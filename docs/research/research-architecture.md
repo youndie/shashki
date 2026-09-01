@@ -1,0 +1,767 @@
+---
+id: research-architecture
+title: shashki — architecture research
+type: research
+status: active
+date: 2026-09-01
+---
+
+# Research: the architecture of shashki
+
+shashki is a reference ride-hailing service: a rider client, a driver client and a dispatch server
+that between them exercise every part of the kotlin.website stack in one product a stranger already
+knows how to use. It is not a demo of one library. The point is the seams — a saga that survives the
+process dying halfway, a broker that carries the events, server-driven screens beside natively drawn
+ones, goldens that fail when the design moves — shown on a domain where "the driver was assigned but
+the card was never charged" is a sentence anybody can judge.
+
+This document records **verified facts** (read out of the artefacts named beside them), **decisions
+taken**, and **risks**. Anything not verified is called a hypothesis and says where it gets settled.
+
+There is no shashki source tree yet. On a greenfield project a verified fact is one read out of a
+dependency at the version that will actually be pinned, or out of that dependency's published
+metadata — not out of memory, and not out of the brief. Where the brief turned out to be wrong, the
+correction is in §2 with the brief's original wording, because the wrong idea is the part that comes
+back.
+
+**Inputs.** The product brief (`shashki-spec.md`), the UI handoff derived from the design kit
+(`shashki-ui-tech-handoff.md`), and two MapLibre style documents (`shashki-map-dark.json`,
+`shashki-map-light.json`). None of the three is a source: each is a plan, and §1 is what happened
+when the plan was checked.
+
+---
+
+## 1. Verified facts
+
+Versions are the ones in the working copies of the stack repositories on 2026-09-01. Where a
+repository publishes a snapshot, that is said rather than smoothed over — see Risk 3.
+
+| Library | Version read | Library | Version read |
+|---|---|---|---|
+| kvadrant-ui | 0.1.0 | kompot | 0.34.1 |
+| viddik | 0.3.0 (kvadrant pins 0.3.0.15) | booblik | 0.3.0-SNAPSHOT |
+| petich | 0.1.0 | bochka | 0.6.0-SNAPSHOT |
+| shildik | 0.2.0 | s3kn | 0.1.0-SNAPSHOT |
+| katcher | 0.6.2 | tracy | 0.1.0-SNAPSHOT |
+| telek | 0.1.2 | smtpkn | 0.1.0-SNAPSHOT |
+
+The whole stack is on **Kotlin 2.4.10 / Compose Multiplatform 1.12.0**, and so is
+`org.maplibre.compose` — which is what makes §1.3's problem a target problem rather than a version
+problem.
+
+### 1.1 The design kit's foundation is not the library's foundation
+
+The handoff's §1 opens with the kit's own claim that section 03 is "foundation, **as inherited**" —
+that the designer took no decisions in this layer, so the work is to *check* the values and override
+nothing. Colour is the one third of that layer where the claim holds.
+
+Verified against the working copy of `youndie/kvadrant-ui` at 0.1.0.
+
+| Fact | Where verified |
+|---|---|
+| The kit's seven dark brushes are the stock dark tokens, hex for hex: foreground `FFFFFF`, background `000000`, subtle `99FFFFFF`, disabled `66FFFFFF`, chrome `1F1F1F`, border `BFFFFFFF`, inactive `33FFFFFF` | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/KvadrantTokens.kt` |
+| The token the kit calls "inactive" is `inactive`. `semitransparent` is a different token, `AA000000`, and is not a candidate | same file, `object Dark` |
+| A dark-theme text box is light in both themes: `textBox = BFFFFFFF` with `textBoxForeground = 000000` | `.../theme/KvadrantColors.kt`, `dark()` |
+| `KvadrantTokens` is `internal`. The public surface is `KvadrantColors.dark(accent)`, `KvadrantAccents.*` and `KvadrantTheme.colors` | `.../theme/KvadrantTokens.kt` line 15, `.../theme/KvadrantTheme.kt` |
+| **Amber is stock**, `KvadrantAccents.Amber = #F0A30A`, one of twenty published accents; Cyan is `#1BA1E2` | `.../theme/KvadrantColors.kt` `object KvadrantAccents`, `KvadrantTokens.Accents` |
+| `Red = #E51400` and `Green = #60A917` are also stock accents — the same two hexes the handoff proposes to hard-code as `ShashkiColors.negative` / `.positive` | `KvadrantTokens.Accents` |
+| Tile grid: `TileSize.Small(1) / Medium(2) / Wide(4)` packed by `KvadrantTileGrid` against `COLUMNS = 4` | `.../components/KvadrantTile.kt` |
+| Press feedback is the theme's: `KvadrantTheme` provides `LocalIndication = TiltIndication(...)` and `LocalOverscrollFactory = KvadrantOverscrollFactory(...)`; `remastered` defaults to `false` | `.../theme/KvadrantTheme.kt` |
+| The font stack is bundled, not loaded by the consumer: Selawik at W200/300/400/600/700 for Latin, a Source Sans 3 variable for Cyrillic at compensated weights (`CYRILLIC_LIGHT_WEIGHT = 330`, `SEMILIGHT = 370`, `NORMAL = 420`, `SEMIBOLD = 640`, `BOLD = 690`) | `.../foundation/KvadrantFonts.kt`, `.../foundation/KvadrantText.kt`, `kvadrant-core/src/commonMain/composeResources/font/` |
+| `KvadrantIcons` exposes 41 public entries, against the kit's "40 stock icons we do not touch" | `.../icons/KvadrantIcons.kt` |
+
+**Consequence 1.1a — the accent-ink rule in the kit is the opposite of the library's.** The kit
+specifies black ink on both accents. `KvadrantColors.onAccent` is `contrastOn(accent)`, and
+`contrastOn` is `if (background.luminance() >= 0.5f) Black else White`. Cyan's luminance is 0.312
+and Amber's is 0.447, so **both resolve to white**. This is not an oversight in the library: its own
+KDoc says the threshold "flips only `Yellow` in practice; `Lime` and `Amber` stay on white text at
+roughly 2.2:1, which is the authentic result and fails WCAG AA. That trade is deliberate — see D7."
+Every filled accent surface in the kit — the selected `ClassTile`, the driver's online tile, the
+accept button — is therefore a place where the computed `onAccent` gives the wrong answer. It is not
+overridable today either (§1.1f), so this is a change to the library rather than a call site we
+avoid. See [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+
+**Consequence 1.1b — two of the three semantic colours already exist.** `ShashkiColors.negative` and
+`.positive` in the handoff are `#E51400` and `#60A917`, which are `KvadrantAccents.Red` and
+`KvadrantAccents.Green`. Writing them as literals creates a second place where the same number
+lives. See [D4](#d4-semantic-colours-are-named-stock-accents-not-literals).
+
+#### Typography: the sizes are stock, four of the seven pairings are not
+
+| Kit style | Kit sp / weight | Nearest stock slot | Verdict |
+|---|---|---|---|
+| pageTitle | 54 / W200 | `pivotHeader` 54 / W300 | size stock, **weight new** |
+| figure | 32 / W200 | `extraLarge` 32 / W300 | size stock, **weight new** |
+| stateHeadline | 24 / W300 | `large` 24 / W300 | matches |
+| pivotItem / tileLabel | 19 / W300 | `mediumLarge` 19 / W400 | size stock, **weight new** |
+| rowEmphasis | 17 / W400 | `title` 17 / W600 | size stock, **weight new** |
+| body | 15 / W400 | `normal` 15 / W400 | matches |
+| meta | 14 / W400 | `subtle` 14 / W400 | matches |
+
+Verified against `.../theme/KvadrantTypography.kt` (`KvadrantTypography.default`, `KvadrantFontSizes`,
+`KvadrantWeights`) and `KvadrantTokens.FontSizesSp`. Every *size* the kit asks for is in the stock
+ramp — 14, 15, 17, 19, 24, 32, 54 — and every *weight* exists in `KvadrantWeights` and in the bundled
+Selawik files. What does not exist is four of the seven pairings.
+
+**Trap.** `KvadrantTypography.pageTitle` is **14 sp / W400** — Metro's `ApplicationTitle`, the small
+line above a page header. The kit's `pageTitle` is 54 / W200. The two documents use one word for two
+objects, and a mapping written from the names alone lands the wrong one on every page header in the
+product.
+
+#### Metrics: 12 dp is not a stock number at any scale
+
+| Fact | Where verified |
+|---|---|
+| `KvadrantMetrics()` defaults: `margin = 9.dp`, `tileGap = 9.dp`, `tileSmall = 74.25.dp`, `tileMedium = 157.5.dp`, `tileWide = 324.dp` | `.../theme/KvadrantMetrics.kt` |
+| The library's own note derives 9 dp from `PhoneMargin` **12 px** × 0.75, not from 16 px | same file, KDoc on `margin` |
+| `scaledToWidth(width) = scaled(width / (margin * 2 + tileWide))`; the divisor is 342 dp, and the KDoc says so and calls the difference from the 360 dp canvas unexplained | same file |
+| `KvadrantTheme` multiplies the type ramp by `metrics.scale`: `typography.scaled(metrics.scale)` | `.../theme/KvadrantTheme.kt` |
+| App bar numbers are private vals in the component, not tokens in `KvadrantMetrics`: `HEIGHT = 54.dp // 72 px`, `BUTTON = 36.dp // 48 px`, `RING = 1.125.dp // 1.5 px`, `KvadrantAppBarGlyphSize = 19.5.dp` | `.../components/KvadrantAppBar.kt` |
+
+**Consequence 1.1c — every spacing number in the kit is exactly 4/3 of the library's, and the type
+ramp is not.** Read against `KvadrantMetrics` and `KvadrantAppBar`, the kit's layout numbers line up
+one to one:
+
+| Kit, section 03/04 | Stock dp | Ratio |
+|---|---|---|
+| page margin 12 | `margin` 9 | 1.3333 |
+| tile gap 12 | `tileGap` 9 | 1.3333 |
+| app-bar button 48 | `BUTTON` 36 | 1.3333 |
+| app-bar ring 1.5 | `RING` 1.125 | 1.3333 |
+| glyph box 26 | `KvadrantAppBarGlyphSize` 19.5 | 1.3333 |
+| app bar height 54 | `HEIGHT` 54 | **1.0** |
+| type ramp 54 / 32 / 24 / 19 / 17 / 15 / 14 | the same seven sizes | **1.0** |
+
+4/3 is 1 / 0.75 — the kit's own header states `px → dp = 0.75` and then adds "nothing on this row is
+a decision". Two readings fit: the conversion was skipped on those five rows, so they are Metro
+pixels labelled dp; or the layout is deliberately scaled by 4/3 while the type ramp is left alone.
+They are different work, and only the designer can say which.
+
+**The scaling knob cannot deliver either reading.** `scaledToWidth(390.dp)` fits the row at
+390 / 342 = 1.1404 and gives a 10.26 dp margin, not 12; a 12 dp margin implies a 456 dp row. And the
+knob is not independent — at any factor `KvadrantTheme` rescales the ramp with it, so the 4/3 reading
+would put the kit's 54 sp page title at 72 sp, which the kit's own invariant ("nothing between 32 and
+54") rules out. Whichever reading wins, the numbers are written down rather than derived.
+
+**One number is ambiguous twice.** 48 dp is also `KvadrantMetrics.touchTargetMin`, the modern
+minimum touch target the library enforces around a 36 dp visual. A kit row reading "48 dp circle,
+1.5 dp ring" may be naming the target or the ring, and those are different pictures.
+
+**Consequence 1.1f — two of the four divergences are API gaps, and two are not.** Which of them can
+be expressed against the published library at all was checked rather than assumed:
+
+| What has to differ | Expressible today? | Why |
+|---|---|---|
+| the type ramp | **yes** | `KvadrantTypography` is a `data class` with a public constructor and public `val`s — `copy()` replaces any slot |
+| page margin, tile gap | **yes** | `KvadrantMetrics` likewise, and `KvadrantTheme` takes a `metrics` argument |
+| ink on an accent surface | **no** | `onAccent` is a computed `val … get() = contrastOn(accent)`, not a constructor parameter. Nothing can override it |
+| app bar height, button, ring | **no** | `HEIGHT`, `BUTTON` and `RING` are `private val`s inside `KvadrantAppBar.kt`. `KvadrantAppBarGlyphSize` is public but a top-level constant, so it is not a theme token either |
+
+Verified in `.../theme/KvadrantColors.kt` (line 54), `.../theme/KvadrantTypography.kt`,
+`.../theme/KvadrantMetrics.kt` and `.../components/KvadrantAppBar.kt`. The two "no" rows are the
+whole of what the library has to grow, and both are additive — see
+[D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+
+**Consequence 1.1d — the app bar does not scale with the theme.** Its height, button and ring are
+constants inside the component, so a scaled theme moves the page around a fixed bar. At the kit's own
+numbers this is invisible (54 dp is 54 dp), which is exactly why it is worth writing down before
+somebody reaches for `scaled()` to fix 1.1c.
+
+### 1.2 Goldens: what viddik makes portable and what it does not
+
+Verified against the working copy of `youndie/viddik` at 0.3.0 and `youndie/kvadrant-ui`'s own notes.
+
+| Fact | Where verified |
+|---|---|
+| The capture engine renders through `ComposeScene` and skiko on a plain JVM. `viddik-testing-core` publishes **JVM variants only** at every published version; `viddik-testing-core-android` is a 404 | `viddik/README.md` ("Compatibility", "Declaring the dependencies by hand"), `kvadrant-ui/gradle/libs.versions.toml` |
+| Therefore neither the Android nor the wasm renderer can have goldens — kvadrant's own build file says so beside its `wasmJs` target | `kvadrant-ui/kvadrant-core/build.gradle.kts` |
+| 0.3.x is bound to Compose Multiplatform 1.12.x / Kotlin 2.4.x, and a mismatch appears at runtime (`NoSuchMethodError` on the first frame), not at compile time | `viddik/README.md`, compatibility table |
+| Reading metadata off `@Preview` needs 0.3.0+, and that `@Preview` is the one CMP 1.12 ships in `commonMain` | `viddik/README.md` |
+| Goldens are cross-OS portable **given** a bundled font run through `normalizeVerticalMetrics()`; glyph rasterisation is neutralised by the capture engine itself | `viddik/README.md`, "Cross-platform goldens" |
+| Bundling the font was **not enough** in practice: kvadrant's first Linux CI run failed on twenty-odd images, all of them text, because the rasteriser differs even when the file does not | `kvadrant-ui/CLAUDE.md`; `kvadrant-ui/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
+| The fix is `ViddikPlatformTextStyle` — a `PlatformTextStyle` pinning `FontHinting` and `FontSmoothing` — applied to **every** slot of the ramp and to every hand-built `TextStyle` | same file |
+| That helper is `internal` and lives in `desktopTest`. It is not published | same file, `internal fun portableTypography` |
+| kvadrant runs `./gradlew check` on macOS because its **calibration** tests fit the Cyrillic companion's weight by comparing ink coverage, and those numbers came from a mac | `kvadrant-ui/CLAUDE.md` |
+| `ViddikGlyphCoverage.missingGlyphs(text)` reads the bundled font's `cmap` and reports characters that would fall through to a host font | `viddik/README.md` |
+| A match is ≤ 0.05 % of pixels with a ±2 per-channel allowance; for scale, one extra character in a button label moves 1.32 % of the pixels | `viddik/README.md` |
+
+**Consequence 1.2a — the handoff's reason for recording on a mac is not the consumer's reason.**
+The handoff says goldens are written on macOS because of "kvadrant's Cyrillic/FreeType limitation".
+The limitation is real and it belongs to *kvadrant's own suite*: it calibrates a variable font's
+weight by counting ink, and ink counts differ per rasteriser. A consumer that only photographs
+screens has the other problem — hinting and smoothing — and that one has a fix, `portableTypography`.
+Whether shashki's goldens are portable is therefore an open measurement, not an inherited fact.
+See [Risk 2](#risk-2-the-golden-suite-may-be-tied-to-one-machine).
+
+**Consequence 1.2b — shashki re-implements the pin.** `portableTypography` cannot be imported.
+It is ten lines over `ViddikPlatformTextStyle`, which *is* public in `ru.workinprogress.viddik.core`,
+and shashki needs its own version anyway because [D2](#d2-kvadrant-ui-is-the-base-and-it-is-pulled-towards-the-kit)
+gives it a ramp built by hand rather than by `KvadrantTypography.default`.
+
+**Consequence 1.2c — the ruble sign is a golden-portability question, not a typographic one.** Every
+fare fixture in the handoff carries `₽` (U+20BD): 249/389 ₽, 420 ₽, 26 940 ₽. If neither Selawik nor
+the bundled Source Sans 3 covers it, it is drawn by a host font and the golden records the machine.
+`ViddikGlyphCoverage` answers this exactly, and the check belongs in the fixtures rather than in
+somebody's head.
+
+### 1.3 The browser target — MapLibre Compose does not publish for Kotlin/Wasm
+
+This is the finding that moves the plan, so it is the one with the most addresses.
+
+| Fact | Where verified |
+|---|---|
+| `org.maplibre.compose:maplibre-compose` 0.15.0 publishes **android, jvm, iosArm64, iosSimulatorArm64, js**. `wasmJs` is not among them | `https://klibs.io/package/org.maplibre.compose/maplibre-compose` |
+| The project's own documentation: maps render through MapLibre Native on Android/iOS/Desktop and through **MapLibre GL JS on Kotlin/JS**; **"Kotlin/Wasm: not yet supported"**; offline downloads exist on every platform except the browser | `https://maplibre.org/maplibre-compose/` |
+| Android and iOS are Beta; Desktop and Web are **Alpha**, and the README attributes that to relying on implementation details in Compose and Skia | `https://github.com/maplibre/maplibre-compose` README |
+| Issue **#209 "Support Wasm"** is open — filed 2024-12-31, last touched 2026-08-25 | `https://github.com/maplibre/maplibre-compose/issues/209` |
+| Its first blocker, spatial-k, was cleared on 2025-09-23. The maintainer's assessment on 2025-12-15: "We don't yet have WASM support… Kotlin's wasmJs external declarations are more limiting than its JS external declarations, so I'm unsure how much of the JS work will trivially port to WASM" | issue #209, comments |
+| PR **#1081**, opened 2026-08-25, moves the GL JS platform to `webMain`, publishes the browser libraries for Kotlin/Wasm and composites through Compose's `WebGLRenderTarget` (from #1114). It reports 236 JS browser tests passing, the Kotlin/Wasm library and demo compiling, and the wasm demo rendering a map that survives viewport resize | `https://github.com/maplibre/maplibre-compose/issues/1081` |
+| It is pinned to the JetBrains build `1.12.10-alpha01+dev4710` and carries `blocked-upstream` "until a non-prerelease Compose release contains merge commit `dca97b20a50006b78bd0e777aeafbf2749d77915`" | same |
+| The newest non-prerelease Compose Multiplatform is **1.12.0, published 2026-08-25** — one week before this document | `https://api.github.com/repos/JetBrains/compose-multiplatform/releases` |
+| maplibre-compose itself builds on Kotlin 2.4.10 / Compose 1.12.0 / maplibre-gl-js 6.6.0 — the same line as the rest of the stack | `https://raw.githubusercontent.com/maplibre/maplibre-compose/main/gradle/libs.versions.toml` |
+
+**Consequence 1.3a — the brief's map row is wrong as written.** It says the official wrapper has "a
+wasm target (on the web, bindings to maplibre-gl-js)". The bindings exist; the target is `js`. On
+released artefacts there is no way to put this library into a Kotlin/Wasm bundle.
+
+**Consequence 1.3b — Kotlin/JS is not the way out.** `kvadrant-core` builds `jvm("desktop")`,
+`wasmJs`, `iosArm64`, `iosSimulatorArm64` and `android`
+(`kvadrant-ui/kvadrant-core/build.gradle.kts`); `kompot-client` builds `jvm("desktop")`, `iosArm64`
+and `wasmJs` (`kompot/kompot-client/build.gradle.kts`). Neither has a `js` target. Retargeting the
+clients to Kotlin/JS to reach the map means adding a target to two libraries and re-verifying both.
+
+**Consequence 1.3c — the spike changes its question.** The brief made "MapLibre Compose in wasm:
+map, markers, route" step one, to retire the main risk. That spike as phrased has a known answer:
+no. What is worth building instead is a comparison — see [D1](#d1-the-browser-is-a-decision-with-a-date-not-a-precondition).
+
+**Consequence 1.3d — the style documents are unaffected.** `shashki-map-dark.json` and
+`shashki-map-light.json` are MapLibre style v8 with a `pmtiles://` source, a `route` GeoJSON source
+carrying a `phase` property of `travelled`/`ahead`, and a `cars` GeoJSON source. Nothing in either is
+specific to a Kotlin target; both remain valid whichever route §1.3 takes. Both name a glyph endpoint
+that does not exist yet and say so in their own metadata: the PBFs must be generated from Source Sans
+3, and until then `text-font` has to fall back to `["Noto Sans Regular"]`.
+
+### 1.4 petich carries the order saga as the brief describes it
+
+| Fact | Where verified |
+|---|---|
+| The phases are exactly `ENRICHMENT, VALIDATION, AUTHORIZATION, EXECUTION, POST_PROCESSING` | `petich/petich-core/src/commonMain/kotlin/Petich.kt`, `enum class PetichPhase` |
+| A saga can pause for a human and continue on a later HTTP request, holding neither a thread nor a database connection; a suspended saga nobody returns to is rolled back by a background sweeper | `petich/README.md` |
+| With an outbox-aware repository the intent to emit an event is written in the same transaction as the state change. `PetichEngineConfig(requireOutbox = true)` refuses to build an engine whose repository cannot store events; `PetichEngineMetrics.onDroppedEvents` counts the fallback. Both are off by default | `petich/README.md` |
+| Default per-phase timeouts: ENRICHMENT 1000 ms, VALIDATION 2000 ms, AUTHORIZATION 30000 ms, EXECUTION 10000 ms | `petich/petich-core/src/commonMain/kotlin/Petich.kt`, `PetichPhase.timeoutMs` |
+| `petich-postgres` is the outbox-aware repository, on Exposed | `petich/README.md`, module table |
+
+**Consequence 1.4a — the 15-second offer cannot be a blocking step.** EXECUTION's default timeout is
+10 s, and a cascade is several offers deep. Waiting for a driver has to be the engine's suspend/resume
+with its own deadline, which is the mechanism the README describes, rather than a step that sleeps.
+The distinction is invisible while one driver accepts immediately and decides the whole matching
+design. See [D5](#d5-the-driver-offer-is-a-suspended-saga-not-a-step-that-waits).
+
+**Consequence 1.4b — `requireOutbox = true` is the setting the brief implies and the default does
+not give.** The brief has the outbox publish `ride-events` into booblik; with the default the engine
+silently drops events when the repository cannot store them, and the saga still completes correctly.
+Turn it on at construction.
+
+### 1.5 kompot, and the parts of it shashki does not need
+
+| Fact | Where verified |
+|---|---|
+| Version 0.34.1 | `kompot/gradle.properties` |
+| `@KompotComponentMarker` is real and drives a KSP registry; the processor rejects a marked class that implements neither `KompotComponent` nor `KompotComponentRenderer<T>` | `kompot/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
+| `kompot-client` targets `jvm("desktop")`, `iosArm64`, `wasmJs { browser() }` | `kompot/kompot-client/build.gradle.kts` |
+| Live updates are three modules: `kompot-realtime` (the frame contract), `kompot-realtime-server` (delivery to one instance's subscribers plus the bus contract), `kompot-realtime-redis` (the pub/sub bus for more than one instance) | `kompot/README.md`, module table |
+
+**Consequence 1.5a — no Redis.** The brief's architecture is one Ktor process. Per-user live updates
+inside a single instance are `kompot-realtime-server`'s job on its own; `kompot-realtime-redis` exists
+for the case shashki deliberately does not have. Pulling it in for a demo would add an infrastructure
+dependency to demonstrate something the demo does not do.
+
+### 1.6 Which of the remaining libraries can reach a browser, and which cannot
+
+The brief assumes several of these run in the wasm clients. Most do not have the target.
+
+| Library | Targets published | Where verified |
+|---|---|---|
+| `booblik-client` | **JVM only** — the module is `kotlin("jvm")` | `booblik/booblik-client/build.gradle.kts` |
+| katcher client | jvm, linuxX64, linuxArm64, macosX64, macosArm64, iosArm64, iosSimulatorArm64, iosX64, mingwX64 — **no `wasmJs`, no `js`** | `katcher/client/build.gradle.kts` |
+| shildik | jvm, linuxX64, linuxArm64, macosArm64; `ktor-role-based-auth` JVM only; `storage-sqlx4k` and `server-boot` jvm + linuxX64; `distribution` linuxX64 | `shildik/README.md` §Targets, `shildik/oidc-auth-client/build.gradle.kts` |
+| smtpkn | `linuxX64` is "the platform this is built for and the only one it is claimed to work on"; `jvm` shares the code and runs in CI but is "not claimed yet only because nothing has been released". 181 tests on linuxX64, 175 on the JVM | `smtp-client/build.gradle.kts`, `smtp-tls-jvm` |
+| bochka | serves `Range`, conditional reads and writes, SigV4 including `aws-chunked`; `bochka-embedded` starts a server on a random port from a test and stops it after | `bochka/README.md` |
+| GraphHopper | Apache-2.0, "use it as Java library or standalone web server", not archived | `https://api.github.com/repos/graphhopper/graphhopper` |
+| katcher ingest | `POST {serverUrl}/api/reports` | `katcher/README.md` |
+| shildik token endpoint shape | `POST /realms/<realm>/protocol/openid-connect/token`; image `ghcr.io/youndie/shildik` | `shildik/README.md` |
+
+**Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
+the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
+The fact is worth recording because the opposite arrangement is the one people reach for.
+
+**Consequence 1.6b — crash reporting from the browser is an HTTP call, not a client library.** The
+brief has both wasm clients reporting to katcher. The client artifact has no browser target, and the
+ingest endpoint is documented. See [D6](#d6-the-browser-clients-post-to-katchers-ingest-endpoint-directly).
+
+**Consequence 1.6c — the browser half of OIDC is shashki's code.** `oidc-auth-client` is jvm +
+linuxX64. Authorization code with PKCE from a browser is a redirect, a verifier, an `S256` challenge
+and a token exchange; the challenge needs SHA-256, which in the browser means WebCrypto and therefore
+an asynchronous call. Small, but it is work the brief books as "shildik modules".
+
+**Consequence 1.6d — shashki would be smtpkn's first JVM consumer of consequence.** The library says
+plainly that the JVM target is unclaimed. That is a feature of this project, not a defect — a
+reference service is exactly what turns "compiles and runs in CI" into "claimed" — but it has to be
+gated by a test rather than assumed. See [Risk 4](#risk-4-smtpkns-jvm-target-is-unclaimed).
+
+### 1.7 The kit's composition rules are half contract and half renderer invariant
+
+Read at source in the kit's section 08 ("composition rules for the screens the server sends as a
+tree"), not through the handoff. Six rules: one accent surface per screen, with the second falling
+back to chrome; tiles never reflow (four columns, gap 12, sizes 1/2/4, unknown sizes dropped rather
+than guessed); figures only at 32 and 54, nothing else in a card above 19; a row leads with a route
+stack, one 20 dp glyph, or nothing, never a photo and never both; the pivot holds the top level and
+the server may reorder its items but not nest them; an empty list renders one server-supplied string
+as a headline in the disabled brush, with no action.
+
+**Consequence 1.7a — three of the six belong in the renderer, not in the protocol.** "The first
+accent surface wins", "an unknown tile size is dropped" and "a primary figure goes to 54" are all
+statements about what the client does when the server sends something the rule does not allow. A
+protocol can describe the allowed shape; only the renderer can decide what happens to the
+disallowed one, and kompot's own posture — degrade rather than crash — is the same posture. Encoding
+them as server-side validation would put the guarantee on the wrong side of the wire, where a second
+implementation of the server silently drops it.
+
+**Consequence 1.7b — the tile rule restates §1.1c's open question.** "Four columns, gap 12, page
+margin 12" is the same 4/3 as everything else in the kit. The renderer takes its grid from
+`ShashkiMetrics`, so it inherits whatever B-15 answers and needs no separate decision.
+
+### 1.8 A tile renderer of our own: what it would actually have to implement
+
+Added after the first pass, when the brief's "own render on Compose Canvas — an optional v2 demo, not
+a blocker" was promoted to a candidate route for §1.3. Research §1.3's problem is that the map is the
+one part of this product that cannot be drawn in Compose; a renderer that draws it in Compose does
+not have that problem on any target. What follows is what it costs, measured rather than guessed.
+
+#### The style documents are the specification, and they are small
+
+Both style files were parsed rather than read. Per file: **13 layers** — 1 background, 4 fill, 6 line,
+2 symbol — over two source types, `vector` (pmtiles) and `geojson`.
+
+| Surface | What the two styles actually use |
+|---|---|
+| paint properties | `background-color`, `fill-color`, `line-color`, `line-width`, `line-dasharray`, `text-color`, `text-halo-width` — seven |
+| layout properties | `line-cap`, `line-join`, `symbol-placement`, `text-field`, `text-font`, `text-size`, `text-letter-spacing` — seven |
+| layer keys beyond the basics | `filter`, `minzoom`. Nothing else |
+| expression and filter operators | `==`, `in`, `get`, `coalesce`, `downcase`, `interpolate` with `exponential`, `zoom` — seven |
+| sprites, icons, halos | **none.** The styles' own metadata says POI icons are off at every zoom, and `text-halo-width` is 0 everywhere |
+
+Verified by parsing `shashki-map-dark.json` and `shashki-map-light.json`. That is a specification a
+person can hold in their head, and it is small because the designer made it small on purpose — the
+metadata line "nothing in the basemap is saturated — the accent has no competition" is the same
+decision seen from the design side.
+
+#### The toolchain reaches far enough, and the hardest part was checked first
+
+The part that sinks a hand-written renderer is text along a curved street, because Compose has no
+API for it. It is reachable, and on the target that matters:
+
+| Fact | Where verified |
+|---|---|
+| `org.jetbrains.skia.PathMeasure.getRSXform(distance)` returns the per-glyph rotate-scale-translate for a point along a path | `skiko-awt-0.150.1.jar`, `org.jetbrains.skia.PathMeasure` |
+| `TextBlob.Companion.makeFromRSXform(glyphs, xforms, font)` builds a blob from those, and `Canvas.drawTextBlob` draws it | same jar, `org.jetbrains.skia.TextBlob$Companion`, `org.jetbrains.skia.Canvas` |
+| `Font.getStringGlyphs`, `Font.getWidths`, `Font.getXPositions` supply the glyph run and its advances | same jar, `org.jetbrains.skia.Font` |
+| **All five exist in the Kotlin/Wasm build of skiko**, not only the JVM one | `skiko-wasm-js-0.150.1.klib` — `getRSXform`, `makeFromRSXform`, `PathMeasure`, `getStringGlyphs`, `drawTextBlob` all present |
+| The bridge from Compose is `Canvas.skiaCanvas` (and `Paint.skiaPaint`). `nativeCanvas` / `NativeCanvas` were deprecated in 1.11 and their deprecation level was raised to **ERROR** in 1.12.0 | Compose Multiplatform 1.11.0 and 1.12.0 release notes |
+| `kotlinx-serialization-protobuf` 1.11.0 publishes a Wasm target, so MVT decoding needs no new dependency shape | `https://klibs.io/package/org.jetbrains.kotlinx/kotlinx-serialization-protobuf` |
+| Compose 1.12.0 loads Noto automatically for unresolved symbols **on web** | Compose Multiplatform 1.12.0 release notes, "Web" |
+
+**Consequence 1.8a — this route deletes four open items rather than adding to them.** Glyph PBFs stop
+existing as a problem: a Compose renderer draws labels with the fonts kvadrant already bundles, so
+[B-06](../backlog/B-06-city-extract-and-tiles.md)'s PBF generation and the styles' interim
+`["Noto Sans Regular"]` fallback both go away. The compositing problem goes away, because there is no
+second canvas. The pmtiles protocol-handler question (Risk 5) goes away, because we read the archive
+ourselves over ranged HTTP. And the map becomes **screenshot-testable**: a MapLibre map is a GL
+surface or a DOM element and can never appear in a viddik golden, while a Compose-drawn map is a
+golden like any other — which matters more here than usual, because the viddik component browser *is*
+the design acceptance for this project.
+
+**Consequence 1.8b — the cost is not the drawing, it is the tiling.** Fills, strokes, joins, caps and
+dash arrays are `DrawScope` calls. What has to be built underneath is the part with no shortcut:
+pmtiles directory traversal and ranged reads, MVT geometry decoding including the zig-zag command
+encoding, tile-to-screen transforms in Web Mercator, per-zoom tile selection with a cache, clipping at
+tile boundaries so a road does not end at a seam, and label placement — collision, de-duplication of
+the same street name across adjacent tiles, and the curved baseline above. Pan and pinch are Compose
+gestures and are the easy end.
+
+**Consequence 1.8c — WorldWind Kotlin is route 3 with a Kotlin API, not a fourth option.**
+`earth.worldwind:worldwind` (Apache-2.0, active — last push 2026-08-25) is the one Kotlin
+Multiplatform library found that publishes a wasm target and carries an MVT layer, and it has a
+`worldwind-compose` module with source sets for `androidMain`, `iosMain`, `jvmMain`, `jsMain` and
+`wasmJsMain`. How it reaches a browser was read out of that module rather than inferred, and its own
+KDoc states the constraint plainly:
+
+> Skia-backed Compose/Web renders the whole UI into a single `<canvas>` and — unlike the DOM-based
+> Compose HTML used on the `js` target — it cannot embed WorldWind's own WebGL `<canvas>` inside that
+> surface. So this binding takes the only workable route on wasmJs: it creates a full-window WebGL
+> `<canvas>` in the DOM *behind* the (transparent) Compose surface and lets the Compose UI overlay it.
+
+| Target | How the map gets on screen | Where verified |
+|---|---|---|
+| `wasmJs` | its own `<canvas id="worldwind-canvas">`, `position: fixed`, `z-index: 0`, inserted as the **first child of `<body>`** — behind Compose's transparent canvas | `worldwind-compose/src/wasmJsMain/kotlin/earth/worldwind/compose/WorldWindow.wasmJs.kt` |
+| `js` | **Compose HTML** — `org.jetbrains.compose.web.dom.Canvas`, and the overload takes an `AttrsScope` instead of a `Modifier` "because Compose HTML's element-attribute model is incompatible with Compose UI's `Modifier`" | `.../jsMain/.../WorldWindow.js.kt` |
+| `jvm` | a JOGL `GLCanvas` inside a `SwingPanel`, because "Skia and JOGL share no GL context" | `.../jvmMain/.../WorldWindow.jvm.kt` |
+
+Three things follow, and each is a fact from the source rather than a worry:
+
+1. **The map cannot be a sized element in a layout.** The `wasmJs` binding's own KDoc: "The
+   [modifier] is accepted for API symmetry with the other targets; the globe canvas itself is always
+   full-window." The kit's phone screens are close enough to full-bleed to live with that; a map
+   inside a card is not available.
+2. **Pointer events are all-or-nothing, and the library says so without saying it.** The sample page
+   ships `body > canvas { pointer-events: none }` with `#worldwind-canvas { pointer-events: auto }`,
+   and the KDoc adds that "apps that overlay interactive Compose UI on the globe must instead
+   re-enable pointer-events on their own controls". Compose UI controls are not DOM elements — there
+   is one canvas — so there is nothing to re-enable them on. Either Compose receives every gesture
+   and the map never pans, or the map receives them and no button on the screen works. Making both
+   work means toggling `pointer-events` on the Compose canvas from hit-test knowledge pushed out to
+   JavaScript. shashki needs both on one screen: the rider drags a pickup pin on the map and taps a
+   class tile below it.
+3. **On no target does the map end up inside Compose's own canvas,** so it can never appear in a
+   viddik golden. That is true of `jvm` too, where a heavyweight `SwingPanel` is the mechanism.
+
+So this library does not remove §1.3's compositing problem; its source documents the problem as
+unsolvable on wasmJs and ships the workaround. It belongs in D1 as a better-packaged route 3, not as
+an escape from the choice.
+
+**Consequence 1.8d — but its MVT package is the size estimate route 4 was missing.**
+`worldwind/src/commonMain/kotlin/earth/worldwind/layer/mvt/` is **30 files**, and the list reads as
+route 4's tiling half itemised: `ProtobufReader`, `MvtDecoder`, `MvtGeometry`, `MvtFilter`,
+`MvtExpression` + `MvtExpressionParser`, `MvtZoomInterp`, `MvtTile` + `MvtTileSource`,
+`MvtBatchedLineTile` + `MvtBatchedPolygonTile`, `MvtLabelCollider`, `MvtLabelGroup`,
+`MvtCurvedTextPlacer`, `MvtCurvedLineLabel`, `CurvedGlyphScale`, `MvtSchemaDetector`,
+`MvtSpriteAtlas`, `MvtMapboxStyleLoader`. Under Apache-2.0 that is a corpus to read, and in places
+to borrow with attribution, rather than a wall to reinvent — for the **decode, filter, expression and
+label-placement** half. The **drawing** half does not transfer: it renders through WorldWind's GL
+pipeline, and route 4's premise is that it renders through Compose.
+
+Two smaller findings, recorded because they cost a run to rediscover:
+
+* **No pmtiles.** `UrlTemplateMvtTileSource` is `{z}/{x}/{y}.pbf` over HTTP. A pmtiles archive needs
+  a new `MvtTileSource`, wherever the code ends up living.
+* **Do not trust that loader's KDoc.** `MvtMapboxStyleLoader`'s header lists modern
+  `["interpolate", …]` expressions as "Not yet implemented" and says it throws on them — while the
+  body calls `parseFloatInterp` for `line-width` and handles `line-dasharray`, neither of which the
+  header admits, and the release notes claim expression-DSL parity. The prose is behind the code.
+  Whether it loads shashki's two style documents is answerable in one run and has not been run; it
+  does not change the verdict above, which rests on rendering rather than on parsing.
+
+**Open: where such an engine would live.** Every other self-hosted piece of this stack is its own
+library rather than a folder in the product that needed it first. A tile renderer is the same shape
+of thing. That is a question about the portfolio and not about shashki, and it does not have to be
+answered before the spike — but it should be answered before the second screen depends on it.
+
+---
+
+## 2. Decisions
+
+### D1. The browser is a decision with a date, not a precondition
+
+Brief: step one of the plan is a spike, "MapLibre Compose in wasm — map, markers, route", to retire
+the main risk; both clients are Compose Multiplatform → wasm.
+
+Decision: the spike stays first and its question changes. It no longer asks whether the wrapper works
+in wasm — §1.3 answers that — but which of four routes to the browser this project takes, and it
+produces a measured comparison and a written choice rather than a green tick.
+
+The routes, with what each costs:
+
+1. **Desktop first (JVM), browser second.** Everything the product needs is published today:
+   `maplibre-compose` has a `jvm` variant, kvadrant-ui has `jvm("desktop")`, kompot-client has
+   `jvm("desktop")`, and viddik's capture engine is JVM-only anyway, so the goldens and the component
+   browser run against the same target the app runs on. The price is that the demo is not a URL.
+2. **Wasm on an unreleased Compose.** Take PR #1081's branch and the pinned
+   `1.12.10-alpha01+dev4710`. The price is that kvadrant-ui is published against 1.12.0 and viddik
+   binds to a Compose line at runtime rather than at compile time — a mismatch shows up as
+   `NoSuchMethodError` on the first frame (§1.2) — so the whole client stack rides on a dev build
+   until Compose ships the merge commit named in that PR.
+3. **Wasm with the map outside Compose.** Run maplibre-gl-js in its own DOM element and put the
+   Compose canvas over it. The price is paid on every screen the kit draws: Compose for Web renders
+   into one canvas, so the map is visible only through a hole punched in it, and the kit's markers,
+   route stack and panels sit over the map by design.
+3b. **Route 3, packaged: WorldWind Kotlin.** `earth.worldwind:worldwind` has a Compose module with a
+   `wasmJs` target. §1.8c read it: it inserts its own full-window WebGL canvas behind Compose's
+   transparent one, the map cannot be a sized element, and pointer events are all-or-nothing on one
+   canvas. It is route 3 with a Kotlin API rather than a way past route 3.
+4. **Draw the map ourselves, in Compose, from the tiles.** The brief listed this as an optional v2
+   demo; it is a candidate route. §1.8 measured what it costs: the two style documents use 13 layers,
+   seven paint properties, seven layout properties and seven expression operators between them, with
+   no sprites, no icons and no halos, and the hardest missing piece — a label following a curved
+   street — is reachable through `PathMeasure.getRSXform` and `TextBlob.makeFromRSXform`, both
+   present in the **Kotlin/Wasm** build of skiko. It is the only route with no target problem on any
+   platform, and the only one whose map appears in a viddik golden.
+
+Why not choose now: routes 1 and 2 differ by a Compose release whose date nobody here controls;
+route 3's cost is a layout question that a prototype answers and an argument does not; and route 4
+trades a dependency risk for a quantity of work, which is a trade only a prototype prices. What is
+decided now is that **the map lives behind one interface with a platform implementation per target**,
+so the choice is a module and not a rewrite, and that no other work waits on it — §1.4, §1.5 and §1.6
+are all server-side or target-independent.
+
+**Route 4 is not judged on the same axis as the others**, and that is why it is worth prototyping
+even though it is the most work. Routes 1–3 buy a map and leave four items open — glyph PBFs, the
+compositing hole, the pmtiles protocol handler, and a map that can never be in a golden. Route 4
+closes all four and opens one: how much of a tile pipeline we are willing to own (§1.8b). Given that
+this stack already owns its broker, its object store, its identity provider, its log store and its
+crash reporter, that question has a precedent — but a precedent is not a measurement.
+
+### D2. kvadrant-ui is the base and it is pulled towards the kit
+
+Brief / handoff: section 03 of the kit is inherited, so the work is "to check and override nothing;
+a divergence is a bug in the kit or in kvadrant, escalate rather than hard-code".
+
+First reading of the research: since the library's divergent numbers are documented as deliberate,
+escalation is closed, so shashki forks the foundation and ships its own.
+
+**Decision, taken by the owner of both repositories: escalation is open.** kvadrant-ui is the base,
+and it is pulled towards the kit rather than worked around. What that means concretely is settled by
+§1.1f, which asked what can be expressed against the published library at all, and got two different
+answers:
+
+- **the type ramp and the spacing are already expressible.** `KvadrantTypography` and
+  `KvadrantMetrics` are both `data class`es with public constructors, and `KvadrantTheme` takes
+  both. `ShashkiTypography` and `ShashkiMetrics` are therefore values supplied to the library, not a
+  fork of it — the same relationship the library already has with `accent`. They live in shashki
+  because they are the kit's numbers, and the kit belongs to this product;
+- **the ink and the app bar are not expressible at all,** and that is a gap in the library rather
+  than a disagreement about a number. Both are closed upstream — [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+
+Why not move kvadrant-ui's **defaults** to the kit's values, which is the other way to read "pull it
+towards the kit": every metric in that library carries the Metro pixel count it was converted from,
+and `margin = 9.dp` is documented as `PhoneMargin` 12 px × 0.75. Changing the default falsifies a
+claim the library makes about a verified source, and it would do it for every consumer in order to
+suit one. Growing the library's *vocabulary* costs nothing and takes nothing away; changing its
+*answers* takes away the reason to trust the rest of them. If that is wanted anyway it is a separate
+decision with its own reasoning, not a consequence of this one.
+
+`ShashkiMetrics` starts as `KvadrantMetrics(margin = 12.dp, tileGap = 12.dp, …)` with `scale` left at
+1f, so the type ramp is not rescaled behind our back. Whether that constant is 12 or 9 is Open
+question 1's fourth part; the module ships either way and only the number waits.
+
+### D3. kvadrant-ui grows the two hooks the kit needs
+
+Both are additive, both keep the stock behaviour as the default, and neither asks the library to
+stop being what it is.
+
+**`onAccent` becomes overridable.** Today it is `val onAccent: Color get() = contrastOn(accent)` — a
+computed property, so no consumer can supply a different answer. It becomes a constructor parameter
+of `KvadrantColors` defaulting to `contrastOn(accent)`. Nothing changes for anyone who does not pass
+it; shashki passes black, which is what the kit specifies and what §1.1a showed the computed value
+contradicts at about 2.2:1 on Amber. The library's own trade (D7 in its research — the authentic
+Metro result, an accepted WCAG failure) survives as the default, which is the point: a default that
+can be overridden is still a position.
+
+**The app bar's dimensions become theme tokens.** `HEIGHT`, `BUTTON` and `RING` are `private val`s
+inside the component and `KvadrantAppBarGlyphSize` is a top-level constant, so the app bar is the one
+surface a theme cannot reach — and, per Consequence 1.1d, the one surface that does not scale when
+the rest of the theme does. Moving them into `KvadrantMetrics` fixes both at once: the kit can state
+its numbers, and a scaled theme stops moving a page around a fixed bar.
+
+The price is stated rather than discovered: `KvadrantColors` and `KvadrantMetrics` are `data class`es
+with `abiValidation` switched on, so adding a parameter to either is a binary-incompatible change and
+will show up as a diff somebody has to approve. That is the mechanism working, not an obstacle —
+those two signatures have changed before without anybody noticing, which is why the validation is
+there.
+
+### D4. Semantic colours are named stock accents, not literals
+
+`ShashkiColors.negative = KvadrantAccents.Red`, `.positive = KvadrantAccents.Green`,
+`.inactive = KvadrantColors.dark().inactive`. The handoff's hexes are correct and are the same
+numbers (§1.1b); writing them again puts one value in two files.
+
+The kit's rule that red is reserved for cancellation in both apps — and that this is why the driver
+accent is amber rather than red — survives unchanged, and is the reason `negative` is a semantic
+name rather than an accent parameter.
+
+### D5. The driver offer is a suspended saga, not a step that waits
+
+The 15-second offer, and the cascade of offers behind it, are `petich`'s suspend/resume with a
+deadline, not work performed inside an EXECUTION step. §1.4a: EXECUTION's default timeout is 10 s and
+a cascade is several offers long, so a blocking implementation is correct exactly until the first
+driver ignores an offer.
+
+Rider cancellation is compensation from the middle of the saga, which is the same mechanism read
+backwards, and is the demo's whole point.
+
+### D6. The browser clients post to katcher's ingest endpoint directly
+
+`POST {serverUrl}/api/reports` (§1.6). The katcher client artifact has no browser target, and adding
+one to katcher is a change to a library in order to save a Ktor call in a consumer.
+
+The consequence is honest and belongs here: the offline persistence and the build-uuid plumbing the
+Android client gets for free are not free for us. What the browser clients send is whatever we choose
+to send.
+
+### D7. One process, so no Redis
+
+`kompot-realtime-server` alone (§1.5a).
+
+### D8. Goldens pin hinting and smoothing, and every fixture string is checked for coverage
+
+Fixtures build their ramp through a shashki-local `portable()` over `ViddikPlatformTextStyle`
+(§1.2b), applied to every slot **and** to every hand-built `TextStyle` — kvadrant's note is explicit
+that fixtures constructing their own styles went on failing after the ramp was pinned.
+
+Every fixture string goes through `ViddikGlyphCoverage.missingGlyphs`, and the check fails the
+fixture rather than warning. `₽` is the reason (§1.2c), and it is in most of them.
+
+### D9. Documentation is in English
+
+Code, comments, test names, exception messages and commit subjects in English, as everywhere in this
+stack; this documentation tree in English too, which is this project's departure from the usual
+Russian `docs/`. The kit and the brief are Russian and stay Russian: they are evidence, and evidence
+is not translated.
+
+---
+
+## 3. Risks and open questions
+
+### Risk 1. The browser target has no released path
+
+**Mechanism.** Both clients are specified as Kotlin/Wasm; the map library publishes no `wasmJs`
+variant, the upstream work is open and pinned to an unreleased Compose, and the alternative target
+(`js`) is missing from two of our own libraries (§1.3).
+
+**Mitigation.** D1: the map behind one interface, a spike that compares the four routes and writes a
+choice down, and no other workstream blocked on it. For routes 2 and 3 that means watching for a
+non-prerelease Compose Multiplatform containing merge commit
+`dca97b20a50006b78bd0e777aeafbf2749d77915`, which is the condition upstream itself states.
+**Route 4 removes the dependency instead of waiting on it** — a map drawn in Compose has no target
+problem on any platform — and §1.8 is what makes that a priced option rather than a hope.
+
+**Open.** Whether route 3 (map in the DOM, Compose over it) can carry the kit's screens at all, and
+what fraction of route 4's tile pipeline a prototype has to build before the rest can be estimated.
+Both are answered with the class picker and the trip screen, which put the most Compose on top of the
+most map.
+
+### Risk 2. The golden suite may be tied to one machine
+
+**Mechanism.** kvadrant records on macOS, and the reason given is a calibration suite of its own
+(§1.2a). If shashki's fixtures turn out to be host-dependent too, the golden suite can only run on
+the mac — and this stack's builds otherwise run on the Linux box, so a check that cannot run there
+is a check that runs rarely.
+
+**Mitigation.** Measure rather than inherit: record one text-heavy fixture (`DriverOffer` — 54 sp
+figures, tabular numerals, a ruble sign) on both hosts and diff. If they match, the suite is
+portable and `verifyOnCheck` goes on. If they do not, the honest arrangement is that goldens are a
+mac-only gate and CI says so, rather than a Linux job that silently re-records.
+
+### Risk 3. Half the stack is a snapshot
+
+**Mechanism.** booblik, bochka, s3kn, tracy and smtpkn are `-SNAPSHOT` in the working copies. A
+reference service that cannot be rebuilt is a screenshot.
+
+**Mitigation.** Before the demo is published, every dependency is a release or a resolved snapshot
+pinned by build metadata, and the version table in §1 is re-read rather than remembered. This is a
+backlog item, not a note.
+
+### Risk 4. smtpkn's JVM target is unclaimed
+
+**Mechanism.** The library states that only `linuxX64` is claimed; the JVM target compiles and its
+175 tests run in CI, but nothing has been released and nothing has used it in anger (§1.6d). TLS on
+the JVM goes through `SSLEngine`, which is the one part not shared with the native path — that is,
+the untested part is the part that talks to a real server.
+
+**Mitigation.** A receipt test against Mailpit in the integration suite, on the JVM target, with TLS
+on. It gates the feature, and a failure is reported upstream rather than routed around.
+
+### Risk 5. pmtiles in the browser is untested from Kotlin
+
+**Mechanism.** A `pmtiles://` source is not native to MapLibre GL JS: it needs the `pmtiles` protocol
+handler registered on the GL JS instance, which is a JavaScript call. Whether that registration is
+reachable from Kotlin/Wasm — and whether the wrapper of D1's chosen route exposes the hook at all —
+has not been checked.
+
+**Mitigation.** It is part of the D1 spike: the spike's success criterion is a rendered city from
+`city.pmtiles`, not a rendered blank style.
+
+**This risk belongs to routes 1–3 only.** Route 4 (§1.8) reads the archive itself over ranged HTTP,
+so there is no protocol handler and no JavaScript call — one of the four items that route closes.
+
+### Risk 6. Nobody has served a pmtiles archive out of bochka
+
+**Mechanism.** bochka supports `Range` (§1.6), which is the requirement on paper. Browser tile
+traffic is many small ranged reads against one large object, which is a different load from the ones
+bochka's own measurements cover.
+
+**Mitigation.** Measure with the real archive before the tile endpoint is part of any demo, and
+record the numbers with what was measured. If it does not hold, the fallback is a static file served
+beside the app, which costs the demo one talking point and nothing else.
+
+### Open question 1. Three questions the kit addressed to the client side
+
+Carried over verbatim from the handoff §1.6 and unanswered here because they are design decisions,
+not research findings: may the 54 dp app bar carry a filled accept button; may the offer screen hide
+the app bar entirely; and is the light theme kvadrant's stock light theme verified by goldens, or
+does it wait for the kit's next pass. The third is the one with a schedule attached — until it is
+answered, fixtures are dark only.
+
+**A fourth goes back with them, and it is the one that changes code:** §1.1c's 4/3. Is the kit's
+layout a deliberate scale-up, or five rows where `× 0.75` was not applied? Adopting 12 dp before that
+is answered risks baking in a units slip; adopting 9 dp risks re-drawing every screen. The question
+answers itself in one screenshot — the class picker at both spacings beside the kit's own artboard.
+
+### Open question 2. One wasm bundle or two
+
+The brief proposes two, for a cleaner demo, and that is very likely right. It is worth re-asking once
+D1 lands, because route 2 and route 3 have different fixed costs per bundle.
+
+### Open question 3. The city
+
+An OSM extract with a compact graph. It decides the size of the pmtiles archive, the GraphHopper
+import time and every fixture's street names, so it is upstream of more than it looks.
+
+### Open question 4. Whether `shashki-api` is published
+
+A separate KMP artifact for the protocol, as groundwork for mobile clients. Deferred: it costs
+nothing to defer and something to get wrong, and the answer is clearer once one client exists.
+
+---
+
+## 4. What happens next
+
+The order of work and the acceptance criteria live in [backlog.md](../../backlog.md). Four things
+have to be nailed down before anything else is worth building:
+
+1. **D1's spike** — the map, on all four routes, judged against the same two screens. Everything
+   about the client's shape follows from it, and route 4 (§1.8) is the one whose cost nobody can
+   estimate without building part of it.
+2. **The two kvadrant-ui hooks** (D3) — an overridable `onAccent` and the app bar's dimensions as
+   theme tokens. Small, additive, and upstream of everything else on the client: until they land,
+   the two components below cannot be built the way the kit draws them.
+3. **The foundation values and the two components** — `ShashkiTypography`, `ShashkiMetrics`,
+   `ShashkiColors` and the `portable()` pin, with `ClassTile` and `OfferCard` on them. Those two
+   carry the whole of §1.1's divergence: the accent fill with black ink, the 54/200 figure, the
+   tabular timer. If they come out right the rest of the kit is transcription.
+4. **The golden host measurement** (Risk 2), because it decides where the acceptance gate lives, and
+   an acceptance gate decided late is an acceptance gate nobody has.
+
+The server layers wait on none of these and can start in parallel: §1.4 and §1.5 verified that the
+saga and the server-driven screens map onto the brief as written.
+
+## Code anchors
+
+There is no shashki source tree yet. What follows is what §1 was verified against; the paths are
+inside the sibling repositories of this stack, and they are what `code_anchors.py --repos ..`
+resolves.
+
+| Subject | Code |
+|---|---|
+| kvadrant-ui foundation | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/` |
+| kvadrant-ui tiles, app bar, text | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/components/KvadrantTile.kt`, `.../components/KvadrantAppBar.kt`, `.../foundation/KvadrantText.kt` |
+| kvadrant-ui targets and viddik wiring | `kvadrant-ui/kvadrant-core/build.gradle.kts` |
+| the golden pin to re-implement | `kvadrant-ui/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
+| viddik contract | `viddik/README.md`, `viddik/viddik-testing-core` |
+| petich phases and timeouts | `petich/petich-core/src/commonMain/kotlin/Petich.kt` |
+| kompot component registry | `kompot/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
+| kompot client targets | `kompot/kompot-client/build.gradle.kts` |
+| booblik client | `booblik/booblik-client/build.gradle.kts` |
+| katcher client targets and ingest | `katcher/client/build.gradle.kts`, `katcher/README.md` |
+| shildik targets | `shildik/oidc-auth-client/build.gradle.kts`, `shildik/README.md` |
+| smtpkn platform claims | `smtp-client/build.gradle.kts`, `smtp-tls-jvm` |
+| bochka object surface | `bochka/README.md`, `bochka/bochka-embedded` |
