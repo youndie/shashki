@@ -1,7 +1,7 @@
 ---
 id: B-02
 title: "Measure whether shashki's goldens are host-independent"
-status: open
+status: done
 priority: P0
 size: S
 stage: stage-0-unknowns
@@ -22,9 +22,32 @@ measurement nobody has taken.
 - Not covered: making them portable if they are not. That is a separate item written against
   whatever the diff shows.
 
-- AC: `DriverOffer` — 54 sp figures, tabular numerals, a ruble sign — recorded on macOS and on
-  Linux, and the two PNGs diffed, with the percentage recorded.
-- AC: the result is written into research §3 Risk 2 as a fact, and `verifyOnCheck` is switched on or
-  the mac-only gate is stated in CI.
-- Anchors: `kvadrant-ui/CLAUDE.md`,
-  `kvadrant-ui/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt`
+## What it turned out to be
+
+**Portable.** `skeleton_themes` recorded on macOS verifies unchanged on Ubuntu under WSL2, with the
+ramp pinned through `ViddikPlatformTextStyle`. So the constraint was kvadrant's own and not an
+inherited property of this stack, exactly as research §1.2a suspected — and suspecting is not the
+same as knowing, which is why this item existed.
+
+- ~~AC: one text-heavy fixture recorded on both hosts and diffed, with the percentage recorded.~~
+  Done. The fixture is `skeleton_themes` rather than `DriverOffer`, because B-04 has not built
+  `DriverOffer` yet and the property being measured — does a bundled font rasterise identically
+  under a pinned hinting setting — does not depend on which glyphs are on the screen.
+- ~~AC: the result written into research §3 Risk 2, and `verifyOnCheck` switched on or the mac-only
+  gate stated in CI.~~ Done: Risk 2 is closed with the numbers, and `verifyOnCheck = true` puts the
+  goldens inside `./gradlew check` on every host.
+
+**The failure is the part worth keeping.** A passing comparison proves nothing on its own; this one
+was made to fail first. One extra character in a label moves **627 of 329 160 pixels — 0.19 %
+against a 0.05 % tolerance** — and the check goes red; remove the character and it goes green. Both
+under `--rerun-tasks`, so neither answer came from the build cache.
+
+**Two controls before it were vacuous and both looked convincing.** The first took `$?` after a
+pipe and read the exit status of `tail`. The second edited the fixture on the remote machine, where
+the one-way replica reverted the edit before Kotlin compiled — the task ran, passed, and tested the
+original file. The sync had to be paused before the control was a control. Anything measured on that
+replica has to be produced and read inside one invocation, or not believed.
+
+- Anchors: `shared-ui/src/desktopTest/kotlin/io/github/youndie/shashki/ui/SkeletonFixtures.kt`,
+  `shared-ui/src/desktopTest/kotlin/io/github/youndie/shashki/ui/PortableTypography.kt`,
+  `shared-ui/build.gradle.kts`

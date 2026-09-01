@@ -30,3 +30,18 @@ kotlin {
         }
     }
 }
+
+// **The goldens are in `check`, and that is a measurement rather than an intention.** viddik leaves
+// this off by default because a project that has not bundled a font has host-specific goldens, and
+// those redden every machine that did not record them. B-02 asked whether this project is such a
+// project and the answer is no: `skeleton_themes`, recorded on macOS, verifies unchanged on Linux.
+//
+// The measurement is only worth anything because the check was shown to bite. With one extra
+// character in a label the same comparison fails at **627 of 329 160 pixels — 0.19 % against a
+// 0.05 % tolerance** — and passes again when the character is removed, both under `--rerun-tasks`
+// so nothing was cached. Two earlier attempts at that control proved nothing and looked like proof:
+// one read the exit status of `tail` through a pipe, the other was silently reverted by the file
+// sync before Kotlin compiled.
+viddik {
+    verifyOnCheck = true
+}

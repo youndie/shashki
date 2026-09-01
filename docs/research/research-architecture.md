@@ -719,17 +719,37 @@ what fraction of route 4's tile pipeline a prototype has to build before the res
 Both are answered with the class picker and the trip screen, which put the most Compose on top of the
 most map.
 
-### Risk 2. The golden suite may be tied to one machine
+### Risk 2. The golden suite may be tied to one machine — measured, and it is not
 
-**Mechanism.** kvadrant records on macOS, and the reason given is a calibration suite of its own
-(§1.2a). If shashki's fixtures turn out to be host-dependent too, the golden suite can only run on
-the mac — and this stack's builds otherwise run on the Linux box, so a check that cannot run there
+**Mechanism, as it stood.** kvadrant records on macOS, and the reason given is a calibration suite of
+its own (§1.2a). If shashki's fixtures turned out host-dependent too, the golden suite could only run
+on the mac — and this stack's builds otherwise run on the Linux box, so a check that cannot run there
 is a check that runs rarely.
 
-**Mitigation.** Measure rather than inherit: record one text-heavy fixture (`DriverOffer` — 54 sp
-figures, tabular numerals, a ruble sign) on both hosts and diff. If they match, the suite is
-portable and `verifyOnCheck` goes on. If they do not, the honest arrangement is that goldens are a
-mac-only gate and CI says so, rather than a Linux job that silently re-records.
+**Measured on 2026-09-01, and the answer is that they are portable.** `skeleton_themes` — 390 × 844,
+text-heavy, `$ 249` at 32 sp on a filled accent surface — was recorded on macOS and verified
+unchanged on Ubuntu under WSL2, on the same commit, with the ramp pinned through
+`ViddikPlatformTextStyle` (D8). `viddikVerify` passes there; the golden's md5 is identical before and
+after, so nothing was quietly re-recorded.
+
+**The number that makes the pass mean something is the failure.** A pass on its own says nothing —
+a check that cannot fail passes everywhere. With one extra character in a label the same comparison
+on the same machine reports **627 of 329 160 pixels differing, 0.19 % against a 0.05 % tolerance**,
+and passes again when the character is removed; both runs under `--rerun-tasks`, so neither was
+served from the build cache.
+
+**Two earlier attempts at that control proved nothing and looked like proof**, which is worth more
+than the result:
+
+* the first read `$?` after a pipe, so it reported the exit status of `tail` rather than of Gradle —
+  a green number produced by a command that cannot fail;
+* the second edited the fixture on the remote machine, where the one-way file sync reverted the edit
+  before Kotlin compiled it. The task genuinely ran, genuinely passed, and genuinely tested the
+  unmodified fixture. The sync had to be paused for the control to be a control.
+
+**Consequence.** `verifyOnCheck = true` in `:shared-ui`, so the goldens are inside `./gradlew check`
+rather than beside it, and the same gate runs on the mac, on the Linux box and on CI's
+`ubuntu-latest` — the second of which is now a host the claim has been tested against.
 
 ### Risk 3. Half the stack is a snapshot
 
