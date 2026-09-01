@@ -39,12 +39,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (15)
+## Open (14)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
-| [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[ ]` | ClassTile and OfferCard on kvadrant primitives | P0 | M | B-03, B-21 |
 | [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
 | [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11, B-20 |
 | [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[ ]` | Matching: the geo-index, the candidate query and the driver simulator | P0 | L | - |
@@ -59,12 +58,13 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (8)
+## Closed (9)
 
 **Remove the unknowns**
 
 - [B-02](docs/backlog/B-02-measure-golden-host-independence.md) `[x]` - Measure whether shashki's goldens are host-independent
 - [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[x]` - The foundation values: shashki's ramp, spacing, ink and golden pin
+- [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[x]` - ClassTile and OfferCard on kvadrant primitives
 - [B-15](docs/backlog/B-15-answer-the-kits-open-questions.md) `[x]` - Settle the kit's 4/3 spacing: as drawn, as converted, or fitted
 - [B-18](docs/backlog/B-18-kvadrant-overridable-on-accent.md) `[x]` - kvadrant-ui: onAccent becomes overridable, keeping the computed value as the default
 - [B-19](docs/backlog/B-19-kvadrant-app-bar-tokens.md) `[x]` - kvadrant-ui: the app bar's dimensions become theme tokens

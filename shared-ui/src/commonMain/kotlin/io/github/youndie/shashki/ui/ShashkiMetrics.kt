@@ -58,5 +58,7 @@ private val GAP = 12.dp
 // 36 dp visual, so a kit row reading "48 dp circle" may be naming the target or the ring, and those
 // are different pictures. Nothing in this product draws an app bar yet.
 //
-// So it waits for the first screen that does — B-04 — where it can be settled against the artboard
-// instead of between two readings of a table.
+// **Settled by B-04's OfferCard, and the library's values stand.** The kit's own markup draws the
+// decline ring at `48 × scale(.75)` — a 36 dp visual inside a 48 dp target — which is exactly what
+// `KvadrantAppBarButton` already does. The kit's "48 dp circle" in section 04 was naming the touch
+// target. So the five `appBar*` fields keep the library's numbers, and `OfferCard` reads them.
