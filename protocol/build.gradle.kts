@@ -6,13 +6,15 @@ plugins {
 }
 
 kotlin {
-    // **One target, and that is the point of the comment.** The server reads this on the JVM. The
-    // clients will read it in a browser, and which browser target that is — `wasmJs` or `js` — is
-    // exactly what B-01 has not decided: research §1.3 found the map library publishes no `wasmJs`
-    // variant, and two of this stack's own libraries publish no `js` one. Declaring both now would
-    // put a target in the build that nothing runs on, which is the failure kvadrant-ui's own D14
-    // exists to prevent.
+    // **Two targets, and B-01 is why there are exactly two.** The server reads this on the JVM; the
+    // clients read it in a browser, and D1 settled which browser that is — `wasmJs`, because it is
+    // the only one the whole stack can reach at once (research §2 D1). The `js` target that the map
+    // library does publish is not added: nothing here would run on it, which is the failure
+    // kvadrant-ui's own D14 exists to prevent.
     jvm()
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs { browser() }
 
     sourceSets {
         commonMain.dependencies {

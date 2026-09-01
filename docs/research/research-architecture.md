@@ -337,6 +337,52 @@ This is the finding that moves the plan, so it is the one with the most addresse
 | The newest non-prerelease Compose Multiplatform is **1.12.0, published 2026-08-25** — one week before this document | `https://api.github.com/repos/JetBrains/compose-multiplatform/releases` |
 | maplibre-compose itself builds on Kotlin 2.4.10 / Compose 1.12.0 / maplibre-gl-js 6.6.0 — the same line as the rest of the stack | `https://raw.githubusercontent.com/maplibre/maplibre-compose/main/gradle/libs.versions.toml` |
 
+**Consequence 1.3a0 — checked a second way, on 2026-09-02, and the absence is older than the
+project.** klibs.io reports variants for one version; the Maven Central directory listing reports
+every artefact ever published under a group, so it answers a different question — has the map *ever*
+crossed to wasm, under any name. Both namespaces were listed:
+
+| Fact | Where verified |
+|---|---|
+| `org.maplibre.compose` publishes `maplibre-compose-js` at 0.11.0 … 0.15.0 and **no `maplibre-compose-wasm-js` at any version** | `https://repo1.maven.org/maven2/org/maplibre/compose/` |
+| The predecessor namespace `dev.sargunv.maplibre-compose` likewise has `maplibre-compose-js` and no `maplibre-compose-wasm-js` — **but it does publish `maplibre-compose-expressions-wasm-js` and `compose-html-interop-wasm-js`** | `https://repo1.maven.org/maven2/dev/sargunv/maplibre-compose/` |
+
+The second row is the informative one. The parts of this library that *have* shipped for Kotlin/Wasm
+are the expression compiler, which is pure Kotlin and touches no renderer, and the DOM-interop
+helper. What never crossed is the map. That is not a release that has not happened yet; it is the
+same boundary #209 describes from the inside, visible from the outside.
+
+**Consequence 1.3a1 — the `js` map is a well-behaved Compose element, and the earlier reading of
+route 3 as a category was wrong about that.** §1.8c read WorldWind and found a full-window WebGL
+canvas inserted behind Compose, and D1's route 3 was written as if that were what "the map on the
+web" means. It is what WorldWind does. It is **not** what maplibre-compose does on `js`:
+
+| Fact | Where verified |
+|---|---|
+| The browser map draws into an ordinary Compose `Canvas(modifier = modifier.onSizeChanged { … })`, and the GL frame is blitted **into Compose's own canvas** — `drawIntoCanvas { canvas.skiaCanvas.drawImageRect(image = target.image, …) }` | `lib/maplibre-compose/src/jsMain/.../gljs/GlJsMapSurface.kt` |
+| Input arrives through a Compose pointer modifier — `modifier.mapInput(session, options.gestureOptions, …)` — not through DOM listeners | `.../jsMain/.../map/JsMapView.kt` |
+| Their own build file says it in one sentence: "The browser platform **composites MapLibre GL JS into the Compose scene**, so its tests need a real WebGL context" | `lib/maplibre-compose/build.gradle.kts` |
+
+So on `js` the map *is* a sized element and Compose draws over it normally. Route 3's objection is
+therefore not "the map cannot be a sized element" — that is WorldWind's problem specifically — but
+the one already in 1.3b: this stack has no `js` target and would have to grow one in two libraries.
+The distinction matters because it says which of the two things would have to change.
+
+**Consequence 1.3a2 — the `jvm` map renders through the host's GPU, reached by reflection.** Route 1
+is the one that works on released artefacts today, so what it costs was read the same way:
+
+| Fact | Where verified |
+|---|---|
+| The desktop host reaches Compose's GPU context through Skiko internals: "Compose Desktop exposes **no supported hook** for any of this, so it is read reflectively" | `.../jvmMain/.../desktop/skiko/AwtComposeMapPresentationHost.kt` KDoc |
+| The backend is chosen by operating system — `LINUX -> OPENGL`, `MACOS -> METAL`, `WINDOWS -> DIRECT3D12` | same file, `HostOperatingSystem.composeBackend` |
+| "One native runtime is loaded per test process; `maplibre.desktop.backend` selects which, and **a CI matrix adds processes for additional applicable backends**" | `lib/maplibre-compose/build.gradle.kts` |
+
+The last row is the one that decides something here. A golden in this project is one image compared
+byte-for-byte on the mac, on the Linux box and on CI — that is what B-02 measured and what
+`verifyOnCheck = true` rests on. A map rendered by Metal on one host and OpenGL on another is not
+that image, and the library's own answer to the difference is a process per backend, which is the
+opposite of one golden.
+
 **Consequence 1.3a — the brief's map row is wrong as written.** It says the official wrapper has "a
 wasm target (on the web, bindings to maplibre-gl-js)". The bindings exist; the target is `js`. On
 released artefacts there is no way to put this library into a Kotlin/Wasm bundle.
@@ -720,6 +766,51 @@ compositing hole, the pmtiles protocol handler, and a map that can never be in a
 closes all four and opens one: how much of a tile pipeline we are willing to own (§1.8b). Given that
 this stack already owns its broker, its object store, its identity provider, its log store and its
 crash reporter, that question has a precedent — but a precedent is not a measurement.
+
+**Decided, 2026-09-02: route 4. The map is drawn in Compose, from the tiles, by this project.**
+
+The measurement that decided it is a compilation and a pair of images, in that order.
+
+**The compilation.** The brief specifies both clients as Kotlin/Wasm. `:shared-ui` and `:protocol`
+now declare `wasmJs { browser() }`, and the whole map package — the protobuf reader, the MVT decoder,
+`TileRenderer`, `drawTextOnPath`, `CanvasMapSurface` — compiles for it, together with
+`RiderClassPicker`, the screen that consumes it. Nothing was added to make that happen and nothing
+was moved to a platform source set: route 4 is Compose and arithmetic, so it goes where Compose goes.
+This is checked rather than stated — `check` depends on `compileKotlinWasmJs`, and the control is
+that one `java.io.File` in `Mvt.kt` fails the build with `Unresolved reference 'java'`. The day this
+route reaches for something only a JVM has, the build says so and this decision reopens.
+
+None of the other three has that property, and each fails it differently:
+
+| Route | What it would take to put a map in a Kotlin/Wasm bundle |
+|---|---|
+| 1 — desktop first | Not a bundle at all. The demo becomes a binary rather than a URL, which is the thing the brief asked for by name |
+| 2 — wait for the wrapper | There is no artefact to wait *with*: no `maplibre-compose-wasm-js` at any version in either namespace (§1.3a0), and the maintainer's own note is that the JS externals do not trivially port |
+| 3 — Kotlin/JS instead | A `js` target in `kvadrant-core` and in `kompot-client`, then re-verifying both. The map itself would behave — §1.3a1 corrected that — but the price is paid in two libraries this project does not own |
+| 3b — WorldWind on wasmJs | Compiles, and is the only other thing that does. Its canvas is full-window and behind Compose by its own KDoc, so it cannot take the 360 dp the kit gives the map |
+
+**The images.** `screens_rider_class_picker` and `map_rider_class_picker_on_canvas` are the same
+screen with the same panel, differing only in what is in the map's slot. The kit gives the map 360 of
+844 dp with the class panel below it, so on this screen the map is a *sized element* — and route 4's
+is a composable like any other, inside the modifier's bounds, in a golden that verifies unchanged on
+Linux. Routes 1 and 3b cannot produce that image: one renders through the host's GPU backend
+(§1.3a2), the other outside Compose's surface entirely.
+
+**What route 4 costs, stated plainly, because it is the expensive one.** Everything a map library
+would have given us is now a line item: gestures and camera, tile fetch and cache, the style
+interpreter (§1.8 priced it at 13 layers, seven paint and seven layout properties, seven operators,
+no sprites and no icons), label collision, and every zoom level beyond the one the prototype draws.
+The prototype transcribes the styles' filters and widths rather than reading the documents, and that
+gap is real work, not a detail. Against it: §1.8a's four items close — glyph PBFs, the compositing
+hole, the pmtiles protocol handler, and a map that can never appear in a golden — and owning the
+decode has already paid once, in [B-24](../backlog/B-24-motorways-carry-ref-not-name.md), a defect in
+the styles that only reading the data could find.
+
+**What is deliberately not decided.** Route 1 stays useful as a fidelity reference — when our tile
+looks wrong, the way to find out is to render the same tile with the real library on desktop — and
+that costs nothing, because it never enters the shipped client. And route 4's renderer is a candidate
+to leave this repository later, on the same argument as every other library in this portfolio
+(§1.9); it stays here until a second product wants it.
 
 ### D2. kvadrant-ui is the base and it is pulled towards the kit
 

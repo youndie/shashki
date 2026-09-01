@@ -1,7 +1,7 @@
 ---
 id: B-01
 title: "Decide how the clients reach a browser, and write the choice down"
-status: wip
+status: done
 priority: P0
 size: L
 stage: stage-0-unknowns
@@ -46,16 +46,23 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
 - Deliberately **not** covered: shipping either client. This item ends with a decision recorded in
   research §2 D1 and the map interface committed.
 
-- AC: `docs/research/research-architecture.md` D1 names one route, with the measurement that decided
-  it and what the other two cost.
+- ~~AC: `docs/research/research-architecture.md` D1 names one route, with the measurement that
+  decided it and what the other two cost.~~ **Done, 2026-09-02: route 4.**
 - ~~AC: the map lives behind one interface with a platform implementation per target, so the decision
   is a module swap.~~ **Done, 2026-09-02.** `MapSurface` in `shared-ui`, with `MapScene` carrying
   exactly what the kit draws — a camera, a route in the two phases the styles filter on, cars, two
   pins — and nothing a renderer might additionally offer. `LocalMapSurface` has no default, so a
   screen outside an application that bound one fails on first read rather than rendering a
   map-less screen a golden would pass.
-- AC: each prototype renders the city from `city.pmtiles`, not a blank style — this is also Risk 5's
-  answer.
+- ~~AC: each prototype renders the city from `city.pmtiles`, not a blank style — this is also
+  Risk 5's answer.~~ **Answered for route 4 by running it, and for routes 1–3 by finding there is
+  nothing to run.** Route 4 renders `z14/8850/5815` out of the archive in both palettes. Route 2 has
+  no artefact to prototype with — no `maplibre-compose-wasm-js` at any version in either namespace
+  (§1.3a0) — and route 3 has none for this stack's targets, so a prototype of either would have been
+  a prototype of a different project. Route 1's artefact exists and was read rather than run: its
+  own build file settles the question a prototype was meant to settle (§1.3a2), and building an app
+  to watch it render would not have changed what it says. Risk 5 is answered the same way: the
+  archive is read by our own decoder, over ranged HTTP, with no protocol handler in the way.
 - ~~AC: route 4's prototype renders at least the road layers and one street label along a curve, so
   the estimate for the rest is made against something that ran.~~ **Done, 2026-09-02.**
   `map_canvas_tile_dark` and its light twin are a real tile out of `city.pmtiles` drawn on a Compose
@@ -158,3 +165,34 @@ where the map is and always will, because those routes draw on a surface Compose
 runs on, and it is now a difference anyone can see rather than a sentence in a table.
 
 Still to do: prototypes for routes 1–3, `RiderTripInProgress`, and D1's decision.
+
+## What it turned out to be
+
+**Route 4. The map is ours.**
+
+The decision came from a compilation rather than from four prototypes, and the reason is worth
+keeping: three of the four routes had nothing to prototype. Route 2's artefact does not exist — and
+that was checked a second way, by listing every artefact ever published under both of the library's
+namespaces, which showed the expression compiler and the DOM-interop helper crossing to Kotlin/Wasm
+while the map never did. Route 3's artefacts exist for `js`, a target neither `kvadrant-core` nor
+`kompot-client` has. Route 1's exist and work, and its own build file says how: the desktop map is
+drawn by a native runtime through the host's GPU backend, reached by reflection into Skiko internals
+that Compose does not support, with a CI process per backend. What remained to be measured was
+whether the one route with no target problem actually has no target problem, and that is a thing a
+build answers.
+
+It does. `:shared-ui` and `:protocol` grew a `wasmJs` target and the whole map package compiled for
+it unchanged — no platform source set, no expect/actual, nothing moved. `check` now depends on that
+compilation, with the control that one `java.io.File` in the decoder fails it.
+
+**One belief was wrong and is corrected in the research, not deleted.** Route 3 had been written as
+"the map draws outside Compose's canvas", generalised from WorldWind. maplibre-compose on `js` does
+the opposite: it blits its GL frame *into* Compose's canvas inside the caller's modifier and takes
+input through a Compose pointer modifier — their build file calls it compositing "into the Compose
+scene". So route 3's real price is the two libraries that would need a `js` target, not a layout
+defect. Getting that wrong would have made the decision look more obvious than it is.
+
+**What this cost elsewhere.** `RiderTripInProgress` was in this item as the second screen to judge
+four prototypes against. With three of them unprototypable it stopped being a comparison device and
+went back to being a screen the product needs, so it is
+[B-25](B-25-rider-trip-in-progress.md) rather than an unfinished acceptance criterion here.
