@@ -70,16 +70,39 @@ Verified against the working copy of `youndie/kvadrant-ui` at 0.1.0.
 | The font stack is bundled, not loaded by the consumer: Selawik at W200/300/400/600/700 for Latin, a Source Sans 3 variable for Cyrillic at compensated weights (`CYRILLIC_LIGHT_WEIGHT = 330`, `SEMILIGHT = 370`, `NORMAL = 420`, `SEMIBOLD = 640`, `BOLD = 690`) | `.../foundation/KvadrantFonts.kt`, `.../foundation/KvadrantText.kt`, `kvadrant-core/src/commonMain/composeResources/font/` |
 | `KvadrantIcons` exposes 41 public entries, against the kit's "40 stock icons we do not touch" | `.../icons/KvadrantIcons.kt` |
 
-**Consequence 1.1a — the accent-ink rule in the kit is the opposite of the library's.** The kit
-specifies black ink on both accents. `KvadrantColors.onAccent` is `contrastOn(accent)`, and
-`contrastOn` is `if (background.luminance() >= 0.5f) Black else White`. Cyan's luminance is 0.312
-and Amber's is 0.447, so **both resolve to white**. This is not an oversight in the library: its own
-KDoc says the threshold "flips only `Yellow` in practice; `Lime` and `Amber` stay on white text at
-roughly 2.2:1, which is the authentic result and fails WCAG AA. That trade is deliberate — see D7."
-Every filled accent surface in the kit — the selected `ClassTile`, the driver's online tile, the
-accept button — is therefore a place where the computed `onAccent` gives the wrong answer. It is not
-overridable today either (§1.1f), so this is a change to the library rather than a call site we
-avoid. See [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+**Consequence 1.1a — the kit departs from Metro here, deliberately, and the library has no opt-in
+for that departure.** The kit specifies black ink on both accents. `KvadrantColors.onAccent` is
+`contrastOn(accent)`, and `contrastOn` is `if (background.luminance() >= 0.5f) Black else White`.
+Cyan's luminance is 0.312 and Amber's 0.447, so **both resolve to white**.
+
+| Accent | luminance | white ink | black ink |
+|---|---|---|---|
+| Cyan `#1BA1E2` | 0.312 | 2.90:1 — what `contrastOn` returns | 7.24:1 |
+| Amber `#F0A30A` | 0.447 | 2.11:1 — what `contrastOn` returns | 9.94:1 |
+
+**Correction, made while writing this section.** An earlier draft presented the left column as the
+library choosing the worse of two available inks, on the arithmetic that the contrast-optimal
+threshold is `L > 0.179` rather than 0.5 — and treated the 0.5 threshold as a candidate defect worth
+asking about. **Metro put white on cyan.** The threshold is a transcription, `contrastOn` is faithful,
+and there is no defect to report. The arithmetic was right and the conclusion drawn from it was
+wrong: a library whose premise is fidelity is not improved by a better number.
+
+The same draft also claimed that `KvadrantColors.accessible()` — which reaches WCAG AA by walking the
+accent towards black or white — rescues a set that flipping the ink would have rescued without moving
+the colour. That does not hold either, and it is worth saying why, because the mistake is easy to
+repeat: contrast is symmetric, so "cyan at 2.90:1" is the same number for *white ink on a cyan
+surface* and for *cyan ink on a white page*. Those are two different problems with one ratio, and
+flipping the ink only addresses the first. Which of them `accessible()` targets was not verified, and
+nothing here depends on the answer.
+
+**What survives is narrower and does not need anybody's opinion.** shashki is not reproducing Metro;
+it is a product whose kit made the other choice, on a domain where a fare on an accent tile has to be
+legible. The library's own accessibility policy is exactly this shape — canonical visual by default,
+higher-contrast variants opt-in (its B-11, its research D7) — and it has one opt-in lever,
+`accessible()`, which moves the accent. There is no lever that keeps the accent at the kit's hex and
+changes the ink, because `onAccent` is a computed property with no parameter behind it (§1.1f). That
+is a missing opt-in under a policy the library already states, not a disagreement with it. See
+[D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
 
 **Consequence 1.1b — two of the three semantic colours already exist.** `ShashkiColors.negative` and
 `.positive` in the handoff are `#E51400` and `#60A917`, which are `KvadrantAccents.Red` and
@@ -135,7 +158,16 @@ one to one:
 4/3 is 1 / 0.75 — the kit's own header states `px → dp = 0.75` and then adds "nothing on this row is
 a decision". Two readings fit: the conversion was skipped on those five rows, so they are Metro
 pixels labelled dp; or the layout is deliberately scaled by 4/3 while the type ramp is left alone.
-They are different work, and only the designer can say which.
+
+**The token source settles it as far as evidence can.** kvadrant generates its tokens from
+`reference/metro-compose-brief/references/metro-tokens.json`, and every one of the kit's five numbers
+is the raw pixel value in that file: `pageMarginPx` 12, tile `gapPx` 12, `appBarIconPx` 48,
+`appBarGlyphPx` 26 — and the app bar's ring is 1.5 px in the component's own comment. Meanwhile the
+kit's type ramp matches the *converted* column exactly, 14 / 15 / 17 / 19 / 24 / 32 / 54 dp. A
+deliberate 4/3 scale-up that happens to land on the px column for spacing while leaving type at the
+dp column is not a story that holds together; a skipped `× 0.75` on five rows is. It is still the
+designer's call to confirm, and [B-15](../backlog/B-15-answer-the-kits-open-questions.md) is where
+that happens — but the reading to confirm is now named rather than balanced.
 
 **The scaling knob cannot deliver either reading.** `scaledToWidth(390.dp)` fits the row at
 390 / 342 = 1.1404 and gives a 10.26 dp margin, not 12; a 12 dp margin implies a 456 dp row. And the
