@@ -311,6 +311,16 @@ plate is European, in Latin letters**, so it is one run in one font.
 Latin run. This was worth checking rather than assuming, because it is the same class of defect as
 the two above and the same silence.
 
+**Amended 2026-09-02, against the city rather than against a guess at it.**
+[B-06](../backlog/B-06-city-extract-and-tiles.md) collected the alphabet of all **3 629 distinct
+street names** in the Ljubljana extract, not a plausible sample of diacritics. It is
+`ć Č č ř Š š Ž ž` plus an en dash — `ř` was not on the list above and arrives with *Dvořákova*, and
+`ž Ž` appear in upper case as well as lower. All of them are in `selawik_light.ttf` and
+`selawik_semilight.ttf`, the two faces the fixtures actually draw with, so the conclusion holds and
+is now measured: nothing in a Ljubljana street name falls through to a host font. The lesson is the
+list, not the verdict — a hand-written set of diacritics was short by one letter that the city uses
+eleven times.
+
 ### 1.3 The browser target — MapLibre Compose does not publish for Kotlin/Wasm
 
 This is the finding that moves the plan, so it is the one with the most addresses.
@@ -529,7 +539,9 @@ API for it. It is reachable, and on the target that matters:
 **Consequence 1.8a — this route deletes four open items rather than adding to them.** Glyph PBFs stop
 existing as a problem: a Compose renderer draws labels with the fonts kvadrant already bundles, so
 [B-06](../backlog/B-06-city-extract-and-tiles.md)'s PBF generation and the styles' interim
-`["Noto Sans Regular"]` fallback both go away. The compositing problem goes away, because there is no
+`["Noto Sans Regular"]` fallback both go away. (B-06 has since generated them anyway, 1.2 MB across
+two stacks — on route 4 that is 1.2 MB nobody serves, not work that has to be undone.) The
+compositing problem goes away, because there is no
 second canvas. The pmtiles protocol-handler question (Risk 5) goes away, because we read the archive
 ourselves over ranged HTTP. And the map becomes **screenshot-testable**: a MapLibre map is a GL
 surface or a DOM element and can never appear in a viddik golden, while a Compose-drawn map is a
@@ -874,6 +886,12 @@ has not been checked.
 **Mitigation.** It is part of the D1 spike: the spike's success criterion is a rendered city from
 `city.pmtiles`, not a rendered blank style.
 
+**Half of it is now off the table (2026-09-02).** [B-06](../backlog/B-06-city-extract-and-tiles.md)
+drew both style documents from `city.pmtiles` through `pmtiles.Protocol` in a browser, so the
+archive, the protocol handler and the glyph endpoint are known to work together and the spike
+starts from a picture rather than from a blank. What is still unchecked is the half this risk is
+actually about: reaching `maplibregl.addProtocol` **from Kotlin/Wasm**. B-06's page is JavaScript.
+
 **This risk belongs to routes 1–3 only.** Route 4 (§1.8) reads the archive itself over ranged HTTP,
 so there is no protocol handler and no JavaScript call — one of the four items that route closes.
 
@@ -920,6 +938,12 @@ roughly 26 km, which is the scale the kit's own fixture already assumes ("Airpor
 rather than a finding, and [B-06](../backlog/B-06-city-extract-and-tiles.md) records what would
 overturn it: the OSM extract and the pmtiles archive turning out large, or the GraphHopper import
 turning out slow.
+
+**Settled 2026-09-02: nothing overturned it, and the numbers are in B-06.** A 41 MB extract, a
+**16.6 MiB** `city.pmtiles` whose biggest tile is 124 kB gzipped, and a GraphHopper import of
+**under four seconds** on a 98 566-node graph. The proposal's own arithmetic was the one thing that
+missed: the airport is at **26.3 km · 20 min** by road, not the kit's 18.4 km · 26 min, so the
+fixtures took the router's numbers. The city is no longer a proposal.
 
 ### Open question 4. Whether `shashki-api` is published
 

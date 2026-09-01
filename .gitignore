@@ -12,3 +12,11 @@ local.properties
 # Session artefacts of the agent, including its git worktrees under .claude/worktrees/.
 # Those are checkouts of this repository; committing the path would embed a gitlink to one.
 .claude/
+
+# Map artefacts: map/city_tiles.sh builds them, B-07 carries them to bochka, git never sees them.
+# The preview is fed by copying them in beside the page.
+map/preview/city.pmtiles
+map/preview/glyphs/
+map/preview/route.geojson
+map/preview/shashki-map-*.json
+map/preview/*.png

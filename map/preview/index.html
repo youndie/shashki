@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+  The acceptance for B-06: both style documents, drawn by MapLibre against the archive
+  `map/city_tiles.sh` produces. It is not a golden and never will be — a GL surface cannot go into
+  a viddik snapshot (research §1.8a) — so it is a picture a person looks at.
+
+    scp -P 2222 youndie@127.0.0.1:shashki-city/{city.pmtiles,route.geojson} map/preview/
+    scp -r -P 2222 youndie@127.0.0.1:shashki-city/glyphs map/preview/
+    cp map/shashki-map-*.json map/preview/
+    python3 map/preview/serve.py 8731
+    open 'http://127.0.0.1:8731/index.html?style=dark&zoom=15'
+
+  ?style=dark|light · ?zoom=15 · ?center=lon,lat. The page posts its own canvas back to the server
+  as <style>-z<zoom>.png when the map goes idle, and window.__shoot('name') repeats that on demand:
+  a hidden browser pane never composites, so a screenshot taken from outside comes back black while
+  the map is fully drawn inside.
+-->
+<meta charset="utf-8">
+<title>shashki map style check</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<style>html,body,#map{margin:0;height:100%;width:100%}</style>
+<div id="map"></div>
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const which = params.get('style') || 'dark';
+const zoom = parseFloat(params.get('zoom') || '15');
+const center = (params.get('center') || '14.5041,46.0507').split(',').map(Number);
+window.__errors = [];
+maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+
+const save = (canvas, name) => new Promise(resolve => {
+  canvas.toBlob(blob => {
+    fetch('/save?name=' + name + '.png', { method: 'POST', body: blob }).then(() => resolve(blob.size));
+  }, 'image/png');
+});
+
+fetch('shashki-map-' + which + '.json').then(r => r.json()).then(async style => {
+  // The style ships the addresses B-07 will serve it from; the preview points the same document at
+  // whatever this server has on disk.
+  style.sources.openmaptiles.url = 'pmtiles://' + location.origin + '/city.pmtiles';
+  style.glyphs = location.origin + '/glyphs/{fontstack}/{range}.pbf';
+  style.sources.route.data = await fetch('route.geojson')
+    .then(r => (r.ok ? r.json() : { type: 'FeatureCollection', features: [] }))
+    .catch(() => ({ type: 'FeatureCollection', features: [] }));
+
+  // preserveDrawingBuffer, because the canvas is read back after the frame rather than during it.
+  const map = new maplibregl.Map({
+    container: 'map', style, center, zoom,
+    attributionControl: false, fadeDuration: 0, preserveDrawingBuffer: true,
+  });
+  map.on('error', e => window.__errors.push(String((e && e.error && e.error.message) || e)));
+  map.on('idle', async () => {
+    if (window.__idle) return;
+    window.__idle = true;
+    await save(map.getCanvas(), which + '-z' + Math.round(zoom));
+    window.__saved = true;
+  });
+  window.__map = map;
+  window.__shoot = name => { map.redraw(); return save(map.getCanvas(), name || which + '-z' + Math.round(zoom)); };
+});
+</script>

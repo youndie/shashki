@@ -44,7 +44,7 @@ internal fun ShashkiTypeRamp() {
             KvadrantText("19 / 300", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
             KvadrantText("trips", style = type.tileLabel)
             KvadrantText("17 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
-            KvadrantText("Slovenska cesta 14", style = type.rowEmphasis)
+            KvadrantText("Miklošičeva cesta 4", style = type.rowEmphasis)
             KvadrantText("15 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
             KvadrantText("comfort · 6 min · Skoda Octavia", style = type.body)
             KvadrantText("14 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))

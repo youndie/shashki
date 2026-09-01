@@ -1,0 +1,175 @@
+{
+  "version": 8,
+  "name": "shashki-light",
+  "metadata": {
+    "shashki:source": "Shashki UI Kit · section 07 map style · light palette (secondary)",
+    "shashki:accent": "#1BA1E2 rider — swap route-ahead line-color and car fills to #F0A30A in the driver app",
+    "shashki:fonts": "glyph PBFs must be generated from Source Sans 3 (maplibre font-maker); until then swap text-font to ['Noto Sans Regular']",
+    "shashki:cars": "car markers are a runtime symbol layer over the 'cars' geojson source; sprite not included here",
+    "shashki:rule": "roads are the only thing whiter than the land; nothing saturated, POI icons off at every zoom"
+  },
+  "sources": {
+    "openmaptiles": {
+      "type": "vector",
+      "url": "pmtiles://https://s3.kotlin.website/tiles/city.pmtiles"
+    },
+    "route": {
+      "type": "geojson",
+      "data": { "type": "FeatureCollection", "features": [] }
+    },
+    "cars": {
+      "type": "geojson",
+      "data": { "type": "FeatureCollection", "features": [] }
+    }
+  },
+  "glyphs": "https://s3.kotlin.website/tiles/glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#EFEFEF" }
+    },
+    {
+      "id": "park",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "park",
+      "minzoom": 12,
+      "paint": { "fill-color": "#E4EBE2" }
+    },
+    {
+      "id": "landcover-green",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "minzoom": 12,
+      "filter": ["in", "class", "grass", "wood", "forest"],
+      "paint": { "fill-color": "#E4EBE2" }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "paint": { "fill-color": "#DCE4E8" }
+    },
+    {
+      "id": "building",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "building",
+      "minzoom": 15,
+      "paint": { "fill-color": "#E2E2E2" }
+    },
+    {
+      "id": "rail",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 13,
+      "filter": ["==", "class", "rail"],
+      "paint": {
+        "line-color": "#CFCFCF",
+        "line-width": 1.5,
+        "line-dasharray": [4, 3.3]
+      }
+    },
+    {
+      "id": "road-residential",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 13,
+      "filter": ["in", "class", "minor", "residential", "service", "unclassified", "living_street"],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#F7F7F7",
+        "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 13, 1.5, 14, 3, 18, 16]
+      }
+    },
+    {
+      "id": "road-primary",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 10,
+      "filter": ["in", "class", "primary", "secondary", "tertiary"],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#FAFAFA",
+        "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 10, 1, 14, 6, 18, 26]
+      }
+    },
+    {
+      "id": "road-motorway",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 6,
+      "filter": ["in", "class", "motorway", "trunk"],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#FFFFFF",
+        "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 6, 1, 14, 10, 18, 40]
+      }
+    },
+    {
+      "id": "route-travelled",
+      "type": "line",
+      "source": "route",
+      "filter": ["==", ["get", "phase"], "travelled"],
+      "layout": { "line-cap": "butt", "line-join": "round" },
+      "paint": {
+        "line-color": "rgba(0,0,0,0.25)",
+        "line-width": 6
+      }
+    },
+    {
+      "id": "route-ahead",
+      "type": "line",
+      "source": "route",
+      "filter": ["==", ["get", "phase"], "ahead"],
+      "layout": { "line-cap": "butt", "line-join": "round" },
+      "paint": {
+        "line-color": "#1BA1E2",
+        "line-width": 6
+      }
+    },
+    {
+      "id": "label-street",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "transportation_name",
+      "minzoom": 14,
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": ["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"]]],
+        "text-font": ["Source Sans 3 Light"],
+        "text-size": 11,
+        "text-letter-spacing": 0
+      },
+      "paint": {
+        "text-color": "rgba(0,0,0,0.65)",
+        "text-halo-width": 0
+      }
+    },
+    {
+      "id": "label-place",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "minzoom": 8,
+      "filter": ["in", "class", "city", "town", "village", "suburb", "neighbourhood"],
+      "layout": {
+        "text-field": ["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"]]],
+        "text-font": ["Source Sans 3 SemiLight"],
+        "text-size": 14,
+        "text-letter-spacing": 0.04
+      },
+      "paint": {
+        "text-color": "rgba(0,0,0,0.75)",
+        "text-halo-width": 0
+      }
+    }
+  ]
+}

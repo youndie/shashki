@@ -74,7 +74,7 @@ private fun StockComponents(dark: Boolean) {
             // The kit's TripRow, twice: a completed trip and a cancelled one. ListItem reads
             // `normal` for the title and `subtle` for the subtitle — the projection's body and meta.
             KvadrantListItem(
-                title = "Slovenska cesta 14 · Airport, terminal B",
+                title = "Slovenska cesta 15 · Airport, terminal B",
                 subtitle = "28 aug · 19:40 · comfort",
             )
             KvadrantListItem(

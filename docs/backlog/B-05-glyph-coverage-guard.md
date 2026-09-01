@@ -28,6 +28,12 @@ host font. The answer was to price in `$`, which all five faces cover — along 
 - The licence plate was the same trap inverted — the kit's `А 123 ВС 177` was Cyrillic А/В/С — and is
   resolved by the plate becoming European Latin (§1.2d). One run, one font.
 
+- The fixtures now carry the city's diacritics rather than avoiding them:
+  [B-06](B-06-city-extract-and-tiles.md) put `Miklošičeva cesta 4` into the type ramp and checked
+  the alphabet of all 3 629 street names in the extract — `ć Č č ř Š š Ž ž` and an en dash — against
+  the two faces the fixtures draw with. All covered. That is the same check this item automates, run
+  once by hand over one input; a guard is what makes it run over the next string too.
+
 - AC: a helper every fixture calls, and one deliberately broken fixture proving it fails.
 - Anchors: `viddik/README.md`,
   `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/foundation/KvadrantText.kt`

@@ -19,7 +19,10 @@ the saga's first phase, where the quote is computed — is its first consumer.
 - **Embedded, on the same extract as the tiles.** One OSM file from [B-06](B-06-city-extract-and-tiles.md)
   produces both the pmtiles archive and the routing graph, so the road the car is drawn on is the
   road it was routed on. The import runs at server start from a cached graph directory; the first
-  start pays the import, the rest do not.
+  start pays the import, the rest do not. B-06 measured what that first start costs on this city:
+  **under four seconds** for 98 566 nodes and 110 853 edges, 13.7 MB of graph on disk, GraphHopper
+  11.0 with the stock car profile — small enough that a cold container is not a reason to keep the
+  graph directory anywhere clever.
 - **The route is a protocol type, not a GraphHopper type.** The server returns a polyline, a
   distance and a duration; the client's map interface (B-01) draws whatever polyline it is given.
   Nothing from `com.graphhopper` crosses the module boundary, so the router can be replaced without

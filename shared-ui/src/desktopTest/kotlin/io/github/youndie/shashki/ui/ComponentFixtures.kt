@@ -46,6 +46,10 @@ internal fun ClassTiles() {
  * The kit's OfferCard at 09 of 15 — the driver's theme, full bleed, no map behind it. The bar is
  * drawn at 9/15 rather than the kit's illustrative 64 %, because the bar and the number are one
  * value and a golden that showed them disagreeing would be recording a bug as a reference.
+ *
+ * The address and both distances are the city's, not invented: Slovenska cesta 15 is an address in
+ * the extract (14 is not), and 26.3 km · 20 min is what GraphHopper answers for it to Brnik
+ * terminal B on the graph B-06 imports.
  */
 @ViddikScreenshot(name = "offer card", group = "components", width = 390, height = 844)
 @Composable
@@ -58,10 +62,10 @@ internal fun Offer() {
                 classAndPayment = "comfort · card",
                 secondsLeft = 9,
                 secondsTotal = 15,
-                pickup = "Slovenska cesta 14",
-                pickupMeta = "2.1 km · 4 min from you",
+                pickup = "Slovenska cesta 15",
+                pickupMeta = "1.8 km · 3 min from you",
                 dropoff = "Airport, terminal B",
-                dropoffMeta = "18.4 km · 26 min",
+                dropoffMeta = "26.3 km · 20 min",
                 onAccept = {},
                 onDecline = {},
             )
@@ -88,10 +92,10 @@ internal fun OfferCountdown() {
                     classAndPayment = "comfort · card",
                     secondsLeft = seconds,
                     secondsTotal = 15,
-                    pickup = "Slovenska cesta 14",
-                    pickupMeta = "2.1 km · 4 min from you",
+                    pickup = "Slovenska cesta 15",
+                    pickupMeta = "1.8 km · 3 min from you",
                     dropoff = "Airport, terminal B",
-                    dropoffMeta = "18.4 km · 26 min",
+                    dropoffMeta = "26.3 km · 20 min",
                     onAccept = {},
                     onDecline = {},
                 )
