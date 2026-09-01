@@ -43,7 +43,7 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
+| [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[~]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
 | [B-09](docs/backlog/B-09-browser-side-pkce.md) `[ ]` | Authorization code with PKCE from the browser is shashki's code | P1 | S | - |
 | [B-13](docs/backlog/B-13-pin-every-dependency.md) `[ ]` | Every dependency is a release or a pinned snapshot before the demo is published | P1 | S | - |

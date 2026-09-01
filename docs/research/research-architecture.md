@@ -611,12 +611,22 @@ Two smaller findings, recorded because they cost a run to rediscover:
 
 * **No pmtiles.** `UrlTemplateMvtTileSource` is `{z}/{x}/{y}.pbf` over HTTP. A pmtiles archive needs
   a new `MvtTileSource`, wherever the code ends up living.
-* **Do not trust that loader's KDoc.** `MvtMapboxStyleLoader`'s header lists modern
-  `["interpolate", …]` expressions as "Not yet implemented" and says it throws on them — while the
-  body calls `parseFloatInterp` for `line-width` and handles `line-dasharray`, neither of which the
-  header admits, and the release notes claim expression-DSL parity. The prose is behind the code.
-  Whether it loads shashki's two style documents is answerable in one run and has not been run; it
-  does not change the verdict above, which rests on rendering rather than on parsing.
+* **Run, and the answer is eleven of thirteen** (B-01, 2026-09-02, `earth.worldwind:worldwind:2.0.10`
+  from Maven Central — whose published variants include `wasmJs`, confirming §1.8c's target claim
+  from the artefact rather than from the README). Fed the whole document the loader throws; fed one
+  layer at a time, **every `fill` and `line` layer loads and both `symbol` layers fail.** So the
+  `interpolate` worry was unfounded — the road widths and the rail's `line-dasharray` go through, as
+  the body rather than the header predicted — and the single thing it cannot read is `text-field`,
+  which the styles write as `["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"]]]`
+  where the loader takes a plain `"{name}"`.
+
+  Two consequences. The basemap is not the obstacle it looked like: a one-property change to the
+  styles, or a patch to that one function, gets all thirteen. And **the KDoc oversells its
+  diagnostics as well as its coverage** — it promises an `MvtStyleParseException` "pointing at the
+  offending node" and delivers a bare `IllegalArgumentException: … JsonArray … is not a
+  JsonPrimitive`, which names a type and no layer, no property and no file. That is worth more than
+  the parsing result: a library that reports a configuration error without naming where it is costs
+  an hour every time somebody edits a style.
 
 **Open: where such an engine would live.** Every other self-hosted piece of this stack is its own
 library rather than a folder in the product that needed it first. A tile renderer is the same shape
@@ -817,6 +827,11 @@ variant, the upstream work is open and pinned to an unreleased Compose, and the 
 choice down, and no other workstream blocked on it. For routes 2 and 3 that means watching for a
 non-prerelease Compose Multiplatform containing merge commit
 `dca97b20a50006b78bd0e777aeafbf2749d77915`, which is the condition upstream itself states.
+
+**Checked again 2026-09-02 and nothing has moved.** The newest non-prerelease Compose Multiplatform
+is still 1.12.0 of 2026-08-25; maplibre-compose #1081 and #209 both still carry `blocked-upstream`.
+A week of no movement says nothing about the next one, and it is recorded so the following check is
+a comparison rather than a first look.
 **Route 4 removes the dependency instead of waiting on it** — a map drawn in Compose has no target
 problem on any platform — and §1.8 is what makes that a priced option rather than a hope.
 

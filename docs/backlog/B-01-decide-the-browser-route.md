@@ -1,7 +1,7 @@
 ---
 id: B-01
 title: "Decide how the clients reach a browser, and write the choice down"
-status: open
+status: wip
 priority: P0
 size: L
 stage: stage-0-unknowns
@@ -54,6 +54,28 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
   answer.
 - AC: route 4's prototype renders at least the road layers and one street label along a curve, so the
   estimate for the rest is made against something that ran.
-- AC: whether WorldWind's `MvtMapboxStyleLoader` actually loads shashki's two style documents is
-  settled by running it once — its KDoc and its body disagree (§1.8d), so neither is quotable.
+- ~~AC: whether WorldWind's `MvtMapboxStyleLoader` actually loads shashki's two style documents is
+  settled by running it once.~~ **Done, 2026-09-02: eleven of thirteen layers.** Fed the whole
+  document it throws; fed one layer at a time, every `fill` and `line` layer loads and both `symbol`
+  layers fail — on `text-field`, which the styles write as `["downcase", ["coalesce", …]]` and the
+  loader takes as a plain `"{name}"`. The `interpolate` worry was unfounded: road widths and the
+  rail's dash array go through. Research §1.8d has it, with the second finding: the failure is a bare
+  `IllegalArgumentException` naming a *type*, not the documented `MvtStyleParseException` naming the
+  offending node.
 - Anchors: `kvadrant-ui/kvadrant-core/build.gradle.kts`, `kompot/kompot-client/build.gradle.kts`
+
+## Progress
+
+**2026-09-02 — the two cheap facts first, because either could have collapsed the route space.**
+
+- The upstream gate has **not** moved: the newest non-prerelease Compose is 1.12.0 (2026-08-25) and
+  both maplibre-compose tickets still carry `blocked-upstream`. Routes 2 and 3 through the official
+  wrapper stay unavailable on released artefacts, so nothing about this choice is settled by waiting
+  another week.
+- WorldWind's style loader is settled (above). It moves route 3's cost down a little — the basemap
+  parses but for one property — and does not touch the compositing objection, which is what §1.8c
+  disqualified it on.
+
+Still to do: the four prototypes against `RiderClassPicker` and `RiderTripInProgress`, the map
+interface, and D1's written decision. `city.pmtiles` exists now (B-06), so the prototypes get the
+real archive rather than a bounding-box stand-in.
