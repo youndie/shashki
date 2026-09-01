@@ -56,6 +56,33 @@ table was written. The table stays as the record of what was read; the catalog i
 Risk 3's rule ("re-read rather than remembered") biting on day one, and the reason B-13 is a checklist
 against the catalog rather than against this section.
 
+**Re-verified 2026-09-02 against what actually resolves ([B-13](../backlog/B-13-pin-every-dependency.md)).**
+The table above is a reading of working copies; this is a reading of the dependency graph, which is a
+different thing and answers the question the table was standing in for.
+
+| Fact | Where verified |
+|---|---|
+| Across `:protocol`, `:server`, `:shared-ui` and `:auth-client` — 18 940 lines of resolved graph — there is **no `-SNAPSHOT` and no dynamic version** | `./gradlew :server:dependencies` and the same for the other three |
+| Nor on the plugin classpath: sborka 0.1.0.23, viddik 0.3.3.19, Kotlin 2.4.10, Compose 1.12.0, KSP 2.3.11, ktlint-gradle 14.2.0 | `./gradlew buildEnvironment` |
+| Of the five libraries this table records as `-SNAPSHOT` — booblik, bochka, s3kn, tracy, smtpkn — **none appears in the graph at all**. Neither do katcher, telek, kompot or shildik | same, zero matches each |
+| What does resolve from the portfolio is kvadrant-core 0.2.0, viddik 0.3.3.19 and petich 0.1.0.10, all CI-numbered publishes rather than `-SNAPSHOT` coordinates | same |
+
+So the risk this table was raising is not yet *taken*: it arrives with
+[B-07](../backlog/B-07-serve-pmtiles-from-bochka.md) (bochka),
+[B-10](../backlog/B-10-crash-reports-from-the-browser.md) (katcher) and
+[B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md) (smtpkn), each of which adds one of the snapshot
+libraries. That is a better place for it than a blanket item, and those three now carry it.
+
+**What a pinned version still does not guarantee.** `0.2.0` and `0.1.0.10` are release coordinates as
+far as Gradle is concerned, so it caches them and never asks again — but they live on a self-hosted
+`/snapshots` line, where nothing but convention stops the same coordinate being republished with
+different bytes. The mechanism that would catch it is Gradle's dependency verification metadata
+(checksums), not dependency locking, which pins coordinates this build has already pinned by hand.
+It is **not** added here: it is a second file to regenerate on every dependency change, and the
+larger exposure is anyway that the host itself is single-homed — no checksum makes a build work when
+the repository is unreachable. Both are named so the next reader weighs them rather than assuming
+the pinning covered them.
+
 ### 1.1 The design kit's foundation is not the library's foundation
 
 The handoff's §1 opens with the kit's own claim that section 03 is "foundation, **as inherited**" —
@@ -1020,6 +1047,18 @@ reference service that cannot be rebuilt is a screenshot.
 **Mitigation.** Before the demo is published, every dependency is a release or a resolved snapshot
 pinned by build metadata, and the version table in §1 is re-read rather than remembered. This is a
 backlog item, not a note.
+
+**Closed 2026-09-02 for what is built, and handed to three items for what is not.** The graph was
+re-read rather than the table: no `-SNAPSHOT` and no dynamic version anywhere across the four
+modules or the plugin classpath, and a clean checkout of `HEAD` built green on an empty Gradle cache
+(B-13). None of the five snapshot libraries is a dependency yet — the risk arrives with the items
+that add them, [B-07](../backlog/B-07-serve-pmtiles-from-bochka.md),
+[B-10](../backlog/B-10-crash-reports-from-the-browser.md) and
+[B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md), and each now carries it as an acceptance
+criterion of its own. Closing it here and nowhere else would have been the failure this risk is
+about: a mitigation recorded as done while the thing it mitigates has not happened yet. What pinning
+still does not cover — republication under the same coordinate, and a single-homed repository host —
+is in §1's amendment.
 
 ### Risk 4. smtpkn's JVM target is unclaimed
 

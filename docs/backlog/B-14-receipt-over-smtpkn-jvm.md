@@ -22,4 +22,5 @@ unclaimed part is the part that talks to a real server.
 
 - AC: a receipt is sent through smtpkn's JVM target with TLS on and arrives in Mailpit, in the
   integration suite rather than by hand.
+- AC: the smtpkn coordinate this adds is a release or a CI-numbered publish, not a `-SNAPSHOT`, and a clean checkout on an empty cache still builds. **Handed over from [B-13](B-13-pin-every-dependency.md)**, which closed Risk 3 for the graph as it stood and could not close it for a dependency nobody had added yet — smtpkn is one of the five the research recorded as pre-release.
 - Anchors: `smtp-client/build.gradle.kts`, `smtp-tls-jvm`

@@ -39,11 +39,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (10)
+## Open (9)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-13](docs/backlog/B-13-pin-every-dependency.md) `[ ]` | Every dependency is a release or a pinned snapshot before the demo is published | P1 | S | - |
 | [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[ ]` | Routes and ETA through GraphHopper embedded in the server | P1 | M | - |
 | [B-24](docs/backlog/B-24-motorways-carry-ref-not-name.md) `[ ]` | Motorways carry ref and not name, so the styles label none of them | P1 | XS | - |
 | [B-25](docs/backlog/B-25-rider-trip-in-progress.md) `[ ]` | The rider's trip-in-progress screen, on the map that D1 chose | P1 | M | - |
@@ -54,7 +53,7 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (16)
+## Closed (17)
 
 **Remove the unknowns**
 
@@ -80,6 +79,10 @@ re-prioritising one must never move its file.
 - [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[x]` - The order saga on petich, with the outbox required rather than optional
 - [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[x]` - The driver offer is a suspended saga with a deadline, not a step that waits
 - [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[x]` - Matching: the geo-index, the candidate query and the driver simulator
+
+**Everything past the core**
+
+- [B-13](docs/backlog/B-13-pin-every-dependency.md) `[x]` - Every dependency is a release or a pinned snapshot before the demo is published
 
 <!-- END INDEX -->
 

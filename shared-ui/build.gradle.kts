@@ -51,8 +51,7 @@ kotlin {
                 // The glyph-coverage guard composes every registered fixture and reads its text off
                 // the semantics tree; that is the only way to check strings that live as literals
                 // inside composables without asking each fixture to declare them.
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                implementation(compose.uiTest)
+                implementation(libs.compose.uiTest)
             }
         }
     }
@@ -77,3 +76,14 @@ viddik {
 // `check` would otherwise touch this target, and a target nobody compiles is a decision that quietly
 // stops being true. D1 rests on `map/` being buildable for Kotlin/Wasm, so `check` compiles it.
 tasks.named("check") { dependsOn(tasks.named("compileKotlinWasmJs")) }
+
+// **`ui-test` is versioned by hand, so the hand is checked.** `compose.uiTest` would have carried
+// the plugin's own version, but it is deprecated in Compose 1.12 and says so only on a clean
+// configuration — a warm cache never re-reads the script, which is why this surfaced during B-13's
+// empty-cache build and not in five hundred incremental ones. Naming the artefact directly means a
+// number that can drift from the Compose the plugin applies, and a test harness one minor behind
+// its runtime is exactly the `NoSuchMethodError` research §1.2 describes.
+check(libs.versions.composeUiTest.get() == wip.versions.composeMultiplatform.get()) {
+    "compose-uiTest is ${libs.versions.composeUiTest.get()} but Compose is " +
+        "${wip.versions.composeMultiplatform.get()}; the test harness must be on the runtime's line"
+}

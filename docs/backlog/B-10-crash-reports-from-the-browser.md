@@ -20,4 +20,5 @@ ingest is documented instead: `POST {serverUrl}/api/reports`.
 - Not covered: the server, which uses the JVM client normally.
 
 - AC: an uncaught exception in either client arrives in katcher with the build identifier attached.
+- AC: the katcher coordinate this adds is a release or a CI-numbered publish, not a `-SNAPSHOT`, and a clean checkout on an empty cache still builds. **Handed over from [B-13](B-13-pin-every-dependency.md)**, which closed Risk 3 for the graph as it stood and could not close it for a dependency nobody had added yet — katcher is one of the five the research recorded as pre-release.
 - Anchors: `katcher/README.md`, `katcher/client/build.gradle.kts`

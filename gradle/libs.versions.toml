@@ -26,6 +26,8 @@ testcontainers = "1.21.4"
 # library, and because it publishes `wasm-js` variants of core, random and the WebCrypto provider —
 # checked in the Maven Central listing, not assumed.
 cryptography = "0.6.0"
+# Kept equal to the shared catalog's `composeMultiplatform` by the check in shared-ui/build.gradle.kts.
+composeUiTest = "1.12.0"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
 
@@ -67,6 +69,12 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kvadrant" }
+
+# Compose's UI test harness, named directly rather than through `compose.uiTest` — that accessor is
+# deprecated in 1.12 ("specify dependency directly") and the deprecation only surfaced on a clean
+# build, because a warm configuration cache never re-evaluated the script. The version rides
+# `wip.versions.composeMultiplatform`, so it cannot drift from the Compose the plugin applies.
+compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeUiTest" }
 
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }

@@ -27,4 +27,5 @@ published measurements cover.
 - AC: the archive served from bochka, a client fetching a city at zoom 10–16, with request count and
   latency distribution recorded beside what was measured.
 - AC: the result written into research §3 Risk 6.
+- AC: the bochka coordinate this adds is a release or a CI-numbered publish, not a `-SNAPSHOT`, and a clean checkout on an empty cache still builds. **Handed over from [B-13](B-13-pin-every-dependency.md)**, which closed Risk 3 for the graph as it stood and could not close it for a dependency nobody had added yet — bochka is one of the five the research recorded as pre-release.
 - Anchors: `bochka/README.md`, `bochka/bochka-http`
