@@ -536,6 +536,16 @@ API for it. It is reachable, and on the target that matters:
 | `kotlinx-serialization-protobuf` 1.11.0 publishes a Wasm target, so MVT decoding needs no new dependency shape | `https://klibs.io/package/org.jetbrains.kotlinx/kotlinx-serialization-protobuf` |
 | Compose 1.12.0 loads Noto automatically for unresolved symbols **on web** | Compose Multiplatform 1.12.0 release notes, "Web" |
 
+**Consequence 1.8e — decoding a tile found a defect in the styles, which is the kind of thing a
+prototype is for.** Building route 4's decoder (B-01) meant reading a real tile out of
+`city.pmtiles`, and the smallest tile carrying a named road turned out to carry the A2 — which in
+OpenMapTiles has a `ref` and no `name`. The styles label through
+`["coalesce", ["get", "name:latin"], ["get", "name"]]`, so they draw nothing on it. Measured over all
+810 tiles: **654 of 11 437 named roads are `ref`-only, every one a motorway** — including the road
+from the city to the airport, which is the one road this product's flagship journey follows.
+[B-24](../backlog/B-24-motorways-carry-ref-not-name.md) is the one-token fix. Neither reading the
+style nor reading the schema would have produced this; decoding the data did.
+
 **Consequence 1.8a — this route deletes four open items rather than adding to them.** Glyph PBFs stop
 existing as a problem: a Compose renderer draws labels with the fonts kvadrant already bundles, so
 [B-06](../backlog/B-06-city-extract-and-tiles.md)'s PBF generation and the styles' interim

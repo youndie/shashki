@@ -101,3 +101,30 @@ library's `KvadrantAppBarButton`, which is where the 36 dp visual and the 48 dp 
 
 Still to do: the four prototypes, `RiderTripInProgress`, and D1's written decision. `city.pmtiles`
 exists (B-06), so they get the real archive rather than a bounding-box stand-in.
+
+**2026-09-02, third pass — route 4's decoder, against the city's own tiles.**
+
+The half of route 4 that is pure logic is built and tested: a minimal protobuf reader and an MVT
+decoder in `shared-ui/.../map/tiles`, about 300 lines between them, no dependency added.
+`kotlinx-serialization-protobuf` publishes a Wasm target and would have done it — but it wants a
+schema, and MVT's whole wire format is four wire types and one packed repeated field. WorldWind
+reached the same conclusion and ships its own `ProtobufReader`; two independent implementations
+choosing the same thing is worth recording.
+
+The test runs against a real tile lifted out of `city.pmtiles` — `z14/8850/5815`, 4 068 bytes, the
+smallest tile in the archive that carries both roads and a street name — and **every expected number
+came from a second reader written in Python before the test existed**. A geometry decoder is exactly
+the kind of code that produces confidently wrong output, and a test whose expectations come from
+running it would agree with it rather than check it.
+
+Reading the pmtiles container was part of the same work and is now understood rather than assumed:
+v3, one root directory and no leaves, gzip inside and out, 810 tiles, tile type MVT, Hilbert tile
+ids. That is the second half of route 4's "tiling" cost from §1.8b, and it came out small.
+
+**It found a defect nobody was looking for** — the styles label no motorway at all, 654 roads of
+11 437 — which is [B-24](B-24-motorways-carry-ref-not-name.md) and research §1.8e. That is what
+prototypes are for, and it is a point in route 4's column that has nothing to do with rendering:
+owning the decode meant reading the data, and reading the data found it.
+
+Still to do: the Compose Canvas half of the prototype (roads drawn, one label on a curve), the
+routes 1–3 prototypes, `RiderTripInProgress`, and D1's decision.
