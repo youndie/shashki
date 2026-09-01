@@ -56,8 +56,12 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
   map-less screen a golden would pass.
 - AC: each prototype renders the city from `city.pmtiles`, not a blank style — this is also Risk 5's
   answer.
-- AC: route 4's prototype renders at least the road layers and one street label along a curve, so the
-  estimate for the rest is made against something that ran.
+- ~~AC: route 4's prototype renders at least the road layers and one street label along a curve, so
+  the estimate for the rest is made against something that ran.~~ **Done, 2026-09-02.**
+  `map_canvas_tile_dark` and its light twin are a real tile out of `city.pmtiles` drawn on a Compose
+  canvas, with the A2's number written along the motorway. `map_rider_class_picker_on_canvas` is R4
+  with the hole filled — the same screen as `screens_rider_class_picker`, and the pair is what the
+  decision gets made on.
 - ~~AC: whether WorldWind's `MvtMapboxStyleLoader` actually loads shashki's two style documents is
   settled by running it once.~~ **Done, 2026-09-02: eleven of thirteen layers.** Fed the whole
   document it throws; fed one layer at a time, every `fill` and `line` layer loads and both `symbol`
@@ -128,3 +132,29 @@ owning the decode meant reading the data, and reading the data found it.
 
 Still to do: the Compose Canvas half of the prototype (roads drawn, one label on a curve), the
 routes 1–3 prototypes, `RiderTripInProgress`, and D1's decision.
+
+**2026-09-02, fourth pass — route 4 draws.**
+
+`TileRenderer` paints the layers the styles paint, in their order, with their colours; `TileRenderer`
+transcribes the filters and widths rather than reading the style JSON, because the question this
+prototype answers is about drawing and §1.8 already sized the interpreter. `CanvasMapSurface`
+implements `MapSurface` over it, and three goldens came out of it — the tile in both palettes, and
+R4 with the map in place of the hole.
+
+**The curved label had a second solution and it is the better one** (research §1.8, corrected). The
+skia `RSXform` route is real and needs an `org.jetbrains.skia.Typeface`, which means finding this
+product's bundled faces by some path other than the one Compose already carries them on — and a
+label in a host font is a golden that records the machine, which B-02 exists to prevent. Compose's
+own `PathMeasure` and `drawText`, one glyph at a time, draw in the theme's typography instead. The
+label is in Selawik and the image verifies on Linux.
+
+**The label is also B-24's proof.** The prototype coalesces through `ref`, so the A2 gets its number;
+with the styles' current `coalesce(name:latin, name)` this image would have a road and nothing
+written on it.
+
+What routes 1–3 cannot answer, this pair of images does: `screens_rider_class_picker` has a hole
+where the map is and always will, because those routes draw on a surface Compose does not own.
+`map_rider_class_picker_on_canvas` is a golden like any other. That is the acceptance this project
+runs on, and it is now a difference anyone can see rather than a sentence in a table.
+
+Still to do: prototypes for routes 1–3, `RiderTripInProgress`, and D1's decision.

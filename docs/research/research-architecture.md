@@ -546,6 +546,24 @@ from the city to the airport, which is the one road this product's flagship jour
 [B-24](../backlog/B-24-motorways-carry-ref-not-name.md) is the one-token fix. Neither reading the
 style nor reading the schema would have produced this; decoding the data did.
 
+**Correction, found while building it (B-01, 2026-09-02): the hardest piece has a second solution,
+and it is the better one here.** Everything above about skia is true — `getRSXform`,
+`makeFromRSXform` and `drawTextBlob` are all in the Kotlin/Wasm build and would place glyphs on a
+curve. What the table did not ask is *which font they would place*. They need an
+`org.jetbrains.skia.Typeface`, and this product's faces are bundled through Compose by kvadrant, so
+the skia route would have to find them again by some other path — and a label drawn in whatever the
+host offers is a golden that records the machine, which is exactly what §1.2 spent B-02 ruling out.
+
+Compose has its own `PathMeasure` with `getPosition` and `getTangent`, and its own `drawText`. One
+glyph at a time, positioned and rotated, draws in the theme's own typography: the label is in
+Selawik, the golden is portable, and nothing reaches around the framework. It costs kerning between
+glyphs, which is invisible at label sizes and is the trade every renderer that curves text makes.
+`map_canvas_tile_dark` is the A2 with its number along it, recorded on the mac and verified on Linux.
+
+The skia route stays true and stays the answer for anything Compose's text stack cannot express.
+This was not that, and the table above did not know it because it asked whether the mechanism existed
+rather than what it would need.
+
 **Consequence 1.8a — this route deletes four open items rather than adding to them.** Glyph PBFs stop
 existing as a problem: a Compose renderer draws labels with the fonts kvadrant already bundles, so
 [B-06](../backlog/B-06-city-extract-and-tiles.md)'s PBF generation and the styles' interim
