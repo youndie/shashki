@@ -1,7 +1,7 @@
 ---
 id: B-21
 title: "The ramp projection is checked against the stock components that read it, by golden"
-status: open
+status: done
 priority: P0
 size: S
 stage: stage-0-unknowns
@@ -37,3 +37,34 @@ slot over: the projection assumed each slot's usage is the kit's usage of that s
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/ShashkiTypography.kt`,
   `shared-ui/src/desktopTest/kotlin/io/github/youndie/shashki/ui/SkeletonFixtures.kt`,
   `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/components/`
+
+## What it turned out to be
+
+`foundation_stock_components`, dark and light, 390 × 844, every block captioned with the slot the
+component reads and the size the kit draws that element at. Verified on Linux under `--rerun-tasks`.
+
+**The list row is right, and that was the case this item was written for.** `KvadrantListItem`
+reads `normal` for its title and `subtle` for its subtitle — the projection's `body` and `meta` —
+so the kit's R9 TripRow comes out at 15 / 400 over 14 / subtle exactly. The fear that it read
+`title` was checked against `Controls.kt:445` and against the picture, and both say no.
+
+**Two components use their slot at a size the kit does not, and the projection is not what is wrong.**
+
+- ~~AC: the list row measures 15 sp against the kit's R3~~ — it does. But `KvadrantPivotHeaders`
+  reads `pivotHeader` and therefore draws the kit's *page title* (54 / W200) where the kit's pivot
+  header is 19 / W300 — a Metro pivot banner where the kit drew small tabs. And `KvadrantButton`
+  reads `mediumLarge` and emboldens it: 19 where the kit's button is 15 / W400. Remapping either slot
+  moves something else that reads it — every page title, or `KvadrantTextBox`.
+- So the projection's KDoc now says which two are **withdrawn**: pivot headers and buttons are drawn
+  by shashki's own composables from `ShashkiTheme.typography`, and the library keeps the slots Metro
+  gave it. That is the item's own rule — "a slot the kit uses two ways is the signal to stop
+  projecting it" — applied twice.
+- Also visible, and not a decision here: the stock tile label reads `normal` (15) where the kit's
+  tile label is 19, and the text box draws its placeholder at 19. Neither matters yet — `ClassTile`
+  and `EarningsTile` are B-04's own composables with their own labels, and the address field is B-04's
+  too. Recorded so they are not rediscovered.
+- ~~AC: fixture strings through the glyph guard~~ — B-05 does not exist yet; the strings are the
+  ramp fixture's, plus two Ljubljana street names already proved in `foundation_type_ramp`.
+
+[B-04](B-04-classtile-and-offercard.md) inherits the two withdrawals as requirements rather than
+surprises.

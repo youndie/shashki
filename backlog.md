@@ -39,7 +39,7 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (16)
+## Open (15)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
@@ -48,7 +48,6 @@ re-prioritising one must never move its file.
 | [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
 | [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11, B-20 |
 | [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[ ]` | Matching: the geo-index, the candidate query and the driver simulator | P0 | L | - |
-| [B-21](docs/backlog/B-21-ramp-projection-against-stock-components.md) `[ ]` | The ramp projection is checked against the stock components that read it, by golden | P0 | S | - |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
 | [B-06](docs/backlog/B-06-city-extract-and-tiles.md) `[ ]` | Produce the OSM extract and the pmtiles archive for Ljubljana | P1 | M | - |
 | [B-09](docs/backlog/B-09-browser-side-pkce.md) `[ ]` | Authorization code with PKCE from the browser is shashki's code | P1 | S | - |
@@ -60,7 +59,7 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (7)
+## Closed (8)
 
 **Remove the unknowns**
 
@@ -69,6 +68,7 @@ re-prioritising one must never move its file.
 - [B-15](docs/backlog/B-15-answer-the-kits-open-questions.md) `[x]` - Settle the kit's 4/3 spacing: as drawn, as converted, or fitted
 - [B-18](docs/backlog/B-18-kvadrant-overridable-on-accent.md) `[x]` - kvadrant-ui: onAccent becomes overridable, keeping the computed value as the default
 - [B-19](docs/backlog/B-19-kvadrant-app-bar-tokens.md) `[x]` - kvadrant-ui: the app bar's dimensions become theme tokens
+- [B-21](docs/backlog/B-21-ramp-projection-against-stock-components.md) `[x]` - The ramp projection is checked against the stock components that read it, by golden
 - [B-22](docs/backlog/B-22-publish-kvadrant-ui-with-the-hooks.md) `[x]` - kvadrant-ui: publish 0.2.0 with the two hooks, so B-03 stops waiting on a merge
 
 **Something builds and can be looked at**

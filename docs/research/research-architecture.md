@@ -149,6 +149,16 @@ reading: [B-21](../backlog/B-21-ramp-projection-against-stock-components.md) ren
 components shashki will actually use under `ShashkiTheme` beside the kit's rows, before B-04 builds on
 them.
 
+**Settled, same day.** `KvadrantListItem` reads `normal`/`subtle` and the kit's row comes out exactly
+right — the specific fear was unfounded. What the golden found instead were two components that use
+a *correct* slot at a size the kit does not: `KvadrantPivotHeaders` draws pivot headers at the
+library's 54 sp (the kit's page title) where the kit draws them at 19; `KvadrantButton` draws at an
+emboldened 19 where the kit's button is 15. Neither can be remapped without moving something else
+that reads the slot, so both are withdrawn from the projection and drawn by shashki's own composables
+— the projection's KDoc names them. The lesson generalises: the projection is a mapping of *sizes*,
+and it is correct; what has to be checked per component is *usage*, and a golden is the only reading
+of usage that stays true across the library's versions.
+
 #### Metrics: 12 dp is not a stock number at any scale
 
 | Fact | Where verified |

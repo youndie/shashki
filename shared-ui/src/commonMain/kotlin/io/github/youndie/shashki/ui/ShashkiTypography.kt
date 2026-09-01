@@ -111,6 +111,25 @@ public data class ShashkiTypography(
  * application title; the kit's own [pageTitle] goes to `pivotHeader`, which is the 54 sp one. The two
  * panorama styles are left as the library built them — this product draws no panorama, and giving
  * values to a surface it does not have would be inventing numbers.
+ *
+ * **Checked by golden against the stock components that read these slots (B-21), and the projection
+ * stands — two components do not.** A slot is what a *component* reads, not a size, and
+ * `foundation_stock_components` shows where the kit uses a component at a size the library never
+ * did:
+ *
+ * - `KvadrantPivotHeaders` reads `pivotHeader`, so it draws the kit's [pageTitle] — 54 / W200, the
+ *   Metro pivot. The kit draws pivot headers at 19 / W300 ([tileLabel]): "trips · profile · promo"
+ *   as small tabs, not as a page-wide banner. The slot is right for the library and wrong for this
+ *   product, and it cannot be remapped without moving every page title with it.
+ * - `KvadrantButton` reads `mediumLarge` and emboldens it, so it draws at 19 where the kit's button
+ *   is 15 / W400 ([body]). Remapping `mediumLarge = body` would fix the button and break
+ *   `KvadrantTextBox`, which reads the same slot.
+ *
+ * **So those two are withdrawn from the projection rather than bent to it**: pivot headers and
+ * buttons in this product are drawn with [ShashkiTheme.typography] directly, by shashki's own
+ * composables, and the library's components keep the slots Metro gave them. `KvadrantListItem`
+ * reads `normal` and `subtle` — the kit's [body] and [meta] — and matches the kit's rows exactly,
+ * which was the case this check was written to catch and did not have to.
  */
 public fun ShashkiTypography.toKvadrant(family: FontFamily): KvadrantTypography =
     KvadrantTypography.default(family).copy(
