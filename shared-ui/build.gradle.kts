@@ -48,6 +48,11 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(compose.desktop.currentOs)
+                // The glyph-coverage guard composes every registered fixture and reads its text off
+                // the semantics tree; that is the only way to check strings that live as literals
+                // inside composables without asking each fixture to declare them.
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                implementation(compose.uiTest)
             }
         }
     }
