@@ -44,7 +44,7 @@ re-prioritising one must never move its file.
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | B-06 |
-| [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[ ]` | The foundation values: shashki's ramp, spacing, ink and golden pin | P0 | M | - |
+| [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[~]` | The foundation values: shashki's ramp, spacing, ink and golden pin | P0 | M | - |
 | [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[ ]` | ClassTile and OfferCard on kvadrant primitives | P0 | M | B-03 |
 | [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
 | [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11 |

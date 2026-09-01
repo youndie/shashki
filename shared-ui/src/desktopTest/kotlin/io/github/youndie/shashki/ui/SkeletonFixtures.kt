@@ -9,27 +9,59 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.kvadrant.theme.KvadrantAccents
-import io.github.youndie.kvadrant.theme.KvadrantColors
 import io.github.youndie.kvadrant.theme.KvadrantTheme
-import io.github.youndie.kvadrant.theme.KvadrantTypography
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
 /**
- * One fixture, at the kit's 390 × 844, whose whole job is that the acceptance path executes.
+ * The kit's seven type styles, at the kit's canvas, in the order the kit lists them.
  *
- * A viddik plugin with no fixture generates no registry, records no golden and passes; the tasks
- * exist and say `NO-SOURCE`, which reads exactly like success. This makes "the screenshot suite is
- * wired" a checkable claim, and it is the file
- * [B-02](../../../../../../../docs/backlog/B-02-measure-golden-host-independence.md) measures with.
+ * This is the acceptance for [ShashkiTypography]: four of the seven pair a stock size with a weight
+ * the library pairs differently, so a golden of the ramp is the only thing that says the projection
+ * came out right rather than merely compiling. The label beside each line names the size and weight
+ * it claims to be, so a diff against the kit's specimen is readable without a ruler.
+ */
+@ViddikScreenshot(name = "type ramp", group = "foundation", width = 390, height = 844)
+@Composable
+internal fun ShashkiTypeRamp() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        val type = ShashkiTheme.typography
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(KvadrantTheme.colors.background)
+                .padding(KvadrantTheme.metrics.margin),
+        ) {
+            KvadrantText("54 / 200", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("$ 420", style = type.pageTitle)
+            KvadrantText("32 / 200", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("$ 249", style = type.figure)
+            KvadrantText("24 / 300", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("no cars nearby", style = type.stateHeadline)
+            KvadrantText("19 / 300", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("trips", style = type.tileLabel)
+            KvadrantText("17 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("Slovenska cesta 14", style = type.rowEmphasis)
+            KvadrantText("15 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("comfort · 6 min · Skoda Octavia", style = type.body)
+            KvadrantText("14 / 400", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+            KvadrantText("28 aug · 19:40 · comfort", style = type.meta.copy(color = KvadrantTheme.colors.subtle))
+        }
+    }
+}
+
+/**
+ * The two applications' accents, side by side, on the surface the kit and the library disagree
+ * about.
  *
- * It is deliberately not a screen — those arrive with `ShashkiTypography`, `ShashkiMetrics` and the
- * components in B-03 and B-04. What it does have to contain is an **accent-filled surface with ink
- * on it**, because that is the one thing the research found the library and the kit disagree about,
- * and a fixture that shows only text would diff identically whichever way that goes.
+ * The ink here is **white**, which is `contrastOn` reproducing Metro faithfully at 2.90:1 on cyan and
+ * 2.11:1 on amber where the kit asks for black. This golden records the disagreement on purpose:
+ * the parameter that resolves it landed in kvadrant-ui B-48 and is not in a published version yet,
+ * so 0.1.0 cannot express the kit's answer. When it can, this image changes and that change is the
+ * evidence.
  */
 @ViddikScreenshot(name = "themes", group = "skeleton", width = 390, height = 844)
 @Composable
@@ -46,27 +78,20 @@ private fun AccentBand(
     label: String,
     accent: Color,
 ) {
-    KvadrantTheme(
-        colors = KvadrantColors.dark(accent = accent),
-        typography = KvadrantTypography.default(kvadrantLatin()).portable(),
-    ) {
-        Column(modifier.background(KvadrantTheme.colors.background).padding(12.dp)) {
-            KvadrantText(label, style = KvadrantTheme.typography.large)
-            // The accent as a surface, which is the whole reason this fixture exists. The kit asks
-            // for black ink here; `KvadrantTheme.colors.onAccent` computes **white** at both of
-            // these accents, faithfully reproducing Metro (research §1.1a). So this golden records
-            // 2.90:1 on cyan and 2.11:1 on amber, on purpose — and B-03 is where it starts recording
-            // what the kit asks for instead, through the parameter kvadrant-ui B-48 added.
+    val latin = kvadrantLatin()
+    ShashkiTheme(accent = accent, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        Column(modifier.background(KvadrantTheme.colors.background).padding(KvadrantTheme.metrics.margin)) {
+            KvadrantText(label, style = ShashkiTheme.typography.stateHeadline)
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp)
+                    .padding(top = KvadrantTheme.metrics.margin)
                     .background(KvadrantTheme.colors.accent)
-                    .padding(12.dp),
+                    .padding(KvadrantTheme.metrics.margin),
             ) {
                 KvadrantText(
                     "$ 249",
-                    style = KvadrantTheme.typography.extraLarge.copy(color = KvadrantTheme.colors.onAccent),
+                    style = ShashkiTheme.typography.figure.copy(color = KvadrantTheme.colors.onAccent),
                 )
             }
         }

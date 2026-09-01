@@ -1,7 +1,7 @@
 ---
 id: B-03
 title: "The foundation values: shashki's ramp, spacing, ink and golden pin"
-status: open
+status: wip
 priority: P0
 size: M
 stage: stage-0-unknowns
@@ -27,7 +27,46 @@ its type ramp is exactly 1:1. Reaching for the scale knob to reconcile them resc
   and in `desktopTest`, and shashki builds its ramp by hand rather than through
   `KvadrantTypography.default`.
 
-- AC: a fixture renders all seven kit styles and the golden matches the kit's specimen.
+## Where it stands
+
+**Done: the ramp, the spacing, the semantic colours, the theme and the pin.**
+
+- `ShashkiTypography` carries the kit's seven names, because four of the seven pair a stock size with
+  a weight the library pairs differently — and because `pageTitle` names two different things in the
+  two vocabularies (54 / W200 here, Metro's 14 / W400 application title there). `toKvadrant` is the
+  only place they meet, so kvadrant's own components draw in the same ramp rather than one nobody
+  chose. The two figure styles are `tnum`; nothing else is, because only money and time change while
+  a screen is up.
+- `shashkiMetrics()` is 12 dp as drawn, `scale` at 1f so the theme cannot rescale the ramp behind us.
+  **The tile sizes are solved against the canvas rather than scaled** — `KvadrantTile` reads all
+  three from the metric set, and the library's are fixed sizes where the kit's grid is fitted to 390:
+  small 82.5, medium 177, wide 366, which keeps the kit's "wide is 2:1, the others square".
+- `ShashkiColors` names `KvadrantAccents.Red` and `.Green` rather than retyping their hexes.
+- ~~AC: a fixture renders all seven kit styles.~~ Done — `foundation_type_ramp`, each line labelled
+  with the size and weight it claims, so a diff against the kit's specimen is readable without a
+  ruler. It verifies on Linux too, so B-02's answer holds for the new ramp and not just for the
+  skeleton.
+- ~~AC: `ShashkiMetrics().scale == 1f`.~~ Done, and stated in KDoc with what a scaled set would cost.
+
+**The app bar is deliberately not set, and the file says so rather than omitting it.** The kit gives
+48 / 1.5 / 26 against the library's 36 / 1.125 / 19.5 — the same 4/3 — but 48 dp is also
+`touchTargetMin`, which the library already enforces *around* a 36 dp visual, so the kit's row may be
+naming the target or the ring. Nothing draws an app bar yet; B-04 settles it against the artboard
+rather than between two readings of a table.
+
+## What remains, and why this is not closed
+
+**The ink**, and it is blocked on a publication rather than on work. The kit asks for black on a
+filled accent surface; `KvadrantColors.onAccent` computes white at both accents, faithfully. The
+parameter that lets a caller say otherwise landed in kvadrant-ui B-48 and **is in no published
+artefact**. Checked on 2026-09-01: Reposilite `/snapshots/io/github/youndie/kvadrant-core` holds only
+`0.1.0`, last modified 2026-08-30 15:42 — before the merge; `/releases` under that group is empty;
+Maven Central 404s; the only tag is `v0.1.0`; and kvadrant's CHANGELOG still files both breaking
+changes under `## Unreleased`.
+
+So `skeleton_themes` records white on purpose, and the moment that image changes is the moment this
+item is done.
+
 - AC: the ink on a filled accent surface is black, supplied through `KvadrantColors`' `onAccent`
   parameter — not through a shashki-local constant that shadows the library.
 - AC: the app bar is stated through `KvadrantMetrics`' `appBar*` fields ([B-19](B-19-kvadrant-app-bar-tokens.md)),

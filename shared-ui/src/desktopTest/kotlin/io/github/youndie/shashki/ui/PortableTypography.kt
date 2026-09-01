@@ -34,3 +34,21 @@ internal fun KvadrantTypography.portable(): KvadrantTypography =
 
 /** The same pin, for a style a fixture constructs itself. */
 internal fun TextStyle.pinned(): TextStyle = copy(platformStyle = ViddikPlatformTextStyle)
+
+/**
+ * The same pin for the product's own ramp.
+ *
+ * Separate from the library's because the slots are different — this is exactly the case kvadrant's
+ * note warns about, where a fixture builds its own styles and goes on failing on another host after
+ * the inherited ramp has been pinned.
+ */
+internal fun ShashkiTypography.portable(): ShashkiTypography =
+    copy(
+        pageTitle = pageTitle.pinned(),
+        figure = figure.pinned(),
+        stateHeadline = stateHeadline.pinned(),
+        tileLabel = tileLabel.pinned(),
+        rowEmphasis = rowEmphasis.pinned(),
+        body = body.pinned(),
+        meta = meta.pinned(),
+    )
