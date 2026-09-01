@@ -48,6 +48,8 @@ dependencies {
     implementation(libs.koin.loggerSlf4j)
 
     testImplementation(kotlin("test"))
+    // The Koin graph is verified statically in a test, because the alternative is the first request.
+    testImplementation(wip.koin.test)
     testImplementation(libs.ktor.server.testHost)
     // The route tests build their URLs from the same @Resource classes a real client would.
     testImplementation(libs.ktor.client.contentNegotiation)

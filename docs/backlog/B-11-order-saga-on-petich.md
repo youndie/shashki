@@ -75,3 +75,16 @@ the trip has not started — and a rejected, failed or compensating one is `CANC
 **Not here, by design:** the suspended offer and its cascade (B-12), candidates and the simulator
 (B-20), real routes (B-23), the broker — `OutboxRelayWorker` publishes to the log, which proves an
 event *leaves* the outbox and nothing about where it goes.
+
+**Amended the same evening: the Koin graph is tested, and the test's blind spot is measured.**
+`KoinGraphTest` verifies `rideModule` statically with `koin-test`'s `verify()` and then resolves a
+binding by type from a built `koinApplication`. The two halves are both there because one is not
+enough, and that was measured rather than assumed: `verify()` reflects over the bound type's
+constructor for every definition — `single { … }` included, which is why `PetichEngine`'s six
+hand-supplied arguments are declared through `injections` — but it **skips any parameter with a
+default**, `() -> String` and `Int = 5` alike, while it does report a non-defaulted lambda as a
+missing `Function0`. So the trap that answered 500 on the first request passes `verify()` and fails
+only on resolution, wrapped in `InstanceCreationException`. Three controls in the file hold each of
+those statements, and the first draft of one of them sabotaged itself with `error()` stubs — Koin
+resolves constructor parameters in order, so the stub threw before the parameter being measured
+was reached. Both findings went into the `server-feature-impl` skill.

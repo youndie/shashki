@@ -8,3 +8,7 @@ build/
 local.properties
 .kotlin/
 .idea/
+
+# Session artefacts of the agent, including its git worktrees under .claude/worktrees/.
+# Those are checkouts of this repository; committing the path would embed a gitlink to one.
+.claude/
