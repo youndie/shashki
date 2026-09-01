@@ -48,8 +48,12 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
 
 - AC: `docs/research/research-architecture.md` D1 names one route, with the measurement that decided
   it and what the other two cost.
-- AC: the map lives behind one interface with a platform implementation per target, so the decision
-  is a module swap.
+- ~~AC: the map lives behind one interface with a platform implementation per target, so the decision
+  is a module swap.~~ **Done, 2026-09-02.** `MapSurface` in `shared-ui`, with `MapScene` carrying
+  exactly what the kit draws — a camera, a route in the two phases the styles filter on, cars, two
+  pins — and nothing a renderer might additionally offer. `LocalMapSurface` has no default, so a
+  screen outside an application that bound one fails on first read rather than rendering a
+  map-less screen a golden would pass.
 - AC: each prototype renders the city from `city.pmtiles`, not a blank style — this is also Risk 5's
   answer.
 - AC: route 4's prototype renders at least the road layers and one street label along a curve, so the
@@ -76,6 +80,24 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
   parses but for one property — and does not touch the compositing objection, which is what §1.8c
   disqualified it on.
 
-Still to do: the four prototypes against `RiderClassPicker` and `RiderTripInProgress`, the map
-interface, and D1's written decision. `city.pmtiles` exists now (B-06), so the prototypes get the
-real archive rather than a bounding-box stand-in.
+**2026-09-02, second pass — the seam and the first of the two screens.**
+
+`MapSurface` exists and `RiderClassPicker` is built against it, which turns one of the four routes'
+differences from an argument into a measurement waiting to be taken: **the kit gives the map 360 of
+the 844 dp and hangs the panel below it**, so on this screen the map is a *sized element*. Routes 1
+and 3 draw outside Compose's canvas and can only approximate a rectangle inside it — WorldWind's
+binding says in its own KDoc that its canvas is always full-window — while route 4 is a composable
+like any other. That is now a thing a prototype can be held against rather than a sentence.
+
+`PlaceholderMapSurface` fills the hole meanwhile, and does it honestly: it paints the style
+documents' own background colour and says no renderer is bound, so `screens_rider_class_picker` is
+visibly a screen 360 dp short of one rather than a screen whose map failed. When a renderer lands the
+image changes, and that change is the evidence.
+
+Two more of the kit's twenty-four icons transcribed (`check`, `card`), and a second sighting of a
+finding: **the kit's bottom bars are not `KvadrantAppBar`.** The library centres its buttons and puts
+labels underneath; R4 and D3 are an action row — ring, label, overflow dots. The ring itself is the
+library's `KvadrantAppBarButton`, which is where the 36 dp visual and the 48 dp target come from.
+
+Still to do: the four prototypes, `RiderTripInProgress`, and D1's written decision. `city.pmtiles`
+exists (B-06), so they get the real archive rather than a bounding-box stand-in.

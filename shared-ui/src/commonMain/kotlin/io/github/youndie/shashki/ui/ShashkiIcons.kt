@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.unit.dp
 
 /**
- * The kit's icons, transcribed from its SVG path data — the first four of the twenty-four the
+ * The kit's icons, transcribed from its SVG path data — six of the twenty-four the
  * handoff (§1.4) says are new. Drawn on the same 26-unit grid as the library's forty, one stroke
  * weight, butt caps, no fill except where a dot or a wheel carries meaning, no corner rounding.
  *
@@ -46,6 +46,20 @@ public object ShashkiIcons {
         vector("pin-dropoff") {
             stroked("M8.5 4.5h9v9h-9z")
             stroked("M13 13.5V24")
+        }
+
+    /** Confirm: order, accept, arrived. The kit's tick. */
+    public val check: ImageVector =
+        vector("check") {
+            stroked("M4 14l6 6L22 6")
+        }
+
+    /** The payment method on a row. */
+    public val card: ImageVector =
+        vector("card") {
+            stroked("M2 6.5h22v13H2z")
+            stroked("M2 10.5h22")
+            stroked("M18 15.5h4")
         }
 
     /** Decline, cancel, close. */

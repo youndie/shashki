@@ -17,6 +17,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // The client speaks the wire types rather than copying them: a `GeoPoint` on a map is
+            // the same `GeoPoint` the server sent, and a second one would drift within a sprint.
+            api(projects.protocol)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
