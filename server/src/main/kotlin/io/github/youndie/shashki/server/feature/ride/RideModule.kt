@@ -27,9 +27,9 @@ import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
 import io.github.youndie.shashki.server.feature.ride.saga.orderSagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
+import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
-import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -50,6 +50,12 @@ import ru.workinprogress.petich.PetichRepository
 public fun rideModule(
     database: Database,
     scope: CoroutineScope,
+    /**
+     * The router, so a test can hand in a graph it controls. Defaulted rather than always resolved
+     * from the environment because the alternative is a test that either needs the city's 41 MB
+     * extract or cannot check that the saga prices on roads at all.
+     */
+    routeEstimator: RouteEstimator = RoutingConfig.estimator(),
 ): Module =
     module {
         single { database }
@@ -58,7 +64,10 @@ public fun rideModule(
         single<Json> { sagaJson() }
         singleOf(::SagaStorage)
 
-        single<RouteEstimator> { StraightLineRouteEstimator() }
+        // B-23's one line. `RoutingConfig` decides between the graph and the straight-line
+        // stand-in, and says loudly which it chose — the stand-in is still reachable because the
+        // saga tests kill the process at phase boundaries and have no use for a routing graph.
+        single<RouteEstimator> { routeEstimator }
         single { Pricing() }
         single<PaymentGateway> { InMemoryPaymentGateway() }
         // The index is a cache of the last known positions, held by one process and rebuilt from

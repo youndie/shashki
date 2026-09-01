@@ -25,6 +25,9 @@ testcontainers = "1.21.4"
 # The PKCE hash and the verifier's randomness. Chosen because shildik verifies with this same
 # library, and because it publishes `wasm-js` variants of core, random and the WebCrypto provider —
 # checked in the Maven Central listing, not assumed.
+# Routing, embedded in the server rather than beside it: Apache-2.0, a plain Java library. The same
+# 11.0 B-06 measured the import with, so the four-second number belongs to this version.
+graphhopper = "11.0"
 cryptography = "0.6.0"
 # Kept equal to the shared catalog's `composeMultiplatform` by the check in shared-ui/build.gradle.kts.
 composeUiTest = "1.12.0"
@@ -75,6 +78,8 @@ kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kva
 # build, because a warm configuration cache never re-evaluated the script. The version rides
 # `wip.versions.composeMultiplatform`, so it cannot drift from the Compose the plugin applies.
 compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeUiTest" }
+
+graphhopper-core = { module = "com.graphhopper:graphhopper-core", version.ref = "graphhopper" }
 
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }

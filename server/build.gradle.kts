@@ -39,6 +39,9 @@ dependencies {
 
     // The order saga: the engine, its Postgres repository, and the outbox relay. petich-postgres
     // ships no driver, no pool and no DDL on purpose — those three are the application's, below.
+    // Routing on the city's own extract, in this process. See B-23 and `GraphHopperRouteEstimator`.
+    implementation(libs.graphhopper.core)
+
     implementation(libs.petich.core)
     implementation(libs.petich.postgres)
     implementation(libs.petich.outboxCore)

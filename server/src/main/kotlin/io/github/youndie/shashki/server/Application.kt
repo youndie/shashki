@@ -9,6 +9,10 @@ import io.github.youndie.shashki.server.feature.ride.driverRoutes
 import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.rideRoutes
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
+import io.github.youndie.shashki.server.feature.route.RoutingConfig
+import io.github.youndie.shashki.server.feature.route.data.NoRouteException
+import io.github.youndie.shashki.server.feature.route.routeRoutes
+import io.github.youndie.shashki.server.pricing.RouteEstimator
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -91,6 +95,14 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
                 ErrorBody(e.message ?: "bad request"),
             )
         }
+        // 422 rather than 400: the request is well formed and the server understood it — there is
+        // simply no road. A 400 would tell the client to fix its message, which is the wrong advice.
+        exception<NoRouteException> { call, e ->
+            call.respond(
+                HttpStatusCode.UnprocessableEntity,
+                ErrorBody(e.message ?: "no route"),
+            )
+        }
         exception<OptimisticLockException> { call, _ ->
             call.respond(HttpStatusCode.Conflict, ErrorBody("concurrent modification, retry"))
         }
@@ -109,11 +121,15 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
  * The rider, driver, dispatch, pricing and billing boundaries are packages under this one; see the
  * note in `build.gradle.kts` for why they are not Gradle modules yet.
  */
-public fun Application.shashki(database: Database) {
-    baseModule(listOf(rideModule(database, scope = this)))
+public fun Application.shashki(
+    database: Database,
+    routeEstimator: RouteEstimator = RoutingConfig.estimator(),
+) {
+    baseModule(listOf(rideModule(database, scope = this, routeEstimator = routeEstimator)))
 
     routing {
         rideRoutes()
+        routeRoutes()
         driverRoutes()
         driverPositionRoutes()
     }

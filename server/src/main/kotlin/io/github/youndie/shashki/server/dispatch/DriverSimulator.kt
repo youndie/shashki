@@ -8,6 +8,9 @@ import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.RideClass
+import io.github.youndie.shashki.protocol.RouteRequest
+import io.github.youndie.shashki.protocol.RouteView
+import io.github.youndie.shashki.protocol.Routes
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.resources.get
@@ -101,7 +104,9 @@ public class DriverSimulator(
         val rideClass = config.rideClass(driverId) ?: RideClass.entries[random.nextInt(RideClass.entries.size)]
         val rating = MIN_RATING + random.nextDouble() * (MAX_RATING - MIN_RATING)
         var at = randomPointNear(config.centre, config.radiusMetres, random)
-        var waypoint = randomPointNear(config.centre, config.radiusMetres, random)
+        // The road ahead, as vertices still to be reached. Empty means "pick somewhere new and ask
+        // for the way there" — see [roadTo].
+        var ahead = ArrayDeque<GeoPoint>()
 
         val session = client.webSocketSession(DRIVER_POSITIONS_PATH)
         try {
@@ -112,17 +117,67 @@ public class DriverSimulator(
                     ),
                 )
                 delay(config.reportInterval)
-                val step = config.speedMetresPerSecond * config.reportInterval.inWholeMilliseconds / MILLIS
-                at = moveTowards(at, waypoint, step)
-                if (metresBetween(at, waypoint) <
-                    step
-                ) {
-                    waypoint = randomPointNear(config.centre, config.radiusMetres, random)
+                if (ahead.isEmpty()) {
+                    ahead = ArrayDeque(roadTo(at, randomPointNear(config.centre, config.radiusMetres, random)))
                 }
+                at =
+                    advance(at, ahead, config.speedMetresPerSecond * config.reportInterval.inWholeMilliseconds / MILLIS)
             }
         } finally {
             runCatching { session.close() }
         }
+    }
+
+    /**
+     * The way from [from] to [to], asked of the server the same way a driver's application would —
+     * over `POST /api/routes` rather than by reaching into the estimator this process also holds.
+     *
+     * **A simulated car that cuts across blocks is a demo that shows the map is decorative.** The
+     * whole point of the pair of cars on the rider's screen is that they are on streets. When the
+     * server cannot route — no extract configured, or a point off the graph — the car falls back to
+     * the straight line, because a simulator that stopped driving would break the parts of the demo
+     * that have nothing to do with routing. That fallback is logged, and it is deliberately not what
+     * any test asserts on.
+     */
+    private suspend fun roadTo(
+        from: GeoPoint,
+        to: GeoPoint,
+    ): List<GeoPoint> =
+        runCatching {
+            val response =
+                client.post(Routes()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(RouteRequest(from = from, to = to))
+                }
+            response.body<RouteView>().geometry.takeIf { it.size >= 2 } ?: listOf(to)
+        }.getOrElse {
+            // `warn` and not `debug`: a simulated car that stops using the roads still moves, so
+            // this failure is invisible in the demo and looks like a rendering problem in the map.
+            log.warn("no road from {} to {}, driving straight: {}", from, to, it.message)
+            listOf(to)
+        }
+
+    /**
+     * Move [metres] along [ahead], consuming the vertices passed. The car stops on the road rather
+     * than between it and wherever it was going, which is what makes the position it reports a place
+     * a car could be.
+     */
+    private fun advance(
+        from: GeoPoint,
+        ahead: ArrayDeque<GeoPoint>,
+        metres: Double,
+    ): GeoPoint {
+        var at = from
+        var budget = metres
+        while (ahead.isNotEmpty()) {
+            val next = ahead.first()
+            val distance = metresBetween(at, next)
+            if (distance > budget) return moveTowards(at, next, budget)
+            at = next
+            budget -= distance
+            ahead.removeFirst()
+        }
+        return at
     }
 
     private suspend fun watchForOffers(driverId: String) {

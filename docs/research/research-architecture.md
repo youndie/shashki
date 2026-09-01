@@ -529,6 +529,25 @@ The brief assumes several of these run in the wasm clients. Most do not have the
 | katcher ingest | `POST {serverUrl}/api/reports` | `katcher/README.md` |
 | shildik token endpoint shape | `POST /realms/<realm>/protocol/openid-connect/token`; image `ghcr.io/youndie/shildik` | `shildik/README.md` |
 
+**Consequence 1.6e — GraphHopper embedded, measured 2026-09-02 ([B-23](../backlog/B-23-routes-and-eta-on-embedded-graphhopper.md)).**
+
+| Fact | Where verified |
+|---|---|
+| `com.graphhopper:graphhopper-core` 11.0 embeds in the Ktor process; a car profile is `Profile("car").setCustomModel(GHUtility.loadCustomModelFromJar("car.json"))` with `setEncodedValuesString("car_access, car_average_speed, road_access")` — the three names `car.json`'s own header comment lists | the jar's `com/graphhopper/custom_models/car.json` |
+| On Ljubljana's extract: import **3 168 ms**, opening the prepared graph **22 ms**, a centre-to-airport route **2.57 ms median / 6.6 ms worst of 201**, 22 806 m over 364 points | `CityGraphMeasurement`, on the Linux box |
+| **A point outside the graph's bounding box is refused before any snapping is attempted** — "Point 0 is out of bounds" — while a point *inside* it snaps from as far as 1 500 m off the nearest road | measured against the four-node test fixture |
+
+The third row is the one that cost time and is the one worth keeping. The two behaviours look alike
+from the outside — both come back as "no route" — but they mean opposite things: outside the box is a
+request for a city this server does not have, and far-from-a-road inside the box is answered
+generously. A test whose points strayed outside the fixture's box got straight lines from a fallback
+and would have passed while proving nothing, which is how it was found.
+
+**The 50 ms criterion holds with two orders of magnitude to spare**, so the interesting cost is not
+the route but the start: 3.2 seconds of import that the prepared directory turns into 22 ms. That is
+the difference between a container that answers immediately and one that does not, and it is why the
+graph directory is configuration rather than a temporary file.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

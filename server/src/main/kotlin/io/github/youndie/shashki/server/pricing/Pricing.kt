@@ -6,7 +6,14 @@ import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.common.haversineMetres
 import kotlin.math.roundToInt
 
-/** Distance and duration between two points. GraphHopper (B-23) is the real one; this is its port. */
+/**
+ * Distance, duration and the road between two points.
+ *
+ * **One interface rather than two.** B-23 needed geometry, which the saga does not, and the tempting
+ * shape was a second `Router` beside this one. Two abstractions over the same question drift: the
+ * quote would be priced on one road and the rider would watch the car drive along another. So the
+ * geometry joins the estimate and the saga ignores the field it does not need.
+ */
 public interface RouteEstimator {
     public fun estimate(
         from: GeoPoint,
@@ -17,6 +24,12 @@ public interface RouteEstimator {
 public data class RouteEstimate(
     val distanceMetres: Int,
     val durationSeconds: Int,
+    /**
+     * The road, from [from] to [to] inclusive. Empty only from an estimator that does not know one —
+     * which is to say from [StraightLineRouteEstimator], where a straight line between the two
+     * points would be a road that is not there.
+     */
+    val geometry: List<GeoPoint> = emptyList(),
 )
 
 /**

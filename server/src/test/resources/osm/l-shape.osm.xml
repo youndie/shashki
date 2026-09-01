@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="hand-written for B-23">
+<!--
+  Note: this comment is inside <osm> and not above it on purpose. GraphHopper's
+  OSMInputFile.openXMLStream calls next() once and requires that event to be the <osm>
+  start element, so a comment in the prolog fails the import with "File is not a valid OSM
+  stream" — a message that names neither the comment nor the line.
+-->
+<!--
+  Four nodes and two ways, in an L. A car going from n1 to n4 must drive east then north; the
+  straight line between them is the hypotenuse and is shorter. That difference is the whole point of
+  the fixture: a router that quietly answered with great-circle distance would pass a test that only
+  checked "some number came back".
+
+  Ljubljana's coordinates, so the numbers read like the city's — but this is not the city's extract.
+  The real one is 41 MB and is not in git; what it measures is recorded in B-06 and B-23 instead.
+-->
+  <node id="1" lat="46.0500" lon="14.5000"/>
+  <node id="2" lat="46.0500" lon="14.5100"/>
+  <node id="3" lat="46.0500" lon="14.5200"/>
+  <node id="4" lat="46.0700" lon="14.5200"/>
+  <way id="10">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Vzhodna cesta"/>
+  </way>
+  <way id="11">
+    <nd ref="3"/>
+    <nd ref="4"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Severna cesta"/>
+  </way>
+</osm>
