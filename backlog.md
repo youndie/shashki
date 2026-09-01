@@ -39,7 +39,7 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (9)
+## Open (10)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
@@ -52,6 +52,7 @@ re-prioritising one must never move its file.
 | [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[ ]` | The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit | P2 | M | - |
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
+| [B-27](docs/backlog/B-27-deprecations-only-a-clean-build-shows.md) `[ ]` | The deprecations only a clean configuration shows | P2 | XS | - |
 
 ## Closed (17)
 
