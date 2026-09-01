@@ -4,7 +4,13 @@ import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import java.util.concurrent.ConcurrentHashMap
 
-/** Who could take this ride, nearest first. The geo-index and the simulator (B-20) are the real one. */
+/**
+ * Who could take this ride, nearest first.
+ *
+ * One implementation in production — [GeoCandidateSource] over the geo-index — and a fixed list in
+ * the tests that are about the saga rather than about matching. The port is what let B-11 and B-12
+ * be built and tested before there was an index to build them on.
+ */
 public interface CandidateSource {
     public fun candidates(
         pickup: GeoPoint,
@@ -17,30 +23,6 @@ public data class DriverCandidate(
     val distanceMetres: Int,
     val rating: Double,
 )
-
-/**
- * A fixed list, so the saga has someone to reserve. Research §1.4d: "the saga itself can be built
- * and killed at phase boundaries against a stub candidate list." Three drivers because B-12's
- * cascade needs more than one to cascade over, and an empty list because "no cars nearby" is a
- * state the kit draws.
- */
-public class FixedCandidateSource(
-    private val candidates: List<DriverCandidate> = DEFAULT,
-) : CandidateSource {
-    override fun candidates(
-        pickup: GeoPoint,
-        rideClass: RideClass,
-    ): List<DriverCandidate> = candidates
-
-    public companion object {
-        public val DEFAULT: List<DriverCandidate> =
-            listOf(
-                DriverCandidate("driver-1", distanceMetres = 800, rating = 4.9),
-                DriverCandidate("driver-2", distanceMetres = 1_400, rating = 4.7),
-                DriverCandidate("driver-3", distanceMetres = 2_100, rating = 4.8),
-            )
-    }
-}
 
 /**
  * Which driver is spoken for by which ride. The EXECUTION step reserves, its compensation releases,

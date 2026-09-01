@@ -2,6 +2,7 @@ package io.github.youndie.shashki.server
 
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
+import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.driverRoutes
@@ -22,6 +23,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.pingPeriod
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
@@ -35,6 +38,7 @@ import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.SuspendedPetichSweeper
 import ru.workinprogress.petich.outbox.OutboxRecord
 import ru.workinprogress.petich.outbox.OutboxRelayWorker
+import kotlin.time.Duration.Companion.seconds
 
 public fun main() {
     val dataSource = DatabaseFactory.dataSource(DatabaseConfig.fromEnv())
@@ -46,6 +50,8 @@ public fun main() {
 
 /** The port, here rather than in a config file until there is a config file worth having. */
 private const val PORT: Int = 8080
+
+private val WEBSOCKET_PING = 15.seconds
 
 /**
  * Everything that needs no database: the plugins, the error mapping and the health probe. Split
@@ -60,6 +66,9 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
     install(ContentNegotiation) { json() }
     install(Resources)
     install(CallLogging)
+    // A ping, because a driver's socket sits idle between reports and the first thing a mobile
+    // network does with an idle socket is forget about it.
+    install(WebSockets) { pingPeriod = WEBSOCKET_PING }
 
     // Before routing, and the reason is order of thought rather than of execution: a route written
     // after this exists answers `.getOrThrow()` and stops, because the mapping is already here.
@@ -106,6 +115,7 @@ public fun Application.shashki(database: Database) {
     routing {
         rideRoutes()
         driverRoutes()
+        driverPositionRoutes()
     }
 
     // Two workers the saga cannot do without and the request path never sees. The sweeper rolls

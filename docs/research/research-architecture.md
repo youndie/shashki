@@ -417,6 +417,15 @@ ENRICHMENT is the first consumer.
 | `kompot-client` targets `jvm("desktop")`, `iosArm64`, `wasmJs { browser() }` | `kompot/kompot-client/build.gradle.kts` |
 | Live updates are three modules: `kompot-realtime` (the frame contract), `kompot-realtime-server` (delivery to one instance's subscribers plus the bus contract), `kompot-realtime-redis` (the pub/sub bus for more than one instance) | `kompot/README.md`, module table |
 
+**Consequence 1.4g — the geo-index is a grid, and the geohash string is deferred on purpose.**
+Built in B-20. The property research §1.6a asks for is that positions never leave the process and
+never enter a topic; the property a query needs is that it touches a bounded number of buckets. A
+lat/lon grid gives both. A base-32 geohash *string* additionally gives a sortable key that a shared
+store can range-scan, which buys nothing until the index is shared — and if it ever moves to Redis
+(the shape `kompot-realtime-redis` has for the same reason, §1.5a), the string is the change. Written
+down because "we should have used geohashes" is a review comment that arrives without the second
+half.
+
 **Consequence 1.5a — no Redis.** The brief's architecture is one Ktor process. Per-user live updates
 inside a single instance are `kompot-realtime-server`'s job on its own; `kompot-realtime-redis` exists
 for the case shashki deliberately does not have. Pulling it in for a demo would add an infrastructure

@@ -34,8 +34,12 @@ ktor-server-callLogging = { module = "io.ktor:ktor-server-call-logging" }
 ktor-server-testHost = { module = "io.ktor:ktor-server-test-host" }
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
 ktor-server-resources = { module = "io.ktor:ktor-server-resources" }
+ktor-server-websockets = { module = "io.ktor:ktor-server-websockets" }
+ktor-client-websockets = { module = "io.ktor:ktor-client-websockets" }
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 ktor-client-resources = { module = "io.ktor:ktor-client-resources" }
+ktor-client-core = { module = "io.ktor:ktor-client-core" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
 # Typed routes, declared once in :protocol and read by both sides. Publishes wasmJs and jvm — checked
 # against the module metadata before it was added, because a KMP module cannot depend on a JVM-only
 # artefact and the failure would name a variant rather than the reason.

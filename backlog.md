@@ -39,12 +39,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (12)
+## Open (11)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
-| [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[ ]` | Matching: the geo-index, the candidate query and the driver simulator | P0 | L | - |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
 | [B-06](docs/backlog/B-06-city-extract-and-tiles.md) `[ ]` | Produce the OSM extract and the pmtiles archive for Ljubljana | P1 | M | - |
 | [B-09](docs/backlog/B-09-browser-side-pkce.md) `[ ]` | Authorization code with PKCE from the browser is shashki's code | P1 | S | - |
@@ -56,7 +55,7 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (11)
+## Closed (12)
 
 **Remove the unknowns**
 
@@ -77,6 +76,7 @@ re-prioritising one must never move its file.
 
 - [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[x]` - The order saga on petich, with the outbox required rather than optional
 - [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[x]` - The driver offer is a suspended saga with a deadline, not a step that waits
+- [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[x]` - Matching: the geo-index, the candidate query and the driver simulator
 
 <!-- END INDEX -->
 

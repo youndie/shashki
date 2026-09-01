@@ -3,8 +3,10 @@ package io.github.youndie.shashki.server.feature.ride
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
 import io.github.youndie.shashki.server.billing.PaymentGateway
 import io.github.youndie.shashki.server.dispatch.CandidateSource
+import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.dispatch.DriverReservations
-import io.github.youndie.shashki.server.dispatch.FixedCandidateSource
+import io.github.youndie.shashki.server.dispatch.GeoCandidateSource
+import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.dispatch.OfferBoard
@@ -59,7 +61,10 @@ public fun rideModule(
         single<RouteEstimator> { StraightLineRouteEstimator() }
         single { Pricing() }
         single<PaymentGateway> { InMemoryPaymentGateway() }
-        single<CandidateSource> { FixedCandidateSource() }
+        // The index is a cache of the last known positions, held by one process and rebuilt from
+        // the socket after a restart — no repository, no migration, nothing through the broker.
+        single<DriverIndex> { GridDriverIndex() }
+        single<CandidateSource> { GeoCandidateSource(get(), get()) }
         single<DriverReservations> { InMemoryDriverReservations() }
         single<OfferBoard> { InMemoryOfferBoard() }
 

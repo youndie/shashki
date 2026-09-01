@@ -3,11 +3,8 @@ package io.github.youndie.shashki.server.pricing
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
-import kotlin.math.asin
-import kotlin.math.cos
+import io.github.youndie.shashki.server.common.haversineMetres
 import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 /** Distance and duration between two points. GraphHopper (B-23) is the real one; this is its port. */
 public interface RouteEstimator {
@@ -39,21 +36,7 @@ public class StraightLineRouteEstimator(
         return RouteEstimate(metres.roundToInt(), (metres / speedMetresPerSecond).roundToInt())
     }
 
-    private fun haversineMetres(
-        a: GeoPoint,
-        b: GeoPoint,
-    ): Double {
-        val dLat = Math.toRadians(b.lat - a.lat)
-        val dLon = Math.toRadians(b.lon - a.lon)
-        val h =
-            sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(a.lat)) * cos(Math.toRadians(b.lat)) * sin(dLon / 2) * sin(dLon / 2)
-        return 2 * EARTH_RADIUS_METRES * asin(sqrt(h))
-    }
-
     private companion object {
-        const val EARTH_RADIUS_METRES = 6_371_000.0
-
         /** 30 km/h. A city average, and a hypothesis until B-23 routes on real roads. */
         const val CITY_SPEED_MPS = 30_000.0 / 3600
     }

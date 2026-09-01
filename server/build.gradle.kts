@@ -26,6 +26,14 @@ dependencies {
     implementation(libs.ktor.server.callLogging)
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.server.resources)
+    // Driver positions arrive on a socket and go straight into the geo-index — never into the
+    // broker (research §1.6a). The client half is here because the simulator is a client of that
+    // same socket rather than a back door into the index.
+    implementation(libs.ktor.server.websockets)
+    implementation(libs.ktor.client.websockets)
+    implementation(libs.ktor.client.contentNegotiation)
+    implementation(libs.ktor.client.resources)
+    implementation(libs.ktor.client.cio)
     implementation(wip.kotlinx.serialization.json)
     runtimeOnly(libs.logback.classic)
 

@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
-import io.github.youndie.shashki.server.dispatch.FixedCandidateSource
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.feature.ride.saga.ACTION_DRIVER_ANSWER
@@ -24,6 +23,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.orderSagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
+import io.github.youndie.shashki.server.testing.FixedCandidateSource
 import io.github.youndie.shashki.server.testing.PostgresHarness
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
