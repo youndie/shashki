@@ -2,7 +2,9 @@ package io.github.youndie.shashki.server
 
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
+import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
+import io.github.youndie.shashki.server.feature.ride.driverRoutes
 import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.rideRoutes
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
@@ -68,16 +70,19 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
                 ErrorBody(e.message ?: "not found"),
             )
         }
+        exception<OfferNotFoundException> { call, e ->
+            call.respond(
+                HttpStatusCode.NotFound,
+                ErrorBody(e.message ?: "not found"),
+            )
+        }
         exception<IllegalArgumentException> { call, e ->
             call.respond(
                 HttpStatusCode.BadRequest,
                 ErrorBody(e.message ?: "bad request"),
             )
         }
-        exception<OptimisticLockException> {
-            call,
-            _,
-            ->
+        exception<OptimisticLockException> { call, _ ->
             call.respond(HttpStatusCode.Conflict, ErrorBody("concurrent modification, retry"))
         }
     }
@@ -96,17 +101,19 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
  * note in `build.gradle.kts` for why they are not Gradle modules yet.
  */
 public fun Application.shashki(database: Database) {
-    baseModule(listOf(rideModule(database)))
+    baseModule(listOf(rideModule(database, scope = this)))
 
-    routing { rideRoutes() }
+    routing {
+        rideRoutes()
+        driverRoutes()
+    }
 
     // Two workers the saga cannot do without and the request path never sees. The sweeper rolls
     // back sagas that suspended for a driver nobody came back for (B-12's deadline); the relay
     // delivers what the outbox holds. Both stop with the application, through its own scope.
     val storage = get<SagaStorage>()
     val engine = get<PetichEngine>()
-    val clock = PetichClock { System.currentTimeMillis() }
-    SuspendedPetichSweeper(repository = storage.petiches, engineFor = { engine }, clock = clock)
+    SuspendedPetichSweeper(repository = storage.petiches, engineFor = { engine }, clock = get<PetichClock>())
         .start(this)
     // Logging is the publisher until the broker is wired; an event that reaches the log has left
     // the outbox, and that is the property B-11 is about. booblik is a later item.

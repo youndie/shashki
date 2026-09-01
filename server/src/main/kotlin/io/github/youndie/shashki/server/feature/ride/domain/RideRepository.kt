@@ -13,3 +13,7 @@ public interface RideRepository {
 public class RideNotFoundException(
     public val id: String,
 ) : RuntimeException("ride $id not found")
+
+public class OfferNotFoundException(
+    public val driverId: String,
+) : RuntimeException("no offer for driver $driverId")

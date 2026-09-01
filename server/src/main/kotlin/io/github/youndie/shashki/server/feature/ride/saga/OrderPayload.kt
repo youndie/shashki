@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.RideClass
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.workinprogress.petich.PetichPayload
+import ru.workinprogress.petich.ResumePayload
 
 /**
  * What the order saga starts with: the request, verbatim.
@@ -35,8 +36,30 @@ public object Enriched {
     public const val QUOTE_CURRENCY: String = "quote.currency"
     public const val HOLD_ID: String = "billing.holdId"
     public const val DRIVER_ID: String = "dispatch.driverId"
+    public const val OFFER_DRIVER: String = "offer.driverId"
+    public const val OFFER_ATTEMPT: String = "offer.attempt"
+    public const val OFFER_EXPIRES_AT: String = "offer.expiresAtEpochMs"
     public const val REJECTION: String = "rejection"
 }
+
+/** What the saga is waiting for while an offer is out. The driver's app answers it. */
+public const val ACTION_DRIVER_ANSWER: String = "DRIVER_ANSWER"
+
+/**
+ * A driver's answer, handed to the engine as the resume payload. Not persisted — petich keeps it on
+ * the `process` call only — so no serialisation, and no `@SerialName` to get wrong.
+ */
+public class DriverAnswer(
+    public val driverId: String,
+    public val outcome: Outcome,
+) : ResumePayload() {
+    public enum class Outcome { ACCEPT, DECLINE, IGNORED }
+}
+
+/** The rider changed their mind while the saga was waiting for a driver. */
+public class RiderCancelled(
+    public val reason: String = "rider cancelled",
+) : ResumePayload()
 
 /** The saga's `type` column, and the only string that names it. */
 public const val ORDER_SAGA_TYPE: String = "order"

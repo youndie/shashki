@@ -96,4 +96,55 @@ public class Rides {
         public val parent: Rides = Rides(),
         public val id: String,
     )
+
+    /** `POST /api/rides/{id}/cancel`. Before a driver is assigned this is the order saga compensating from the middle. */
+    @Resource("{id}/cancel")
+    public class Cancel(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
+}
+
+/** What a driver does with an offer. Not answering is not a decision — the server times it out. */
+@Serializable
+public enum class DriverDecision {
+    ACCEPT,
+    DECLINE,
+}
+
+/** `driverId` is a field until B-09 puts it in the driver's token. */
+@Serializable
+public data class OfferAnswer(
+    val driverId: String,
+    val decision: DriverDecision,
+)
+
+/** The offer as the driver sees it: the kit's OfferCard, minus the seconds — those the client counts from [expiresAtEpochMs]. */
+@Serializable
+public data class OfferView(
+    val rideId: String,
+    val rideClass: RideClass,
+    val quote: Quote,
+    val pickup: GeoPoint,
+    val dropoff: GeoPoint,
+    val expiresAtEpochMs: Long,
+)
+
+/**
+ * The driver's side of matching. `GET /api/driver/offers/{driverId}` is the offer waiting for this
+ * driver, or 404; `POST /api/driver/offers/{rideId}/answer` is the driver's decision on it.
+ */
+@Resource("/api/driver/offers")
+public class DriverOffers {
+    @Resource("{driverId}")
+    public class ForDriver(
+        public val parent: DriverOffers = DriverOffers(),
+        public val driverId: String,
+    )
+
+    @Resource("{rideId}/answer")
+    public class Answer(
+        public val parent: DriverOffers = DriverOffers(),
+        public val rideId: String,
+    )
 }

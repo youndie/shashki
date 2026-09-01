@@ -2,6 +2,7 @@ package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.Rides
+import io.github.youndie.shashki.server.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
@@ -23,6 +24,7 @@ import org.koin.ktor.ext.inject
  */
 public fun Route.rideRoutes() {
     val requestRide by inject<RequestRideUseCase>()
+    val cancelRide by inject<CancelRideUseCase>()
     val rides by inject<RideRepository>()
 
     post<Rides> {
@@ -32,5 +34,9 @@ public fun Route.rideRoutes() {
 
     get<Rides.ById> { route ->
         call.respond(rides.find(route.id) ?: throw RideNotFoundException(route.id))
+    }
+
+    post<Rides.Cancel> { route ->
+        call.respond(cancelRide(route.id).getOrThrow())
     }
 }

@@ -379,6 +379,15 @@ not for a restart. The first draft of the recovery test conflated the two and th
 conflation. The distinction matters for B-12: the sweeper handles the suspended shape, and the
 `PROCESSING` shape has no sweeper because it needs none — the next call for that id is the recovery.
 
+**Consequence 1.4f — petich's expiry is a rollback, not a cascade, so the per-offer deadline is the
+application's.** `expireSuspended` sends an expired suspension straight to `triggerCompensation`.
+The brief wants "decline → cascade to the next driver" and the kit draws fifteen seconds per driver
+inside ninety of asking; those are two clocks. Built in B-12 as: an in-process timer per offer that
+resumes the saga with `IGNORED` (the cascade), and petich's `ttl` set to the ninety-second budget
+(the rollback). The `Resuspend` result is what makes the cascade a loop inside one step rather than a
+step per candidate. After a restart the timers are gone and the budget is what survives — a
+degradation, named, and the only thing petich-scheduler would buy back.
+
 **Consequence 1.4c — one ride is two sagas and a stretch of no saga, and `RideStatus` had said
 otherwise.** The first cut of `protocol/.../Ride.kt` documented the status enum as "the order of the
 saga". It is not: the *order saga* runs the five phases once, `REQUESTED → ASSIGNED` — quote, hold,

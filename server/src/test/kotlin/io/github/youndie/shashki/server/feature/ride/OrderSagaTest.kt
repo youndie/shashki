@@ -5,14 +5,18 @@ import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
 import io.github.youndie.shashki.server.dispatch.FixedCandidateSource
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
+import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
+import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswer
+import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswerStep
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.HoldPaymentStep
 import io.github.youndie.shashki.server.feature.ride.saga.ORDER_SAGA_TYPE
+import io.github.youndie.shashki.server.feature.ride.saga.OfferStep
+import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
 import io.github.youndie.shashki.server.feature.ride.saga.OrderStep
 import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
-import io.github.youndie.shashki.server.feature.ride.saga.ReserveDriverStep
 import io.github.youndie.shashki.server.feature.ride.saga.RideAssignedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
@@ -21,9 +25,13 @@ import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import io.github.youndie.shashki.server.testing.PostgresHarness
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
 import ru.workinprogress.petich.InterceptorResult
 import ru.workinprogress.petich.Petich
+import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichInterceptor
 import ru.workinprogress.petich.PetichPhase
 import ru.workinprogress.petich.PetichResult
@@ -44,15 +52,36 @@ class OrderSagaTest {
     private val storage = SagaStorage(PostgresHarness.database, json)
     private val payments = InMemoryPaymentGateway()
     private val reservations = InMemoryDriverReservations()
+    private val clock = PetichClock { System.currentTimeMillis() }
+    private val timeouts = OfferTimeouts(CoroutineScope(SupervisorJob() + Dispatchers.Default)) { _, _ -> }
 
-    private val steps: List<PetichInterceptor<*>> =
-        listOf(
+    private fun offerStep(candidates: FixedCandidateSource = FixedCandidateSource()) =
+        OfferStep(candidates, reservations, InMemoryOfferBoard(), clock, timeouts)
+
+    private fun stepsWith(candidates: FixedCandidateSource = FixedCandidateSource()): List<PetichInterceptor<*>> {
+        val offers = offerStep(candidates)
+        return listOf(
             QuoteStep(StraightLineRouteEstimator(), Pricing()),
             ServiceAreaStep(),
             HoldPaymentStep(payments),
-            ReserveDriverStep(FixedCandidateSource(), reservations),
+            offers,
+            DriverAnswerStep(candidates, reservations, offers),
             PublishAssignedStep(json),
         )
+    }
+
+    private val steps: List<PetichInterceptor<*>> = stepsWith()
+
+    /** The saga stops to ask the nearest driver; the driver says yes. Two passes, as in production. */
+    private suspend fun runToAssigned(
+        engine: ru.workinprogress.petich.PetichEngine,
+        id: String,
+    ): PetichResult {
+        val parked = engine.process(order(id))
+        if (parked !is PetichResult.ActionRequired) return parked
+        val saga = checkNotNull(storage.petiches.findById(id))
+        return engine.process(saga.copy(resumePayload = DriverAnswer("driver-1", DriverAnswer.Outcome.ACCEPT)))
+    }
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()
@@ -60,7 +89,7 @@ class OrderSagaTest {
     @Test
     fun `a ride runs through every phase, holds the fare, reserves a driver and leaves one event in the outbox`() =
         runTest {
-            val result = orderSagaEngine(steps, storage).process(order("ride-ok"))
+            val result = runToAssigned(orderSagaEngine(steps, storage, clock), "ride-ok")
 
             assertIs<PetichResult.Success>(result)
             assertEquals(PetichStatus.COMPLETED, result.petich.status)
@@ -87,10 +116,17 @@ class OrderSagaTest {
                 PetichPhase.EXECUTION,
                 PetichPhase.POST_PROCESSING,
             )) {
-                val engine = orderSagaEngine(steps.withDeathAt(dieBefore), storage)
+                val engine = orderSagaEngine(steps.withDeathAt(dieBefore), storage, clock)
                 val id = "ride-dies-before-$dieBefore"
 
-                val result = engine.process(order(id))
+                var result = engine.process(order(id))
+                // Past EXECUTION the saga first parks for a driver; the death is on the pass that
+                // the driver's answer starts, so answer it.
+                if (result is PetichResult.ActionRequired) {
+                    val saga = checkNotNull(storage.petiches.findById(id))
+                    result =
+                        engine.process(saga.copy(resumePayload = DriverAnswer("driver-1", DriverAnswer.Outcome.ACCEPT)))
+                }
 
                 assertTrue(result !is PetichResult.Success, "$dieBefore: the saga must not complete")
                 assertEquals(emptyList(), payments.activeHolds().toList(), "$dieBefore: a hold survived the death")
@@ -132,14 +168,11 @@ class OrderSagaTest {
             storage.petiches.saveOrGet(parked)
 
             // A fresh process picks the row up: the sweeper, a retried request, or the next call
-            // for that id. It must continue from EXECUTION — not re-run AUTHORIZATION and hold twice.
-            val resumed =
-                orderSagaEngine(
-                    steps,
-                    storage,
-                ).process(checkNotNull(storage.petiches.findById("ride-resumed")))
-
-            assertIs<PetichResult.Success>(resumed)
+            // for that id. It continues at EXECUTION — not re-running AUTHORIZATION and holding
+            // twice — asks a driver and parks; the driver's answer finishes it.
+            val engineB = orderSagaEngine(steps, storage, clock)
+            val firstPass = engineB.process(checkNotNull(storage.petiches.findById("ride-resumed")))
+            assertIs<PetichResult.ActionRequired>(firstPass)
             assertEquals(
                 listOf(hold),
                 payments.activeHolds().map {
@@ -147,6 +180,15 @@ class OrderSagaTest {
                 },
                 "resumed, not re-run: the one hold from before the death",
             )
+
+            val resumed =
+                engineB.process(
+                    checkNotNull(storage.petiches.findById("ride-resumed"))
+                        .copy(resumePayload = DriverAnswer("driver-1", DriverAnswer.Outcome.ACCEPT)),
+                )
+
+            assertIs<PetichResult.Success>(resumed)
+            assertEquals(listOf(hold), payments.activeHolds().map { it.id }, "still the one hold after the answer")
             assertEquals("driver-1", reservations.reservedFor("ride-resumed"))
             assertEquals(listOf(RideAssignedEvent.TYPE), storage.outbox.fetchPending().map { it.type })
         }
@@ -154,16 +196,12 @@ class OrderSagaTest {
     @Test
     fun `no cars nearby compensates the hold rather than leaving the rider charged`() =
         runTest {
-            val noCars =
-                steps.map { step ->
-                    if (step is ReserveDriverStep) {
-                        ReserveDriverStep(FixedCandidateSource(emptyList()), reservations)
-                    } else {
-                        step
-                    }
-                }
-
-            val result = orderSagaEngine(noCars, storage).process(order("ride-no-cars"))
+            val result =
+                orderSagaEngine(
+                    stepsWith(FixedCandidateSource(emptyList())),
+                    storage,
+                    clock,
+                ).process(order("ride-no-cars"))
 
             assertIs<PetichResult.Error>(result)
             assertEquals(emptyList(), payments.activeHolds().toList())
@@ -174,7 +212,7 @@ class OrderSagaTest {
         runTest {
             val far = order("ride-far", pickup = GeoPoint(48.8566, 2.3522))
 
-            val result = orderSagaEngine(steps, storage).process(far)
+            val result = orderSagaEngine(steps, storage, clock).process(far)
 
             assertIs<PetichResult.Error>(result)
             assertEquals(emptyList(), payments.activeHolds().toList())

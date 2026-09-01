@@ -1,6 +1,10 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.shashki.protocol.DriverDecision
+import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.OfferAnswer
+import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.RideStatus
@@ -32,7 +36,7 @@ class RideRoutesTest {
     fun clean() = PostgresHarness.truncateAll()
 
     @Test
-    fun `asking for a car returns the ride assigned, and it can be read back by id`() =
+    fun `asking for a car parks it at MATCHING, and the driver's accept makes it ASSIGNED`() =
         testApplication {
             application { shashki(PostgresHarness.database) }
             val client = typedClient()
@@ -52,13 +56,59 @@ class RideRoutesTest {
                 }
             assertEquals(HttpStatusCode.Created, created.status)
             val ride = created.body<RideView>()
-            assertEquals(RideStatus.ASSIGNED, ride.status)
-            assertEquals("driver-1", ride.driverId)
+            assertEquals(RideStatus.MATCHING, ride.status)
+            assertEquals(null, ride.driverId)
             assertNotNull(ride.quote).let { assertEquals("USD", it.currency) }
 
+            // The driver's app sees the offer the kit draws, and answers it.
+            val offer = client.get(DriverOffers.ForDriver(driverId = "driver-1"))
+            assertEquals(HttpStatusCode.OK, offer.status)
+            assertEquals(ride.id, offer.body<OfferView>().rideId)
+
+            val answered =
+                client.post(DriverOffers.Answer(rideId = ride.id)) {
+                    contentType(ContentType.Application.Json)
+                    setBody(OfferAnswer("driver-1", DriverDecision.ACCEPT))
+                }
+            assertEquals(HttpStatusCode.OK, answered.status)
+            assertEquals(RideStatus.ASSIGNED, answered.body<RideView>().status)
+            assertEquals("driver-1", answered.body<RideView>().driverId)
+
             val read = client.get(Rides.ById(id = ride.id))
-            assertEquals(HttpStatusCode.OK, read.status)
-            assertEquals(ride, read.body<RideView>())
+            assertEquals(RideStatus.ASSIGNED, read.body<RideView>().status)
+            assertEquals(
+                HttpStatusCode.NotFound,
+                client.get(DriverOffers.ForDriver(driverId = "driver-1")).status,
+                "an accepted offer leaves the board",
+            )
+        }
+
+    @Test
+    fun `the rider can cancel while a driver is being asked, and not after`() =
+        testApplication {
+            application { shashki(PostgresHarness.database) }
+            val client = typedClient()
+            val ride =
+                client
+                    .post(Rides()) {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            RideRequest(
+                                "rider-1",
+                                GeoPoint(46.0511, 14.5051),
+                                GeoPoint(46.2237, 14.4576),
+                                RideClass.ECONOMY,
+                                "card-4417",
+                            ),
+                        )
+                    }.body<RideView>()
+
+            val cancelled = client.post(Rides.Cancel(id = ride.id))
+            assertEquals(HttpStatusCode.OK, cancelled.status)
+            assertEquals(RideStatus.CANCELLED, cancelled.body<RideView>().status)
+
+            // Cancelling again: the saga is no longer waiting, and that is a 400 rather than a repeat.
+            assertEquals(HttpStatusCode.BadRequest, client.post(Rides.Cancel(id = ride.id)).status)
         }
 
     @Test

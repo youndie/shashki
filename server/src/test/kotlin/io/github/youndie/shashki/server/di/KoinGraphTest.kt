@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server.di
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.rideModule
+import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.module.dsl.factoryOf
@@ -41,11 +42,12 @@ import kotlin.test.assertTrue
  */
 class KoinGraphTest {
     private val noDatabase: Database = Database.connect({ error("the graph verifier never opens a connection") })
+    private val noScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
 
     @OptIn(KoinExperimentalAPI::class)
     @Test
     fun `every definition in the ride module can be resolved`() {
-        rideModule(noDatabase).verify(
+        rideModule(noDatabase, noScope).verify(
             // `PetichEngine` is built by `orderSagaEngine`, which hands its constructor every
             // argument itself; `verify()` cannot see that and asks the container for each one in
             // turn. All six are named, per definition rather than as a global `extraTypes`, so a
@@ -60,6 +62,9 @@ class KoinGraphTest {
                         PetichClock::class,
                         PetichEngineMetrics::class,
                     ),
+                    // `OfferTimeouts` takes its `onExpired` as a suspend lambda written in the
+                    // module — a `Function3` once the continuation is counted.
+                    definition<OfferTimeouts>(kotlin.jvm.functions.Function3::class),
                 ),
         )
     }
@@ -69,7 +74,7 @@ class KoinGraphTest {
         // `verify()` over an empty module passes, so it is not by itself evidence of anything.
         // Resolving a binding by type is. The repository is the one that reaches through the
         // saga storage and the tables — built, not connected: Exposed's `connect` is lazy.
-        val koin = koinApplication { modules(rideModule(noDatabase)) }.koin
+        val koin = koinApplication { modules(rideModule(noDatabase, noScope)) }.koin
         assertNotNull(koin.get<RideRepository>(), "the ride repository is not in the graph")
     }
 
