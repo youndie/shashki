@@ -57,3 +57,6 @@ dependencyResolutionManagement {
 include(":protocol")
 include(":server")
 include(":shared-ui")
+// The browser half of sign-in. Not in :protocol, which is the contract with *this* server — the
+// identity provider is a different service with its own wire format. See B-09.
+include(":auth-client")

@@ -515,6 +515,27 @@ linuxX64. Authorization code with PKCE from a browser is a redirect, a verifier,
 and a token exchange; the challenge needs SHA-256, which in the browser means WebCrypto and therefore
 an asynchronous call. Small, but it is work the brief books as "shildik modules".
 
+**Consequence 1.6c1 — built 2026-09-02, and three things about it were different from the
+sentence above.**
+
+| Fact | Where verified |
+|---|---|
+| shildik already has PKCE — `Pkce.matches(challenge, verifier)`, `S256` only, constant-time — but only the **verifying** half. There is no generator anywhere in it, published or not | `shildik/crypto/src/commonMain/.../Pkce.kt` |
+| It verifies with `dev.whyoleg.cryptography`, which publishes `cryptography-core-wasm-js`, `cryptography-random-wasm-js` and `cryptography-provider-webcrypto-wasm-js` at 0.6.0 | `https://repo1.maven.org/maven2/dev/whyoleg/cryptography/` |
+| shildik's `crypto` and `shared-oidc` modules are `jvm, macosArm64, linuxX64, linuxArm64`. `shared-oidc` — the module holding the `@Resource` endpoint types — depends only on `ktor-resources` and `kotlinx-serialization-json`, both of which publish `wasmJs` | `shildik/crypto/build.gradle.kts`, `shildik/shared-oidc/build.gradle.kts` |
+| shildik's `authorize` serves shildik's **own** sign-in page; the choice between a magic link and Google is made there and returns through `callback/{method}`. The client names no method | `shildik/server/src/commonMain/.../oidc/OidcRoutes.kt`, `startAuthorization` |
+
+What this changes. The half that is genuinely ours is smaller than "a browser OIDC client": there is
+no `method` parameter, no branch for Google, and no hand-written WebCrypto — the same library
+shildik verifies with does SHA-256 and secure random on `wasmJs`, so the asynchrony stays in the
+signature (`suspend fun challenge`) and nowhere else. What is bigger is the reason: shildik is not
+missing a browser *variant*, it is missing a browser **target**, on modules whose dependencies
+already have one. `shared-oidc` in particular is two lines away from giving the browser the typed
+addresses that the rest of this portfolio insists on — which is why shashki's client builds the
+authorize URL by hand today, the one place in this repository where a path exists as a string. That
+is worth proposing upstream rather than working around twice; it is not filed, because filing in
+somebody else's repository is asked about first.
+
 **Consequence 1.6d — shashki would be smtpkn's first JVM consumer of consequence.** The library says
 plainly that the JVM target is unclaimed. That is a feature of this project, not a defect — a
 reference service is exactly what turns "compiles and runs in CI" into "claimed" — but it has to be
