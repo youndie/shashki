@@ -9,9 +9,9 @@ import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
-    fun `the module installs and answers its health probe`() =
+    fun `the base module installs and answers its health probe without a database`() =
         testApplication {
-            application { shashki() }
+            application { baseModule() }
 
             val response = client.get("/health")
 

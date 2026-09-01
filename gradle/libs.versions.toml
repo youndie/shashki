@@ -14,6 +14,14 @@ sborka = "0.1.0.23"
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
 logback = "1.5.20"
+# The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
+# choose — a different one here is a version conflict, not a preference.
+petich = "0.1.0.10"
+exposed = "1.4.0"
+hikari = "7.1.0"
+postgresql = "42.7.13"
+flyway = "13.3.0"
+testcontainers = "1.21.4"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
 
@@ -25,6 +33,28 @@ ktor-server-statusPages = { module = "io.ktor:ktor-server-status-pages" }
 ktor-server-callLogging = { module = "io.ktor:ktor-server-call-logging" }
 ktor-server-testHost = { module = "io.ktor:ktor-server-test-host" }
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
+ktor-server-resources = { module = "io.ktor:ktor-server-resources" }
+ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation" }
+ktor-client-resources = { module = "io.ktor:ktor-client-resources" }
+# Typed routes, declared once in :protocol and read by both sides. Publishes wasmJs and jvm — checked
+# against the module metadata before it was added, because a KMP module cannot depend on a JVM-only
+# artefact and the failure would name a variant rather than the reason.
+ktor-resources = { module = "io.ktor:ktor-resources" }
+
+petich-core = { module = "io.github.youndie:petich-core", version.ref = "petich" }
+petich-postgres = { module = "io.github.youndie:petich-postgres", version.ref = "petich" }
+petich-outboxCore = { module = "io.github.youndie:petich-outbox-core", version.ref = "petich" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-migrationJdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+koin-ktor = { module = "io.insert-koin:koin-ktor" }
+koin-loggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 

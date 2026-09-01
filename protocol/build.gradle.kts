@@ -18,6 +18,10 @@ kotlin {
         commonMain.dependencies {
             implementation(wip.kotlinx.serialization.json)
             implementation(wip.kotlinx.datetime)
+            // `@Resource` routes live here so the path to an endpoint exists as a string on neither
+            // side: the server matches the class, the client builds the URL from it, and a renamed
+            // route is a compile error rather than a 404 in production.
+            api("io.ktor:ktor-resources:${wip.versions.ktor.get()}")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

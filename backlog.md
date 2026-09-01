@@ -39,12 +39,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (14)
+## Open (13)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
-| [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
 | [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11, B-20 |
 | [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[ ]` | Matching: the geo-index, the candidate query and the driver simulator | P0 | L | - |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
@@ -58,7 +57,7 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (9)
+## Closed (10)
 
 **Remove the unknowns**
 
@@ -74,6 +73,10 @@ re-prioritising one must never move its file.
 **Something builds and can be looked at**
 
 - [B-08](docs/backlog/B-08-repository-skeleton.md) `[x]` - The repository skeleton: modules, targets, versions and the check target
+
+**The order survives the process dying**
+
+- [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[x]` - The order saga on petich, with the outbox required rather than optional
 
 <!-- END INDEX -->
 

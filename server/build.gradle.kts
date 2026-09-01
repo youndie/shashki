@@ -25,9 +25,36 @@ dependencies {
     implementation(libs.ktor.server.statusPages)
     implementation(libs.ktor.server.callLogging)
     implementation(libs.ktor.serialization.json)
+    implementation(libs.ktor.server.resources)
     implementation(wip.kotlinx.serialization.json)
     runtimeOnly(libs.logback.classic)
 
+    // The order saga: the engine, its Postgres repository, and the outbox relay. petich-postgres
+    // ships no driver, no pool and no DDL on purpose — those three are the application's, below.
+    implementation(libs.petich.core)
+    implementation(libs.petich.postgres)
+    implementation(libs.petich.outboxCore)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.json)
+    implementation(libs.hikari)
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.postgresql)
+    runtimeOnly(libs.postgresql)
+
+    implementation(platform(wip.koin.bom))
+    implementation(wip.koin.core)
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.loggerSlf4j)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.testHost)
+    // The route tests build their URLs from the same @Resource classes a real client would.
+    testImplementation(libs.ktor.client.contentNegotiation)
+    testImplementation(libs.ktor.client.resources)
+    testImplementation(wip.kotlinx.coroutines.test)
+    // The schema-drift guard: Flyway's V1 is hand-written and the tables are petich's, and the only
+    // thing that says they agree is a test that asks Exposed what DDL is still missing.
+    testImplementation(libs.exposed.migrationJdbc)
+    testImplementation(libs.testcontainers.postgresql)
 }

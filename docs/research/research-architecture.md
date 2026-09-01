@@ -369,6 +369,16 @@ not give.** The brief has the outbox publish `ride-events` into booblik; with th
 silently drops events when the repository cannot store them, and the saga still completes correctly.
 Turn it on at construction.
 
+**Consequence 1.4e — recovery after a dead process is `process()` re-reading the row, and a
+suspended row is not that.** Verified against a real Postgres in B-11: `PetichEngine.process()` on
+a `PROCESSING` row continues from the persisted phase and interceptor index, so a saga killed after
+AUTHORIZATION committed resumes at EXECUTION with the hold it already took and does not take a
+second one. A row left by `InterceptorResult.Suspend` is `PENDING_SIGNATURE` and re-processing it
+without a resume payload is a `SystemFailure` — correctly, because that row is waiting for a human,
+not for a restart. The first draft of the recovery test conflated the two and the engine refused the
+conflation. The distinction matters for B-12: the sweeper handles the suspended shape, and the
+`PROCESSING` shape has no sweeper because it needs none — the next call for that id is the recovery.
+
 **Consequence 1.4c — one ride is two sagas and a stretch of no saga, and `RideStatus` had said
 otherwise.** The first cut of `protocol/.../Ride.kt` documented the status enum as "the order of the
 saga". It is not: the *order saga* runs the five phases once, `REQUESTED → ASSIGNED` — quote, hold,

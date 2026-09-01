@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.protocol
 
+import io.ktor.resources.Resource
 import kotlinx.serialization.Serializable
 
 /**
@@ -36,4 +37,63 @@ public enum class RideClass {
     ECONOMY,
     COMFORT,
     BUSINESS,
+}
+
+/** WGS 84, degrees. Latitude first, as the map libraries this product will meet all expect. */
+@Serializable
+public data class GeoPoint(
+    val lat: Double,
+    val lon: Double,
+)
+
+/**
+ * What a ride is going to cost, and the route it was costed on.
+ *
+ * Money is an integer count of the smallest unit — cents — because a fare is added, multiplied by a
+ * class coefficient and compared, and a `Double` does two of those three wrong.
+ */
+@Serializable
+public data class Quote(
+    val distanceMetres: Int,
+    val durationSeconds: Int,
+    val amountCents: Long,
+    val currency: String,
+)
+
+/** What a rider sends to ask for a car. `riderId` is a field until B-09 puts it in the token. */
+@Serializable
+public data class RideRequest(
+    val riderId: String,
+    val pickup: GeoPoint,
+    val dropoff: GeoPoint,
+    val rideClass: RideClass,
+    val paymentMethodId: String,
+)
+
+/** A ride as the rider sees it. Everything optional arrives as the saga produces it. */
+@Serializable
+public data class RideView(
+    val id: String,
+    val status: RideStatus,
+    val rideClass: RideClass,
+    val pickup: GeoPoint,
+    val dropoff: GeoPoint,
+    val quote: Quote? = null,
+    val driverId: String? = null,
+    val cancellationReason: String? = null,
+)
+
+/**
+ * The ride routes, declared once. `POST /api/rides` asks for a car; `GET /api/rides/{id}` reads it.
+ *
+ * Both sides build from this class, so the path exists as a string in exactly one place — here —
+ * and a route renamed is a route the compiler notices.
+ */
+@Resource("/api/rides")
+public class Rides {
+    @Resource("{id}")
+    public class ById(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
 }

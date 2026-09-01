@@ -24,3 +24,8 @@ reference service.
 - AC: a clean checkout on a machine with an empty cache builds.
 - AC: research §1's version table re-verified against what actually resolves, and §3 Risk 3 closed
   with the outcome.
+
+**Amended after B-11.** The server now pins `petich 0.1.0.10` — a CI-numbered build on the
+`/snapshots` line, like kvadrant's `0.2.0` — plus Exposed 1.4.0 (petich's own pin), Hikari, the
+Postgres driver, Flyway and Testcontainers at the numbers the neighbouring service uses. The
+catalog is the fact; this item re-reads it, not the research table.
