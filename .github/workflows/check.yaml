@@ -70,6 +70,38 @@ jobs:
       - if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: python3 scripts/docs_check.py --on-main
 
+  # The code gate, beside the documentation one. Two jobs and not two steps of one: they fail for
+  # unrelated reasons and a contributor runs them separately, so a red build should say which half.
+  #
+  # **`ubuntu-latest`, decided rather than defaulted.** The label follows the repository's
+  # *visibility* and not the account: a private repository's `ubuntu-latest` job does not start at
+  # all while the account's Actions minutes are unpaid, and a self-hosted label on a repository with
+  # no runners parks every run in `queued` — which reads exactly like success and is worse than a
+  # failure. A public repository gets GitHub's standard runners for free, so this is the right label
+  # for the one this is going to be. It stops being right if the repository is ever made private,
+  # and the check for that is `gh repo view --json isPrivate` plus confirming a run **finished**
+  # rather than merely that it is not red.
+  gradle:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Not `build`: `check` is the target a contributor runs, and the distribution is not something
+      # a pull request needs built.
+      #
+      # `viddikVerify` is deliberately **not** here yet. The goldens were recorded on one machine and
+      # whether they mean the same thing on another is an open measurement — B-02 — so wiring the
+      # comparison in now would either redden every run or, worse, pass for a reason nobody checked.
+      - run: ./gradlew check --no-daemon
+
   # Separate from the gate, and on a schedule rather than on a pull request, because an anchor rots
   # when somebody refactors a **different** repository. A pull request here is the least likely
   # moment for one to break, and running it there trains people to ignore a red build they did not

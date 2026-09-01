@@ -13,6 +13,23 @@ all of it.
 3. **The layer document the task belongs to** — `docs/features/`, `docs/screens/`, `docs/api/`,
    `docs/services/`. None of these exist yet; see below.
 
+## Which skill to work through
+
+Feature work goes through a skill rather than through improvisation, and which one follows from
+which half of the product the task is in.
+
+| The task is | Use |
+|---|---|
+| a server feature or endpoint — domain and data layers, repository, use case, routing, the DI module | **`server-feature-impl`** |
+| a client feature — repository / use case / view model, the Screen/Content split, wiring through DI | **`client-feature-impl`** |
+
+Invoke the skill first and follow it; this file does not restate what it says. The division of labour
+is the point — a skill carries *how* the layers are built and changes when that changes, while this
+file says *which* one applies here and would go stale the moment it tried to summarise one.
+
+A task that is neither — the build, the documentation tree, a spike answering a research question —
+has no skill and is done directly against the backlog item.
+
 ## The rule the tree is built on
 
 **`main` describes what exists. An open pull request describes what will be.** A feature that is

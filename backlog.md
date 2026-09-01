@@ -39,7 +39,7 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (16)
+## Open (15)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
@@ -47,7 +47,6 @@ re-prioritising one must never move its file.
 | [B-02](docs/backlog/B-02-measure-golden-host-independence.md) `[ ]` | Measure whether shashki's goldens are host-independent | P0 | S | - |
 | [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[ ]` | The foundation values: shashki's ramp, spacing, ink and golden pin | P0 | M | - |
 | [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[ ]` | ClassTile and OfferCard on kvadrant primitives | P0 | M | B-03 |
-| [B-08](docs/backlog/B-08-repository-skeleton.md) `[ ]` | The repository skeleton: modules, targets, versions and the check target | P0 | M | - |
 | [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
 | [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11 |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
@@ -60,13 +59,17 @@ re-prioritising one must never move its file.
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (3)
+## Closed (4)
 
 **Remove the unknowns**
 
 - [B-15](docs/backlog/B-15-answer-the-kits-open-questions.md) `[x]` - Settle the kit's 4/3 spacing: as drawn, as converted, or fitted
 - [B-18](docs/backlog/B-18-kvadrant-overridable-on-accent.md) `[x]` - kvadrant-ui: onAccent becomes overridable, keeping the computed value as the default
 - [B-19](docs/backlog/B-19-kvadrant-app-bar-tokens.md) `[x]` - kvadrant-ui: the app bar's dimensions become theme tokens
+
+**Something builds and can be looked at**
+
+- [B-08](docs/backlog/B-08-repository-skeleton.md) `[x]` - The repository skeleton: modules, targets, versions and the check target
 
 <!-- END INDEX -->
 

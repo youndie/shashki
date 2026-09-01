@@ -1,0 +1,37 @@
+# What this repository decides for itself. Everything several repositories have to agree on — Kotlin,
+# coroutines, serialization, Ktor's version, Compose, KSP, JUnit — comes from the shared `wip`
+# catalog instead, reached as `wip.…` beside this one.
+#
+# Nothing is declared here before something reads it. A version nobody resolves is a number nobody
+# has checked, and it goes stale silently.
+
+[versions]
+# The convention plugins. The settings plugin is versioned in `settings.gradle.kts`; these are the
+# project half, and they need a version here because the root build has to put them on the plugin
+# classpath — see the note there.
+sborka = "0.1.0.23"
+
+# Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
+# not carry because which of them a service needs is the service's business.
+logback = "1.5.20"
+kvadrant = "0.1.0"
+viddik = "0.3.3.19"
+
+[libraries]
+ktor-server-core = { module = "io.ktor:ktor-server-core" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio" }
+ktor-server-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation" }
+ktor-server-statusPages = { module = "io.ktor:ktor-server-status-pages" }
+ktor-server-callLogging = { module = "io.ktor:ktor-server-call-logging" }
+ktor-server-testHost = { module = "io.ktor:ktor-server-test-host" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
+
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kvadrant" }
+
+[plugins]
+sborkaJvm = { id = "ru.workinprogress.sborka.jvm", version.ref = "sborka" }
+sborkaKmp = { id = "ru.workinprogress.sborka.kmp", version.ref = "sborka" }
+sborkaLint = { id = "ru.workinprogress.sborka.lint", version.ref = "sborka" }
+viddik = { id = "ru.workinprogress.viddik", version.ref = "viddik" }
