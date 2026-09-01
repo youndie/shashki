@@ -1,7 +1,7 @@
 ---
 id: B-18
 title: "kvadrant-ui: onAccent becomes overridable, keeping the computed value as the default"
-status: open
+status: done
 priority: P0
 size: XS
 stage: stage-0-unknowns
@@ -47,3 +47,19 @@ contrast-optimal threshold was a correct calculation attached to the wrong concl
 - AC: every existing golden is byte-identical, because the default is unchanged.
 - AC: the ABI dump is updated in the same commit as the signature.
 - Anchors: `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/KvadrantColors.kt`
+
+## What it turned out to be
+
+**Done upstream: kvadrant-ui B-48, merged.** `onAccent` is a constructor parameter of
+`KvadrantColors` defaulting to `contrastOn(accent)`, carried through `dark()`, `light()` and
+`copy()`. The default is held for all twenty accents by a test, because raising it is the helpful
+edit that would quietly stop the library reproducing Metro.
+
+**One hazard neither this item nor the upstream one named, and it was checked rather than argued:**
+storing the ink means `accessible()`, which rebuilds the palette through `copy(accent = …)`, hands
+the walked accent an ink computed from the original. That is only a defect if the walk can cross the
+0.5 luminance threshold, and it cannot — `accessibleAccent` moves the accent *away* from the text on
+it. Asserted for all twenty with a positive control.
+
+The change is **unreleased**: it sits on kvadrant's `main` above 0.1.0. shashki depends on a version
+that does not exist yet, which [B-13](B-13-pin-every-dependency.md) already owns.

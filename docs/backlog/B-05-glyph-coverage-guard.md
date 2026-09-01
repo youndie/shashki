@@ -14,12 +14,19 @@ documentation is explicit that a character the bundled font does not cover falls
 font, which makes the golden a record of the machine that took it — and the failure is silent, since
 the screenshot still renders.
 
-- **Make it a fixture failure, not a warning.** `ViddikGlyphCoverage.missingGlyphs(text)` reads the
-  font's own `cmap`; a non-empty result fails.
-- The rejected alternative is checking once by hand. The set of strings grows with every fixture, and
-  a character added in six months arrives with no check attached.
-- Covers the bundled Selawik and the bundled Source Sans 3, since `KvadrantText` routes per
-  character between them.
+**The defect this was written for is gone; the mechanism is not.** Research §1.2c read the bundled
+`cmap`s and found no Selawik face carries `₽` (U+20BD), so every price would have been drawn by a
+host font. The answer was to price in `$`, which all five faces cover — along with `·`, `—`, `×` and
+`…`, the kit's other non-alphabetic characters. Nothing in the kit falls through today.
+
+- **Guard the next one, because this one was silent.** `KvadrantText` splits by script, and the
+  library's own KDoc says the real rule is coverage: "anything… that is neither Latin nor Cyrillic
+  has to be checked against Selawik before it is drawn", with `U+25CF` as the character that already
+  fell out of both runs once. A screenshot of a missing glyph still renders.
+- `ViddikGlyphCoverage.missingGlyphs(text)` reads the font's own `cmap`; a non-empty result fails the
+  fixture rather than warning.
+- The licence plate was the same trap inverted — the kit's `А 123 ВС 177` was Cyrillic А/В/С — and is
+  resolved by the plate becoming European Latin (§1.2d). One run, one font.
 
 - AC: a helper every fixture calls, and one deliberately broken fixture proving it fails.
 - Anchors: `viddik/README.md`,

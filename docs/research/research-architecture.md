@@ -77,8 +77,8 @@ Cyan's luminance is 0.312 and Amber's 0.447, so **both resolve to white**.
 
 | Accent | luminance | white ink | black ink |
 |---|---|---|---|
-| Cyan `#1BA1E2` | 0.312 | 2.90:1 — what `contrastOn` returns | 7.24:1 |
-| Amber `#F0A30A` | 0.447 | 2.11:1 — what `contrastOn` returns | 9.94:1 |
+| Cyan `#1BA1E2` | 0.3121 | 2.90:1 — what `contrastOn` returns | 7.24:1 |
+| Amber `#F0A30A` | 0.4474 | 2.11:1 — what `contrastOn` returns | 9.95:1 |
 
 **Correction, made while writing this section.** An earlier draft presented the left column as the
 library choosing the worse of two available inks, on the arithmetic that the contrast-optimal
@@ -159,10 +159,19 @@ one to one:
 a decision". Two readings fit: the conversion was skipped on those five rows, so they are Metro
 pixels labelled dp; or the layout is deliberately scaled by 4/3 while the type ramp is left alone.
 
-**The token source settles it as far as evidence can.** kvadrant generates its tokens from
+**Answered: 12 dp, as drawn.** The reasoning below stands and the decision went the other way from
+it, which is worth keeping rather than tidying. The evidence says the kit's spacing is Metro's pixel
+column with the conversion skipped; the choice says it does not matter. The kit is this product's
+design authority, its artboards are what the goldens are diffed against, and the look was approved at
+12. Metro fidelity is kvadrant's job. shashki's is to look like the kit, and a screen that is
+authentically tighter than the drawing is a screen the designer has to accept twice.
+
+**The evidence, kept because the next reader will re-derive it.** kvadrant generates its tokens from
 `reference/metro-compose-brief/references/metro-tokens.json`, and every one of the kit's five numbers
 is the raw pixel value in that file: `pageMarginPx` 12, tile `gapPx` 12, `appBarIconPx` 48,
-`appBarGlyphPx` 26 — and the app bar's ring is 1.5 px in the component's own comment. Meanwhile the
+`appBarGlyphPx` 26. The fifth, the app bar's ring at 1.5, is 1.5 px in the component's own comment
+and — as kvadrant B-49 established when this was checked — is in no token dump at all; wherever the
+kit read it, it was not the dp column either. Meanwhile the
 kit's type ramp matches the *converted* column exactly, 14 / 15 / 17 / 19 / 24 / 32 / 54 dp. A
 deliberate 4/3 scale-up that happens to land on the px column for spacing while leaving type at the
 dp column is not a story that holds together; a skipped `× 0.75` on five rows is. It is still the
@@ -186,13 +195,26 @@ be expressed against the published library at all was checked rather than assume
 |---|---|---|
 | the type ramp | **yes** | `KvadrantTypography` is a `data class` with a public constructor and public `val`s — `copy()` replaces any slot |
 | page margin, tile gap | **yes** | `KvadrantMetrics` likewise, and `KvadrantTheme` takes a `metrics` argument |
-| ink on an accent surface | **no** | `onAccent` is a computed `val … get() = contrastOn(accent)`, not a constructor parameter. Nothing can override it |
-| app bar height, button, ring | **no** | `HEIGHT`, `BUTTON` and `RING` are `private val`s inside `KvadrantAppBar.kt`. `KvadrantAppBarGlyphSize` is public but a top-level constant, so it is not a theme token either |
+| ink on an accent surface | **was no, now yes** | `onAccent` was a computed `val … get() = contrastOn(accent)`. It is a constructor parameter now, defaulting to the same derivation |
+| app bar height, button, ring | **was no, now yes** | `HEIGHT`, `BUTTON` and `RING` were `private val`s inside `KvadrantAppBar.kt`. They are `appBarHeight`, `appBarMiniHeight`, `appBarButton`, `appBarGlyph` and `appBarRing` in `KvadrantMetrics` now, and `scaled()` carries them |
 
-Verified in `.../theme/KvadrantColors.kt` (line 54), `.../theme/KvadrantTypography.kt`,
-`.../theme/KvadrantMetrics.kt` and `.../components/KvadrantAppBar.kt`. The two "no" rows are the
-whole of what the library has to grow, and both are additive — see
-[D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+**Closed upstream, and this table is the record of what the gap was.** kvadrant-ui B-48 and B-49
+landed both hooks additively, with every default unchanged: `KvadrantColors(onAccent = …)` and the
+five `appBar*` fields on `KvadrantMetrics`. Two breaking changes, one moved golden, and
+`KvadrantAppBarGlyphSize` deprecated rather than deleted. They are **unreleased** — the change sits
+on `main` above 0.1.0 — so shashki's dependency on them is a version that does not exist yet, which
+is [Risk 3](#risk-3-half-the-stack-is-a-snapshot)'s problem and not a new one.
+
+**The ring turned out to be nobody's transcription.** B-49 was filed claiming all five numbers were
+upstream of the code; four are, and the fifth had no source. Settled by looking rather than by
+failing to find: the WP8 SDK's design assembly carries ten control templates and the ApplicationBar
+is not among them, because on the phone it was a shell control rather than a XAML one — so there is
+no template to transcribe, and 1.5 px is the library's own number, now marked as such in KDoc. That
+sharpens §1.1c rather than disturbing it: the kit's ring of 1.5 cannot have come from Microsoft
+either, so it came from the component's `// 1.5 px` comment — the pixel column again.
+
+Verified in `.../theme/KvadrantColors.kt`, `.../theme/KvadrantMetrics.kt` and
+`.../components/KvadrantAppBar.kt`. See [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
 
 **Consequence 1.1d — the app bar does not scale with the theme.** Its height, button and ring are
 constants inside the component, so a scaled theme moves the page around a fixed bar. At the kit's own
@@ -230,11 +252,36 @@ It is ten lines over `ViddikPlatformTextStyle`, which *is* public in `ru.workinp
 and shashki needs its own version anyway because [D2](#d2-kvadrant-ui-is-the-base-and-it-is-pulled-towards-the-kit)
 gives it a ramp built by hand rather than by `KvadrantTypography.default`.
 
-**Consequence 1.2c — the ruble sign is a golden-portability question, not a typographic one.** Every
-fare fixture in the handoff carries `₽` (U+20BD): 249/389 ₽, 420 ₽, 26 940 ₽. If neither Selawik nor
-the bundled Source Sans 3 covers it, it is drawn by a host font and the golden records the machine.
-`ViddikGlyphCoverage` answers this exactly, and the check belongs in the fixtures rather than in
-somebody's head.
+**Consequence 1.2c — the currency sign was a defect in waiting, and the answer was to change the
+currency.** Every fare in the kit carries `₽` (U+20BD), thirteen times. The bundled fonts were read
+directly, `cmap` by `cmap`: **none of the five Selawik faces contains U+20BD**; only the Source Sans 3
+companion does. `KvadrantText` splits a string **by script** and hands Cyrillic runs to that
+companion, so `₽` — neither Latin nor Cyrillic — stays on the Latin run, in the one font that lacks
+it, and is drawn by whatever the host offers. The library predicted this exact failure in the same
+file's KDoc: "the rule is coverage, and *is it Cyrillic* is only an approximation of it… anything
+added that is neither Latin nor Cyrillic has to be checked against Selawik before it is drawn", with
+`U+25CF`, the password mask, as the precedent that already fell out of both runs once.
+
+**Resolved by decision: the product prices in `$`.** `U+0024` is covered by all five Selawik faces,
+as are every other non-alphabetic character the kit uses — `·`, `—`, `×`, `…` — so nothing else in
+the kit falls through. The defect is gone rather than fixed, and this paragraph stays because the
+*mechanism* is what [B-05](../backlog/B-05-glyph-coverage-guard.md) guards against: the next
+character somebody adds gets the same treatment, and the failure is silent — the screenshot renders.
+
+`€` is equally covered and would sit better beside a European city; the choice of `$` was taken
+before the city was, and changing it later costs one constant and a re-record.
+
+**Consequence 1.2d — the licence plate was the same trap wearing Latin clothes, and is also
+resolved.** The kit set the plate as `А 123 ВС 177`, whose `А`, `В`, `С` are **Cyrillic** codepoints
+indistinguishable from the Latin letters. `splitByScript` would have cut it into three runs and drawn
+one short string in two typefaces at one weight — in the element the kit calls "the only inverted
+element on a rider screen, which is why it is the thing you find first". **Resolved by decision: the
+plate is European, in Latin letters**, so it is one run in one font.
+
+**Consequence 1.2e — a European city costs nothing typographically.** Checked before choosing one:
+`selawik_regular` covers `č ž š ä ö ü é å ø ł ą ő ș ć`, so street names with diacritics stay on the
+Latin run. This was worth checking rather than assuming, because it is the same class of defect as
+the two above and the same silence.
 
 ### 1.3 The browser target — MapLibre Compose does not publish for Kotlin/Wasm
 
@@ -577,8 +624,9 @@ question 1's fourth part; the module ships either way and only the number waits.
 
 ### D3. kvadrant-ui grows the two hooks the kit needs
 
-Both are additive, both keep the stock behaviour as the default, and neither asks the library to
-stop being what it is.
+**Done — kvadrant-ui B-48 and B-49, merged.** Both additive, both keeping the stock behaviour as the
+default, and neither asking the library to stop being what it is. What follows is the argument as it
+was made; the shapes it asked for are the shapes that landed.
 
 **`onAccent` becomes overridable.** Today it is `val onAccent: Color get() = contrastOn(accent)` — a
 computed property, so no consumer can supply a different answer. It becomes a constructor parameter
@@ -725,28 +773,39 @@ bochka's own measurements cover.
 record the numbers with what was measured. If it does not hold, the fallback is a static file served
 beside the app, which costs the demo one talking point and nothing else.
 
-### Open question 1. Three questions the kit addressed to the client side
+### Open question 1. The kit's questions — answered, except the one that moves a number
 
-Carried over verbatim from the handoff §1.6 and unanswered here because they are design decisions,
-not research findings: may the 54 dp app bar carry a filled accept button; may the offer screen hide
-the app bar entirely; and is the light theme kvadrant's stock light theme verified by goldens, or
-does it wait for the kit's next pass. The third is the one with a schedule attached — until it is
-answered, fixtures are dark only.
+The three the kit addressed to the client side, and the fourth the research added, were put to the
+owner and came back:
 
-**A fourth goes back with them, and it is the one that changes code:** §1.1c's 4/3. Is the kit's
-layout a deliberate scale-up, or five rows where `× 0.75` was not applied? Adopting 12 dp before that
-is answered risks baking in a units slip; adopting 9 dp risks re-drawing every screen. The question
-answers itself in one screenshot — the class picker at both spacings beside the kit's own artboard.
+| Question | Answer |
+|---|---|
+| May the 54 dp app bar carry a filled accent accept button? | **Simplify for now** — no new app-bar variant; the offer's accept is the filled surface the kit already draws in the card |
+| May the offer screen suppress the app bar entirely? | Same: **not for now**. The screen keeps the bar |
+| Is the light theme kvadrant's stock light, or does it wait for the kit's next pass? | **Stock `KvadrantColors.light()`**, verified by goldens. The light half of the fixture set is scoped work rather than a wait |
+| §1.1c's 4/3: is the kit's spacing a deliberate scale-up or a skipped `× 0.75`? | **12 dp, as drawn** — the kit wins over the derivation, and §1.1c records why the derivation says otherwise |
+
+Three of the four remove the reason fixtures were dark-only, so the suite doubles: every
+fixture gains a light variant, and `KvadrantColors.light()` is checked by a golden rather than
+assumed to be the kit's intent.
 
 ### Open question 2. One wasm bundle or two
 
 The brief proposes two, for a cleaner demo, and that is very likely right. It is worth re-asking once
 D1 lands, because route 2 and route 3 have different fixed costs per bundle.
 
-### Open question 3. The city
+### Open question 3. The city — delegated and chosen, revocably
 
-An OSM extract with a compact graph. It decides the size of the pmtiles archive, the GraphHopper
-import time and every fixture's street names, so it is upstream of more than it looks.
+"Some neutral European city." Chosen on the criteria already written down — a compact graph, an
+airport the fixtures can name, and nothing that reads as a statement — plus one checked in §1.2e,
+that its street names do not leave the bundled Latin face.
+
+**Proposal: Ljubljana.** About 295 000 people and a genuinely small road graph; one airport at
+roughly 26 km, which is the scale the kit's own fixture already assumes ("Airport, terminal B ·
+18.4 km · 26 min"); Latin script with `č ž š`, all covered. This is a choice taken under delegation
+rather than a finding, and [B-06](../backlog/B-06-city-extract-and-tiles.md) records what would
+overturn it: the OSM extract and the pmtiles archive turning out large, or the GraphHopper import
+turning out slow.
 
 ### Open question 4. Whether `shashki-api` is published
 
