@@ -47,8 +47,8 @@ re-prioritising one must never move its file.
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
 | [B-09](docs/backlog/B-09-browser-side-pkce.md) `[ ]` | Authorization code with PKCE from the browser is shashki's code | P1 | S | - |
 | [B-13](docs/backlog/B-13-pin-every-dependency.md) `[ ]` | Every dependency is a release or a pinned snapshot before the demo is published | P1 | S | - |
-| [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[ ]` | Routes and ETA through GraphHopper embedded in the server | P1 | M | B-06 |
-| [B-07](docs/backlog/B-07-serve-pmtiles-from-bochka.md) `[ ]` | Serve the pmtiles archive out of bochka and measure ranged reads | P2 | S | B-06 |
+| [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[ ]` | Routes and ETA through GraphHopper embedded in the server | P1 | M | - |
+| [B-07](docs/backlog/B-07-serve-pmtiles-from-bochka.md) `[ ]` | Serve the pmtiles archive out of bochka and measure ranged reads | P2 | S | - |
 | [B-10](docs/backlog/B-10-crash-reports-from-the-browser.md) `[ ]` | Crash reports from the browser go over katcher's ingest endpoint | P2 | S | - |
 | [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[ ]` | The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit | P2 | M | - |
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |

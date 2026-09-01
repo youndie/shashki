@@ -5,9 +5,11 @@ status: open
 priority: P2
 size: S
 stage: stage-1-skeleton
-blocked_by: [B-06]
 ---
 
+
+**Unblocked:** [B-06](B-06-city-extract-and-tiles.md) is done and the archive exists — 16.6 MiB,
+810 tiles — so this item now has the real file its measurement is about.
 # B-07 — Serve the pmtiles archive out of bochka and measure ranged reads
 
 Research §1.6 confirmed bochka serves `Range`, which is the requirement on paper. Browser tile

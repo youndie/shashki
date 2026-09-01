@@ -5,9 +5,11 @@ status: open
 priority: P1
 size: M
 stage: stage-2-saga
-blocked_by: [B-06]
 ---
 
+
+**Unblocked:** [B-06](B-06-city-extract-and-tiles.md) is done and the graph imports in under four
+seconds, so the extract this item routes on exists.
 # B-23 — Routes and ETA through GraphHopper embedded in the server
 
 Every figure the kit puts on a screen that is not a price is a route: the ETA beside a class tile,
