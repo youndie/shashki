@@ -5,7 +5,7 @@ status: open
 priority: P0
 size: M
 stage: stage-2-saga
-blocked_by: [B-11]
+blocked_by: [B-11, B-20]
 ---
 
 # B-12 — The driver offer is a suspended saga with a deadline, not a step that waits
@@ -19,7 +19,9 @@ offer — which is the normal case, not the edge case.
 - The rejected alternative — raising EXECUTION's timeout — moves the number without fixing the shape:
   a thread and a connection are still held for the length of a cascade.
 - Not covered: the matching itself (nearest N online drivers of the class, sorted by distance and
-  rating). That is B-11's EXECUTION step; this item is about what happens between offers.
+  rating). That is [B-20](B-20-matching-geo-index-and-driver-simulator.md), which also supplies the
+  simulated drivers this item's acceptance needs — three that decline, one that never answers; this
+  item is about what happens between offers.
 
 - AC: three consecutive declines cascade without the saga holding a connection, provable from the
   pool's in-use count.

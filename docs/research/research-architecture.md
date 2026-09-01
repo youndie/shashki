@@ -49,6 +49,13 @@ The whole stack is on **Kotlin 2.4.10 / Compose Multiplatform 1.12.0**, and so i
 `org.maplibre.compose` — which is what makes §1.3's problem a target problem rather than a version
 problem.
 
+**Amended 2026-09-01, same day.** The table above is what the working copies said; what shashki
+actually pins is in `gradle/libs.versions.toml`, and the two already disagree on one line: viddik is
+**0.3.3.19** there, not 0.3.0 — the CI-numbered publish kvadrant-ui's own catalog moved to after this
+table was written. The table stays as the record of what was read; the catalog is the fact. This is
+Risk 3's rule ("re-read rather than remembered") biting on day one, and the reason B-13 is a checklist
+against the catalog rather than against this section.
+
 ### 1.1 The design kit's foundation is not the library's foundation
 
 The handoff's §1 opens with the kit's own claim that section 03 is "foundation, **as inherited**" —
@@ -130,6 +137,17 @@ Selawik files. What does not exist is four of the seven pairings.
 line above a page header. The kit's `pageTitle` is 54 / W200. The two documents use one word for two
 objects, and a mapping written from the names alone lands the wrong one on every page header in the
 product.
+
+**The same trap, one slot over — found in review after `toKvadrant` was written.** The projection
+puts the kit's `rowEmphasis` (17 / W400) into the library's `title` slot because the sizes match. But
+a slot is not a size: it is the style a library *component* reads, and which components read `title`
+was not checked — if `KvadrantListItem` draws its primary line from it, every stock list row in the
+product comes out at 17 / W400 where the kit's list title is 15 / W400 (`body`), the row R3 draws.
+Matching the kit's ramp to the library's slots by size assumes each slot's *usage* is the kit's usage
+of that size, which is exactly the assumption `pageTitle` just broke. Settled by a golden, not by
+reading: [B-21](../backlog/B-21-ramp-projection-against-stock-components.md) renders the stock
+components shashki will actually use under `ShashkiTheme` beside the kit's rows, before B-04 builds on
+them.
 
 #### Metrics: 12 dp is not a stock number at any scale
 
@@ -340,6 +358,26 @@ design. See [D5](#d5-the-driver-offer-is-a-suspended-saga-not-a-step-that-waits)
 not give.** The brief has the outbox publish `ride-events` into booblik; with the default the engine
 silently drops events when the repository cannot store them, and the saga still completes correctly.
 Turn it on at construction.
+
+**Consequence 1.4c — one ride is two sagas and a stretch of no saga, and `RideStatus` had said
+otherwise.** The first cut of `protocol/.../Ride.kt` documented the status enum as "the order of the
+saga". It is not: the *order saga* runs the five phases once, `REQUESTED → ASSIGNED` — quote, hold,
+match, the suspended offer of D5. `ARRIVING → ARRIVED → IN_PROGRESS` is the trip, driven by the
+driver's transitions and by location, with nothing to compensate. `COMPLETED` opens the *settlement
+saga* — capture, payout, receipt, events. Cancellation is therefore two mechanisms under one word:
+before `ASSIGNED` it is the order saga compensating from the middle; after it, a trip ending early
+and a settlement that charges a fee. B-11's acceptance — "no held payment and no reserved driver at
+any phase boundary" — is a claim about the first saga only, and the KDoc now says which is which.
+
+**Consequence 1.4d — EXECUTION has nothing to offer until something produces candidates.** The
+offer cascade (D5, B-12) is only a cascade if there are several drivers to cascade over: a geo-index
+of online drivers, a candidate query by class and distance, and — for a demo with no real drivers —
+a simulator that keeps virtual cars moving on the real road graph. None of that was an item.
+[B-20](../backlog/B-20-matching-geo-index-and-driver-simulator.md) is; it blocks B-12, not B-11,
+because the saga itself can be built and killed at phase boundaries against a stub candidate list.
+Routing and ETA, verified in §1.6 as GraphHopper embedded, are
+[B-23](../backlog/B-23-routes-and-eta-on-embedded-graphhopper.md), and the pricing step of
+ENRICHMENT is the first consumer.
 
 ### 1.5 kompot, and the parts of it shashki does not need
 
@@ -575,6 +613,12 @@ The routes, with what each costs:
    present in the **Kotlin/Wasm** build of skiko. It is the only route with no target problem on any
    platform, and the only one whose map appears in a viddik golden.
 
+**What the spike needs from the city is smaller than B-06.** The prototypes need *a* `city.pmtiles`
+with real roads, not the full extract with a GraphHopper import behind it — and Protomaps serves a
+bounding-box extract of Ljubljana as a single pmtiles in about a minute. So B-01 no longer waits on
+B-06 (amended 2026-09-01): the spike takes the bbox extract, B-06 produces the archive the demo ships
+and the graph the router imports, and the two are reconciled when B-06's numbers come in.
+
 Why not choose now: routes 1 and 2 differ by a Compose release whose date nobody here controls;
 route 3's cost is a layout question that a prototype answers and an argument does not; and route 4
 trades a dependency risk for a quantity of work, which is a trade only a prototype prices. What is
@@ -627,6 +671,18 @@ question 1's fourth part; the module ships either way and only the number waits.
 **Done — kvadrant-ui B-48 and B-49, merged.** Both additive, both keeping the stock behaviour as the
 default, and neither asking the library to stop being what it is. What follows is the argument as it
 was made; the shapes it asked for are the shapes that landed.
+
+**Published as 0.2.0 on 2026-09-01, later the same day** — on Reposilite `/snapshots`, where this
+library's releases actually live (`/releases` is a 404 for 0.2.0 as it was for 0.1.0), and without a
+`v0.2.0` tag as of that evening. shashki pins it; B-03 and B-22 closed on it. The paragraph below is
+kept as the record of the gap between a merge and an artefact, because the gap recurs.
+
+**Merged is not published, and the difference was the only thing holding B-03 open.** Checked on
+2026-09-01: Reposilite holds `kvadrant-core 0.1.0` from before the merge, `/releases` is empty, the
+only tag is `v0.1.0`, and the CHANGELOG files both changes under `Unreleased`. The blocker is a
+publication the owner of both repositories controls, so it is an item rather than a wait —
+[B-22](../backlog/B-22-publish-kvadrant-ui-with-the-hooks.md): two breaking changes on `data class`es
+with ABI validation are a minor bump by the library's own rules, and 0.2.0 is what B-03 and B-04 pin.
 
 **`onAccent` becomes overridable.** Today it is `val onAccent: Color get() = contrastOn(accent)` — a
 computed property, so no consumer can supply a different answer. It becomes a constructor parameter

@@ -5,12 +5,18 @@ import kotlinx.serialization.Serializable
 /**
  * The states a ride passes through, and the only place they are written down.
  *
- * The order is the order of the saga: `petich` walks a ride through `ENRICHMENT → VALIDATION →
- * AUTHORIZATION → EXECUTION → POST_PROCESSING`, and these are what the rider and the driver see
- * while it does. Research §1.4 verified that the phase names above are the engine's own.
+ * **These are not the saga's phases, and one saga does not own all of them.** `petich` walks
+ * `ENRICHMENT → VALIDATION → AUTHORIZATION → EXECUTION → POST_PROCESSING` (research §1.4), and the
+ * *order saga* runs that once, from [REQUESTED] to [ASSIGNED]: the quote, the payment hold, the
+ * matching and the offer that suspends for a driver (B-11, B-12). What follows — [ARRIVING],
+ * [ARRIVED], [IN_PROGRESS] — is the trip, driven by the driver's own transitions and by location, and
+ * it is not a saga at all: nothing in it needs compensating. [COMPLETED] opens the second saga, the
+ * *settlement*: capture the hold, write the payout, send the receipt, publish the events.
  *
  * `CANCELLED` is reachable from every state before `COMPLETED`, which is why it is not a step in
- * the sequence: a cancellation is compensation running backwards, not a further state forwards.
+ * the sequence. Before [ASSIGNED] it is the order saga compensating from the middle — the hold
+ * released, the driver freed. After it, it is a trip ending early and a settlement saga that
+ * charges a fee instead of a fare. Same word, two mechanisms, and the split is the demo's point.
  */
 @Serializable
 public enum class RideStatus {

@@ -5,7 +5,6 @@ status: open
 priority: P0
 size: L
 stage: stage-0-unknowns
-blocked_by: [B-06]
 ---
 
 # B-01 — Decide how the clients reach a browser, and write the choice down
@@ -40,6 +39,10 @@ Compose build. Kotlin/JS is not a way round it: neither `kvadrant-core` nor `kom
   element, and pointer events are all-or-nothing because Compose controls are not DOM elements. It
   belongs in the route-3 column, better packaged. Its 30-file MVT package is, separately, the best
   available size estimate for route 4's decode-and-label half, and Apache-2.0.
+- **Unblocked from [B-06](B-06-city-extract-and-tiles.md), deliberately.** The prototypes need *a*
+  `city.pmtiles` with real roads, and a Protomaps bounding-box extract of Ljubljana is one file and
+  one minute; B-06 is the archive the demo ships plus the graph the router imports, and it can land
+  after the route is chosen. A P0 unknown does not wait on a P1 build step it can borrow from.
 - Deliberately **not** covered: shipping either client. This item ends with a decision recorded in
   research §2 D1 and the map interface committed.
 

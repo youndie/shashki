@@ -54,9 +54,13 @@ Builds and tests run on the Linux build box rather than on the editing machine, 
 the global agent instructions name — it finds the sync session for the current directory itself.
 
 What genuinely cannot be built there stays local: Apple targets, `xcodebuild`, the simulator, and
-anything prefixed `LOCAL=1`. **Formatters run locally.** So, possibly, do the screenshot goldens —
-that is [B-02](docs/backlog/B-02-measure-golden-host-independence.md), and until it is measured
-nobody should assert either way.
+anything prefixed `LOCAL=1`. **Formatters run locally.**
+
+**Goldens are recorded on this machine and verified everywhere.** `LOCAL=1 ./gradlew
+:shared-ui:viddikRecord` writes them; `./gradlew check` compares them, and it does so identically on
+the mac, on the Linux box and on CI — measured, not assumed:
+[B-02](docs/backlog/B-02-measure-golden-host-independence.md). Look at a re-recorded PNG before
+committing it; a screenshot of the wrong thing verifies just as well as one of the right thing.
 
 Edits are made in the working copy on this machine. The directory on the Linux side is a replica:
 work done there reaches neither git nor here.

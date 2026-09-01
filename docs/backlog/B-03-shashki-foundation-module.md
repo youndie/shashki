@@ -1,7 +1,7 @@
 ---
 id: B-03
 title: "The foundation values: shashki's ramp, spacing, ink and golden pin"
-status: wip
+status: done
 priority: P0
 size: M
 stage: stage-0-unknowns
@@ -54,21 +54,17 @@ its type ramp is exactly 1:1. Reaching for the scale knob to reconcile them resc
 naming the target or the ring. Nothing draws an app bar yet; B-04 settles it against the artboard
 rather than between two readings of a table.
 
-## What remains, and why this is not closed
+## Closed by the publication
 
-**The ink**, and it is blocked on a publication rather than on work. The kit asks for black on a
-filled accent surface; `KvadrantColors.onAccent` computes white at both accents, faithfully. The
-parameter that lets a caller say otherwise landed in kvadrant-ui B-48 and **is in no published
-artefact**. Checked on 2026-09-01: Reposilite `/snapshots/io/github/youndie/kvadrant-core` holds only
-`0.1.0`, last modified 2026-08-30 15:42 — before the merge; `/releases` under that group is empty;
-Maven Central 404s; the only tag is `v0.1.0`; and kvadrant's CHANGELOG still files both breaking
-changes under `## Unreleased`.
+kvadrant-ui **0.2.0** landed on 2026-09-01 ([B-22](B-22-publish-kvadrant-ui-with-the-hooks.md)), and
+the theme now passes `onAccent = Color.Black` through `KvadrantColors.dark()` and `.light()` — the
+accent stays at the kit's hex and only the ink moves, which is the whole point of the parameter.
+`skeleton_themes` re-recorded: **11 077 → 11 164 bytes, black on both accents**, and it verifies on
+Linux under `--rerun-tasks`. The ramp golden is byte-identical, as it should be — it has no accent
+surface in it.
 
-So `skeleton_themes` records white on purpose, and the moment that image changes is the moment this
-item is done.
-
-- AC: the ink on a filled accent surface is black, supplied through `KvadrantColors`' `onAccent`
-  parameter — not through a shashki-local constant that shadows the library.
+- ~~AC: the ink on a filled accent surface is black, supplied through `KvadrantColors`' `onAccent`
+  parameter — not through a shashki-local constant that shadows the library.~~ Done, on 0.2.0.
 - AC: the app bar is stated through `KvadrantMetrics`' `appBar*` fields ([B-19](B-19-kvadrant-app-bar-tokens.md)),
   not by re-measuring it.
 - AC: `ShashkiMetrics().scale == 1f`, and a test fails if a scaled set reaches `KvadrantTheme`.

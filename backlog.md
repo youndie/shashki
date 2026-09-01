@@ -39,33 +39,37 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (14)
+## Open (16)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | B-06 |
-| [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[~]` | The foundation values: shashki's ramp, spacing, ink and golden pin | P0 | M | - |
-| [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[ ]` | ClassTile and OfferCard on kvadrant primitives | P0 | M | B-03 |
+| [B-01](docs/backlog/B-01-decide-the-browser-route.md) `[ ]` | Decide how the clients reach a browser, and write the choice down | P0 | L | - |
+| [B-04](docs/backlog/B-04-classtile-and-offercard.md) `[ ]` | ClassTile and OfferCard on kvadrant primitives | P0 | M | B-03, B-21 |
 | [B-11](docs/backlog/B-11-order-saga-on-petich.md) `[ ]` | The order saga on petich, with the outbox required rather than optional | P0 | L | - |
-| [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11 |
+| [B-12](docs/backlog/B-12-offer-as-a-suspended-saga.md) `[ ]` | The driver offer is a suspended saga with a deadline, not a step that waits | P0 | M | B-11, B-20 |
+| [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[ ]` | Matching: the geo-index, the candidate query and the driver simulator | P0 | L | - |
+| [B-21](docs/backlog/B-21-ramp-projection-against-stock-components.md) `[ ]` | The ramp projection is checked against the stock components that read it, by golden | P0 | S | - |
 | [B-05](docs/backlog/B-05-glyph-coverage-guard.md) `[ ]` | Every fixture string is checked for glyph coverage | P1 | XS | - |
 | [B-06](docs/backlog/B-06-city-extract-and-tiles.md) `[ ]` | Produce the OSM extract and the pmtiles archive for Ljubljana | P1 | M | - |
 | [B-09](docs/backlog/B-09-browser-side-pkce.md) `[ ]` | Authorization code with PKCE from the browser is shashki's code | P1 | S | - |
 | [B-13](docs/backlog/B-13-pin-every-dependency.md) `[ ]` | Every dependency is a release or a pinned snapshot before the demo is published | P1 | S | - |
+| [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[ ]` | Routes and ETA through GraphHopper embedded in the server | P1 | M | B-06 |
 | [B-07](docs/backlog/B-07-serve-pmtiles-from-bochka.md) `[ ]` | Serve the pmtiles archive out of bochka and measure ranged reads | P2 | S | B-06 |
 | [B-10](docs/backlog/B-10-crash-reports-from-the-browser.md) `[ ]` | Crash reports from the browser go over katcher's ingest endpoint | P2 | S | - |
 | [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[ ]` | The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit | P2 | M | - |
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 
-## Closed (5)
+## Closed (7)
 
 **Remove the unknowns**
 
 - [B-02](docs/backlog/B-02-measure-golden-host-independence.md) `[x]` - Measure whether shashki's goldens are host-independent
+- [B-03](docs/backlog/B-03-shashki-foundation-module.md) `[x]` - The foundation values: shashki's ramp, spacing, ink and golden pin
 - [B-15](docs/backlog/B-15-answer-the-kits-open-questions.md) `[x]` - Settle the kit's 4/3 spacing: as drawn, as converted, or fitted
 - [B-18](docs/backlog/B-18-kvadrant-overridable-on-accent.md) `[x]` - kvadrant-ui: onAccent becomes overridable, keeping the computed value as the default
 - [B-19](docs/backlog/B-19-kvadrant-app-bar-tokens.md) `[x]` - kvadrant-ui: the app bar's dimensions become theme tokens
+- [B-22](docs/backlog/B-22-publish-kvadrant-ui-with-the-hooks.md) `[x]` - kvadrant-ui: publish 0.2.0 with the two hooks, so B-03 stops waiting on a merge
 
 **Something builds and can be looked at**
 
@@ -107,6 +111,14 @@ values. Every metric there carries the Metro pixel count it was converted from, 
 falsifies a claim about a verified source for every consumer in order to suit one. Growing the
 library's vocabulary takes nothing away; changing its answers takes away the reason to trust the
 rest of them.
+
+**One ride is two sagas with a trip between them, and the word "cancel" means a different thing on
+each side of `ASSIGNED`.** The order saga runs the five phases once, `REQUESTED → ASSIGNED`; the trip
+is the driver's transitions and location, with nothing to compensate; `COMPLETED` opens the
+settlement saga. Research §1.4c records it because the first `RideStatus` KDoc said the enum *was*
+the saga, and a matching design built on that reading would have put the trip's states inside
+EXECUTION. Matching itself, and the simulated drivers a cascade needs, were not items at all until
+[B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md).
 
 **A missing target is a finding, not a blocker.** Research §1.6 found four libraries whose published
 targets do not match what the brief assumes — booblik's client is JVM-only, katcher's has no browser

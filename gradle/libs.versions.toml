@@ -14,7 +14,7 @@ sborka = "0.1.0.23"
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
 logback = "1.5.20"
-kvadrant = "0.1.0"
+kvadrant = "0.2.0"
 viddik = "0.3.3.19"
 
 [libraries]

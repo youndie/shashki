@@ -5,7 +5,7 @@ status: open
 priority: P0
 size: M
 stage: stage-0-unknowns
-blocked_by: [B-03]
+blocked_by: [B-03, B-21]
 ---
 
 # B-04 — ClassTile and OfferCard on kvadrant primitives
