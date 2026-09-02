@@ -39,6 +39,11 @@ dependencies {
 
     // The order saga: the engine, its Postgres repository, and the outbox relay. petich-postgres
     // ships no driver, no pool and no DDL on purpose — those three are the application's, below.
+    // Token verification. The provider is shildik and the validator is shildik's — a second
+    // implementation of "is this signature ours" is the last thing a service should own.
+    implementation(libs.shildik.oidcAuthServer)
+    implementation(libs.shildik.oidcAuthCore)
+
     // The one screen the server owns, as a tree. `kompot-core` is the component model and
     // `kompot-standard` its vocabulary — neither carries Compose, which is what lets a headless
     // server build a screen at all. See B-32 and research §2 D11.
@@ -84,6 +89,12 @@ dependencies {
     // thing that says they agree is a test that asks Exposed what DDL is still missing.
     testImplementation(libs.exposed.migrationJdbc)
     testImplementation(libs.testcontainers.postgresql)
+
+    // `ProtectedRidesTest` signs in the way the rider application does. The point of that test is
+    // that the two halves agree, so the client half has to be *this* client and not a re-enactment
+    // of it — a hand-rolled token request in a test proves the test can talk to shildik.
+    testImplementation(projects.authClient)
+    testImplementation(libs.ktor.client.cio)
 }
 
 // **Pinning a timestamped snapshot pins the root module and not its platform variants**, which is a

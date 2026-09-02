@@ -108,6 +108,9 @@ ktor-client-js = { module = "io.ktor:ktor-client-js" }
 
 katcher-shared = { module = "ru.workinprogress.katcher:shared", version.ref = "katcher" }
 
+shildik-oidcAuthServer = { module = "ru.workinprogress.shildik:oidc-auth-server", version.ref = "shildik" }
+shildik-oidcAuthCore = { module = "ru.workinprogress.shildik:oidc-auth-core", version.ref = "shildik" }
+
 shildik-sharedOidc = { module = "ru.workinprogress.shildik:shared-oidc", version.ref = "shildik" }
 
 kompot-standard = { module = "io.github.youndie:kompot-standard", version.ref = "kompot" }

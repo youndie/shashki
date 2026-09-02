@@ -1,11 +1,10 @@
 ---
 id: B-26
 title: "Rider and driver actually sign in, against a running shildik"
-status: open
+status: done
 priority: P1
 size: M
 stage: stage-1-skeleton
-blocked_by: [B-28]
 ---
 
 # B-26 — Rider and driver actually sign in, against a running shildik
@@ -32,11 +31,58 @@ because two things it needs do not exist yet.
 
 - AC: a rider signs in with a magic link against a locally running shildik and the client holds a
   token the server accepts.
-- AC: the same flow runs in the browser build, not only on the JVM — this is the criterion that
-  covers WebCrypto.
+- AC: **not met.** The same flow runs in the browser build, not only on the JVM — this is the
+  criterion that covers WebCrypto. It has moved to [B-34](B-34-a-browser-on-the-build-box.md), with
+  the thing that blocks it; see below.
 - AC: a tampered `state` on the callback is refused, and the refusal is shown to have been reached
   rather than assumed.
 - AC: how shildik is run locally is written down in the repository, so the next person does not
   rediscover the realm and client setup.
 - Anchors: `auth-client/src/commonMain/kotlin/io/github/youndie/shashki/auth/SignIn.kt`,
   `shildik/server/src/commonMain/kotlin/ru/workinprogress/shildik/server/oidc/OidcRoutes.kt`
+
+## What it turned out to be
+
+**Three of the four criteria were met against a provider that was actually running; the fourth was
+not met, and it is the one that needed a machine rather than code.**
+
+The stand is `docker/compose.yaml` — shildik 0.2.0.8 and a Postgres, both bound to `127.0.0.1` on
+18081 and 19001 rather than 8080 and 9000. That is not tidiness: the first attempt sat in `Created`
+with an empty log because another project on the shared build box already held those ports, and a
+container that never starts looks exactly like one that started and crashed. `docker/bootstrap-shildik.sh`
+creates the realm, the **public** client `rider` with its redirect URI, and a user with a password —
+that last through `PUT /admin/tenants/{realm}/users/{id}/password`, because creating a user does not
+set one.
+
+`docker/sign-in-flow.py` walks the whole dance on the standard library, and its fourth step is the
+control: the same code with the wrong verifier must be refused. Without that step the first three
+prove only that a code can be exchanged, not that the challenge was ever checked.
+
+**The two halves are proved against each other, not each against a fixture.** `SignInAgainstShildikTest`
+takes the URL, challenge and form this module builds and requires shildik to complete them.
+`ProtectedRidesTest` then takes the token that sign-in produced and requires *this server* to accept
+it — a token the rider client obtained, on a route the rider uses. Neither side proves this alone: a
+client can be handed a token by a provider whose keys the server never fetches, and a server can
+accept a token no client of ours can produce.
+
+The server had **no authentication at all** before this item, which the criterion "a token the server
+accepts" quietly assumed it did. `configureAuth` from shildik's own `oidc-auth-server` is installed
+when — and only when — an `OidcConfig` is supplied, and `POST /api/rides` and the cancel route move
+inside `authenticate(JWT_AUTH_OIDC)`. `/api/routes`, `/api/quotes` and the promo screen stay public:
+a price and a road are facts about the city.
+
+A switch that is off by default is a switch nobody notices is off, so both sides are tested. The
+refusal runs unattended and points at an address nothing answers on — if the 401 needed the provider
+to be reachable, it would be happening after a network call rather than before one. And the
+acceptance carries its own negative control: the same request with one character of the signature
+changed must be refused, because a validator that accepted anything would pass every other line.
+
+What is **still** authenticated rather than authorised: `RideRequest` carries a `riderId` as a field,
+so a token proves somebody signed in and not that the ride is theirs. That half is B-09's remainder
+and is named where the routes are declared.
+
+**AC2 is not met and is not ticked.** The flow runs on the JVM against the JDK provider; the browser
+build compiles and nothing executes it, because `wasmJsBrowserTest` is disabled in three build
+scripts — there is no browser on the build box. That is the same wall [B-10](B-10-crash-reports-from-the-browser.md)
+closed against, and after the third time it is a piece of work rather than a footnote:
+[B-34](B-34-a-browser-on-the-build-box.md).

@@ -39,6 +39,11 @@ kotlin {
             implementation(libs.ktor.resources)
             implementation(libs.shildik.sharedOidc)
         }
+        jvmTest.dependencies {
+            // A real engine for the one test that talks to a real shildik.
+            implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
+            implementation(libs.ktor.client.cio)
+        }
         commonTest.dependencies {
             implementation(wip.kotlinx.coroutines.test)
         }

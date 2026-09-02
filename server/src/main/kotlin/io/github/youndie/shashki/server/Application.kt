@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
+import io.github.youndie.shashki.server.feature.auth.AuthConfig
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
@@ -38,6 +39,8 @@ import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
+import ru.workinprogress.oidc.OidcConfig
+import ru.workinprogress.oidc.configureAuth
 import ru.workinprogress.petich.OptimisticLockException
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
@@ -51,7 +54,8 @@ public fun main() {
     val applied = DatabaseFactory.migrate(dataSource)
     LoggerFactory.getLogger("shashki").info("applied {} migrations", applied)
     val database = DatabaseFactory.connect(dataSource)
-    embeddedServer(CIO, port = PORT, host = "0.0.0.0") { shashki(database) }.start(wait = true)
+    val oidc = AuthConfig.fromEnv()
+    embeddedServer(CIO, port = PORT, host = "0.0.0.0") { shashki(database, oidc = oidc) }.start(wait = true)
 }
 
 /** The port, here rather than in a config file until there is a config file worth having. */
@@ -126,11 +130,25 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
 public fun Application.shashki(
     database: Database,
     routeEstimator: RouteEstimator = RoutingConfig.estimator(),
+    oidc: OidcConfig? = null,
 ) {
     baseModule(listOf(rideModule(database, scope = this, routeEstimator = routeEstimator)))
 
+    // **Verification is installed only when a provider is named, and that is a switch with a test
+    // on both sides.** The environment is read in `main` rather than defaulted here: a parameter
+    // that reads `System.getenv` by default makes every test's behaviour depend on the shell it was
+    // started from, and the one that would change is whether the rider's routes need a token. A demo pointed at no provider must still run — there is nobody to sign in
+    // against — and a guard that is off by default is a guard nobody notices is off, so
+    // `ProtectedRidesTest` runs the same routes with it on and requires a 401 without a token.
+    if (oidc != null) {
+        // Any token this provider issued to the rider client. There are no roles yet: a rider is
+        // whoever signed in, and what they may do to a *particular* ride is ownership rather than a
+        // role — which `RideRepository` will answer when the token carries the rider's id (B-09).
+        configureAuth(oidc) { data -> data.azp == oidc.clientId }
+    }
+
     routing {
-        rideRoutes()
+        rideRoutes(protected = oidc != null)
         routeRoutes()
         quoteRoutes()
         promoRoutes()

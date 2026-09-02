@@ -641,6 +641,35 @@ more. The eight tests that were already there passed unchanged, including the on
 whole URL character by character, which is what says the replacement was equivalent. `crypto` is deliberately not part of that ask — shildik has PKCE's
 verifying half and a client needs the generating half, which is genuinely the client's.
 
+**Consequence 1.6c2 — run against a shildik that was actually running, and the sentence above was
+missing its other end (2026-09-02, [B-26](../backlog/B-26-sign-in-end-to-end.md)).**
+
+Everything in §1.6c and §1.6c1 is about the **client** half. The criterion, though, said the client
+should hold "a token the server accepts" — and shashki's server had no authentication at all. Nothing
+in the research had noticed, because every note about shildik was written from the browser's side.
+
+| Fact | Where verified |
+|---|---|
+| `oidc-auth-server` and `oidc-auth-core` publish at 0.2.0.13 and the whole surface is three names: `configureAuth(config, engine, validate: (AuthData) -> Boolean)`, `JWT_AUTH_OIDC`, `AuthData(roles, email, azp)` | the published modules; `server/src/main/.../Application.kt` |
+| The validator fetches JWKS itself and does not need to be reachable to refuse a request that carries no token — the 401 happens before any network call | `ProtectedRidesTest`, whose unattended test points at `http://127.0.0.1:1` |
+| A token this repository's `SignInAttempt` obtained through the full PKCE dance is accepted by this repository's server, and the same token with one character of its signature changed is refused | `ProtectedRidesTest`, against shildik 0.2.0.8 on the build box |
+| Standing shildik up locally is 18081/19001 rather than 8080/9000: the shared build box already has projects on those ports, and a container that never starts presents as `Created` with an empty log | `docker/compose.yaml` |
+| Creating a user through the admin API does not set a password; that is a separate `PUT /admin/tenants/{realm}/users/{id}/password` | `docker/bootstrap-shildik.sh` |
+
+What this changes. The auth tier of every route is now a decision this repository has made rather
+than one it inherited: the rider's mutating routes are behind `authenticate(JWT_AUTH_OIDC)`, and
+`/api/routes`, `/api/quotes` and the promo screen are public on purpose. The switch is off when no
+provider is configured — a demo has nobody to sign in against — which is why the refusal is tested
+unattended and the acceptance carries a forged-signature control: a validator that accepted anything
+would satisfy every other assertion.
+
+What it does **not** change is §1.6c's claim about WebCrypto, and that is the point worth carrying
+forward: it is still unverified. The whole flow ran on the JVM against the JDK provider. The browser
+build compiles and nothing executes it, because `wasmJsBrowserTest` is disabled in three build
+scripts for want of a browser on the build box — the third item to end that way, and now an item of
+its own ([B-34](../backlog/B-34-a-browser-on-the-build-box.md)) rather than a footnote repeated three
+times.
+
 **Consequence 1.6d1 — it was, and it found a defect on the first try (2026-09-02,
 [B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md)).**
 

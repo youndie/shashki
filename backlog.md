@@ -43,12 +43,12 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-28 |
 | [B-29](docs/backlog/B-29-the-driver-bundle.md) `[ ]` | The driver bundle, which is the second one D10 chose | P1 | L | - |
 | [B-30](docs/backlog/B-30-tiles-over-the-wire.md) `[ ]` | The map fetches its tiles, so the streets are there | P1 | L | - |
 | [B-31](docs/backlog/B-31-the-wait-for-a-car.md) `[ ]` | The wait for a car, which the kit puts on every class tile | P2 | S | - |
+| [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[ ]` | A headless browser on the build box, so the wasm target is run and not only compiled | P2 | M | - |
 
-## Closed (29)
+## Closed (30)
 
 **Remove the unknowns**
 
@@ -71,6 +71,7 @@ re-prioritising one must never move its file.
 - [B-09](docs/backlog/B-09-browser-side-pkce.md) `[x]` - Authorization code with PKCE from the browser is shashki's code
 - [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[x]` - One wasm bundle or two
 - [B-24](docs/backlog/B-24-motorways-carry-ref-not-name.md) `[x]` - Motorways carry ref and not name, so the styles label none of them
+- [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[x]` - Rider and driver actually sign in, against a running shildik
 - [B-27](docs/backlog/B-27-deprecations-only-a-clean-build-shows.md) `[x]` - The deprecations only a clean configuration shows
 
 **The order survives the process dying**

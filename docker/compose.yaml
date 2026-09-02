@@ -1,0 +1,46 @@
+# The identity provider shashki signs in against, for a laptop and for the tests.
+#
+# **Not a deployment.** Secrets are strings in this file, the database has no volume, and both of
+# shildik's ports are published because there is nobody on this machine to protect them from.
+#
+# **The ports are high on purpose.** shashki's own server wants 8080, and a shared build box has
+# other people's services on the obvious numbers — 8080 and 8081 were both taken by another project
+# when this was written, and the only symptom was a container stuck in `Created` with an empty log.
+#
+# `SHILDIK_ISSUER` has to be the address a client actually reaches: it goes into every token as `iss`
+# and the client compares it with what discovery says. Getting that wrong produces a sign-in that
+# completes and a token nobody accepts.
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: shildik
+      POSTGRES_USER: shildik
+      POSTGRES_PASSWORD: secret
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shildik"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  shildik:
+    # A numbered tag, not `latest`: a demo that cannot be stood up again in six months is a
+    # screenshot of a demo (research §3 Risk 3).
+    image: ghcr.io/youndie/shildik:0.2.0.8
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SHILDIK_ISSUER: http://127.0.0.1:18081
+      # Set explicitly, as shildik's own e2e harness does. Left out, the image died on start with a
+      # panic from its native driver and nothing else in the log.
+      SHILDIK_PORT: 8080
+      SHILDIK_MANAGEMENT_PORT: 9000
+      SHILDIK_JDBC_URL: jdbc:postgresql://postgres:5432/shildik
+      SHILDIK_DB_USER: shildik
+      SHILDIK_DB_PASSWORD: secret
+      SHILDIK_MASTER_KEYS: change-me
+      SHILDIK_BOOTSTRAP_TOKEN: bootstrap
+    ports:
+      - "127.0.0.1:18081:8080"
+      - "127.0.0.1:19001:9000"
