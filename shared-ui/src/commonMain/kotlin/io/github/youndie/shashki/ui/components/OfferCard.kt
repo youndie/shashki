@@ -98,7 +98,15 @@ public fun OfferCard(
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    KvadrantText(fare, style = type.pageTitle.copy(color = colors.accent))
+                    // **The fare is the foreground brush and not the accent** (B-48). The kit drew
+                    // this card in dark only, where amber on black is 7.24:1 and reads; the first
+                    // light golden of it put the same amber on white at **2.11:1** — the worst
+                    // number in the palette, on the one figure a driver has fifteen seconds to
+                    // read. The rule that came out of it is one line: accent-coloured *text* is a
+                    // control's label, figures take the foreground. The accent still leads this card
+                    // — the strip and the accept button are accent *surfaces*, where the ink is
+                    // black at 9.95:1.
+                    KvadrantText(fare, style = type.pageTitle)
                     KvadrantText(
                         classAndPayment,
                         style = type.rowEmphasis.copy(color = colors.foreground.copy(alpha = CLASS_LINE_ALPHA)),

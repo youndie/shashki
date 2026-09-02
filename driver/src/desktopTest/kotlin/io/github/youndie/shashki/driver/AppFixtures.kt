@@ -26,8 +26,16 @@ import ru.workinprogress.viddik.annotations.ViddikScreenshot
  */
 @ViddikScreenshot(name = "shift offline", group = "driver", width = 390, height = 844)
 @Composable
-internal fun ShiftOffline() {
-    Fixture {
+internal fun ShiftOffline(): Unit = ShiftOfflineBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "shift offline light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun ShiftOfflineLight(): Unit = ShiftOfflineBody(dark = false)
+
+@Composable
+private fun ShiftOfflineBody(dark: Boolean) {
+    Fixture(dark) {
         ShiftContent(uiState = ShiftUiState(driverLabel = "driver-1"), onAction = { })
     }
 }
@@ -40,8 +48,16 @@ internal fun ShiftOffline() {
  */
 @ViddikScreenshot(name = "shift waiting", group = "driver", width = 390, height = 844)
 @Composable
-internal fun ShiftWaiting() {
-    Fixture {
+internal fun ShiftWaiting(): Unit = ShiftWaitingBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "shift waiting light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun ShiftWaitingLight(): Unit = ShiftWaitingBody(dark = false)
+
+@Composable
+private fun ShiftWaitingBody(dark: Boolean) {
+    Fixture(dark) {
         ShiftContent(
             uiState = ShiftUiState(driverLabel = "driver-1", online = true, reported = 42),
             onAction = { },
@@ -58,8 +74,16 @@ internal fun ShiftWaiting() {
  */
 @ViddikScreenshot(name = "shift with an offer", group = "driver", width = 390, height = 844)
 @Composable
-internal fun ShiftWithAnOffer() {
-    Fixture {
+internal fun ShiftWithAnOffer(): Unit = ShiftWithAnOfferBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "shift with an offer light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun ShiftWithAnOfferLight(): Unit = ShiftWithAnOfferBody(dark = false)
+
+@Composable
+private fun ShiftWithAnOfferBody(dark: Boolean) {
+    Fixture(dark) {
         ShiftContent(
             uiState =
                 ShiftUiState(
@@ -84,8 +108,16 @@ internal fun ShiftWithAnOffer() {
  */
 @ViddikScreenshot(name = "assigned ride", group = "driver", width = 390, height = 844)
 @Composable
-internal fun AssignedRide() {
-    Fixture {
+internal fun AssignedRide(): Unit = AssignedRideBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "assigned ride light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun AssignedRideLight(): Unit = AssignedRideBody(dark = false)
+
+@Composable
+private fun AssignedRideBody(dark: Boolean) {
+    Fixture(dark) {
         DriverTripContent(
             uiState =
                 DriverTripUiState(
@@ -105,9 +137,12 @@ internal fun AssignedRide() {
 }
 
 @Composable
-private fun Fixture(content: @Composable () -> Unit) {
+private fun Fixture(
+    dark: Boolean,
+    content: @Composable () -> Unit,
+) {
     val latin = kvadrantLatin()
-    DriverTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         content()
     }
 }

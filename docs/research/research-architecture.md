@@ -1826,6 +1826,31 @@ Three of the four remove the reason fixtures were dark-only, so the suite double
 fixture gains a light variant, and `KvadrantColors.light()` is checked by a golden rather than
 assumed to be the kit's intent.
 
+**Done on 2026-09-02 ([B-48](../backlog/B-48-light-goldens-for-every-screen.md)), and the doubling
+found one real defect.** Twenty-one fixtures have light twins now — every screen, every component,
+both bundles' own — recorded on the mac and verified on Linux by the same `check`. Measured contrasts
+in the stock light theme, computed from the kit's own hexes:
+
+| Pair | Ratio | Where it appears |
+|---|---|---|
+| black ink on a cyan surface | 7.24 | selected class tile, tip button — `ShashkiTheme` passes `onAccent = Color.Black` in **both** themes, and that was already right |
+| black ink on an amber surface | 9.95 | accept button, the earnings tile |
+| cyan text on white | 2.90 | the kit's own printed number |
+| cyan text on the light chrome `#DDD` | 2.13 | a bar's label |
+| **amber text on white** | **2.11** | the offer card's fare — *the defect* |
+
+**The defect and the rule that came out of it.** The kit drew this card in dark only, where amber on
+black is 7.24:1 and reads. The first light golden put the same amber on white at 2.11:1 — the worst
+number in the palette, on the one figure a driver has fifteen seconds to read. The fix is in the
+component rather than in the theme, because the accent is the kit's and shashki disagreeing with it
+would be shashki disagreeing with the thing it exists to show: **accent-coloured *text* is a
+control's label; figures take the foreground brush.** The accent still leads that card — its strip
+and its accept button are accent *surfaces*, where the ink is black.
+
+What is *not* fixed and is recorded instead: a bar's label in accent on light chrome sits at 2.13:1.
+It is a control with a shape and a position, it is the kit's palette used as the kit uses it, and
+changing the hue would be this product editing the design it is demonstrating.
+
 ### Open question 2. One wasm bundle or two
 
 The brief proposes two, for a cleaner demo, and that is very likely right. It is worth re-asking once

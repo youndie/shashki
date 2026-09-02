@@ -272,6 +272,19 @@ internal fun RiderTripOnEmptyScene() {
     TripFixture(dark = true, palette = TilePalette.Dark, scene = emptyScene(MapCamera(TILE_CENTRE)))
 }
 
+/**
+ * And the same, light (B-48).
+ *
+ * **The palette moves with the theme.** A light screen on the dark basemap is the defect this item
+ * would most easily ship — the two palettes belong to the styles, not to a preference — so the
+ * fixture that pairs them is the one that would catch it.
+ */
+@ViddikScreenshot(name = "rider trip on an empty scene light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderTripOnEmptySceneLight() {
+    TripFixture(dark = false, palette = TilePalette.Light, scene = emptyScene(MapCamera(TILE_CENTRE)))
+}
+
 @Composable
 private fun TripFixture(
     dark: Boolean,

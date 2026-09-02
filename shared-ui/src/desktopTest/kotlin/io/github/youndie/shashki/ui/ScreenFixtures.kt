@@ -35,9 +35,17 @@ import ru.workinprogress.viddik.annotations.ViddikScreenshot
  */
 @ViddikScreenshot(name = "rider class picker", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderClassPickerFixture() {
+internal fun RiderClassPickerFixture(): Unit = RiderClassPicker(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider class picker light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderClassPickerFixtureLight(): Unit = RiderClassPicker(dark = false)
+
+@Composable
+private fun RiderClassPicker(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         CompositionLocalProvider(LocalMapSurface provides PlaceholderMapSurface()) {
             RiderClassPicker(
                 scene =
@@ -80,9 +88,17 @@ internal fun RiderClassPickerFixture() {
  */
 @ViddikScreenshot(name = "rider matching", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderMatchingFixture() {
+internal fun RiderMatchingFixture(): Unit = RiderMatching(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider matching light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderMatchingFixtureLight(): Unit = RiderMatching(dark = false)
+
+@Composable
+private fun RiderMatching(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderMatching(
             stage = MatchingStage.LOOKING,
             headline = "looking for a car",
@@ -105,9 +121,17 @@ internal fun RiderMatchingFixture() {
  */
 @ViddikScreenshot(name = "rider no cars nearby", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderNoCarsNearbyFixture() {
+internal fun RiderNoCarsNearbyFixture(): Unit = RiderNoCarsNearby(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider no cars nearby light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderNoCarsNearbyFixtureLight(): Unit = RiderNoCarsNearby(dark = false)
+
+@Composable
+private fun RiderNoCarsNearby(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderMatching(
             stage = MatchingStage.NO_CARS,
             headline = "no cars nearby",
@@ -130,9 +154,17 @@ internal fun RiderNoCarsNearbyFixture() {
  */
 @ViddikScreenshot(name = "rider cancel confirm", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderCancelConfirmFixture() {
+internal fun RiderCancelConfirmFixture(): Unit = RiderCancelConfirm(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider cancel confirm light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderCancelConfirmFixtureLight(): Unit = RiderCancelConfirm(dark = false)
+
+@Composable
+private fun RiderCancelConfirm(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderMatching(
             stage = MatchingStage.LOOKING,
             headline = "looking for a car",
@@ -165,9 +197,17 @@ internal fun RiderCancelConfirmFixture() {
  */
 @ViddikScreenshot(name = "rider finished", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderFinishedFixture() {
+internal fun RiderFinishedFixture(): Unit = RiderFinished(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider finished light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderFinishedFixtureLight(): Unit = RiderFinished(dark = false)
+
+@Composable
+private fun RiderFinished(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderFinished(
             total = "$ 28.96",
             destination = "airport · 22.8 km",
@@ -196,9 +236,17 @@ internal fun RiderFinishedFixture() {
  */
 @ViddikScreenshot(name = "rider history", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderHistoryFixture() {
+internal fun RiderHistoryFixture(): Unit = RiderHistory(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider history light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderHistoryFixtureLight(): Unit = RiderHistory(dark = false)
+
+@Composable
+private fun RiderHistory(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderHistory(
             titles = listOf("trips", "profile", "promo"),
             trips =
@@ -221,9 +269,17 @@ internal fun RiderHistoryFixture() {
  */
 @ViddikScreenshot(name = "rider history empty", group = "screens", width = 390, height = 844)
 @Composable
-internal fun RiderHistoryEmptyFixture() {
+internal fun RiderHistoryEmptyFixture(): Unit = RiderHistoryEmpty(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider history empty light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderHistoryEmptyFixtureLight(): Unit = RiderHistoryEmpty(dark = false)
+
+@Composable
+private fun RiderHistoryEmpty(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderHistory(
             titles = listOf("trips", "profile", "promo"),
             trips = emptyList(),
@@ -246,9 +302,17 @@ internal fun RiderHistoryEmptyFixture() {
  */
 @ViddikScreenshot(name = "driver earnings", group = "screens", width = 390, height = 844)
 @Composable
-internal fun DriverEarningsFixture() {
+internal fun DriverEarningsFixture(): Unit = DriverEarnings(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "driver earnings light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverEarningsFixtureLight(): Unit = DriverEarnings(dark = false)
+
+@Composable
+private fun DriverEarnings(dark: Boolean) {
     val latin = kvadrantLatin()
-    DriverTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         DriverEarnings(
             titles = listOf("today", "week", "history"),
             today = "$ 23.16",

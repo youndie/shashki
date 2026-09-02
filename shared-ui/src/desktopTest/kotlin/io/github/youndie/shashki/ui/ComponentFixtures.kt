@@ -24,9 +24,17 @@ import ru.workinprogress.viddik.annotations.ViddikScreenshot
  */
 @ViddikScreenshot(name = "class tile", group = "components", width = 390, height = 844)
 @Composable
-internal fun ClassTiles() {
+internal fun ClassTiles(): Unit = ClassTiles(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "class tile light", group = "components", width = 390, height = 844)
+@Composable
+internal fun ClassTilesLight(): Unit = ClassTiles(dark = false)
+
+@Composable
+private fun ClassTiles(dark: Boolean) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         val metrics = KvadrantTheme.metrics
         Column(
             Modifier
@@ -53,9 +61,17 @@ internal fun ClassTiles() {
  */
 @ViddikScreenshot(name = "offer card", group = "components", width = 390, height = 844)
 @Composable
-internal fun Offer() {
+internal fun Offer(): Unit = Offer(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "offer card light", group = "components", width = 390, height = 844)
+@Composable
+internal fun OfferLight(): Unit = Offer(dark = false)
+
+@Composable
+private fun Offer(dark: Boolean) {
     val latin = kvadrantLatin()
-    DriverTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         Column(Modifier.fillMaxSize().background(KvadrantTheme.colors.background)) {
             OfferCard(
                 fare = "$ 420",
@@ -80,9 +96,17 @@ internal fun Offer() {
  */
 @ViddikScreenshot(name = "offer countdown", group = "components", width = 390, height = 844)
 @Composable
-internal fun OfferCountdown() {
+internal fun OfferCountdown(): Unit = OfferCountdown(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "offer countdown light", group = "components", width = 390, height = 844)
+@Composable
+internal fun OfferCountdownLight(): Unit = OfferCountdown(dark = false)
+
+@Composable
+private fun OfferCountdown(dark: Boolean) {
     val latin = kvadrantLatin()
-    DriverTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         val colors = KvadrantTheme.colors
         val type = ShashkiTheme.typography
         Column(Modifier.fillMaxSize().background(colors.background)) {

@@ -36,8 +36,16 @@ import ru.workinprogress.viddik.annotations.ViddikScreenshot
  */
 @ViddikScreenshot(name = "class picker priced", group = "rider", width = 390, height = 844)
 @Composable
-internal fun ClassPickerPriced() {
-    Fixture {
+internal fun ClassPickerPriced(): Unit = ClassPickerPricedBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "class picker priced light", group = "rider", width = 390, height = 844)
+@Composable
+internal fun ClassPickerPricedLight(): Unit = ClassPickerPricedBody(dark = false)
+
+@Composable
+private fun ClassPickerPricedBody(dark: Boolean) {
+    Fixture(dark) {
         ClassPickerContent(
             scene = MapScene(camera = MapCamera(CENTRE)),
             uiState =
@@ -64,8 +72,16 @@ internal fun ClassPickerPriced() {
  */
 @ViddikScreenshot(name = "class picker before the server answers", group = "rider", width = 390, height = 844)
 @Composable
-internal fun ClassPickerLoading() {
-    Fixture {
+internal fun ClassPickerLoading(): Unit = ClassPickerLoadingBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "class picker before the server answers light", group = "rider", width = 390, height = 844)
+@Composable
+internal fun ClassPickerLoadingLight(): Unit = ClassPickerLoadingBody(dark = false)
+
+@Composable
+private fun ClassPickerLoadingBody(dark: Boolean) {
+    Fixture(dark) {
         ClassPickerContent(
             scene = MapScene(camera = MapCamera(CENTRE)),
             uiState = ClassPickerUiState(),
@@ -74,11 +90,22 @@ internal fun ClassPickerLoading() {
     }
 }
 
+/**
+ * The theme and the basemap, together (B-48).
+ *
+ * **The palette moves with the theme and that pairing is the point**: a light screen on the dark
+ * basemap is the defect this item would most easily ship, because nothing about the map is part of
+ * the theme — the two palettes belong to the styles.
+ */
 @Composable
-private fun Fixture(content: @Composable () -> Unit) {
+private fun Fixture(
+    dark: Boolean,
+    content: @Composable () -> Unit,
+) {
     val latin = kvadrantLatin()
-    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
-        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(palette = TilePalette.Dark)) {
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        val palette = if (dark) TilePalette.Dark else TilePalette.Light
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(palette = palette)) {
             content()
         }
     }
