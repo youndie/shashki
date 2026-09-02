@@ -5,7 +5,8 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
-import io.github.youndie.shashki.ui.map.cityTile
+import io.github.youndie.shashki.ui.map.FIXTURE_TILES
+import io.github.youndie.shashki.ui.map.cityTiles
 import io.github.youndie.shashki.ui.map.tiles.labelText
 import ru.workinprogress.viddik.core.ViddikGlyphCoverage
 import ru.workinprogress.viddik.generated.GeneratedViddikRegistry
@@ -57,7 +58,7 @@ class GlyphCoverageTest {
         // draw their labels onto the canvas, which is what the second test is for — so they are
         // named here rather than tolerated by a blanket rule.
         assertEquals(
-            listOf("map/canvas tile dark", "map/canvas tile light"),
+            listOf("map/canvas tile dark", "map/canvas tiles at a seam", "map/canvas tile light"),
             silent,
             "a fixture drew no text at all: either it lost its labels, or the semantics walk is broken",
         )
@@ -75,28 +76,35 @@ class GlyphCoverageTest {
      * the goldens actually draw under the same rule as everything else.
      */
     @Test
-    fun `every label the fixture tile draws is covered by a bundled face`() {
+    fun `every label the fixture tiles draw is covered by a bundled face`() {
         val labels =
-            cityTile.layers
-                .flatMap { it.features }
+            FIXTURE_TILES
+                .mapNotNull { cityTiles.loaded(it) }
+                .flatMap { tile -> tile.layers.flatMap { it.features } }
                 .mapNotNull { it.labelText() }
                 .distinct()
-        // **Pinned, and the pin says something uncomfortable.** All four are ASCII: this tile
-        // carries no diacritic at all, so on its own it would prove nothing about a city whose
-        // street names are full of them. The diacritics are checked by the test above, through the
-        // type-ramp fixture that draws `Miklošičeva cesta 4` — and across the whole extract they
-        // were checked once, by hand, in B-06. What this test adds is the only strings in the
-        // project that come from data rather than from a literal, and a changed fixture tile that
-        // quietly stopped carrying labels would fail here rather than pass silently.
-        // Lower case since B-24: the style documents say `["downcase", …]` and the renderer now
-        // agrees with them. This assertion changing is the guard noticing that, which is what it is
-        // for — the labels are the thing the goldens draw.
-        assertEquals(listOf("voglje", "vodice", "torovo", "a2"), labels)
+
+        // **The vacuity guard, because this reads data and data can go missing.** A fixture archive
+        // that quietly stopped carrying its `transportation_name` layer would make every assertion
+        // below true over nothing. The number is a floor rather than a pin: the archive is five real
+        // tiles of a real city, and pinning the exact count would make this fail on a re-cut that
+        // changed nothing about coverage.
+        assertTrue(labels.size > 100, "only ${labels.size} labels: the fixture archive lost its names")
+
+        // **And it reaches the characters this guard exists for.** Until B-30 the fixture was one
+        // tile from the outskirts carrying four ASCII names — `voglje`, `vodice`, `torovo`, `a2` —
+        // and its own comment admitted that proved nothing about a city whose street names are full
+        // of diacritics. The archive now holds the city centre, so it does.
+        assertTrue(
+            labels.count { label -> label.any { it in DIACRITICS } } > 20,
+            "the fixture labels carry no diacritics, so nothing here tests the hard half of coverage",
+        )
+
         val offences =
             labels.mapNotNull { label ->
                 uncoveredIn(label).takeIf { it.isNotEmpty() }?.let { "\"$label\" — ${it.render()}" }
             }
-        assertEquals(emptyList(), offences, "the tile carries characters no bundled face draws")
+        assertEquals(emptyList(), offences, "the tiles carry characters no bundled face draws")
     }
 
     /**
@@ -184,3 +192,6 @@ private fun face(name: String): ByteArray =
             .getResourceAsStream("composeResources/io.github.youndie.kvadrant.resources/font/$name"),
     ) { "$name is not on the test classpath — kvadrant-core moved its resources" }
         .use { it.readBytes() }
+
+/** Slovene street names are made of these, and a bundled face either has them or does not. */
+private val DIACRITICS = setOf('č', 'š', 'ž', 'ć', 'đ')

@@ -9,8 +9,12 @@ import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.ui.RiderTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
+import io.github.youndie.shashki.ui.map.tiles.MemoryTileSource
 import io.github.youndie.shashki.ui.map.tiles.MvtTile
+import io.github.youndie.shashki.ui.map.tiles.PmtilesArchive
+import io.github.youndie.shashki.ui.map.tiles.RangeReader
 import io.github.youndie.shashki.ui.map.tiles.TilePalette
+import io.github.youndie.shashki.ui.map.tiles.TileSource
 import io.github.youndie.shashki.ui.map.tiles.decodeMvt
 import io.github.youndie.shashki.ui.portable
 import io.github.youndie.shashki.ui.screens.RideClassOffer
@@ -18,14 +22,62 @@ import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderTripInProgress
 import io.github.youndie.shashki.ui.screens.TripDriver
 import io.github.youndie.shashki.ui.screens.TripStage
+import kotlinx.coroutines.runBlocking
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
-/** The fixture tile, decoded once. `z14/8850/5815` out of the city's own archive. */
+/** The fixture tile: the city centre, out of the archive rather than out of a loose file. */
 internal val cityTile: MvtTile by lazy {
+    checkNotNull(cityTiles.loaded(CITY_TILE)) { "the fixture archive does not hold $CITY_TILE" }
+}
+
+/**
+ * The 2x2 block, read out of a real pmtiles archive.
+ *
+ * **The goldens go through the archive reader**, which is the difference between a picture of the
+ * renderer and a picture of the product: header, root directory, Hilbert ids and the hand-written
+ * inflater are all in the path that produces these images. The bytes arrive from memory rather than
+ * from HTTP because a screenshot suite has no business opening a socket — the transport is a port
+ * and this is the other implementation of it.
+ */
+internal val cityTiles: TileSource by lazy {
     val bytes =
-        checkNotNull(TilePaletteAnchor::class.java.classLoader.getResourceAsStream("tiles/ljubljana-14-8850-5815.mvt"))
+        checkNotNull(TilePaletteAnchor::class.java.classLoader.getResourceAsStream(FIXTURE_ARCHIVE))
             .use { it.readBytes() }
-    decodeMvt(bytes)
+    runBlocking {
+        val archive = PmtilesArchive.open(ByteArrayRangeReader(bytes))
+        val decoded = mutableMapOf<TileCoordinate, MvtTile>()
+        for (at in FIXTURE_TILES) archive.tile(at)?.let { decoded[at] = decodeMvt(it) }
+        MemoryTileSource(decoded)
+    }
+}
+
+/** The archive the goldens are drawn from — `map/pmtiles_subset.py` cut it out of `city.pmtiles`. */
+internal const val FIXTURE_ARCHIVE: String = "tiles/ljubljana.pmtiles"
+
+/**
+ * What is in it: the 2x2 block over the city centre, and one tile from the outskirts.
+ *
+ * The odd one out is `8850/5815`, which is there as an **oracle** rather than for a picture — the
+ * loose `.mvt` beside it was extracted for B-01 by a different tool chain, so a reader that walks
+ * this archive correctly hands back exactly those bytes.
+ */
+internal val FIXTURE_TILES: List<TileCoordinate> =
+    listOf(
+        TileCoordinate(14, 8852, 5825),
+        TileCoordinate(14, 8853, 5825),
+        TileCoordinate(14, 8852, 5826),
+        TileCoordinate(14, 8853, 5826),
+        TileCoordinate(14, 8850, 5815),
+    )
+
+/** The archive, already in hand. The measured transport is B-07's and is not a screenshot's business. */
+internal class ByteArrayRangeReader(
+    private val bytes: ByteArray,
+) : RangeReader {
+    override suspend fun read(
+        offset: Long,
+        length: Int,
+    ): ByteArray = bytes.copyOfRange(offset.toInt(), offset.toInt() + length)
 }
 
 private class TilePaletteAnchor
@@ -43,8 +95,31 @@ private class TilePaletteAnchor
 internal fun CanvasTileDark() {
     val latin = kvadrantLatin()
     RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
-        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTile, CITY_TILE, TilePalette.Dark)) {
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, TilePalette.Dark)) {
             MapPane(emptyScene(MapCamera(TILE_CENTRE)), Modifier.fillMaxSize())
+        }
+    }
+}
+
+/**
+ * **Four tiles meeting in the middle of the pane, which is where a tiling renderer fails first.**
+ *
+ * A road that stops dead at a boundary, a shift of a pixel between neighbours, one tile's water
+ * painted over the next one's street: none of those are visible in a golden of a comfortable tile
+ * centre, and all of them are visible here. The camera sits exactly on the corner the four fixture
+ * tiles share.
+ *
+ * The ordering rule this checks is the one the renderer had to be split for — every tile's areas,
+ * then every tile's roads. Drawn tile by tile instead, the overlap the format leaves at each edge
+ * becomes a band of one tile's landcover over its neighbour's road network.
+ */
+@ViddikScreenshot(name = "canvas tiles at a seam", group = "map", width = 390, height = 390)
+@Composable
+internal fun CanvasTilesAtASeam() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, TilePalette.Dark)) {
+            MapPane(emptyScene(MapCamera(SEAM_CENTRE)), Modifier.fillMaxSize())
         }
     }
 }
@@ -54,7 +129,7 @@ internal fun CanvasTileDark() {
 internal fun CanvasTileLight() {
     val latin = kvadrantLatin()
     RiderTheme(dark = false, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
-        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTile, CITY_TILE, TilePalette.Light)) {
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, TilePalette.Light)) {
             MapPane(emptyScene(MapCamera(TILE_CENTRE)), Modifier.fillMaxSize())
         }
     }
@@ -71,7 +146,7 @@ internal fun CanvasTileLight() {
 internal fun RiderClassPickerOnCanvas() {
     val latin = kvadrantLatin()
     RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
-        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTile, CITY_TILE, TilePalette.Dark)) {
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, TilePalette.Dark)) {
             RiderClassPicker(
                 scene = emptyScene(MapCamera(TILE_CENTRE)),
                 destination = "airport",
@@ -93,13 +168,31 @@ internal fun RiderClassPickerOnCanvas() {
     }
 }
 
-private val TILE_CENTRE = GeoPoint(46.0511, 14.5051)
+/**
+ * The centre of the fixture tile.
+ *
+ * **It used to be Ljubljana's own centre and that was wrong in a way nothing could see.** The
+ * prototype took the frame from a fixed `TileCoordinate` and ignored the camera, so a camera
+ * pointing three tiles east made no difference to the picture. With a real viewport the camera picks
+ * the tiles, and a fixture pointing at ground the archive does not hold draws an empty map.
+ */
+private val TILE_CENTRE = GeoPoint(46.04653, 14.51294)
 
 /**
- * Which tile `cityTile` is. The name in the resource says it and now the code does too, because the
- * projection needs it: without the coordinate a route in latitude and longitude has nowhere to land.
+ * Where all four fixture tiles meet: the corner of 8850/5815, 8851/5815, 8850/5816 and 8851/5816.
+ *
+ * The seam is where a tiling renderer looks wrong first — a road that stops at the edge, a shift of
+ * a pixel between neighbours, one tile's water over another's street — so B-30 asks for a golden of
+ * exactly this and not of a comfortable tile centre.
  */
-internal val CITY_TILE: TileCoordinate = TileCoordinate(zoom = 14, x = 8850, y = 5815)
+private val SEAM_CENTRE = GeoPoint(46.04273565, 14.52392578)
+
+/**
+ * Which tile `cityTile` is: the one over the city centre, which is where the demonstration route is
+ * lifted from. The projection needs it — without a coordinate a route in latitude and longitude has
+ * nowhere to land.
+ */
+internal val CITY_TILE: TileCoordinate = TileCoordinate(zoom = 14, x = 8852, y = 5825)
 
 /**
  * The demonstration trip, lifted out of the tile's own road geometry.
@@ -187,7 +280,7 @@ private fun TripFixture(
 ) {
     val latin = kvadrantLatin()
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
-        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTile, CITY_TILE, palette)) {
+        CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, palette)) {
             RiderTripInProgress(
                 scene = scene,
                 stage = TripStage.IN_PROGRESS,

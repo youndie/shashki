@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,9 +29,10 @@ import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
-import io.github.youndie.shashki.ui.map.tiles.MvtTile
+import io.github.youndie.shashki.ui.map.tiles.NoTiles
 import io.github.youndie.shashki.ui.map.tiles.TilePalette
 import io.github.youndie.shashki.ui.map.tiles.TileRenderer
+import io.github.youndie.shashki.ui.map.tiles.TileSource
 
 /**
  * B-01's fourth route, as far as a prototype takes it: the map drawn by us, inside the caller's
@@ -46,29 +49,30 @@ import io.github.youndie.shashki.ui.map.tiles.TileRenderer
  * layer is a marker that would. It is also what lets a pin be the kit's own glyph in the kit's own
  * ink rather than a shape redrawn in a `DrawScope`.
  *
- * **It is a prototype and the gap is named**: one tile, scaled to the pane, no camera, no cache and
- * no style interpreter. Research §1.8b lists what the rest costs — pmtiles ranges, tile selection,
- * clipping at seams, label collision — and this exists so that estimate is made against something
- * that ran rather than something imagined.
+ * **It is no longer one tile.** The prototype drew a single tile scaled to the pane, which was
+ * enough to answer "can Compose draw this map" and not enough to be a map: B-30 gave it a camera, a
+ * plane of tiles and a source to fetch them from. What §1.8b still lists as unbuilt is the style
+ * interpreter and label collision — the colours and filters here are transcribed Kotlin, and two
+ * street names that overlap both get drawn.
  */
 public class CanvasMapSurface(
     /**
-     * The basemap, or **`null` for none**.
-     *
-     * Null is not a degraded mode, it is the honest one until tile fetching exists (§1.8b): the
+     * Where the basemap comes from. [NoTiles] is a real answer and not a degraded one: the
      * background is the style document's own, and everything the server actually said — the road,
-     * the car, the pins — is drawn on it, in the right place. A surface that had refused to draw
-     * without a tile would have made the trip screen wait on a transport nobody has written.
+     * the car, the pins — is drawn on it in the right place. A surface that refused to draw without
+     * tiles would make every screen wait on a transport.
      */
-    private val tile: MvtTile? = null,
-    /**
-     * Which tile the drawing is projected through, or `null` to take it from the scene's camera.
-     *
-     * Fixed for a golden of one known tile; derived for an application, where the ride decides where
-     * the map is looking.
-     */
-    private val coordinate: TileCoordinate? = null,
+    private val tiles: TileSource = NoTiles,
     private val palette: TilePalette = TilePalette.Dark,
+    /**
+     * How big one tile is drawn, in pixels at the pane's own density.
+     *
+     * **512 rather than the pane's width**, which is what the prototype used. A tile sized to the
+     * pane makes zoom mean something different on every screen; a fixed size makes `zoom` mean what
+     * it means in every other tile scheme, so `MapCamera(centre, 14.0)` frames the same ground on a
+     * 390 dp phone pane and a 900 dp window.
+     */
+    private val tileSide: Float = DEFAULT_TILE_SIDE,
 ) : MapSurface {
     private val renderer = TileRenderer(palette)
 
@@ -79,25 +83,43 @@ public class CanvasMapSurface(
     ) {
         val measurer = rememberTextMeasurer()
         val labelStyle = ShashkiTheme.typography.meta.copy(color = KvadrantTheme.colors.subtle)
-        // The projection needs the drawn size, and the markers need the projection — so the size is
-        // read once from the layout and shared, rather than each half measuring for itself.
-        var side by remember { mutableStateOf(0f) }
-        val frame = coordinate ?: TileCoordinate.containing(scene.camera.centre, scene.camera.zoom.toInt())
-        val projection = remember(side, frame) { TileProjection(frame, side) }
+        // The viewport needs the drawn size, and the markers need the viewport — so the size is read
+        // once from the layout and shared, rather than each half measuring for itself.
+        var pane by remember { mutableStateOf(Size.Zero) }
+        val projection =
+            remember(pane, scene.camera) { MapViewport(scene.camera, pane.width, pane.height, tileSide) }
+        val wanted = remember(projection) { projection.tiles() }
 
-        Box(modifier.clipToBounds().onSizeChanged { side = maxOf(it.width, it.height).toFloat() }) {
+        // **Fetching is beside the drawing, not inside it.** The canvas paints what is in memory;
+        // this asks for what is not, and the source's own state brings the frame back when it lands.
+        LaunchedEffect(wanted, tiles) {
+            for (coordinate in wanted) tiles.load(coordinate)
+        }
+
+        Box(modifier.clipToBounds().onSizeChanged { pane = Size(it.width.toFloat(), it.height.toFloat()) }) {
             Canvas(Modifier.fillMaxSize()) {
                 with(renderer) {
-                    if (tile == null) {
-                        drawRect(palette.background, size = size)
-                    } else {
-                        drawTile(tile)
-                        drawStreetLabels(tile, measurer, labelStyle)
-                    }
+                    drawRect(palette.background, size = size)
+                    val present = wanted.mapNotNull { at -> tiles.loaded(at)?.let { at to it } }
+                    // Areas across every tile, then roads across every tile, then the labels. A tile
+                    // finished before its neighbour starts paints water over the neighbour's roads
+                    // in the band where the two overlap.
+                    for ((at, tile) in present) drawTileAreas(tile, projection.originOf(at), projection.drawnTileSide)
+                    for ((at, tile) in present) drawTileRoads(tile, projection.originOf(at), projection.drawnTileSide)
+                    // **One pass over every tile's labels, not one pass per tile.** A street that
+                    // crosses a boundary is two features with one name, so labels can only be
+                    // de-duplicated and collision-tested against the whole viewport.
+                    drawStreetLabels(
+                        present.flatMap { (at, tile) ->
+                            streetLabels(tile, projection.originOf(at), projection.drawnTileSide)
+                        },
+                        measurer,
+                        labelStyle,
+                    )
                     scene.route?.let { drawRoute(it, projection) }
                 }
             }
-            if (side > 0f) {
+            if (pane.minDimension > 0f) {
                 for (pin in scene.pins) {
                     Marker(projection.toCanvas(pin.at), pin.glyph(), PIN_SIZE, KvadrantTheme.colors.foreground)
                 }
@@ -149,5 +171,8 @@ public class CanvasMapSurface(
         /** The kit's row glyph size, which is what the pins are drawn at in the artboards. */
         val PIN_SIZE = 20.dp
         val CAR_SIZE = 20.dp
+
+        /** One tile, in pixels. The convention every tile scheme uses, doubled for a dense screen. */
+        const val DEFAULT_TILE_SIDE = 512f
     }
 }

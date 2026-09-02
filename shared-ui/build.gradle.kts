@@ -59,6 +59,12 @@ kotlin {
             api(libs.kompot.client)
             api(libs.kompot.core)
             implementation(libs.kompot.registryAnnotations)
+            // **The map fetches its own basemap, so this module has a client.** It is the one place
+            // a UI library reaches for the network, and the reason is that the basemap is not
+            // application data: no screen asks for it, no view model holds it, and both bundles
+            // would otherwise carry the same reader. The engine is still the application's.
+            implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
+            implementation(libs.ktor.client.core)
         }
         // `getByName` rather than `by getting`: the delegate is deprecated in Gradle 9.6, and its
         // warning is a script-compilation warning like the ones above.
@@ -70,6 +76,8 @@ kotlin {
                 // the semantics tree; that is the only way to check strings that live as literals
                 // inside composables without asking each fixture to declare them.
                 implementation(libs.compose.uiTest)
+                // A real engine for the one test that reads the archive off a running store.
+                implementation(libs.ktor.client.cio)
             }
         }
     }

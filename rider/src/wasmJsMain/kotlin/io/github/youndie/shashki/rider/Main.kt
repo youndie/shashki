@@ -26,6 +26,7 @@ public fun main() {
                     serverUrl = origin(),
                     riderId = "rider-1",
                     paymentMethodId = "card-4417",
+                    tilesUrl = tilesUrl().takeIf { it.isNotBlank() },
                     katcherUrl = katcherUrl().takeIf { it.isNotBlank() },
                     katcherAppKey = katcherAppKey().takeIf { it.isNotBlank() },
                     release = release(),
@@ -45,6 +46,9 @@ private external fun origin(): String
  * A build identifier compiled into the wasm would make every deployment a different artefact, which
  * is the opposite of what a content-hashed bundle is for (D10).
  */
+@JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.tilesUrl) || ''")
+private external fun tilesUrl(): String
+
 @JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.katcherUrl) || ''")
 private external fun katcherUrl(): String
 

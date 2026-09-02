@@ -18,6 +18,10 @@ import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerViewModel
 import io.github.youndie.shashki.rider.feature.ride.ui.TripViewModel
 import io.github.youndie.shashki.ui.map.CanvasMapSurface
 import io.github.youndie.shashki.ui.map.MapSurface
+import io.github.youndie.shashki.ui.map.tiles.HttpRangeReader
+import io.github.youndie.shashki.ui.map.tiles.NoTiles
+import io.github.youndie.shashki.ui.map.tiles.PmtilesArchive
+import io.github.youndie.shashki.ui.map.tiles.PmtilesTileSource
 import io.github.youndie.shashki.ui.map.tiles.TilePalette
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -42,6 +46,8 @@ public data class RiderConfig(
     val serverUrl: String,
     val riderId: String,
     val paymentMethodId: String,
+    /** Where `city.pmtiles` is served from, or `null` for a map with no streets on it. */
+    val tilesUrl: String?,
     val katcherUrl: String?,
     val katcherAppKey: String?,
     val release: String,
@@ -91,10 +97,21 @@ public fun riderModule(config: RiderConfig): Module =
         factory { ObserveRideUseCase(get()) }
         factory { WatchDriverUseCase(get()) }
 
-        // **No tile and no fixed frame**: the basemap's transport does not exist yet (§1.8b), so the
-        // surface paints the style's own background and draws what the server said on top of it, in
-        // the right place, through a projection taken from the ride's own camera.
-        single<MapSurface> { CanvasMapSurface(palette = TilePalette.Dark) }
+        // **The basemap, over ranged HTTP from wherever the archive is hosted** (B-30). Not from
+        // this server: the tiles are a static object and shashki is not a tile server, which is why
+        // the address is configuration rather than a route in `:protocol`.
+        //
+        // No archive configured is a running configuration, not a broken one — the surface paints
+        // the style's own background and draws the road, the car and the pins on it, in the right
+        // place. That was the whole product's map until this item and it is still the demo's when
+        // nobody has uploaded a city.
+        single<MapSurface> {
+            val tiles =
+                config.tilesUrl?.let { url ->
+                    PmtilesTileSource { PmtilesArchive.open(HttpRangeReader(get(), url)) }
+                } ?: NoTiles
+            CanvasMapSurface(tiles, TilePalette.Dark)
+        }
 
         // **A wrapper rather than a nullable binding.** Koin resolves by type and a `single` that
         // returned null would fail at injection with a message about the type rather than about the

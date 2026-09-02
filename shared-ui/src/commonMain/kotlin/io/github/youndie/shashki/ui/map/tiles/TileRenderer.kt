@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.ui.map.tiles
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -11,8 +12,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.ui.map.Projection
 import io.github.youndie.shashki.ui.map.RouteLine
-import io.github.youndie.shashki.ui.map.TileProjection
 
 /**
  * One decoded tile, drawn on a Compose canvas. B-01's route-4 prototype.
@@ -36,22 +37,41 @@ import io.github.youndie.shashki.ui.map.TileProjection
 public class TileRenderer(
     private val palette: TilePalette = TilePalette.Dark,
 ) {
-    /** The basemap. Labels are [drawStreetLabels], because they need a `TextMeasurer` and a style. */
-    public fun DrawScope.drawTile(tile: MvtTile) {
-        drawRect(palette.background, size = size)
+    /**
+     * The areas: land, parks, water, buildings.
+     *
+     * **Split from the roads because a plane of tiles has to be drawn in layers, not in tiles.**
+     * MVT geometry runs past the tile's own edge by a buffer, so neighbours overlap — and a renderer
+     * that finished each tile before starting the next would paint one tile's water over its
+     * neighbour's roads in that band. Every tile's areas first, then every tile's roads.
+     *
+     * [origin] is where this tile's top-left corner sits on the canvas and [side] is how big it is
+     * drawn. Nothing is clipped: the overlap is the same geometry twice in the same place.
+     */
+    public fun DrawScope.drawTileAreas(
+        tile: MvtTile,
+        origin: Offset,
+        side: Float,
+    ) {
+        tile.layer("landcover")?.let { draw(it, palette.landcover, origin, side, filled = true) }
+        tile.layer("park")?.let { draw(it, palette.landcover, origin, side, filled = true) }
+        tile.layer("water")?.let { draw(it, palette.water, origin, side, filled = true) }
+        tile.layer("building")?.let { draw(it, palette.building, origin, side, filled = true) }
+    }
 
-        tile.layer("landcover")?.let { draw(it, palette.landcover, filled = true) }
-        tile.layer("park")?.let { draw(it, palette.landcover, filled = true) }
-        tile.layer("water")?.let { draw(it, palette.water, filled = true) }
-        tile.layer("building")?.let { draw(it, palette.building, filled = true) }
-
-        // Roads by class, thinnest first, so a motorway is drawn over the residential street it
-        // crosses — which is the order the style document lists them in and the reason it does.
+    /** The roads, thinnest band first so a motorway is drawn over the street it crosses. */
+    public fun DrawScope.drawTileRoads(
+        tile: MvtTile,
+        origin: Offset,
+        side: Float,
+    ) {
         val roads = tile.layer("transportation") ?: return
         for (band in ROAD_BANDS) {
             draw(
                 layer = roads,
                 colour = palette.road(band),
+                origin = origin,
+                side = side,
                 filled = false,
                 width = band.width,
                 keep = { it.tags["class"] in band.classes },
@@ -72,7 +92,7 @@ public class TileRenderer(
      */
     public fun DrawScope.drawRoute(
         route: RouteLine,
-        projection: TileProjection,
+        projection: Projection,
     ) {
         strokePath(route.travelled, projection, palette.routeTravelled)
         strokePath(route.ahead, projection, palette.routeAhead)
@@ -80,7 +100,7 @@ public class TileRenderer(
 
     private fun DrawScope.strokePath(
         points: List<GeoPoint>,
-        projection: TileProjection,
+        projection: Projection,
         colour: Color,
     ) {
         if (points.size < 2) return
@@ -101,34 +121,70 @@ public class TileRenderer(
      * theme's typography, and a renderer that took a `TextStyle` to draw a polygon would be carrying
      * text into every call that has no text in it.
      */
-    public fun DrawScope.drawStreetLabels(
+    public fun streetLabels(
         tile: MvtTile,
+        origin: Offset,
+        side: Float,
+    ): List<StreetLabel> {
+        val layer = tile.layer("transportation_name") ?: return emptyList()
+        val scale = side / layer.extent
+        return layer.features.mapNotNull { feature ->
+            val text = feature.labelText() ?: return@mapNotNull null
+            val points = feature.paths.maxByOrNull { it.size } ?: return@mapNotNull null
+            if (points.size < 4) return@mapNotNull null
+            StreetLabel(text, points.readingLeftToRight().toPath(scale, origin), points.size)
+        }
+    }
+
+    /**
+     * The labels that fit, drawn; the rest dropped.
+     *
+     * **Collision and de-duplication are one pass and they have to be, because they are one problem.**
+     * A street crossing a tile boundary is two features with one name, so a renderer that drew every
+     * candidate wrote the name twice at the seam — and the same street, split into segments by every
+     * junction, wrote it five more times down its own length. Research §1.8b listed label collision
+     * as unbuilt; the seam is what made it unignorable.
+     *
+     * The rule: longest road first, one placement per name in the viewport, and a candidate whose box
+     * touches an accepted one is dropped. Longest first is what makes the surviving placement the
+     * most prominent stretch of that road rather than whichever segment the tile happened to list.
+     *
+     * What it deliberately does not do is push a label along its road to find a free spot, or repeat
+     * a name down a long street the way a paper map does. Both are real and both are more than the
+     * seam needs.
+     */
+    public fun DrawScope.drawStreetLabels(
+        labels: List<StreetLabel>,
         measurer: TextMeasurer,
         style: TextStyle,
     ) {
-        val layer = tile.layer("transportation_name") ?: return
-        val scale = size.maxDimension / layer.extent
-        for (feature in layer.features) {
-            val text = feature.labelText() ?: continue
-            val points = feature.paths.maxByOrNull { it.size } ?: continue
-            if (points.size < 4) continue
-            drawTextOnPath(measurer, text, points.toPath(scale), style)
+        val taken = mutableListOf<Rect>()
+        val named = mutableSetOf<String>()
+        for (label in labels.sortedByDescending { it.weight }) {
+            if (!named.add(label.text)) continue
+            val bounds = labelBounds(measurer, label.text, label.path, style) ?: continue
+            val padded = bounds.inflate(LABEL_PADDING)
+            if (taken.any { it.overlaps(padded) }) continue
+            taken += padded
+            drawTextOnPath(measurer, label.text, label.path, style)
         }
     }
 
     private fun DrawScope.draw(
         layer: MvtLayer,
         colour: Color,
+        origin: Offset,
+        side: Float,
         filled: Boolean,
         width: Float = 1f,
         keep: (MvtFeature) -> Boolean = { true },
     ) {
-        val scale = size.maxDimension / layer.extent
+        val scale = side / layer.extent
         for (feature in layer.features) {
             if (!keep(feature)) continue
             for (points in feature.paths) {
                 if (points.size < 4) continue
-                val path = points.toPath(scale)
+                val path = points.toPath(scale, origin)
                 if (filled) {
                     drawPath(
                         path,
@@ -141,17 +197,45 @@ public class TileRenderer(
         }
     }
 
-    private fun IntArray.toPath(scale: Float): Path =
+    /**
+     * The same road, wound so its name reads the right way up.
+     *
+     * **A road's geometry has a direction and it is not the reader's.** The glyphs are placed along
+     * the tangent, so a street digitised east-to-west comes out mirrored — which the first goldens of
+     * this renderer duly recorded as correct, because a screenshot test certifies whatever it is
+     * shown. Half the street names on `screens_rider_trip_in_progress` were upside down.
+     *
+     * End points rather than the tangent at the midpoint: a road that bends back on itself has no
+     * single direction, and the two ends are what decides which way the name should be read.
+     */
+    private fun IntArray.readingLeftToRight(): IntArray {
+        if (size < 4 || this[0] <= this[size - 2]) return this
+        val reversed = IntArray(size)
+        var at = 0
+        for (i in size - 2 downTo 0 step 2) {
+            reversed[at++] = this[i]
+            reversed[at++] = this[i + 1]
+        }
+        return reversed
+    }
+
+    private fun IntArray.toPath(
+        scale: Float,
+        origin: Offset,
+    ): Path =
         Path().apply {
-            moveTo(this@toPath[0] * scale, this@toPath[1] * scale)
+            moveTo(origin.x + this@toPath[0] * scale, origin.y + this@toPath[1] * scale)
             var i = 2
             while (i + 1 < this@toPath.size) {
-                lineTo(this@toPath[i] * scale, this@toPath[i + 1] * scale)
+                lineTo(origin.x + this@toPath[i] * scale, origin.y + this@toPath[i + 1] * scale)
                 i += 2
             }
         }
 
     private companion object {
+        /** Enough that two labels do not touch. Half a line of the size they are drawn at. */
+        const val LABEL_PADDING = 6f
+
         /** The three road bands the styles paint, with the widths they set around zoom 14. */
         val ROAD_BANDS =
             listOf(
@@ -164,6 +248,14 @@ public class TileRenderer(
         const val ROUTE_WIDTH = 6f
     }
 }
+
+/** A street name and the stretch of road it would be written along. */
+public data class StreetLabel(
+    val text: String,
+    val path: Path,
+    /** How long the road segment is, in points. The longest stretch of a name is the one drawn. */
+    val weight: Int,
+)
 
 internal data class RoadBand(
     val classes: Set<String>,

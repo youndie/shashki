@@ -66,12 +66,32 @@ class RiderGraphTest {
         assertNotNull(koin.get<CrashReporting>().reporter)
     }
 
+    /**
+     * **A map with no archive still resolves**, which is the half of B-30 that is easy to break by
+     * making the basemap a requirement. A demo pointed at no tiles draws the style's own background
+     * with the road and the car on it; a graph that refused to build without an archive would take
+     * every screen down with the map.
+     */
+    @Test
+    fun `the map resolves with and without an archive to fetch from`() {
+        val koin = startKoin { modules(riderModule(CONFIG)) }.koin
+        assertNotNull(koin.get<MapSurface>())
+        stopKoin()
+
+        val withTiles =
+            startKoin {
+                modules(riderModule(CONFIG.copy(tilesUrl = "https://tiles.example/city.pmtiles")))
+            }.koin
+        assertNotNull(withTiles.get<MapSurface>())
+    }
+
     private companion object {
         val CONFIG =
             RiderConfig(
                 serverUrl = "http://127.0.0.1:8080",
                 riderId = "rider-1",
                 paymentMethodId = "card-4417",
+                tilesUrl = null,
                 katcherUrl = null,
                 katcherAppKey = null,
                 release = "test",

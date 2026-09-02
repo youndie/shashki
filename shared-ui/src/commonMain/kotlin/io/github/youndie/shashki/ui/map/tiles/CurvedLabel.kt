@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.ui.map.tiles
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -84,5 +85,40 @@ public fun MvtFeature.labelText(): String? =
             ?: tags["name"]?.takeIf { it.isNotBlank() }
             ?: tags["ref"]?.takeIf { it.isNotBlank() }
     )?.lowercase()
+
+/**
+ * The box a label would occupy, or `null` when the road is too short to carry its own name.
+ *
+ * **Axis-aligned and centred on the midpoint, which is an approximation and is the right one.** The
+ * label is drawn glyph by glyph along a curve, so its true footprint is a ribbon; a box around the
+ * middle of it is what a collision test needs and is cheap enough to compute for every candidate in
+ * the viewport before drawing any of them. It errs by being a little too small on a sharp bend,
+ * which shows up as two labels touching rather than as a label missing.
+ *
+ * The `null` case is the same condition [drawTextOnPath] refuses on, so a caller that places by this
+ * and draws by that never reserves space for a label that is not drawn.
+ */
+public fun labelBounds(
+    measurer: TextMeasurer,
+    text: String,
+    path: Path,
+    style: TextStyle,
+    startFraction: Float = 0.5f,
+): Rect? {
+    val measure = PathMeasure().apply { setPath(path, false) }
+    val length = measure.length
+    if (length <= 0f) return null
+    val layout = measurer.measure(AnnotatedString(text), style)
+    val width = layout.size.width.toFloat()
+    if (width > length) return null
+    val centre = measure.getPosition(length * startFraction)
+    val height = layout.size.height.toFloat()
+    return Rect(
+        left = centre.x - width / 2,
+        top = centre.y - height / 2,
+        right = centre.x + width / 2,
+        bottom = centre.y + height / 2,
+    )
+}
 
 private const val DEGREES_PER_RADIAN = 57.29578f

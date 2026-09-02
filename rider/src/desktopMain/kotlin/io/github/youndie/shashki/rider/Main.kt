@@ -30,6 +30,7 @@ public fun main() {
                         serverUrl = System.getenv("SHASHKI_SERVER") ?: "http://127.0.0.1:8080",
                         riderId = "rider-1",
                         paymentMethodId = "card-4417",
+                        tilesUrl = System.getenv("SHASHKI_TILES"),
                         katcherUrl = System.getenv("SHASHKI_KATCHER_URL"),
                         katcherAppKey = System.getenv("SHASHKI_KATCHER_KEY"),
                         release = System.getenv("SHASHKI_RELEASE") ?: "dev",

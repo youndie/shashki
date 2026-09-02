@@ -904,6 +904,49 @@ tile boundaries so a road does not end at a seam, and label placement — collis
 the same street name across adjacent tiles, and the curved baseline above. Pan and pinch are Compose
 gestures and are the easy end.
 
+**Consequence 1.8b1 — that list was built, and it cost less than it reads (2026-09-02,
+[B-30](../backlog/B-30-tiles-over-the-wire.md)).** Every item above is now in `:shared-ui`, and the
+two surprises were not on it.
+
+| What §1.8b named | Where it is | What it actually cost |
+|---|---|---|
+| pmtiles directory traversal and ranged reads | `tiles/Pmtiles.kt`, `tiles/HttpRangeReader.kt` | ~200 lines; the header is five offset pairs and the directory is four runs of varints |
+| MVT geometry decoding | `tiles/Mvt.kt` — done in B-01 | — |
+| tile-to-screen transforms in Web Mercator | `MapViewport` | ~60 lines, and the arithmetic was already in `TileProjection` |
+| per-zoom tile selection with a cache | `MapViewport.tiles`, `PmtilesTileSource` | the cache is a `mutableStateMapOf` and a miss counter |
+| clipping at tile boundaries | **not needed** | see below |
+| label collision and de-duplication | `TileRenderer.drawStreetLabels` | ~20 lines, greedy, longest road first |
+
+**The clipping turned out to be the wrong instruction.** MVT geometry runs *past* the tile's own
+edge by a buffer, precisely so a neighbour can draw the same road and the two meet; clipping at the
+boundary is what makes a road end at a seam, not what prevents it. What the seam actually needs is
+**ordering across tiles rather than within them** — every tile's areas, then every tile's roads — or
+one tile's water covers its neighbour's street network in the overlap. That is a two-line change and
+an unobvious one, and it is why `drawTile` became `drawTileAreas` and `drawTileRoads`.
+
+**And gzip was not on the list at all.** The archive is gzipped inside and out — the directory and
+every tile — and there is nowhere to borrow an inflater from on the target that matters: okio's
+wasmJs klib carries none (checked in the artefact, not assumed), and the browser's
+`DecompressionStream` would make every read asynchronous and leave the desktop target, the one that
+can be photographed, on a different implementation from the one that ships. So `tiles/Inflate.kt` is
+DEFLATE and the gzip wrapper in common code, checking the trailer's CRC-32 — because a hand-written
+inflater that is subtly wrong does not throw, it produces plausible bytes, and a tile made of
+plausible bytes draws a city that is not there.
+
+Two things measured rather than asserted:
+
+- **The reader agrees with a tool chain that is not ours.** `ljubljana-14-8850-5815.mvt` was
+  extracted for B-01 by `pmtiles`; the archive fixture is a cut of `city.pmtiles` with nothing
+  re-encoded. The bytes this reader hands back for that tile are that file, 4 068 of them, identical
+  — one assertion covering the header parse, the directory walk, the Hilbert id and the inflater.
+- **The read count is held to.** Opening is two requests, each tile is one, a miss is none, and a
+  second look at the same viewport is none. Against the real archive on bochka: 810 tiles, two
+  requests to know it, four to draw a corner.
+
+**And the goldens are still portable.** The whole new pipeline — inflate, decode, project, place
+labels — is in the path that produces `map_canvas_tiles_at_a_seam`, recorded on macOS and verified
+unchanged on Linux by the same `check`. B-02's claim now covers arithmetic as well as text.
+
 **Consequence 1.8c — WorldWind Kotlin is route 3 with a Kotlin API, not a fourth option.**
 `earth.worldwind:worldwind` (Apache-2.0, active — last push 2026-08-25) is the one Kotlin
 Multiplatform library found that publishes a wasm target and carries an MVT layer, and it has a

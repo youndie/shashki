@@ -1,4 +1,5 @@
-# The identity provider shashki signs in against, for a laptop and for the tests.
+# The services shashki talks to on a laptop and in its tests: the identity provider it signs in
+# against, and the object store its basemap is fetched from.
 #
 # **Not a deployment.** Secrets are strings in this file, the database has no volume, and both of
 # shildik's ports are published because there is nobody on this machine to protect them from.
@@ -44,3 +45,23 @@ services:
     ports:
       - "127.0.0.1:18081:8080"
       - "127.0.0.1:19001:9000"
+
+  # Where `city.pmtiles` lives. B-07 measured the load this takes — many small ranged reads into one
+  # 16.6 MiB object — and found that the numbers were never the problem: **two switches are, and
+  # both are off by default.** `BOCHKA_ANONYMOUS` alone leaves an unsigned GET at 403, because a
+  # browser cannot sign a request; and without a CORS configuration the preflight is 403 and a plain
+  # GET carrying `Origin` comes back with no `Access-Control-Allow-Origin` at all. `Range` is not on
+  # the CORS safelist, so every single tile read is preflighted. A deployment that set the bucket
+  # policy and forgot the CORS rule passes every `curl` check and fails in the product.
+  #
+  # `docker/upload-tiles.sh` sets both, and it has to be run: an empty store is not a broken one.
+  bochka:
+    image: ghcr.io/youndie/bochka:v0.5.0
+    environment:
+      # The key `map/tile_serving.py` signs with. In a deployment these go in a file behind
+      # `BOCHKA_CONFIG` — passed here they are readable by anyone who can run `docker inspect`,
+      # which on a laptop is the person who started it.
+      BOCHKA_KEYS: shashki:shashkisecret
+      BOCHKA_ANONYMOUS: "1"
+    ports:
+      - "127.0.0.1:19000:9000"
