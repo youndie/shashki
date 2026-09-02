@@ -10,6 +10,7 @@ import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.dispatch.OfferBoard
+import io.github.youndie.shashki.server.feature.quote.PickupEta
 import io.github.youndie.shashki.server.feature.ride.data.PetichRideRepository
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.CancelRideUseCase
@@ -69,6 +70,9 @@ public fun rideModule(
         // saga tests kill the process at phase boundaries and have no use for a routing graph.
         single<RouteEstimator> { routeEstimator }
         single { Pricing() }
+        // The wait a rider is shown: the candidate query and the router, joined (B-31). Named
+        // explicitly rather than `singleOf`, like everything else in this module.
+        single { PickupEta(candidates = get(), estimator = get()) }
         single<PaymentGateway> { InMemoryPaymentGateway() }
         // The index is a cache of the last known positions, held by one process and rebuilt from
         // the socket after a restart — no repository, no migration, nothing through the broker.

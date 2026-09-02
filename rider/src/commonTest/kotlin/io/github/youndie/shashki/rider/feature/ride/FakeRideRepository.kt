@@ -63,8 +63,8 @@ internal class FakeRideRepository(
                 durationSeconds = 2_079,
                 classes =
                     listOf(
-                        ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD")),
-                        ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD")),
+                        ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD"), pickupEtaSeconds = 240),
+                        ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD"), pickupEtaSeconds = 360),
                     ),
             )
 

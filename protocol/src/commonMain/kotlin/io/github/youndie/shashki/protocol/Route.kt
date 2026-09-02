@@ -51,6 +51,18 @@ public class Routes
 public data class ClassQuote(
     val rideClass: RideClass,
     val quote: Quote,
+    /**
+     * How long until a car of this class reaches the pickup, or `null` when there is none.
+     *
+     * **`null` is the kit's "no cars nearby" and it is an answer.** The tile has a state for it, and
+     * the alternative — dropping the row — makes the list reflow while somebody is reading it. What
+     * it must never be is a number: the wait is the most-looked-at figure on the screen, and a
+     * constant there is a decoration (B-31).
+     *
+     * **It is here rather than in a second call** because a screen that asked twice could show a
+     * price from one moment and a wait from another.
+     */
+    val pickupEtaSeconds: Int? = null,
 )
 
 @Serializable

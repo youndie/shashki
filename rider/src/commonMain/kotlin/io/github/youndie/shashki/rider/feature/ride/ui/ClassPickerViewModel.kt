@@ -24,7 +24,11 @@ public data class ClassPickerUiState(
     val distanceMetres: Int = 0,
     val durationSeconds: Int = 0,
     val ordering: Boolean = false,
-)
+) {
+    /** Whether a car of this class is near enough for the server to have named a wait. */
+    public fun hasCars(rideClass: RideClass): Boolean =
+        quotes.any { it.rideClass == rideClass && it.pickupEtaSeconds != null }
+}
 
 public sealed interface ClassPickerUiAction {
     public data class Select(
@@ -76,9 +80,23 @@ public class ClassPickerViewModel(
 
     public fun onAction(action: ClassPickerUiAction) {
         when (action) {
-            is ClassPickerUiAction.Select -> _uiState.value = _uiState.value.copy(selected = action.rideClass)
-            ClassPickerUiAction.Retry -> load()
-            ClassPickerUiAction.Order -> order()
+            // **A class nobody is driving cannot be selected.** The kit's tile draws it in its
+            // unavailable state and still reports a click — that is the component being a component
+            // — so refusing is this screen's job. Ordering one would be a ride the saga cancels for
+            // want of cars a second later, which is a worse answer than the tile already gave.
+            is ClassPickerUiAction.Select -> {
+                if (_uiState.value.hasCars(action.rideClass)) {
+                    _uiState.value = _uiState.value.copy(selected = action.rideClass)
+                }
+            }
+
+            ClassPickerUiAction.Retry -> {
+                load()
+            }
+
+            ClassPickerUiAction.Order -> {
+                order()
+            }
         }
     }
 
@@ -97,6 +115,8 @@ public class ClassPickerViewModel(
                                 quotes = quotes.classes,
                                 distanceMetres = quotes.distanceMetres,
                                 durationSeconds = quotes.durationSeconds,
+                                // **The selection follows the cars.**
+                                selected = quotes.classes.selectable(_uiState.value.selected),
                             )
                     }.onFailure {
                         _uiState.value = _uiState.value.copy(loading = false)
@@ -104,6 +124,21 @@ public class ClassPickerViewModel(
                     }
             }
     }
+
+    /**
+     * The class to open on: the current one if it has cars, otherwise the first that does.
+     *
+     * `ECONOMY` is the default before anything is known. If it turns out nobody is driving one, the
+     * screen would otherwise open on a greyed row with the order bar live under it — which is a
+     * screen inviting an action it has already said is unavailable. Falling back to nothing (all
+     * three empty) keeps the current selection, because there is nothing better to move to.
+     */
+    private fun List<ClassQuote>.selectable(current: RideClass): RideClass =
+        if (any { it.rideClass == current && it.pickupEtaSeconds != null }) {
+            current
+        } else {
+            firstOrNull { it.pickupEtaSeconds != null }?.rideClass ?: current
+        }
 
     private fun order() {
         if (_uiState.value.ordering) return

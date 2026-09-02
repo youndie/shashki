@@ -26,8 +26,13 @@ import ru.workinprogress.viddik.annotations.ViddikScreenshot
  * can be a golden, and it is the half that contains everything the design cares about.
  *
  * What these show that `:shared-ui`'s goldens cannot is the **mapping**: a `Quote` of 3 890 cents
- * arriving as `$ 38.90`, 22 806 metres as `22.8 km`, 2 079 seconds as `35 min`. Those conversions
- * are the application's, they are easy to get subtly wrong, and until now nothing looked at them.
+ * arriving as `$ 38.90`, 22 806 metres as `22.8 km`, 2 079 seconds as `35 min`, and a pickup wait of
+ * 240 seconds as `4 min`. Those conversions are the application's, they are easy to get subtly
+ * wrong, and until now nothing looked at them.
+ *
+ * The third row is the one to read: `business` has a price and no wait, so it draws as the kit's
+ * unavailable tile saying "no cars nearby" (B-31). A class the server prices and nobody is driving
+ * is not a class a rider can order.
  */
 @ViddikScreenshot(name = "class picker priced", group = "rider", width = 390, height = 844)
 @Composable
@@ -40,8 +45,8 @@ internal fun ClassPickerPriced() {
                     loading = false,
                     quotes =
                         listOf(
-                            ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD")),
-                            ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD")),
+                            ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD"), 240),
+                            ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD"), 360),
                         ),
                     selected = RideClass.ECONOMY,
                     distanceMetres = 22_806,

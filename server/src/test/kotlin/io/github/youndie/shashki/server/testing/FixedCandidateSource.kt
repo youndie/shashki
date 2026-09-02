@@ -24,11 +24,19 @@ class FixedCandidateSource(
     ): List<DriverCandidate> = candidates
 
     companion object {
+        /**
+         * All three in the same place, because these tests are about the cascade and not the map.
+         *
+         * The saga only reads `driverId`; the position exists for the wait a rider is shown (B-31),
+         * which is `PickupEtaTest`'s subject and is measured against a real graph there.
+         */
+        private val AT = GeoPoint(46.0511, 14.5051)
+
         val DEFAULT: List<DriverCandidate> =
             listOf(
-                DriverCandidate("driver-1", distanceMetres = 800, rating = 4.9),
-                DriverCandidate("driver-2", distanceMetres = 1_400, rating = 4.7),
-                DriverCandidate("driver-3", distanceMetres = 2_100, rating = 4.8),
+                DriverCandidate("driver-1", distanceMetres = 800, rating = 4.9, at = AT),
+                DriverCandidate("driver-2", distanceMetres = 1_400, rating = 4.7, at = AT),
+                DriverCandidate("driver-3", distanceMetres = 2_100, rating = 4.8, at = AT),
             )
     }
 }

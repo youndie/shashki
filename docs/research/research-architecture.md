@@ -774,6 +774,28 @@ would have been shown one number and charged another the first time a coefficien
 The trip screen draws those four as em dashes, because the registration is the field a rider checks a
 real car against and fiction there is worse than a blank.
 
+**Consequence 1.7f — one of the two dashes had an answer already in the building
+(2026-09-02, [B-31](../backlog/B-31-the-wait-for-a-car.md)).** The class tile reads `4 min · Kia Rio`
+and B-28 drew both halves as a dash. The wait was not a missing capability: the geo-index answers
+"who is near, of this class" (B-20) and the router answers "how long from here to there" (B-23), and
+nothing had applied the second to the first. It is now a field of the same `POST /api/quotes` answer,
+because a screen that asked twice could show a price from one moment and a wait from another.
+
+| Decision | Why |
+|---|---|
+| the nearest candidate by straight line, then routed — not the fastest by road | routing every candidate is one graph search per online driver per class, for a number shown before anybody has ordered; and the index's ordering is the one the offer cascade uses, so the rider is told about the driver they would actually be offered |
+| `null` rather than a number when there is no candidate, or no road to one | the wait is the most-looked-at figure on the screen; a constant there is a decoration, and the kit's tile already has an unavailable state |
+| unavailable means no car, not no price | pricing is arithmetic and answers for every class — what a rider cannot do is order a class nobody is driving |
+
+**The test discriminates rather than merely ordering.** The fixture graph is an L, so a car at the
+north end is 3 772 m away by road and 2 710 m by hypotenuse: a wait taken from the index's own
+straight-line metres gives a ratio of 3.5 between the two classes and a routed wait gives 4.9. The
+assertion sits between them, and the mutation confirms it — replacing the route with the index's
+distance produces exactly 3.52 and fails.
+
+The car stays a dash. `RideView` carries a `driverId` and nothing about the vehicle, and the
+registration is the field a rider checks a real car against.
+
 **Consequence 1.7e — the second bundle found a defect the first could not have
 (2026-09-02, [B-29](../backlog/B-29-the-driver-bundle.md)).**
 

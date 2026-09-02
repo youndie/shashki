@@ -1,6 +1,8 @@
 package io.github.youndie.shashki.rider.feature.ride
 
+import io.github.youndie.shashki.protocol.ClassQuote
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RequestRideUseCase
@@ -68,6 +70,57 @@ class ClassPickerViewModelTest {
             assertEquals(RideClass.COMFORT, rides.requested?.rideClass)
             assertIs<ClassPickerUiEvent.Ordered>(event)
             assertEquals("ride-1", event.rideId)
+        }
+
+    /**
+     * B-31's second criterion, on the client's side.
+     *
+     * **A class nobody is driving cannot be selected**, and the tile that says so still reports a
+     * click — the kit draws the unavailable state and leaves the decision to the screen. Ordering it
+     * would create a ride the saga cancels for want of cars a second later, which is a worse answer
+     * than the tile already gave.
+     */
+    @Test
+    fun `a class with no cars cannot be selected`() =
+        runTest(dispatcher) {
+            rides.quotes =
+                FakeRideRepository.QUOTES.copy(
+                    classes =
+                        listOf(
+                            ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD"), pickupEtaSeconds = 240),
+                            ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD"), pickupEtaSeconds = null),
+                        ),
+                )
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onAction(ClassPickerUiAction.Select(RideClass.COMFORT))
+
+            assertEquals(RideClass.ECONOMY, model.uiState.value.selected)
+            assertFalse(model.uiState.value.hasCars(RideClass.COMFORT))
+        }
+
+    /**
+     * **The screen opens on a class the rider can order.** `ECONOMY` is the default before anything
+     * is known; if the answer says nobody is driving one, staying there would leave a greyed row
+     * with the order bar live under it.
+     */
+    @Test
+    fun `the opening selection moves to a class that has cars`() =
+        runTest(dispatcher) {
+            rides.quotes =
+                FakeRideRepository.QUOTES.copy(
+                    classes =
+                        listOf(
+                            ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD"), pickupEtaSeconds = null),
+                            ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD"), pickupEtaSeconds = 360),
+                        ),
+                )
+            val model = viewModel()
+
+            advanceUntilIdle()
+
+            assertEquals(RideClass.COMFORT, model.uiState.value.selected)
         }
 
     /** A server that does not answer leaves a screen that says so, not one that hangs on "…". */

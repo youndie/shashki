@@ -139,7 +139,7 @@ public class GridDriverIndex : DriverIndex {
             .sortedWith(compareBy({ it.second }, { -it.first.rating }))
             .take(limit)
             .map { (presence, metres) ->
-                DriverCandidate(presence.driverId, metres.roundToInt(), presence.rating)
+                DriverCandidate(presence.driverId, metres.roundToInt(), presence.rating, presence.at)
             }
     }
 

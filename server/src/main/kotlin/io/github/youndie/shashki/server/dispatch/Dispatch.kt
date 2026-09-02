@@ -22,6 +22,15 @@ public data class DriverCandidate(
     val driverId: String,
     val distanceMetres: Int,
     val rating: Double,
+    /**
+     * Where the driver is.
+     *
+     * **[distanceMetres] is a straight line and this is what a road can be found along.** The index
+     * sorts by the first because it has to be cheap enough to run per offer; the wait a rider is
+     * shown is the second, routed (B-31). Carrying the point here rather than asking the index again
+     * keeps the two answers from being about different moments.
+     */
+    val at: GeoPoint,
 )
 
 /**

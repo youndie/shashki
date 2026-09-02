@@ -82,16 +82,20 @@ public fun ClassPickerContent(
 private fun ClassPickerUiState.offerFor(rideClass: RideClass): RideClassOffer {
     val quote = quotes.firstOrNull { it.rideClass == rideClass }
     val carRects = RideClass.entries.indexOf(rideClass) + 1
+    val eta = quote?.pickupEtaSeconds
     return RideClassOffer(
         name = rideClass.name.lowercase(),
-        // **The kit puts the wait and the car here — "4 min · Kia Rio" — and the server can answer
-        // neither.** The wait is a route from the nearest candidate driver to the pickup, which is a
-        // query the server does not expose; the car is the assigned driver's, and nobody is assigned
-        // yet. So this is a dash, on the same rule as the trip screen's blank registration: a number
-        // in the wrong place reads as an answer, and a dash reads as a question.
-        meta = if (quote == null) "no cars nearby" else "—",
+        // **The kit puts the wait and the car here — "4 min · Kia Rio" — and the server can now
+        // answer the first** (B-31): the nearest candidate of this class, routed to the pickup.
+        //
+        // The car is still a dash and stays one. `RideView` carries a `driverId` and nothing about
+        // the vehicle, and the registration is the field a rider checks a real car against — fiction
+        // there is worse than a blank. Same rule as the trip screen's.
+        meta = if (eta == null) "no cars nearby" else eta.asDuration(),
         price = quote?.quote?.asMoney(),
         carRects = carRects,
-        available = quote != null,
+        // **Unavailable when there is no car, not when there is no price.** Pricing is arithmetic
+        // and answers for every class; what a rider cannot do is order a class nobody is driving.
+        available = quote != null && eta != null,
     )
 }
