@@ -90,6 +90,35 @@ services:
     ports:
       - "127.0.0.1:19092:9092"
 
+  # **Where the service is watched from** (B-39). Both take one ingest key per installation rather
+  # than per service, and the service name *is* the identifier — there is no registration step, so a
+  # typo in `SHASHKI_METRIK_ENDPOINT` creates a phantom service instead of an error.
+  #
+  # metrik ingests over **UDP**, which is why the shashki container is given `metrik:9999` and not a
+  # URL: nothing about a datagram fails visibly, and a wrong address here looks exactly like a
+  # service with no traffic. Check the dashboard, not the log.
+  metrik:
+    image: ghcr.io/youndie/metrik:latest
+    environment:
+      METRIK_INGEST_KEY: shashki-ingest
+      METRIK_ADMINS: ""
+    ports:
+      - "127.0.0.1:19080:8080"
+      - "127.0.0.1:19999:9999/udp"
+
+  # tracy ingests over HTTP and keeps its spans in SQLite inside the container: no volume here for
+  # the same reason the databases have none — this is a stand, and a trace older than the demo is
+  # not interesting.
+  tracy:
+    image: ghcr.io/youndie/tracy:0.2.2
+    environment:
+      TRACY_INGEST_KEY: shashki-ingest
+      # The **file**, not the directory it lives in: tracy opens exactly this path, and a directory
+      # here dies on start with `unable to open database file` and a native stack trace.
+      TRACY_DB_PATH: /tmp/tracy.db
+    ports:
+      - "127.0.0.1:19081:8080"
+
   # shashki's own database. A second Postgres rather than a second schema in shildik's: they are two
   # services, and a demo that shares one instance teaches the wrong shape for the sake of 30 MB.
   shashki-db:
@@ -120,6 +149,8 @@ services:
         condition: service_healthy
       booblik:
         condition: service_started
+      tracy:
+        condition: service_started
     environment:
       DB_URL: jdbc:postgresql://shashki-db:5432/shashki
       DB_USER: shashki
@@ -146,5 +177,15 @@ services:
       # Without this the relay is not started at all and a ride's events stay in the outbox — which
       # is true, and is what a server with no broker should say rather than logging them delivered.
       SHASHKI_BOOBLIK: booblik:9092
+      # Both absent is a running configuration and both say so on start — a service that silently
+      # measures nothing and a service with no traffic look identical from a graph.
+      SHASHKI_METRIK_ENDPOINT: metrik:9999
+      SHASHKI_METRIK_KEY: shashki-ingest
+      SHASHKI_TRACY_ENDPOINT: http://tracy:8080
+      SHASHKI_TRACY_KEY: shashki-ingest
+      # **Every trace kept, which a stand needs and a deployment must not have.** The agent's default
+      # is 1%: it keeps failures and slow calls and drops successful fast ones, so a demo whose every
+      # request succeeds in 20 ms shows an empty collector and reads as broken wiring.
+      SHASHKI_TRACY_SAMPLE_RATE: "1.0"
     ports:
       - "127.0.0.1:18080:8080"

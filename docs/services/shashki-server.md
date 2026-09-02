@@ -134,6 +134,33 @@ Read where it is used, not from a central file: `DatabaseFactory.kt`, `AuthConfi
 | `SHASHKI_BOOBLIK` | the broker; without it the relay does not start and events stay in the outbox | no |
 | `SHASHKI_SMTP_*` | the mail relay; without it receipts are recorded as unsent | no |
 | `SHASHKI_BUNDLES`, `SHASHKI_TILES_URL`, `SHASHKI_KATCHER_*` | what the served page tells the bundles | no |
+| `SHASHKI_METRIK_ENDPOINT`, `_KEY` | metrik's UDP ingest, `host:port`; without it nothing measures the service | no |
+| `SHASHKI_TRACY_ENDPOINT`, `_KEY` | tracy's HTTP ingest, an origin; without it a request's time is unattributed | no |
+| `SHASHKI_TRACY_SAMPLE_RATE` | what fraction of ordinary requests keeps its trace; the agent's own default is `0.01` | no |
+
+## 7a. What can be seen from outside (B-39)
+
+| Tool | What it answers | How it gets there |
+|---|---|---|
+| metrik | is it up, how slow, how many errors | `install(Metrik)` in `baseModule`, UDP |
+| tracy | where a request's time went, and what the saga did | `install(Tracy)`, plus named spans in `QuoteRouting` and one per saga step |
+| kompot's degradation sink | which server-driven component a client could not draw | the client posts `/api/screens/degradations`; `DegradationCounter` counts it |
+
+**The spans are named, and the names are asserted.** A trace whose only span is `POST /api/quotes`
+is the library installed rather than used, so `QuoteRouting` opens `route.estimate`,
+`pricing.quote` and `dispatch.pickupEta`, and both saga base classes make `intercept` final and wrap
+their `run` — a step written tomorrow is traced tomorrow rather than forgotten. `OrderSagaTest`
+asserts the names because the first version shipped an unexpanded `$phase` in every one of them.
+
+**Sampling is why an empty collector is not evidence of broken wiring.** tracy's agent keeps 1% of
+ordinary requests, plus everything that failed or was slow; on a stand where every request succeeds
+in 20 ms that is nothing at all. `SHASHKI_TRACY_SAMPLE_RATE=1.0` is what the stand sets; a single
+request can also be kept with tracy's `X-Tracy-Force` header.
+
+**telek is not in this table and the row that named it was wrong.** telek is a toolkit for building
+Telegram bots as state machines, not an alerting system — "tell somebody when it breaks" is metrik's
+own notifier, configured on the metrik installation with `METRIK_TELEGRAM_TOKEN` and a rule. This
+repository deliberately does not carry alert rules: they describe an installation.
 
 ## 8. Quirks
 
@@ -144,5 +171,13 @@ Read where it is used, not from a central file: `DatabaseFactory.kt`, `AuthConfi
   in; that the ride is theirs is checked only where the *order saga* recorded the driver
   (`AdvanceTripUseCase`). B-09's remainder.
 * **The payment gateway is in memory.** Restart and every hold is gone, which for a mock is a feature.
+* **A collector that is down is silent by design.** The agents buffer and drop; nothing in this
+  service fails because tracy is unreachable, which is right, and means "no traces" has three
+  indistinguishable causes: no traffic, no configuration, no collector. The first thing to check is
+  the start-up log, which names the missing variables.
+* **metrik answers a windowed query out of aggregated buckets**, so a window narrower than a bucket
+  answers `0` rather than an error — the default window (no `from`/`to`) is what a check should use,
+  and a delta across two readings needs a quiet period first, because a reading taken seconds after
+  traffic has not counted it yet.
 * **The ride history is a projection with no store**, rebuilt from the broker on start — so what
   retention has dropped is not in it, and no database would bring it back either.

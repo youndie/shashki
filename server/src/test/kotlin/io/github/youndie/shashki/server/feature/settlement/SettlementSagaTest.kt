@@ -270,7 +270,7 @@ class SettlementSagaTest {
                 object : SettlementStep() {
                     override val phase = phase
 
-                    override suspend fun intercept(
+                    override suspend fun run(
                         petich: Petich,
                         payload: SettlementPayload,
                     ): InterceptorResult = error("process died before $phase answered")

@@ -8,6 +8,7 @@ import io.github.youndie.shashki.server.dispatch.CandidateSource
 import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.dispatch.Offer
 import io.github.youndie.shashki.server.dispatch.OfferBoard
+import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import kotlinx.serialization.Serializable
@@ -20,6 +21,7 @@ import ru.workinprogress.petich.PetichInterceptor
 import ru.workinprogress.petich.PetichPayload
 import ru.workinprogress.petich.PetichPhase
 import ru.workinprogress.petich.SimpleEnrichedPayload
+import ru.workinprogress.tracy.agent.withSpan
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -29,6 +31,46 @@ import kotlin.time.Duration.Companion.seconds
  */
 public abstract class OrderStep : PetichInterceptor<OrderPayload> {
     final override fun supports(payload: PetichPayload): Boolean = payload is OrderPayload
+
+    /**
+     * Every step is a span, and it is one line here rather than one per step.
+     *
+     * **B-39's criterion is that a saga's phases are visible in a trace**, and the natural way to get
+     * there — wrapping each `intercept` — is ten call sites that a new step forgets. `intercept` is
+     * final and delegates to [run], so a step written tomorrow is traced tomorrow. Outside a request
+     * there is no context and `withSpan` is a no-op that still runs the block, which is exactly what a
+     * saga resumed by the sweeper should be: unattributed rather than invented.
+     */
+    final override suspend fun intercept(
+        petich: Petich,
+        payload: OrderPayload,
+    ): InterceptorResult {
+        val agent = tracing?.tracy ?: return run(petich, payload)
+        return withSpan(spanName, agent) { run(petich, payload) }
+    }
+
+    /**
+     * **Named, so that a test can read it.** The first version built this string inline and shipped
+     * a name with the dollar sign still in it to the collector — an unexpanded template, invisible to the
+     * compiler and to every test, and found by looking at what actually arrived. A name is a value
+     * like any other and is asserted like one.
+     */
+    public val spanName: String get() = "saga.order.$phase.${this::class.simpleName}"
+
+    protected abstract suspend fun run(
+        petich: Petich,
+        payload: OrderPayload,
+    ): InterceptorResult
+
+    /**
+     * The agent, set once by the graph.
+     *
+     * **A mutable property and not a constructor parameter**, which is the ugly half of this and is
+     * deliberate: the steps are built in a list inside `rideModule` and threading an agent through
+     * ten constructors — six of which do not want one — is how a cross-cutting concern becomes a
+     * parameter everybody copies. It is written once, before the engine exists.
+     */
+    public var tracing: Observability? = null
 
     /** Steps with nothing to undo say so by leaving this alone. */
     override suspend fun compensate(
@@ -54,7 +96,7 @@ public class QuoteStep(
 ) : OrderStep() {
     override val phase: PetichPhase = PetichPhase.ENRICHMENT
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {
@@ -86,7 +128,7 @@ public class ServiceAreaStep(
 ) : OrderStep() {
     override val phase: PetichPhase = PetichPhase.VALIDATION
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult =
@@ -120,7 +162,7 @@ public class HoldPaymentStep(
 ) : OrderStep() {
     override val phase: PetichPhase = PetichPhase.AUTHORIZATION
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {
@@ -162,7 +204,7 @@ public class OfferStep(
     override val phase: PetichPhase = PetichPhase.EXECUTION
     override val priority: Int = 10
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {
@@ -251,7 +293,7 @@ public class DriverAnswerStep(
     override val phase: PetichPhase = PetichPhase.EXECUTION
     override val priority: Int = 0
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {
@@ -320,7 +362,7 @@ public class PublishAssignedStep(
 ) : OrderStep() {
     override val phase: PetichPhase = PetichPhase.POST_PROCESSING
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {

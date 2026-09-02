@@ -55,6 +55,8 @@ navigation3 = "1.2.0-alpha02"
 shildik = "0.2.0.13"
 # katcher's own wire types. The browser target arrived with youndie/katcher#32.
 booblik = "0.3.1"
+metrik = "0.1.13"
+tracy = "0.1.13"
 katcher = "0.6.40"
 kompot = "0.34.1.101"
 kvadrant = "0.2.0"
@@ -113,6 +115,12 @@ katcher-shared = { module = "ru.workinprogress.katcher:shared", version.ref = "k
 # and the same number as the image the stand runs — a client and a broker that disagree about the
 # protocol version fail at the first METADATA rather than at the first record.
 booblik-client = { module = "io.github.youndie.booblik:booblik-client", version.ref = "booblik" }
+
+# Watching the service. Both are numbered publishes rather than `-SNAPSHOT` (B-13), and both are
+# agents rather than servers: what a service links is the thing that sends, never the thing that
+# stores.
+metrik-agent = { module = "ru.workinprogress.metrik:agent", version.ref = "metrik" }
+tracy-agent = { module = "ru.workinprogress.tracy:agent", version.ref = "tracy" }
 
 shildik-oidcAuthServer = { module = "ru.workinprogress.shildik:oidc-auth-server", version.ref = "shildik" }
 shildik-oidcAuthCore = { module = "ru.workinprogress.shildik:oidc-auth-core", version.ref = "shildik" }

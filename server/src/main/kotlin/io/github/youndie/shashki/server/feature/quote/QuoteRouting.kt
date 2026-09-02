@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.Quotes
 import io.github.youndie.shashki.protocol.QuotesView
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RouteRequest
+import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import io.ktor.server.request.receive
@@ -12,6 +13,7 @@ import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
+import ru.workinprogress.tracy.agent.withSpan
 
 /**
  * `POST /api/quotes` — one road, priced for every class, with the wait for each.
@@ -31,10 +33,24 @@ public fun Route.quoteRoutes() {
     val estimator by inject<RouteEstimator>()
     val pricing by inject<Pricing>()
     val pickupEta by inject<PickupEta>()
+    val observability by inject<Observability>()
+
+    // `withSpan` on an agent that is not there would be a null check at every call site; this is the
+    // same three lines once. Outside a request it is a no-op that still runs the block, which is
+    // tracy's own behaviour and the reason a span cannot invent a parent.
+    suspend fun <T> span(
+        name: String,
+        block: suspend () -> T,
+    ): T = observability.tracy?.let { withSpan(name, it) { block() } } ?: block()
 
     post<Quotes> {
         val request = call.receive<RouteRequest>()
-        val estimate = estimator.estimate(request.from, request.to)
+        // **Named spans, because a trace with one span called `POST` is the library installed rather
+        // than used.** tracy instruments the boundaries and nothing else on purpose — time nobody
+        // wrapped shows up as unattributed rather than disappearing — so the two things this route
+        // actually spends time on say so themselves: a graph search, and a candidate query plus a
+        // second search per class.
+        val estimate = span("route.estimate") { estimator.estimate(request.from, request.to) }
         call.respond(
             QuotesView(
                 distanceMetres = estimate.distanceMetres,
@@ -43,12 +59,17 @@ public fun Route.quoteRoutes() {
                 // from A to B is the same whichever class drives it, so it is estimated once; the
                 // wait is a different road each time — from wherever that class's nearest driver is.
                 classes =
-                    RideClass.entries.map { rideClass ->
-                        ClassQuote(
-                            rideClass = rideClass,
-                            quote = pricing.quote(request.from, rideClass, estimate),
-                            pickupEtaSeconds = pickupEta.secondsTo(request.from, rideClass),
-                        )
+                    span("pricing.quote") {
+                        RideClass.entries.map { rideClass ->
+                            ClassQuote(
+                                rideClass = rideClass,
+                                quote = pricing.quote(request.from, rideClass, estimate),
+                                pickupEtaSeconds =
+                                    span("dispatch.pickupEta") {
+                                        pickupEta.secondsTo(request.from, rideClass)
+                                    },
+                            )
+                        }
                     },
             ),
         )

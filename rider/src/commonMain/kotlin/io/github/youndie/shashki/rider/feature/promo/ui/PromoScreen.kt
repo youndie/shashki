@@ -4,15 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.youndie.kompot.KompotActionHandler
+import io.github.youndie.kompot.KompotDegradationSink
+import io.github.youndie.kompot.LocalKompotDegradationSink
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiTheme
 import io.github.youndie.shashki.ui.kompot.ServerScreen
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -31,7 +35,13 @@ public fun PromoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    PromoContent(uiState, onAction, modifier)
+    // **The sink is provided here rather than around the whole application**, because what it reports
+    // is useless without the screen it happened on — "a client could not draw `earningsTile`" is a
+    // fact; "on the promo screen" is what makes it actionable. This is the only server-driven screen
+    // there is, so this is the only place that provides one (B-39).
+    CompositionLocalProvider(LocalKompotDegradationSink provides koinInject<KompotDegradationSink>()) {
+        PromoContent(uiState, onAction, modifier)
+    }
 }
 
 @Composable

@@ -7,6 +7,7 @@ import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.saga.RideOutboxEvent
+import io.github.youndie.shashki.server.observability.Observability
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ import ru.workinprogress.petich.PetichInterceptor
 import ru.workinprogress.petich.PetichPayload
 import ru.workinprogress.petich.PetichPhase
 import ru.workinprogress.petich.SimpleEnrichedPayload
+import ru.workinprogress.tracy.agent.withSpan
 
 /**
  * One step per phase, like the order saga's, and for the same reason: a step exists because it can
@@ -26,6 +28,30 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
  */
 public abstract class SettlementStep : PetichInterceptor<SettlementPayload> {
     final override fun supports(payload: PetichPayload): Boolean = payload is SettlementPayload
+
+    /** One span per phase, in one place — `OrderStep` carries the argument. */
+    final override suspend fun intercept(
+        petich: Petich,
+        payload: SettlementPayload,
+    ): InterceptorResult {
+        val agent = tracing?.tracy ?: return run(petich, payload)
+        return withSpan(spanName, agent) { run(petich, payload) }
+    }
+
+    /**
+     * **Named, so that a test can read it.** The first version built this string inline and shipped
+     * a name with the dollar sign still in it to the collector — an unexpanded template, invisible to the
+     * compiler and to every test, and found by looking at what actually arrived. A name is a value
+     * like any other and is asserted like one.
+     */
+    public val spanName: String get() = "saga.settlement.$phase.${this::class.simpleName}"
+
+    protected abstract suspend fun run(
+        petich: Petich,
+        payload: SettlementPayload,
+    ): InterceptorResult
+
+    public var tracing: Observability? = null
 
     override suspend fun compensate(
         petich: Petich,
@@ -51,7 +77,7 @@ public class ChargeAndPayoutStep(
 ) : SettlementStep() {
     override val phase: PetichPhase = PetichPhase.ENRICHMENT
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: SettlementPayload,
     ): InterceptorResult {
@@ -106,7 +132,7 @@ public data class Commission(
 public class SettleableStep : SettlementStep() {
     override val phase: PetichPhase = PetichPhase.VALIDATION
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: SettlementPayload,
     ): InterceptorResult {
@@ -141,7 +167,7 @@ public class CaptureStep(
 ) : SettlementStep() {
     override val phase: PetichPhase = PetichPhase.AUTHORIZATION
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: SettlementPayload,
     ): InterceptorResult {
@@ -165,7 +191,7 @@ public class PayoutStep(
 ) : SettlementStep() {
     override val phase: PetichPhase = PetichPhase.EXECUTION
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: SettlementPayload,
     ): InterceptorResult {
@@ -203,7 +229,7 @@ public class PublishSettledStep(
 ) : SettlementStep() {
     override val phase: PetichPhase = PetichPhase.POST_PROCESSING
 
-    override suspend fun intercept(
+    override suspend fun run(
         petich: Petich,
         payload: SettlementPayload,
     ): InterceptorResult {

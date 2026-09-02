@@ -48,7 +48,7 @@ public fun RiderApp(
     scope: CoroutineScope,
     modifier: Modifier = Modifier,
 ) {
-    KoinApplication(koinConfiguration { modules(riderModule(config)) }) {
+    KoinApplication(koinConfiguration { modules(riderModule(config, scope)) }) {
         CrashReporting(scope)
 
         val latin = kvadrantLatin()

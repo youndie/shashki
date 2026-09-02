@@ -18,6 +18,7 @@ import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublish
 import io.github.youndie.shashki.server.feature.events.data.BooblikRideHistory
 import io.github.youndie.shashki.server.feature.events.domain.InMemoryRideHistory
 import io.github.youndie.shashki.server.feature.events.domain.RideHistory
+import io.github.youndie.shashki.server.feature.promo.DegradationCounter
 import io.github.youndie.shashki.server.feature.quote.PickupEta
 import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
@@ -33,6 +34,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswerStep
 import io.github.youndie.shashki.server.feature.ride.saga.HoldPaymentStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
+import io.github.youndie.shashki.server.feature.ride.saga.OrderStep
 import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
@@ -46,9 +48,12 @@ import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayoutS
 import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
 import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
 import io.github.youndie.shashki.server.feature.settlement.saga.SettleableStep
+import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
 import io.github.youndie.shashki.server.feature.trip.data.ExposedTripRepository
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
+import io.github.youndie.shashki.server.observability.Observability
+import io.github.youndie.shashki.server.observability.ObservabilityConfig
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import kotlinx.coroutines.CoroutineScope
@@ -62,6 +67,8 @@ import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichInterceptor
 import ru.workinprogress.petich.PetichRepository
+import ru.workinprogress.tracy.agent.TracyAgent
+import ru.workinprogress.tracy.agent.TracyDelivery
 import java.net.InetSocketAddress
 
 /**
@@ -96,6 +103,20 @@ public fun rideModule(
         // saga tests kill the process at phase boundaries and have no use for a routing graph.
         single<RouteEstimator> { routeEstimator }
         single { Pricing() }
+        single { DegradationCounter() }
+
+        // **The agent is built here rather than in `Application`** so that everything which wants to
+        // name a span can ask the graph for it — a use case that had to be handed one through four
+        // constructors is a use case nobody wraps. The delivery loop starts on the application's own
+        // scope: nothing leaves the process until it runs (B-39).
+        single {
+            val config = ObservabilityConfig.tracy()
+            Observability(
+                config
+                    ?.let { TracyAgent(config = it, clock = { System.currentTimeMillis() }) }
+                    ?.also { TracyDelivery(it, config).start(scope) },
+            )
+        }
 
         // **The broker, or the honest absence of one, as one value.** Koin resolves by type and
         // binds only non-nullable ones — `single<BooblikOutboxPublisher?>` does not compile — so the
@@ -129,6 +150,8 @@ public fun rideModule(
         single { OfferTimeouts(get()) { rideId, driverId -> get<ExpireOfferUseCase>().invoke(rideId, driverId) } }
         single { OfferStep(get(), get(), get(), get(), get()) }
         single<List<PetichInterceptor<*>>> {
+            // Every step gets the agent, once, where the list is built — see `OrderStep.tracing`.
+            val tracing = get<Observability>()
             listOf(
                 QuoteStep(get(), get()),
                 ServiceAreaStep(),
@@ -143,7 +166,13 @@ public fun rideModule(
                 CaptureStep(get()),
                 PayoutStep(get()),
                 PublishSettledStep(get(), get()),
-            )
+            ).onEach { step ->
+                when (step) {
+                    is OrderStep -> step.tracing = tracing
+                    is SettlementStep -> step.tracing = tracing
+                    else -> Unit
+                }
+            }
         }
         single<PetichEngine> { sagaEngine(get(), get(), get()) }
         single<PetichRepository> { get<SagaStorage>().petiches }

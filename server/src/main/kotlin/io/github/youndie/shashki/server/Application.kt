@@ -6,6 +6,7 @@ import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
 import io.github.youndie.shashki.server.feature.auth.AuthConfig
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.eventRoutes
+import io.github.youndie.shashki.server.feature.promo.degradationRoutes
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
@@ -22,6 +23,8 @@ import io.github.youndie.shashki.server.feature.settlement.domain.NothingToSettl
 import io.github.youndie.shashki.server.feature.trip.domain.NotThisDriversRideException
 import io.github.youndie.shashki.server.feature.trip.domain.OutOfOrderTransitionException
 import io.github.youndie.shashki.server.feature.trip.tripRoutes
+import io.github.youndie.shashki.server.observability.Observability
+import io.github.youndie.shashki.server.observability.ObservabilityConfig
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -46,6 +49,7 @@ import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
+import ru.workinprogress.metrik.agent.Metrik
 import ru.workinprogress.oidc.OidcConfig
 import ru.workinprogress.oidc.configureAuth
 import ru.workinprogress.petich.OptimisticLockException
@@ -53,6 +57,7 @@ import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.SuspendedPetichSweeper
 import ru.workinprogress.petich.outbox.OutboxRelayWorker
+import ru.workinprogress.tracy.agent.Tracy
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
@@ -90,6 +95,19 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
     // A ping, because a driver's socket sits idle between reports and the first thing a mobile
     // network does with an idle socket is forget about it.
     install(WebSockets) { pingPeriod = WEBSOCKET_PING }
+
+    // **Both agents, and both absent by default.** metrik counts what every route did; tracy carries
+    // the trace context through the coroutine, which is what lets `withSpan` in a use case find a
+    // parent at all. Installing tracy is also what makes the saga's phases attributable — without a
+    // context in scope every `withSpan` is a no-op that still runs its block (B-39).
+    ObservabilityConfig.metrik()?.let { (endpoint, key) ->
+        install(Metrik) {
+            service = ObservabilityConfig.SERVICE
+            apiKey = key
+            this.endpoint = endpoint
+            release = System.getenv("SHASHKI_RELEASE").orEmpty()
+        }
+    }
 
     // Before routing, and the reason is order of thought rather than of execution: a route written
     // after this exists answers `.getOrThrow()` and stops, because the mapping is already here.
@@ -175,6 +193,11 @@ public fun Application.shashki(
 ) {
     baseModule(listOf(rideModule(database, scope = this, routeEstimator = routeEstimator)))
 
+    // **Here and not in `baseModule`, because the agent is a binding and `baseModule` runs with no
+    // modules in half this suite.** The plugin belongs before `routing`: the trace context it puts in
+    // the coroutine is what every `withSpan` downstream attaches to.
+    get<Observability>().tracy?.let { agent -> install(Tracy) { this.agent = agent } }
+
     // **Verification is installed only when a provider is named, and that is a switch with a test
     // on both sides.** The environment is read in `main` rather than defaulted here: a parameter
     // that reads `System.getenv` by default makes every test's behaviour depend on the shell it was
@@ -194,6 +217,7 @@ public fun Application.shashki(
         routeRoutes()
         quoteRoutes()
         promoRoutes()
+        degradationRoutes()
         driverRoutes()
         driverPositionRoutes()
         eventRoutes()

@@ -82,6 +82,28 @@ smtp:
     name: shashki-smtp
     passwordKey: password
 
+# Who watches it (B-39). Empty means the service says on start that nothing measures it — which is
+# a running configuration, and the one thing that must not happen quietly.
+#
+# The endpoints are not URLs of the same kind: metrik ingests over **UDP** and takes `host:port`,
+# tracy over HTTP and takes an origin it appends `/ingest` to. Nothing about a datagram fails
+# visibly, so a wrong metrik address looks exactly like a service with no traffic.
+observability:
+  metrik:
+    endpoint: ""
+    secret:
+      name: shashki-metrik
+      keyKey: ingestKey
+  tracy:
+    endpoint: ""
+    # **The agent's own default is 1%**, and tail sampling keeps failures and slow calls: a service
+    # whose requests all succeed quickly shows an almost empty collector, which reads as broken
+    # wiring. Raise it for a demo, leave it alone under load.
+    sampleRate: ""
+    secret:
+      name: shashki-tracy
+      keyKey: ingestKey
+
 # What the served page calls this build. It reaches every crash report; without it a stack trace
 # names lines in a bundle nobody can identify.
 release: ""

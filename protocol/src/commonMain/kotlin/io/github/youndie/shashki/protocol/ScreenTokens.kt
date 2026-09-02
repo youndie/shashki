@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.protocol
 
 import io.ktor.resources.Resource
+import kotlinx.serialization.Serializable
 
 /**
  * The names the server may use when it sends a screen, and the client resolves.
@@ -64,3 +65,29 @@ public object ShashkiTokens {
  */
 @Resource("/api/screens/promo")
 public class PromoScreen
+
+/**
+ * What a client could not render, told to the server that sent it.
+ *
+ * **kompot's degradation is correct and silent, which is the problem it leaves behind.** A component
+ * a build does not know renders as a placeholder and the screen keeps working — so a server can go on
+ * sending something half its users see a hole where, for as long as nobody looks. `kompot-client`
+ * builds `KompotDegradationSink` for exactly this and leaves the transport to the application
+ * (B-32, B-39).
+ *
+ * `kind` is kompot's own enum name rather than a copy of it: the vocabulary belongs upstream and a
+ * second spelling here would be one to keep in step.
+ */
+@Serializable
+public data class DegradationReport(
+    val kind: String,
+    val componentType: String,
+    /** Which screen it happened on, so a count can be read as "this screen is broken for somebody". */
+    val screen: String,
+    /** Whether anything was drawn in its place. A hole and a placeholder are different holes. */
+    val drawnAsFallback: Boolean = false,
+)
+
+/** `POST /api/screens/degradations` — what a client could not draw. */
+@Resource("/api/screens/degradations")
+public class Degradations

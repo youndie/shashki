@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.rider
 
+import io.github.youndie.kompot.KompotDegradationSink
 import io.github.youndie.shashki.auth.SignInConfig
 import io.github.youndie.shashki.auth.TokenStore
 import io.github.youndie.shashki.auth.redirectTo
@@ -11,6 +12,7 @@ import io.github.youndie.shashki.rider.feature.auth.data.HttpTokenExchange
 import io.github.youndie.shashki.rider.feature.auth.domain.Session
 import io.github.youndie.shashki.rider.feature.auth.domain.TokenExchange
 import io.github.youndie.shashki.rider.feature.promo.data.HttpPromoRepository
+import io.github.youndie.shashki.rider.feature.promo.data.ReportingDegradationSink
 import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase
 import io.github.youndie.shashki.rider.feature.promo.domain.PromoRepository
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
@@ -41,6 +43,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
@@ -89,7 +92,14 @@ public data class RiderConfig(
  * first request with the compiler silent. The server hit that exact trap in B-11 and it is written
  * into the skill; the cost of avoiding it here is one lambda each.
  */
-public fun riderModule(config: RiderConfig): Module =
+public fun riderModule(
+    config: RiderConfig,
+    /**
+     * The application's own scope, for the two things that outlive a composition: the crash
+     * reporter's queue and the degradation sink's fire-and-forget report.
+     */
+    scope: CoroutineScope,
+): Module =
     module {
         single { config }
         // **The session first**, because the client below asks it for a token on every request.
@@ -136,6 +146,9 @@ public fun riderModule(config: RiderConfig): Module =
         single<RideRepository> { HttpRideRepository(get()) }
 
         single<PromoRepository> { HttpPromoRepository(get()) }
+        // The far end of kompot's sink. Bound at last: B-32 built the whole degradation story and
+        // recorded that nothing was listening (B-39).
+        single<KompotDegradationSink> { ReportingDegradationSink(get(), scope, screen = "promo") }
         factory { LoadPromoUseCase(get()) }
 
         factory { QuoteJourneyUseCase(get()) }

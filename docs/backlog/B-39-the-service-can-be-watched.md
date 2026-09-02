@@ -1,7 +1,7 @@
 ---
 id: B-39
 title: "The service can be watched: metrik, tracy, telek and kompot's degradation sink"
-status: open
+status: done
 priority: P2
 size: M
 stage: stage-4-elsewhere
@@ -42,6 +42,50 @@ already noticed it had not connected.
   measures it, rather than believed because it appeared.
 - AC: a component the client cannot render reaches the server, and a test shows the count moving —
   the degradation sink asserted by data, not by the binding existing.
-- AC: telek receives one alert that somebody caused on purpose.
+- ~~AC: telek receives one alert that somebody caused on purpose.~~ **Dropped: the premise is
+  wrong.** telek is a toolkit for building Telegram bots as state machines, not an alerting system —
+  nothing in it receives an alert. "Tell somebody when it breaks" belongs to metrik's own notifier
+  (`METRIK_TELEGRAM_TOKEN` plus a rule), which is configured on the metrik installation, and this
+  item already puts alert rules out of scope because they describe an installation.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/Application.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/kompot/`
+
+## What it turned out to be
+
+**Three of the four were configuration, and configuration is not the distance to a true number.** The
+installs are two lines. What stood between them and a collector holding numbers somebody can act on
+was five findings, each visible only from what actually arrived — the full table is
+[research §1.6f](../research/research-architecture.md), and the two that would have shipped silently
+are these:
+
+- **metrik and tracy both publish `agent-jvm-<version>.jar`, on the same version number.** Two
+  different files want one name in `lib/` and `installDist` refuses. Every value of
+  `duplicatesStrategy` resolves that by keeping one and dropping the other — and the one dropped is
+  an agent that then reports nothing, from inside a running deployment, indistinguishable from a
+  service nobody is looking at. Both are kept and renamed by group (konekt met this first and its
+  fix is ported with attribution), and `imageContext` now fails unless two agent jars are in the
+  image: the guard exists because the failure is silent by construction.
+- **Every saga span arrived named `saga.order.$phase.QuoteStep`.** One unexpanded template, written
+  once in a final `intercept` so that no step could forget it — and therefore wrong in every span at
+  once, grouping five phases under one row. Nothing type-checks a name; `spanName` is now a property
+  and `OrderSagaTest` asserts that it carries its phase.
+
+**The evidence, rather than the wiring.** `POST /api/quotes` on the stand produces a trace of
+`route.estimate`, `pricing.quote` and three `dispatch.pickupEta` spans under one request span, and a
+ride produces `saga.order.VALIDATION.QuoteStep` through `saga.order.EXECUTION.OfferStep`. The number
+that is checked against something else: **8 requests sent, metrik's `requests` moved by 8, tracy held
+8 `POST /api/quotes` spans** over the same window — two collectors, two transports, and a count made
+by hand. The first attempt at that delta said 20 for 8, because a reading taken seconds after traffic
+has not counted it yet; the check that holds needs a quiet period first.
+
+**The fourth row was the one that was not boilerplate, and it stayed that way.** kompot's degradation
+sink is now bound — `ReportingDegradationSink` on the client, `DegradationCounter` and
+`POST /api/screens/degradations` on the server — and the pair of tests meets on `:protocol`'s own
+`DegradationReport` rather than on a string, because "built at both ends and joined at neither" is
+what this backlog keeps finding. Writing the client half found that the sink depended on the
+application client's `defaultRequest` for its content type: with any other client the report failed
+to serialise and its own `runCatching` swallowed it.
+
+**And one criterion was dropped rather than met.** telek is a bot toolkit; nothing in it receives an
+alert. The item's own table asserted otherwise, which is the third time here that a line naming a
+library has turned out to name a capability it does not have.

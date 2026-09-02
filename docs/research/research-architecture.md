@@ -559,6 +559,17 @@ inside a single instance are `kompot-realtime-server`'s job on its own; `kompot-
 for the case shashki deliberately does not have. Pulling it in for a demo would add an infrastructure
 dependency to demonstrate something the demo does not do.
 
+**Consequence 1.5b — the degradation sink is joined, and what joins it is two tests
+(2026-09-02, [B-39](../backlog/B-39-the-service-can-be-watched.md)).** [B-32](../backlog/B-32-which-screens-the-server-sends.md)
+built the server-driven screen and recorded that kompot's sink — the one thing that says a client
+could not draw what the server sent — existed and was connected to nothing. Binding it is four lines;
+what makes the binding true is that each end is checked against the *other end's* type:
+`ReportingDegradationSinkTest` catches the request on its way out and decodes it with the server's
+`DegradationReport`, and `DegradationRoutesTest` posts that class and watches `DegradationCounter`
+move. Writing the first found that the sink relied on the application client's `defaultRequest` for
+its content type and silently failed for any other client — a report that cannot be seen failing is
+the one thing this class must not be.
+
 ### 1.6 Which of the remaining libraries can reach a browser, and which cannot
 
 The brief assumes several of these run in the wasm clients. Most do not have the target.
@@ -690,6 +701,25 @@ first version and is not in this one.
 Measured on the running container, three restarts: **healthy after 1 482 / 2 124 / 3 707 ms**, of
 which the graph is **180 / 324 / 400 ms**. Against 3 168 ms to import, the prepared directory turns
 the map from most of the start-up into a tenth of it.
+
+**Consequence 1.6f — an agent is installed in a line and is joined by four things that are not
+lines (2026-09-02, [B-39](../backlog/B-39-the-service-can-be-watched.md)).** The item said three of
+the four tools were "configuration rather than work". `install(Metrik)` and `install(Tracy)` are; the
+distance between that and a collector holding true numbers is the entry below, and every row was
+found by looking at what actually arrived rather than at what was wired.
+
+| Fact | How it presented |
+|---|---|
+| **metrik and tracy each publish `agent-jvm-<version>.jar`**, and they happen to share a version, so two different files want one name in `lib/` | `installDist` refused the build. Every `duplicatesStrategy` "fixes" it by dropping one agent — a service that then reports nothing from half its observability, from inside a running deployment. Both are kept and renamed by group; konekt met this first |
+| **tracy's agent keeps 1% of ordinary requests** (tail sampling: everything slow or failed, 1% of the rest) | three requests against the stand produced an empty collector, which reads as broken wiring. `SHASHKI_TRACY_SAMPLE_RATE` exists for that, and the stand sets `1.0` |
+| **A span name is a value and nothing type-checks it** | every saga span arrived named `saga.order.$phase.QuoteStep` — one unexpanded template, invisible to the compiler and to every test, grouping all five phases under one row. Now `spanName` is a property and `OrderSagaTest` asserts it |
+| **metrik answers a window narrower than its aggregation bucket with `0`, not an error**, and a reading taken seconds after traffic has not counted it yet | a delta of 20 for 8 requests, and empty answers for correct-looking windows. The check that holds is: quiet period, reading, N requests, reading |
+| **telek is a toolkit for building Telegram bots as state machines**, not an alerting system | the item's fourth criterion asked for "one alert telek received". Nothing could satisfy it. Alerting is metrik's own notifier plus a rule, and rules describe an installation, which this item put out of scope |
+
+**The number that was checked against something else** (the item's second criterion): 8 requests sent
+to `/api/quotes` on the stand, metrik's `requests` moving by **8** across a quiet-period delta, and
+tracy holding **8** `POST /api/quotes` spans over the same window. Two collectors on two transports —
+UDP and HTTP — and the count somebody made by hand.
 
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.

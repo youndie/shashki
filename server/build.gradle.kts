@@ -44,6 +44,11 @@ dependencies {
     implementation(libs.shildik.oidcAuthServer)
     implementation(libs.shildik.oidcAuthCore)
 
+    // Watching it. Agents, not servers: metrik's UDP ingest and tracy's buffer-and-deliver loop
+    // are what a service carries; where the data lands is a deployment (B-39).
+    implementation(libs.metrik.agent)
+    implementation(libs.tracy.agent)
+
     // The broker. What goes through it is what happened to a *ride* — positions go straight into
     // the geo-index over a socket and never enter a topic (research §1.6a).
     implementation(libs.booblik.client)
@@ -128,6 +133,60 @@ configurations.configureEach {
                 }
             useVersion(pinned)
             because("a timestamped snapshot pins the root module only; the platform variants stay -SNAPSHOT")
+        }
+    }
+}
+
+// TWO DIFFERENT JARS WANT THE SAME NAME IN `lib/`, and the distribution cannot hold both (B-39).
+//
+// metrik and tracy each publish a multiplatform `agent`, and its JVM artifact is `agent-jvm-<version>
+// .jar` in both. The libraries are independent and happen to share a version number today, so
+// `ru.workinprogress.metrik:agent-jvm:0.1.13` and `ru.workinprogress.tracy:agent-jvm:0.1.13` are two
+// files with one name. `installDist` refuses, and is right to.
+//
+// **What must not be done is setting a `duplicatesStrategy`.** Every value of it keeps one file and
+// drops the other, and the one dropped is an observability agent that then reports nothing — which
+// from inside a running deployment is indistinguishable from a service nobody is looking at. That is
+// this repository's most frequent finding wearing a build script.
+//
+// The mechanism and this fix are konekt's, met there first and re-met here rather than assumed:
+// `konekt/server/build.gradle.kts`. Both jars are kept and only the colliding ones are renamed, by
+// their group — renaming everything would churn every name in the image for the sake of one pair.
+val collidingLibNames: Provider<Map<String, String>> =
+    configurations.runtimeClasspath
+        .flatMap { it.incoming.artifacts.resolvedArtifacts }
+        .map { artifacts ->
+            val shared = artifacts.groupBy { it.file.name }.filterValues { it.size > 1 }.keys
+            artifacts
+                .filter { it.file.name in shared }
+                .mapNotNull { artifact ->
+                    val id = artifact.id.componentIdentifier
+                    if (id is ModuleComponentIdentifier) {
+                        artifact.file.absolutePath to "${id.group}-${artifact.file.name}"
+                    } else {
+                        null
+                    }
+                }.toMap()
+        }
+
+// **A wildcard classpath**, so the start script does not name each jar: the generated script lists
+// every file, and those names would have to be renamed in step with the copy below — one mapping in
+// two places, the second of which is discovered by a container that starts and cannot find a class.
+tasks.named<CreateStartScripts>("startScripts") {
+    classpath = files("lib/*")
+}
+
+distributions {
+    named("main") {
+        contents {
+            // Captured into a local FIRST: referring to the property inside the lambda makes the copy
+            // action hold the build script itself, which the configuration cache refuses to
+            // serialise, with a message about types rather than about this line.
+            val renames = collidingLibNames
+            eachFile {
+                val unique = renames.get()[file.absolutePath]
+                if (unique != null) name = unique
+            }
         }
     }
 }
@@ -239,6 +298,25 @@ val assembleImageContext =
         from(prepareGraph) {
             into("graph")
             readable()
+        }
+
+        // **The guard on the rename above, checked on the assembled context rather than trusted.**
+        // The failure being prevented is silent by construction: an image missing one agent starts,
+        // serves, and reports nothing from the half nobody is looking at. Both groups must appear,
+        // so a `duplicatesStrategy` added later to make a build pass fails here instead.
+        //
+        // **Two `agent-jvm` jars, counted rather than named.** Naming the groups would read better
+        // and would go vacuous the day the two libraries stop sharing a version: no collision, no
+        // rename, and a guard looking for a `ru.workinprogress.metrik-` prefix that is no longer
+        // there. What must hold in every version of this is that both agents are present.
+        val lib = imageContext.get().asFile.resolve("app/lib")
+        doLast {
+            val agents = lib.list().orEmpty().filter { it.contains("agent-jvm") }
+            check(agents.size == 2) {
+                "expected metrik's and tracy's agents in ${lib.absolutePath}, found $agents — an " +
+                    "image missing one starts, serves, and reports nothing from the half nobody " +
+                    "is looking at"
+            }
         }
     }
 

@@ -60,6 +60,10 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(wip.kotlinx.coroutines.test)
+            // The degradation sink is fire-and-forget: nothing in this module reads its answer, so
+            // the only way to see what it sends is to catch the request (B-39).
+            implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
+            implementation(libs.ktor.client.mock)
         }
         getByName("wasmJsMain").dependencies {
             implementation(libs.ktor.client.js)

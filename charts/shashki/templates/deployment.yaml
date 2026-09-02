@@ -94,6 +94,28 @@ spec:
               value: {{ .Values.smtp.caBundlePath | quote }}
             {{- end }}
             {{- end }}
+            {{- if .Values.observability.metrik.endpoint }}
+            - name: SHASHKI_METRIK_ENDPOINT
+              value: {{ .Values.observability.metrik.endpoint | quote }}
+            - name: SHASHKI_METRIK_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.observability.metrik.secret.name }}
+                  key: {{ .Values.observability.metrik.secret.keyKey }}
+            {{- end }}
+            {{- if .Values.observability.tracy.endpoint }}
+            - name: SHASHKI_TRACY_ENDPOINT
+              value: {{ .Values.observability.tracy.endpoint | quote }}
+            - name: SHASHKI_TRACY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.observability.tracy.secret.name }}
+                  key: {{ .Values.observability.tracy.secret.keyKey }}
+            {{- if .Values.observability.tracy.sampleRate }}
+            - name: SHASHKI_TRACY_SAMPLE_RATE
+              value: {{ .Values.observability.tracy.sampleRate | quote }}
+            {{- end }}
+            {{- end }}
             {{- if .Values.release }}
             - name: SHASHKI_RELEASE
               value: {{ .Values.release | quote }}

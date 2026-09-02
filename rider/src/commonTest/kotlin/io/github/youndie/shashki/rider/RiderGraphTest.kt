@@ -8,6 +8,8 @@ import io.github.youndie.shashki.rider.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.WatchDriverUseCase
 import io.github.youndie.shashki.ui.map.MapSurface
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import kotlin.test.AfterTest
@@ -30,7 +32,7 @@ class RiderGraphTest {
 
     @Test
     fun `every definition the rider needs resolves`() {
-        val koin = startKoin { modules(riderModule(CONFIG)) }.koin
+        val koin = startKoin { modules(riderModule(CONFIG, noScope)) }.koin
 
         assertNotNull(koin.get<HttpClient>())
         assertNotNull(koin.get<RideRepository>())
@@ -51,7 +53,7 @@ class RiderGraphTest {
      */
     @Test
     fun `no katcher configured resolves to a reporting with no reporter`() {
-        val koin = startKoin { modules(riderModule(CONFIG)) }.koin
+        val koin = startKoin { modules(riderModule(CONFIG, noScope)) }.koin
 
         assertNull(koin.get<CrashReporting>().reporter)
     }
@@ -60,7 +62,9 @@ class RiderGraphTest {
     fun `a katcher configured resolves to a reporter`() {
         val koin =
             startKoin {
-                modules(riderModule(CONFIG.copy(katcherUrl = "https://katcher.example", katcherAppKey = "key")))
+                modules(
+                    riderModule(CONFIG.copy(katcherUrl = "https://katcher.example", katcherAppKey = "key"), noScope),
+                )
             }.koin
 
         assertNotNull(koin.get<CrashReporting>().reporter)
@@ -74,16 +78,19 @@ class RiderGraphTest {
      */
     @Test
     fun `the map resolves with and without an archive to fetch from`() {
-        val koin = startKoin { modules(riderModule(CONFIG)) }.koin
+        val koin = startKoin { modules(riderModule(CONFIG, noScope)) }.koin
         assertNotNull(koin.get<MapSurface>())
         stopKoin()
 
         val withTiles =
             startKoin {
-                modules(riderModule(CONFIG.copy(tilesUrl = "https://tiles.example/city.pmtiles")))
+                modules(riderModule(CONFIG.copy(tilesUrl = "https://tiles.example/city.pmtiles"), noScope))
             }.koin
         assertNotNull(withTiles.get<MapSurface>())
     }
+
+    /** Nothing is launched on it: the graph is built and resolved, never used. */
+    private val noScope = CoroutineScope(SupervisorJob())
 
     private companion object {
         val CONFIG =

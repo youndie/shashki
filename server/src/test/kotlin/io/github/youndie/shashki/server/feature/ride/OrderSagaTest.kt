@@ -40,6 +40,7 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -85,6 +86,27 @@ class OrderSagaTest {
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()
+
+    /**
+     * **The names, asserted as data.** They went to the collector with the dollar sign still in them
+     * — `saga.order.$phase.QuoteStep`, one unescaped template, invisible to the compiler and to
+     * every test here, and found by reading what had actually arrived in tracy. A span whose name is
+     * wrong is worse than a missing one: it groups every phase of every saga under one row.
+     */
+    @Test
+    fun `every step's span name carries its own phase`() {
+        val named = steps.filterIsInstance<OrderStep>()
+        assertEquals(steps.size, named.size, "a step outside the base class is a step with no span")
+
+        named.forEach { step ->
+            assertFalse('$' in step.spanName, "an unexpanded template: ${step.spanName}")
+            assertTrue(
+                step.spanName.startsWith("saga.order.${step.phase}."),
+                "${step.spanName} does not name the phase it belongs to",
+            )
+        }
+        assertEquals(named.size, named.map { it.spanName }.toSet().size, "two steps share a span name")
+    }
 
     @Test
     fun `a ride runs through every phase, holds the fare, reserves a driver and leaves one event in the outbox`() =
@@ -246,7 +268,7 @@ class OrderSagaTest {
                 object : OrderStep() {
                     override val phase = phase
 
-                    override suspend fun intercept(
+                    override suspend fun run(
                         petich: Petich,
                         payload: OrderPayload,
                     ): InterceptorResult = error("process died before $phase answered")

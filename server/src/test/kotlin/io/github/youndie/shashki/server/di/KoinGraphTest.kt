@@ -13,6 +13,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
+import io.github.youndie.shashki.server.observability.Observability
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.module.dsl.factoryOf
@@ -28,6 +29,7 @@ import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichEngineConfig
 import ru.workinprogress.petich.PetichEngineMetrics
 import ru.workinprogress.petich.PetichRepository
+import ru.workinprogress.tracy.agent.TracyAgent
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -80,6 +82,9 @@ class KoinGraphTest {
                     // container for each; declared per definition rather than as a global
                     // `extraTypes`, so a real disappearance of the same type elsewhere stays visible.
                     definition<Events>(BooblikOutboxPublisher::class, BooblikRideHistory::class),
+                    // `Observability` is the same shape: one lambda builds the agent from the
+                    // environment, or does not.
+                    definition<Observability>(TracyAgent::class),
                 ),
         )
     }
@@ -109,6 +114,7 @@ class KoinGraphTest {
         // binding that only exists when a broker does.
         assertNotNull(koin.get<RideHistory>(), "the projection is not in the graph")
         assertNull(koin.get<Events>().publisher, "a publisher appeared with no broker configured")
+        assertNull(koin.get<Observability>().tracy, "an agent appeared with no collector configured")
     }
 
     /**
