@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server.dispatch
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverReport
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.ktor.server.routing.Route
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.CloseReason
@@ -45,6 +46,7 @@ public fun Route.driverPositionRoutes(protected: Boolean = false) {
     val json by inject<Json>()
     val tickets by inject<DriverTickets>()
     val dropped by inject<DroppedFrames>()
+    val drivers by inject<DriverRepository>()
     val log = LoggerFactory.getLogger("shashki.positions")
 
     webSocket(DRIVER_POSITIONS_PATH) {
@@ -78,8 +80,17 @@ public fun Route.driverPositionRoutes(protected: Boolean = false) {
                     log.warn("a socket reported a position for a driver it is not signed in as")
                     continue
                 }
+                // **The class is the record's, not the frame's** (B-63). A driver telling the
+                // server which class they drive is a driver choosing which offers they are eligible
+                // for; the record ends that with no new check. A driver this server has never heard
+                // of is not indexed at all — a visible failure rather than a silent promotion.
+                val known = drivers.find(report.driverId)
+                if (known == null) {
+                    log.warn("a position for a driver with no record: {}", report.driverId)
+                    continue
+                }
                 driverId = report.driverId
-                index.report(report, clock.nowEpochMs())
+                index.report(report.copy(rideClass = known.rideClass), clock.nowEpochMs())
                 // **The acknowledgement, and it is the whole of B-54.** The driver's screen counts
                 // positions "the socket actually took"; before this it counted the frames the client
                 // had *written*, so a shift whose every frame was refused read `19 positions sent`

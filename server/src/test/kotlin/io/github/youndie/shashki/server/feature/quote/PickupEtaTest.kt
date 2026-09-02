@@ -53,6 +53,19 @@ class PickupEtaTest {
     fun clean() = PostgresHarness.truncateAll()
 
     /**
+     * The two this suite puts on the map, on the books (B-63).
+     *
+     * A driver the server has never heard of is not a candidate, so a fixture that plants one has
+     * to say it exists — and its class is the record's, which is what the second of these is for.
+     */
+    @BeforeTest
+    fun drivers() {
+        PostgresHarness.driver("near-economy")
+        PostgresHarness.driver("only-economy")
+        PostgresHarness.driver("far-comfort", "COMFORT")
+    }
+
+    /**
      * B-31's third criterion. **Two classes, two distances, and a ratio the map decides.**
      *
      * A constant would make them equal. A wait taken from the index's straight-line metres would put

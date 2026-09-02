@@ -60,18 +60,20 @@ public fun TripContent(
             },
         meta =
             quote?.let { "${it.durationSeconds.asDuration()} · ${it.distanceMetres.asDistance()}" }.orEmpty(),
-        // **A placeholder, and it is the one thing on this screen the server cannot answer.**
-        // `RideView` carries a `driverId` and nothing about the person: no name, no car, no plate.
-        // Inventing them here would put fiction on the screen the rider checks a registration
-        // against, so they are visibly blank until the server has somewhere to put them.
+        // **The record, since B-63 gave the server one.** This was four dashes and an identifier —
+        // the honest shape while `RideView` carried nothing about the person, and the note said so.
+        // The dashes are still what a driver with no record gets: the plate is the field a rider
+        // checks a real car against, and a blank is better there than a guess.
         driver =
-            TripDriver(
-                name = uiState.ride?.driverId ?: "—",
-                car = "—",
-                plate = "—",
-                rating = "—",
-                carRects = 2,
-            ),
+            uiState.ride?.driver.let { known ->
+                TripDriver(
+                    name = known?.name ?: "—",
+                    car = known?.car ?: "—",
+                    plate = known?.plate ?: "—",
+                    rating = known?.rating?.let { rating -> "${(rating * 10).toInt() / 10.0}" } ?: "—",
+                    carRects = 2,
+                )
+            },
         actionLabel = "call the driver",
         onCall = { onAction(TripUiAction.Call) },
         prompt = uiState.takeIf { it.confirming }?.let { cancelPrompt(it.ride) },

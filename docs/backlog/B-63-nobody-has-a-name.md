@@ -1,7 +1,7 @@
 ---
 id: B-63
 title: "The product has no driver record, so a rider is asked to rate an e-mail address"
-status: open
+status: done
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
@@ -34,3 +34,31 @@ blank. Four documents already name the same absence in their own words.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/`,
   `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/Driver.kt`,
   `docs/api/endpoint-driver.md`, `docs/screens/screen-rider-finished.md`
+
+## What it turned out to be
+
+**One table, and four documents stopped saying the same thing in four different ways.** `drivers`
+carries a name, a car, a plate and a class; `RideView.driver` carries the first three to the rider's
+screens with the recorded average beside them, and R8 asks about *Ivan Sokolov* rather than about an
+e-mail address the stand happens to sign both roles in as.
+
+**The class moved off the wire, which is the security half of it.** A driver telling the server
+which class they drive is a driver choosing which offers they are eligible for. The frame's
+`rideClass` is not read at all now — `TheDriversOwnClassTest` sends `BUSINESS` from a driver the
+record calls `ECONOMY` and asserts which list they land in, and it fails against the old code. The
+rating had already moved in B-44, which is why only half of this was left.
+
+**No registration, so the rows are seeded and the migration says so.** Inventing a record on first
+sight would be the server making up somebody's car. The rule that comes with it is deliberate: a
+driver the server has never heard of is **not indexed**, and the log names them — a driver who cannot
+go online is a visible failure, where a driver silently promoted into a class nobody gave them is not.
+
+**Five test suites had to say their drivers exist**, which is the rule working rather than a nuisance:
+a fixture that put a car on the map without a record was a fixture asserting a driver could choose
+their own class. `PostgresHarness.driver(...)` is one line each. The exception is
+`SimulatorFollowsRoadsTest`, which has no database and is about geometry — its module binds a
+`DriverRepository` that answers for everybody, which is what `fun interface` is for.
+
+**What is still missing and now says so in one place**: the timezone. D6's day rolls at UTC because
+the record has no zone in it, and that is a column and an item rather than a paragraph in four
+documents.

@@ -109,6 +109,14 @@ public data class RideView(
     val dropoff: GeoPoint,
     val quote: Quote? = null,
     val driverId: String? = null,
+    /**
+     * The driver, as a person rather than an identifier (B-63).
+     *
+     * **R8 used to ask a rider to rate an e-mail address**, and R6's card had a registration slot
+     * that stayed blank, because this product had no driver record at all. `driverId` stays: it is
+     * what the saga and the socket work with, and a screen is not the only reader.
+     */
+    val driver: DriverView? = null,
     val cancellationReason: String? = null,
     /**
      * What cancelling **now** would cost, in cents, or `null` when the ride cannot be cancelled at
@@ -367,4 +375,19 @@ public data class AssignedDriverView(
     val driverId: String,
     val at: GeoPoint? = null,
     val bearingDegrees: Float = 0f,
+)
+
+/**
+ * A driver, as a rider's screens need them (B-63).
+ *
+ * The plate is the field a rider checks a real car against, which is why it was blank rather than
+ * invented until there was a record to read it from.
+ */
+@Serializable
+public data class DriverView(
+    val name: String,
+    val car: String,
+    val plate: String,
+    /** The average riders have given, or `null` for a driver nobody has rated. */
+    val rating: Double? = null,
 )

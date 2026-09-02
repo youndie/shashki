@@ -34,6 +34,38 @@ object PostgresHarness {
 
     val database: Database by lazy { DatabaseFactory.connect(dataSource) }
 
+    /**
+     * Put a driver on the books, because since B-63 a driver the server has never heard of is not a
+     * candidate.
+     *
+     * **A test that puts a car on the map now has to say the car exists**, which is the rule doing
+     * its job rather than a nuisance: the class is the record's, and a fixture that skipped the
+     * record was a fixture asserting a driver could choose their own. `V4__drivers.sql` seeds the
+     * demo's two; everything a test invents, it declares here.
+     */
+    fun driver(
+        id: String,
+        rideClass: String = "ECONOMY",
+    ) {
+        dataSource.connection.use { connection ->
+            connection
+                .prepareStatement(
+                    """
+                    INSERT INTO drivers (id, name, car, plate, ride_class) VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET ride_class = EXCLUDED.ride_class
+                    """.trimIndent(),
+                ).use {
+                    it.setString(1, id)
+                    it.setString(2, id)
+                    it.setString(3, "Skoda Octavia · white")
+                    it.setString(4, "A 123 BC")
+                    it.setString(5, rideClass)
+                    it.executeUpdate()
+                }
+            connection.commit()
+        }
+    }
+
     fun truncateAll() {
         dataSource.connection.use { connection ->
             // **Every table the server writes, not the two it used to have.** A payout left behind

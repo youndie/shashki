@@ -59,8 +59,12 @@ place. The size limit is enforced by reading one byte past it rather than by bel
 `Content-Length`, and with no store configured every one of the three answers **503** — see
 [feature-driver-onboarding](../features/feature-driver-onboarding.md).
 
-What has not moved: the class and the rating are still self-reported, because there is no driver
-record to read them from. The second lock on the last route is still there and is still worth having
+**Amended by B-63: neither is self-reported any longer.** A `drivers` row carries the class, and a
+position frame's `rideClass` is not read at all — a driver telling the server which class they drive
+is a driver choosing which offers they are eligible for. The rating has been the recorded average
+since B-44. A driver the server has no record for is not indexed, and the log names them: with no
+registration flow the rows are seeded by `V4__drivers.sql`, and a driver who cannot go online is a
+visible failure rather than a silent promotion.
 — `AdvanceTripUseCase` compares the identity with the driver the *order saga* assigned, so a
 signed-in driver cannot drive somebody else's trip.
 

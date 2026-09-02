@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.feature.route
 
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.baseModule
 import io.github.youndie.shashki.server.common.haversineMetres
 import io.github.youndie.shashki.server.dispatch.DriverIndex
@@ -8,6 +9,8 @@ import io.github.youndie.shashki.server.dispatch.DriverSimulator
 import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.SimulatorConfig
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
+import io.github.youndie.shashki.server.feature.driver.domain.Driver
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -72,6 +75,13 @@ class SimulatorFollowsRoadsTest {
                             // Every position the driver reports passes through here on its way to
                             // the index, which is the only place in the server that sees them all.
                             single<DriverIndex> { RecordingDriverIndex(GridDriverIndex(), seen) }
+                            // **Everybody exists here** (B-63). This suite is about whether a
+                            // simulated car keeps to the road; the records that decide a driver's
+                            // class are `MatchingTest`'s subject and a table this module has not
+                            // got.
+                            single<DriverRepository> {
+                                DriverRepository { id -> Driver(id, id, "—", "—", RideClass.ECONOMY) }
+                            }
                         },
                     ),
                 )

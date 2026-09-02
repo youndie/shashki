@@ -18,6 +18,8 @@ import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.dispatch.RatedCandidates
 import io.github.youndie.shashki.server.feature.documents.DocumentsConfig
 import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
+import io.github.youndie.shashki.server.feature.driver.data.ExposedDriverRepository
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.EventsConfig
 import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
@@ -167,6 +169,8 @@ public fun rideModule(
         // What the rider thought of the ride, and the one number the candidate sort has that is not
         // geometry (B-44).
         single<RatingRepository> { ExposedRatingRepository(database) }
+        // Read-only and seeded by a migration: this product has no registration (B-63).
+        single<DriverRepository> { ExposedDriverRepository(database) }
         factory { RateRideUseCase(rides = get(), ratings = get()) }
         // **The application's HTTP client, which this graph did not have.** The line below asked
         // the container for one and nothing bound it, so all three document routes answered 500 in
@@ -222,7 +226,13 @@ public fun rideModule(
         single<PayoutRepository> { ExposedPayoutRepository(get()) { get<PetichClock>().nowEpochMs() } }
 
         single<RideRepository> {
-            PetichRideRepository(get<SagaStorage>().petiches, get(), get(), sagaIndex = SagaIndex(database, get()))
+            PetichRideRepository(
+                get<SagaStorage>().petiches,
+                get(),
+                get(),
+                get(),
+                sagaIndex = SagaIndex(database, get()),
+            )
         }
         factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }

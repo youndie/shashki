@@ -2094,6 +2094,11 @@ each is now an item rather than an impression:
   (1 999 / 2 018 / 2 025 ms against B-35's 1.5–3.7 s) and the first request measured is a route,
   because the memory-mapped graph is what a change of base would break. Distroless was not a
   candidate: its Java images stop at 21.
+- ~~**No driver record**: the class and the rating on a position frame are the driver's own claim,
+  and the assigned-ride card's registration slot is blank.~~ **`drivers` since B-63** — a name, a car,
+  a plate and a class, seeded because this product has no registration and saying so. The frame's
+  class is not read at all, which ends a signed-in driver choosing which offers they are eligible
+  for; what is still missing is the timezone D6's day would need.
 - ~~**No real position** for a real driver; the bundle sends its configured point and says so.~~
   **Since B-49 the browser's own position is sent when a person grants it**, behind the same port, so
   a phone in a car is a demo this project gives. The configured point is the fallback and the screen

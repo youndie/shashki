@@ -51,7 +51,10 @@ public fun FinishedContent(
             ride?.chargedCents?.let { money(it, currency) }
                 ?: ride?.quote?.let { money(it.amountCents, currency) }.orEmpty(),
         destination = listOfNotNull("airport", ride?.quote?.distanceMetres?.asDistance()).joinToString(" · "),
-        driver = ride?.driverId ?: "your driver",
+        // **A person, since there is a record to read one from** (B-63). This was the driver's id
+        // — on a stand where a rider and a driver are the same account, R8 asked somebody to rate
+        // their own e-mail address.
+        driver = ride?.driver?.name ?: "your driver",
         stars = uiState.stars,
         tips = FinishedUiState.TIPS.map { money(it, currency) },
         selectedTip = uiState.selectedTip,

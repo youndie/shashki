@@ -1,8 +1,10 @@
 package io.github.youndie.shashki.server.feature.ride.data
 
+import io.github.youndie.shashki.protocol.DriverView
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
@@ -34,6 +36,8 @@ public class PetichRideRepository(
      * own: R8 asks for one ride and needs to know whether it has been rated before it draws a form.
      */
     private val ratings: RatingRepository,
+    /** Who the driver is, once one is assigned (B-63). */
+    private val drivers: DriverRepository,
     private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
@@ -71,6 +75,10 @@ public class PetichRideRepository(
         val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED }
         val current = trip?.let { ride.copy(status = it.status) } ?: ride
         return current.copy(
+            driver =
+                current.driverId
+                    ?.let(drivers::find)
+                    ?.let { DriverView(it.name, it.car, it.plate, ratings.averageFor(it.id)) },
             stars = ratings.find(id)?.stars,
             cancellationFeeCents = current.cancellationFee(),
             // **What the settlement took, read off the settlement's own row** (B-44). It lives in a

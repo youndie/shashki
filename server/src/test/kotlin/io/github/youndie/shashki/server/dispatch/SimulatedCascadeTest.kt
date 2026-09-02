@@ -48,6 +48,10 @@ class SimulatedCascadeTest {
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()
 
+    /** The simulator's three, on the books — a driver with no record is not a candidate (B-63). */
+    @BeforeTest
+    fun drivers() = repeat(SIMULATED_DRIVERS) { PostgresHarness.driver("sim-${it + 1}", "COMFORT") }
+
     @Test
     fun `drivers who all decline exhaust the cascade and the rider is told there are no cars`() =
         testApplication {
@@ -128,3 +132,6 @@ class SimulatedCascadeTest {
             install(ContentNegotiation) { json() }
         }
 }
+
+/** The simulator names them `sim-1`…`sim-3`, and each needs a record (B-63). */
+private const val SIMULATED_DRIVERS = 3

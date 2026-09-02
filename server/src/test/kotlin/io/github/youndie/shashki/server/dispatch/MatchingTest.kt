@@ -54,6 +54,12 @@ class MatchingTest {
             val client = simulatorClient()
             startApplication()
 
+            // **Every driver on the books first** (B-63): the class is the record's now, and a
+            // driver the server has never heard of is not indexed at all.
+            repeat(SIMULATED) { PostgresHarness.driver("sim-${it + 1}") }
+            PostgresHarness.driver("next-door", "COMFORT")
+            PostgresHarness.driver("returning")
+
             val index = app.get<DriverIndex>()
             val clock = app.get<PetichClock>()
             // The Application is the simulator's scope, so its drivers stop when the test's server
@@ -105,6 +111,12 @@ class MatchingTest {
             val client = simulatorClient()
             startApplication()
 
+            // **Every driver on the books first** (B-63): the class is the record's now, and a
+            // driver the server has never heard of is not indexed at all.
+            repeat(SIMULATED) { PostgresHarness.driver("sim-${it + 1}") }
+            PostgresHarness.driver("next-door", "COMFORT")
+            PostgresHarness.driver("returning")
+
             val index = app.get<DriverIndex>()
             val clock = app.get<PetichClock>()
 
@@ -142,6 +154,9 @@ class MatchingTest {
         }
 
     private companion object {
+        /** The simulator names them `sim-0`…`sim-19`; the records have to exist (B-63). */
+        const val SIMULATED = 20
+
         const val METRES_PER_DEGREE_LAT = 111_320.0
     }
 }

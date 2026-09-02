@@ -40,7 +40,8 @@ word against the bank's.
 `GET /api/driver/earnings` answers today, this week and all time. **The day and the week are UTC**,
 which is a seam rather than a decision: a driver in another timezone sees their day roll at the wrong
 hour, and fixing it needs the driver record this product does not have — the same missing thing that
-makes the class and the rating on a position frame self-reported.
+made the class and the rating on a position frame self-reported until B-63 gave this product a
+`drivers` row. The timezone is still missing from it, which is why this paragraph is still here.
 
 ## 2. One `54` and the rest at `32`
 

@@ -42,15 +42,14 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[?]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
 | [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | B-65 |
-| [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[ ]` | The product has no driver record, so a rider is asked to rate an e-mail address | P2 | M | - |
 
-## Closed (62)
+## Closed (63)
 
 **Remove the unknowns**
 
@@ -133,6 +132,7 @@ re-prioritising one must never move its file.
 - [B-59](docs/backlog/B-59-the-finished-screen-writes-and-never-reads.md) `[x]` - R8 asks for a rating it already has, and puts its one accent on skip
 - [B-60](docs/backlog/B-60-d1-says-in-words-what-the-kit-says-in-glyphs.md) `[x]` - D1 states a document's status in words where the kit states it in a glyph
 - [B-62](docs/backlog/B-62-a-price-for-a-class-you-cannot-order.md) `[x]` - R4 prices a class it has just said has no cars
+- [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[x]` - The product has no driver record, so a rider is asked to rate an e-mail address
 - [B-64](docs/backlog/B-64-the-offer-reaches-the-client-and-not-the-screen.md) `[x]` - The offer reaches the driver's client and never reaches the driver's screen
 
 <!-- END INDEX -->
