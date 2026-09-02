@@ -88,7 +88,10 @@ class GlyphCoverageTest {
         // were checked once, by hand, in B-06. What this test adds is the only strings in the
         // project that come from data rather than from a literal, and a changed fixture tile that
         // quietly stopped carrying labels would fail here rather than pass silently.
-        assertEquals(listOf("Voglje", "Vodice", "Torovo", "A2"), labels)
+        // Lower case since B-24: the style documents say `["downcase", …]` and the renderer now
+        // agrees with them. This assertion changing is the guard noticing that, which is what it is
+        // for — the labels are the thing the goldens draw.
+        assertEquals(listOf("voglje", "vodice", "torovo", "a2"), labels)
         val offences =
             labels.mapNotNull { label ->
                 uncoveredIn(label).takeIf { it.isNotEmpty() }?.let { "\"$label\" — ${it.render()}" }

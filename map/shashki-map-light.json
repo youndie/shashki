@@ -143,7 +143,7 @@
       "minzoom": 14,
       "layout": {
         "symbol-placement": "line",
-        "text-field": ["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"]]],
+        "text-field": ["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"], ["get", "ref"]]],
         "text-font": ["Source Sans 3 Light"],
         "text-size": 11,
         "text-letter-spacing": 0

@@ -67,15 +67,22 @@ public fun DrawScope.drawTextOnPath(
 }
 
 /**
- * The label a road carries, by the rule the styles *should* use.
+ * The label a road carries, by the rule the style documents state:
+ * `["downcase", ["coalesce", ["get", "name:latin"], ["get", "name"], ["get", "ref"]]]`.
  *
- * `ref` is the third branch, which the style documents do not have — 654 of the archive's 11 437
- * named roads carry nothing else, every one a motorway (B-24). A prototype that inherited the gap
- * would have drawn an unlabelled map and proved nothing about labels.
+ * **All three branches and the `downcase`, because a renderer that draws a different string from the
+ * one the style specifies is a golden that certifies the wrong picture.** The `ref` branch was
+ * missing from the documents until [B-24](../../../../../../../../../docs/backlog/B-24-motorways-carry-ref-not-name.md):
+ * 654 of the archive's 11 437 labelled roads carry nothing else, and this prototype found it by
+ * drawing one of them. The `downcase` was missing *here* until the same item, which is the same
+ * mistake pointing the other way — the kit's street labels are lower case, and every label in
+ * `map_canvas_tile_dark` had been drawn in the source's own case.
  */
 public fun MvtFeature.labelText(): String? =
-    tags["name:latin"]?.takeIf { it.isNotBlank() }
-        ?: tags["name"]?.takeIf { it.isNotBlank() }
-        ?: tags["ref"]?.takeIf { it.isNotBlank() }
+    (
+        tags["name:latin"]?.takeIf { it.isNotBlank() }
+            ?: tags["name"]?.takeIf { it.isNotBlank() }
+            ?: tags["ref"]?.takeIf { it.isNotBlank() }
+    )?.lowercase()
 
 private const val DEGREES_PER_RADIAN = 57.29578f

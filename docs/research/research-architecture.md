@@ -654,10 +654,31 @@ prototype is for.** Building route 4's decoder (B-01) meant reading a real tile 
 `city.pmtiles`, and the smallest tile carrying a named road turned out to carry the A2 — which in
 OpenMapTiles has a `ref` and no `name`. The styles label through
 `["coalesce", ["get", "name:latin"], ["get", "name"]]`, so they draw nothing on it. Measured over all
-810 tiles: **654 of 11 437 named roads are `ref`-only, every one a motorway** — including the road
-from the city to the airport, which is the one road this product's flagship journey follows.
+810 tiles: **654 of 11 437 named roads are `ref`-only** — including the road from the city to the
+airport, which is the one road this product's flagship journey follows.
 [B-24](../backlog/B-24-motorways-carry-ref-not-name.md) is the one-token fix. Neither reading the
 style nor reading the schema would have produced this; decoding the data did.
+
+**Corrected 2026-09-02, when B-24 re-measured with a script instead of an impression.** This used to
+say the 654 were "every one a motorway". The count was right and the characterisation was not:
+194 are `motorway`, and the rest are **secondary 195, tertiary 152, primary 107, path 4, minor 1,
+primary_construction 1**. The wrong half came from generalising the one road the prototype happened
+to draw. It matters because it changes what the defect is: not "the motorway shields are missing", a
+thing a map might reasonably leave out, but *every* numbered road in the city going unlabelled — a
+third of them ordinary secondary and tertiary streets that a rider would expect to read.
+
+The re-measurement is repeatable rather than recounted: `map/label_coverage.py` reads the archive and
+takes the keys out of the style document's own `text-field`, so it measures the map rather than the
+author's memory of it. Run before the change it reproduces 654 exactly, which is what makes the 0
+afterwards worth anything. Every one of the 654 carries `ref`, so the third branch closes all of
+them: **0 of 11 437**, in both documents.
+
+**And the same measurement found the mistake pointing the other way.** The styles say
+`["downcase", …]`; route 4's renderer did not, so every label in `map_canvas_tile_dark` was drawn in
+the source's own case — "A2" and "Voglje" where the design says "a2" and "voglje". A renderer that
+draws a different string from the one the style specifies makes a golden that certifies the wrong
+picture, which is worse than no golden. `labelText()` lower-cases now and the three map goldens were
+re-recorded.
 
 **Correction, found while building it (B-01, 2026-09-02): the hardest piece has a second solution,
 and it is the better one here.** Everything above about skia is true — `getRSXform`,
