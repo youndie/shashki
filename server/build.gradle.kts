@@ -39,6 +39,14 @@ dependencies {
 
     // The order saga: the engine, its Postgres repository, and the outbox relay. petich-postgres
     // ships no driver, no pool and no DDL on purpose — those three are the application's, below.
+    // The receipt, over SMTP written from the RFC rather than through a JVM mail library — which is
+    // the only thing this part of the demo demonstrates. See B-14 and research §1.6d.
+    implementation(libs.smtpkn.client)
+    implementation(libs.smtpkn.transportKtor)
+    implementation(libs.smtpkn.tlsJvm)
+    implementation(libs.smtpkn.mime)
+    implementation(libs.smtpkn.sasl)
+
     // Routing on the city's own extract, in this process. See B-23 and `GraphHopperRouteEstimator`.
     implementation(libs.graphhopper.core)
 

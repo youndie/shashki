@@ -27,6 +27,15 @@ testcontainers = "1.21.4"
 # checked in the Maven Central listing, not assumed.
 # Routing, embedded in the server rather than beside it: Apache-2.0, a plain Java library. The same
 # 11.0 B-06 measured the import with, so the four-second number belongs to this version.
+# **A timestamped snapshot, pinned by build metadata.** smtpkn has released nothing — only
+# `0.1.0-SNAPSHOT` exists — so B-13's documented fallback applies: pin the resolved build rather than
+# the moving coordinate. Published 2026-08-09; these cannot change under the build.
+smtpkn = "0.1.0-20260809.051147-2"
+# **And it is two numbers, not one.** The same publish left `smtp-transport-ktor` at build **1**
+# while the other five modules are at build **2**, on the same timestamp. A single version reference
+# across the set therefore does not resolve — loudly, with "could not find", which is the good case;
+# the fallback B-13 describes quietly assumes one build number per publish and this one has two.
+smtpknTransport = "0.1.0-20260809.051147-1"
 graphhopper = "11.0"
 cryptography = "0.6.0"
 # Kept equal to the shared catalog's `composeMultiplatform` by the check in shared-ui/build.gradle.kts.
@@ -80,6 +89,12 @@ kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kva
 # build, because a warm configuration cache never re-evaluated the script. The version rides
 # `wip.versions.composeMultiplatform`, so it cannot drift from the Compose the plugin applies.
 compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeUiTest" }
+
+smtpkn-client = { module = "io.github.youndie:smtp-client", version.ref = "smtpkn" }
+smtpkn-transportKtor = { module = "io.github.youndie:smtp-transport-ktor", version.ref = "smtpknTransport" }
+smtpkn-tlsJvm = { module = "io.github.youndie:smtp-tls-jvm", version.ref = "smtpkn" }
+smtpkn-mime = { module = "io.github.youndie:smtp-mime", version.ref = "smtpkn" }
+smtpkn-sasl = { module = "io.github.youndie:smtp-sasl", version.ref = "smtpkn" }
 
 graphhopper-core = { module = "com.graphhopper:graphhopper-core", version.ref = "graphhopper" }
 

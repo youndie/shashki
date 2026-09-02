@@ -602,6 +602,30 @@ authorize URL by hand today, the one place in this repository where a path exist
 is worth proposing upstream rather than working around twice; it is not filed, because filing in
 somebody else's repository is asked about first.
 
+**Consequence 1.6d1 — it was, and it found a defect on the first try (2026-09-02,
+[B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md)).**
+
+The JVM target works: a receipt goes out through `SslEngineTlsProvider` over a real `STARTTLS`
+handshake and arrives in Mailpit, with the certificate **verified** — the control points the same
+code at a CA that signed nothing and it fails. That is Risk 4's question answered.
+
+| Fact | Where verified |
+|---|---|
+| `SmtpSession.encrypted` is `private var encrypted = false` and is **assigned nowhere in the module**, so `isEncrypted` is permanently `false` — on every platform, not only the JVM | `smtp-client/src/commonMain/.../SmtpSession.kt:105`, grep over the module |
+| `authenticate()` refuses to run when `!isEncrypted`, so **`AUTH` after a successful `STARTTLS` always throws** unless the caller passes `allowOverPlaintext = true` — a flag whose name asserts the opposite of the truth | same file, line 407 |
+| The library's own README shows exactly that sequence — `startTls(...)` then `authenticate(...)` — as its usage example | `kmp-smtp-client/README.md` |
+| Its own tests do not catch it because they pass `allowOverPlaintext = true` throughout, with a comment saying that is better than "pretending the scripted transport" is encrypted | `smtp-client/src/commonTest/.../SmtpAuthTest.kt:332` |
+
+The last row is the mechanism: the flag is only wrong when a *real* provider has upgraded a *real*
+connection, and no test does both. Deciding to be honest about a scripted transport is what hid a
+defect in the unscripted one — which is worth recording as a shape, not only as a bug.
+
+**Nothing is worked around in shashki.** Mailpit needs no credentials, so the receipt path does not
+call `authenticate` and is not blocked; a real relay would be, on the first attempt. The check that
+`SmtpReceiptSender` would naturally make — "am I encrypted?" — cannot be made, so it is written as
+the test's negative control instead, which demonstrates more anyway. **Not filed upstream**: that is
+asked about first.
+
 **Consequence 1.6d — shashki would be smtpkn's first JVM consumer of consequence.** The library says
 plainly that the JVM target is unclaimed. That is a feature of this project, not a defect — a
 reference service is exactly what turns "compiles and runs in CI" into "claimed" — but it has to be
@@ -1129,6 +1153,14 @@ the untested part is the part that talks to a real server.
 
 **Mitigation.** A receipt test against Mailpit in the integration suite, on the JVM target, with TLS
 on. It gates the feature, and a failure is reported upstream rather than routed around.
+
+**Closed 2026-09-02: the JVM target works, and the first real use of it found a defect elsewhere.**
+The receipt arrives over a verified `STARTTLS` handshake — `SSLEngine` and all — and the control
+proves the verification rather than the socket. What broke is not TLS but `isEncrypted`, which is
+never assigned and therefore makes `AUTH` after `STARTTLS` impossible without a flag that lies;
+§1.6d1 has it. This is the risk behaving exactly as written: "compiles and runs in CI" became
+"claimed for what a reference service exercised", and the part nobody exercised is the part that was
+wrong.
 
 ### Risk 5. pmtiles in the browser is untested from Kotlin
 
