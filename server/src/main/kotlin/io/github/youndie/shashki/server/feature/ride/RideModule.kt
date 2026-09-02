@@ -66,10 +66,14 @@ import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.observability.ObservabilityConfig
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.onClose
+import org.koin.core.module.dsl.onOptions
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -164,8 +168,19 @@ public fun rideModule(
         // geometry (B-44).
         single<RatingRepository> { ExposedRatingRepository(database) }
         factory { RateRideUseCase(rides = get(), ratings = get()) }
-        // The object store, or the honest absence of one (B-47). It shares the application's HTTP
-        // client: one more connection pool for three uploads a shift would be waste.
+        // **The application's HTTP client, which this graph did not have.** The line below asked
+        // the container for one and nothing bound it, so all three document routes answered 500 in
+        // every configuration — with a store and without one. `verify()` cannot see it: the bound
+        // type is an interface, so there is no constructor to reflect over, and what a lambda asks
+        // the container for is invisible to the static half of the guard. It was found by opening
+        // the running stand, which is the only place it was ever going to be found.
+        //
+        // Closed with the Koin scope rather than left to the garbage collector: a connection pool
+        // that outlives its application is the kind of leak a demo never notices and a deployment
+        // does.
+        single { HttpClient(CIO) }.onOptions { onClose { it?.close() } }
+        // The object store, or the honest absence of one (B-47). It shares the client above: one
+        // more connection pool for three uploads a shift would be waste.
         single<DocumentStore> { DocumentsConfig.store(get()) }
         single { DriverTickets(get()) }
         single { DroppedFrames() }

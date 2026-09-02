@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.di
 
 import io.github.youndie.shashki.server.billing.PayoutRepository
+import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
 import io.github.youndie.shashki.server.feature.events.data.BooblikRideHistory
@@ -14,6 +15,8 @@ import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseC
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.observability.Observability
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.module.dsl.factoryOf
@@ -85,6 +88,10 @@ class KoinGraphTest {
                     // `Observability` is the same shape: one lambda builds the agent from the
                     // environment, or does not.
                     definition<Observability>(TracyAgent::class),
+                    // The HTTP client is built with `HttpClient(CIO)` — the engine is the argument
+                    // the lambda supplies, and `verify()` asks the container for it like any other
+                    // constructor parameter. Named here for the same reason as the four above.
+                    definition<HttpClient>(HttpClientEngine::class),
                 ),
         )
     }
@@ -112,6 +119,16 @@ class KoinGraphTest {
         // `SHASHKI_BOOBLIK`, which is the ordinary case for a checkout, so what it holds is that a
         // server with nowhere to publish still builds its graph — the failure it prevents is a
         // binding that only exists when a broker does.
+        // **The object store, resolved because it shipped broken** (B-47). `DocumentsConfig.store`
+        // asks the container for an `HttpClient` and nothing bound one, so every document route
+        // answered 500 in the running stand — with a store configured and without one. Neither half
+        // of this file saw it: `verify()` reflects over the bound type's constructor and
+        // `DocumentStore` is an interface, and what a lambda asks the container for is invisible to
+        // it. The list above is hand-maintained, and this is the line that was not added; adding it
+        // is the whole fix to the guard, and the reason to write that down is that the next binding
+        // behind an interface has the same hole waiting for it.
+        assertNotNull(koin.get<DocumentStore>(), "a driver's documents have nowhere to go")
+
         assertNotNull(koin.get<RideHistory>(), "the projection is not in the graph")
         assertNull(koin.get<Events>().publisher, "a publisher appeared with no broker configured")
         assertNull(koin.get<Observability>().tracy, "an agent appeared with no collector configured")

@@ -6,7 +6,7 @@
 #
 #   docker compose -f docker/compose.yaml up -d
 #   bash docker/bootstrap-shildik.sh
-#   bash docker/upload-tiles.sh ~/shashki-city/Ljubljana.pmtiles
+#   bash docker/upload-tiles.sh ~/shashki-city/city.pmtiles
 #   open http://127.0.0.1:18080          # the rider
 #   open http://127.0.0.1:18080/driver   # the driver
 #
@@ -173,7 +173,24 @@ services:
       #
       # Where the browser fetches tiles from. Not this server: B-07 settled that the archive is a
       # static object somewhere else, and 127.0.0.1 is the address a *browser* reaches bochka at.
-      SHASHKI_TILES_URL: http://127.0.0.1:19000/tiles/Ljubljana.pmtiles
+      # **The name is `map/city_tiles.sh`'s output and the upload's key is its basename**, so these
+      # three have to be one word. They were not: this said `Ljubljana.pmtiles`, which nothing in
+      # this repository produces, and the quickstart above told a reader to upload a file that does
+      # not exist. What that costs is not a 404 in a console — it is a black screen (see below).
+      SHASHKI_TILES_URL: http://127.0.0.1:19000/tiles/city.pmtiles
+      # Where a driver's documents go (B-47). **The same bochka as the tiles and deliberately a
+      # different bucket**: `tiles` is published to the world because a browser cannot sign a
+      # request, and `documents` has no policy at all because a licence is the opposite requirement.
+      # This is the container's own address for it, not the browser's — nothing but this server ever
+      # talks to the documents bucket.
+      #
+      # It was missing here, and what that cost was not an unconfigured feature: the routes answered
+      # 500 rather than the 503 the absent-store path exists to give, because the store's binding
+      # asked the graph for an HTTP client nobody had bound. `bootstrap-documents.sh` has to have run.
+      SHASHKI_DOCUMENTS_ENDPOINT: http://bochka:9000
+      SHASHKI_DOCUMENTS_BUCKET: documents
+      SHASHKI_DOCUMENTS_KEY: shashki
+      SHASHKI_DOCUMENTS_SECRET: shashkisecret
       # Without this the relay is not started at all and a ride's events stay in the outbox — which
       # is true, and is what a server with no broker should say rather than logging them delivered.
       SHASHKI_BOOBLIK: booblik:9092

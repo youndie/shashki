@@ -322,8 +322,12 @@ private fun DriverEarnings(dark: Boolean) {
             todayLabel = "today, 1 ride",
             tiles =
                 listOf(
+                    // **Three, because three is what the client builds.** This fixture had two, so
+                    // the golden of this screen was a picture of a screen nobody ships: the third
+                    // tile is what pushed the row past the grid's four columns.
                     EarningsTile("today", "today", "$ 23.16", size = 2, accent = true),
                     EarningsTile("week", "week", "$ 118.40", size = 2),
+                    EarningsTile("all", "all time", "$ 1 204.60", size = 2),
                 ),
             history = listOf("airport · today" to "$ 23.16"),
             emptyLine = "nothing yet",

@@ -79,17 +79,59 @@ public fun DriverEarnings(
     }
 }
 
-/** The kit's four-column grid: the renderer knows the widths, this knows the gap. */
+/**
+ * The kit's four-column grid: the renderer knows the widths, this knows the gap — **and where the
+ * row ends**.
+ *
+ * This used to be a single `Row`. The client sends three tiles of two columns each, which is six
+ * columns into a grid four wide: the third tile hung off the right edge with its figure wrapped one
+ * character to a line. Nothing caught it, because the fixture that photographs this screen sends
+ * **two** tiles — a golden is a photograph, and it never had the third in the frame.
+ *
+ * "Tiles do not reflow" is a rule about a tile's own size, not a licence for a row to be wider than
+ * the screen: a size outside 1/2/4 is dropped by the renderer, and a row that would exceed four
+ * columns starts a new one here.
+ */
 @Composable
 private fun Tiles(tiles: List<EarningsTile>) {
     val budget = AccentBudget()
     val renderer = EarningsTileRenderer()
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        CompositionLocalProvider(LocalAccentBudget provides budget) {
-            tiles.forEach { tile -> renderer.Render(tile, KompotActionHandler { }, NO_FORMS) }
+    // The accent budget is the screen's and not the row's: rule 1 allows one accent surface per
+    // screen, so it is claimed across every row rather than once per line.
+    CompositionLocalProvider(LocalAccentBudget provides budget) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            tiles.inRowsOfFourColumns().forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { tile -> renderer.Render(tile, KompotActionHandler { }, NO_FORMS) }
+                }
+            }
         }
     }
 }
+
+/**
+ * Greedy, in the order the server sent them: a tile goes on the current row while it fits and starts
+ * the next one when it does not. Re-ordering to pack them tighter would be the client deciding what
+ * the screen says first, which is the server's to decide.
+ */
+private fun List<EarningsTile>.inRowsOfFourColumns(): List<List<EarningsTile>> {
+    val rows = mutableListOf<MutableList<EarningsTile>>()
+    var used = COLUMNS + 1
+    forEach { tile ->
+        val size = tile.size.coerceIn(1, COLUMNS)
+        if (used + size > COLUMNS) {
+            rows += mutableListOf(tile)
+            used = size
+        } else {
+            rows.last() += tile
+            used += size
+        }
+    }
+    return rows
+}
+
+/** The kit's grid, in columns. `EarningsTileRenderer` holds the same number as widths. */
+private const val COLUMNS = 4
 
 /** Rides and what each one paid. The kit's empty list: one line, disabled brush, no action. */
 @Composable
