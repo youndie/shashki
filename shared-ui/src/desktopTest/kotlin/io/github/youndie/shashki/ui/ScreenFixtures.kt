@@ -83,6 +83,57 @@ private fun RiderClassPicker(dark: Boolean) {
 }
 
 /**
+ * R4 with nobody driving anything (B-62).
+ *
+ * **This is the state a stand is in most of the time and no golden had it.** Every class unavailable,
+ * every price an em dash, and the bar saying so rather than quoting a figure for a ride that cannot
+ * be ordered — which is what it did until B-62: `no cars nearby · $ 28.96` on all three rows, and
+ * `order · $ 28.96` underneath.
+ */
+@ViddikScreenshot(name = "rider class picker empty", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderClassPickerEmptyFixture(): Unit = RiderClassPickerEmpty(dark = true)
+
+/** The same on the stock light theme (B-48). */
+@ViddikScreenshot(name = "rider class picker empty light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderClassPickerEmptyFixtureLight(): Unit = RiderClassPickerEmpty(dark = false)
+
+@Composable
+private fun RiderClassPickerEmpty(dark: Boolean) {
+    val latin = kvadrantLatin()
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        // The screen draws a map and a golden has no archive: the placeholder is what every other
+        // map fixture here uses, for the reason B-01 gives.
+        CompositionLocalProvider(LocalMapSurface provides PlaceholderMapSurface()) {
+            RiderClassPicker(
+                scene =
+                    MapScene(
+                        camera = MapCamera(LJUBLJANA, zoom = 14.0),
+                        pins =
+                            listOf(MapPin(LJUBLJANA, MapPin.Kind.PICKUP), MapPin(BRNIK, MapPin.Kind.DROPOFF)),
+                    ),
+                destination = "airport",
+                destinationMeta = "26.3 km · 20 min",
+                offers =
+                    listOf(
+                        RideClassOffer("economy", "no cars nearby", null, carRects = 1, available = false),
+                        RideClassOffer("comfort", "no cars nearby", null, carRects = 2, available = false),
+                        RideClassOffer("business", "no cars nearby", null, carRects = 3, available = false),
+                    ),
+                selectedIndex = 0,
+                paymentLabel = "card ·· 4417",
+                orderLabel = "no cars nearby",
+                canOrder = false,
+                onSelect = {},
+                onChangePayment = {},
+                onOrder = {},
+            )
+        }
+    }
+}
+
+/**
  * R5: the wait, with no map on it.
  *
  * **The dots are animated and the golden is a still, which is the honest limit of this image.** What

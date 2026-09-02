@@ -63,6 +63,14 @@ public fun RiderClassPicker(
     selectedIndex: Int,
     paymentLabel: String,
     orderLabel: String,
+    /**
+     * Whether there is anything to order (B-62).
+     *
+     * **A bar that offers a ride nobody can take is the tile's defect one row down.** The kit draws
+     * a disabled action in the disabled brush and lets it be pressed by nobody, which is what a
+     * screen with no cars in it should look like.
+     */
+    canOrder: Boolean = true,
     onSelect: (Int) -> Unit,
     onChangePayment: () -> Unit,
     onOrder: () -> Unit,
@@ -111,7 +119,7 @@ public fun RiderClassPicker(
             PaymentRow(paymentLabel, onChangePayment)
         }
 
-        OrderBar(orderLabel, onOrder, onMore)
+        OrderBar(orderLabel, canOrder, onOrder, onMore)
     }
 }
 
@@ -157,6 +165,7 @@ private fun PaymentRow(
 @Composable
 private fun OrderBar(
     label: String,
+    canOrder: Boolean,
     onOrder: () -> Unit,
     onMore: () -> Unit,
 ) {
@@ -172,15 +181,15 @@ private fun OrderBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            KvadrantAppBarButton(onClick = onOrder, label = null) {
+            KvadrantAppBarButton(onClick = { if (canOrder) onOrder() }, label = null) {
                 Image(
                     painter = rememberVectorPainter(ShashkiIcons.check),
                     contentDescription = null,
                     modifier = Modifier.size(ROW_GLYPH).align(Alignment.Center),
-                    colorFilter = ColorFilter.tint(colors.foreground),
+                    colorFilter = ColorFilter.tint(if (canOrder) colors.foreground else colors.disabled),
                 )
             }
-            KvadrantText(label, style = type.body)
+            KvadrantText(label, style = type.body.copy(color = if (canOrder) colors.foreground else colors.disabled))
         }
         Spacer(Modifier.size(0.dp))
         // **The dots go somewhere now** (B-45). They were the kit's shape with nothing behind them

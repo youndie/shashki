@@ -68,7 +68,16 @@ public fun ClassPickerContent(
         offers = RideClass.entries.map { uiState.offerFor(it) },
         selectedIndex = RideClass.entries.indexOf(uiState.selected),
         paymentLabel = "card ·· 4417",
-        orderLabel = order?.let { "order · ${it.quote.asMoney()}" } ?: "order",
+        // **And the bar does not offer what the tiles refuse** (B-62). A selected class with no
+        // candidate is a class nobody can order; the bar says so in the kit's own words rather than
+        // quoting a price for it, and the button below is disabled.
+        orderLabel =
+            when {
+                order == null -> "order"
+                order.pickupEtaSeconds == null -> "no cars nearby"
+                else -> "order · ${order.quote.asMoney()}"
+            },
+        canOrder = order?.pickupEtaSeconds != null,
         onSelect = { index -> onAction(ClassPickerUiAction.Select(RideClass.entries[index])) },
         onChangePayment = { },
         onOrder = { onAction(ClassPickerUiAction.Order) },
@@ -83,7 +92,7 @@ public fun ClassPickerContent(
  * The kit's tile has a state for exactly this — "no cars nearby", an em dash where the price is —
  * and dropping the row instead would make the list reflow while the rider was reading it.
  */
-private fun ClassPickerUiState.offerFor(rideClass: RideClass): RideClassOffer {
+internal fun ClassPickerUiState.offerFor(rideClass: RideClass): RideClassOffer {
     val quote = quotes.firstOrNull { it.rideClass == rideClass }
     val carRects = RideClass.entries.indexOf(rideClass) + 1
     val eta = quote?.pickupEtaSeconds
@@ -96,7 +105,11 @@ private fun ClassPickerUiState.offerFor(rideClass: RideClass): RideClassOffer {
         // the vehicle, and the registration is the field a rider checks a real car against — fiction
         // there is worse than a blank. Same rule as the trip screen's.
         meta = if (eta == null) "no cars nearby" else eta.asDuration(),
-        price = quote?.quote?.asMoney(),
+        // **No car, no price** (B-62). The tile has always drawn `—` where a price is missing; this
+        // was handing it one anyway, so every class read `no cars nearby · $ 28.96` — an offer the
+        // product cannot honour, beside the sentence saying so. The quote is real arithmetic and
+        // stays available to the order bar's own decision; what is not real is a ride.
+        price = quote?.quote?.asMoney()?.takeIf { eta != null },
         carRects = carRects,
         // **Unavailable when there is no car, not when there is no price.** Pricing is arithmetic
         // and answers for every class; what a rider cannot do is order a class nobody is driving.

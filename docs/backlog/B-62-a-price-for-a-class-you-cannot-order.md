@@ -1,7 +1,7 @@
 ---
 id: B-62
 title: "R4 prices a class it has just said has no cars"
-status: open
+status: done
 priority: P2
 size: XS
 stage: stage-6-what-running-it-said
@@ -30,3 +30,23 @@ it still says `order · $ 28.96`.
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/components/ClassTile.kt`,
   `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/classpicker/`,
   `docs/screens/screen-rider-class-picker.md`
+
+## What it turned out to be
+
+**One `takeIf`, and the tile had been right all along.** `ClassTile` draws the kit's em dash whenever
+it is given no price and refuses to be clicked when unavailable; the screen was handing it a price
+anyway, so on a stand with nobody online all three rows read `no cars nearby · $ 28.96`. The quote is
+real arithmetic and stays — the bar still needs it — but a class nobody is driving does not carry a
+figure.
+
+**The bar was the same defect one row down.** It said `order · $ 28.96` for a class it could not
+order. It says `no cars nearby` now, the tick is drawn in the disabled brush and pressing it does
+nothing, which is the kit's own shape for an action that is not available.
+
+**And the state a stand is in most of the time now has a golden.** `rider class picker empty` is
+every class unavailable — three em dashes and a bar that refuses. Nothing had photographed it, which
+is why nobody had seen the price standing beside the sentence that contradicts it; the bundle's own
+"before the server answers" golden moved with the same change, and shows `order` in the disabled
+brush rather than an offer to buy something that has not been priced yet.
+
+`ClassOfferTest` holds the mapping to it: no candidate, no price, not available.
