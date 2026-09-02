@@ -62,7 +62,8 @@ defect in the unscripted one.
 the receipt path does not call `authenticate` and is not blocked; a real relay would be, immediately.
 The check `SmtpReceiptSender` would naturally make — "am I encrypted?" — cannot be made, so the
 comment there says why and points at the control that demonstrates it instead. Research §1.6d1 has
-the four addresses. **Not filed upstream**: that is asked about first.
+the four addresses, and it is filed as
+[youndie/smtpkn#4](https://github.com/youndie/smtpkn/issues/4).
 
 **One more thing about pinning.** B-13's fallback for an unreleased library is "pin the snapshot by
 build metadata". That works, and it needs *per-module* numbers rather than one: this publish is build

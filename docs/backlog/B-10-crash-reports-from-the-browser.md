@@ -50,8 +50,9 @@ ingest is documented instead: `POST {serverUrl}/api/reports`.
 - *`katcher:shared` has no `wasmJs` either.* The client artifact having no browser target was known
   (§1.6); the module holding `CreateReportParams` not having one was not. So the payload here is a
   **copy of somebody else's wire type**, which the portfolio calls a future bug. `CrashReport`'s
-  KDoc says that rather than presenting the duplication as a design, and research §1.6b1 proposes
-  the two-line fix upstream instead of doing it.
+  KDoc says that rather than presenting the duplication as a design. Filed as
+  [youndie/katcher#32](https://github.com/youndie/katcher/issues/32), which also raises the public
+  ingest and the 202 as documentation gaps rather than as asks.
 
 **The reporter is deliberately small and deliberately unhelpful in two places.** It takes an
 `HttpClient` rather than building one — the application has an engine and a second would be a second

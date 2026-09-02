@@ -59,8 +59,9 @@ holds the `@Resource` types for `authorize`, `token`, `jwks` and `callback` and 
 but `ktor-resources` and `kotlinx-serialization-json` — both multiplatform including `wasmJs`. Its
 absence is why `SignInAttempt.authorizeUrl` builds a path out of string pieces, which is the one
 place in this repository where an endpoint exists as a string; everywhere else `@Resource` makes
-that a compile error. Adding `wasmJs` to `shared-oidc` would delete that. **Not filed upstream** —
-that is asked about first — but recorded in research §1.6c1 so it is proposed rather than forgotten.
+that a compile error. Adding `wasmJs` to `shared-oidc` would delete that. **Filed upstream**
+2026-09-02 as [youndie/shildik#20](https://github.com/youndie/shildik/issues/20), with research
+§1.6c1 carrying the measurement behind it.
 
 **What the tests do not cover, said plainly.** Eight tests run, all on the JVM, where
 `CryptographyProvider.Default` is the JDK one. The `wasmJs` target compiles — `check` depends on it —

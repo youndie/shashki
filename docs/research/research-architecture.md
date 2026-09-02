@@ -570,7 +570,8 @@ The last row is the same shape as §1.6c1's finding about `shared-oidc`, and it 
 not a missing *variant* but a missing **target**, on a module that depends on nothing but
 kotlinx-serialization. Until it grows one, shashki carries a copy of somebody else's wire type, which
 this portfolio's own rule calls a future bug — `CrashReport` says so in its KDoc rather than pretending
-the duplication is a design. **Not filed upstream**; proposing it is asked about first.
+the duplication is a design. **Filed upstream 2026-09-02**: youndie/katcher#32, which also notes the
+public ingest and the 202 as documentation gaps rather than asks.
 
 The 202 is worth its own line because the obvious implementation is wrong: a reporter that accepted
 any 2xx would count a proxy's 200, a redirect target or a captive portal as a delivered crash, and
@@ -599,8 +600,10 @@ missing a browser *variant*, it is missing a browser **target**, on modules whos
 already have one. `shared-oidc` in particular is two lines away from giving the browser the typed
 addresses that the rest of this portfolio insists on — which is why shashki's client builds the
 authorize URL by hand today, the one place in this repository where a path exists as a string. That
-is worth proposing upstream rather than working around twice; it is not filed, because filing in
-somebody else's repository is asked about first.
+is worth proposing upstream rather than working around twice. **Filed 2026-09-02**:
+youndie/shildik#20, which carries the module's own dependency list as the argument that the
+target costs two lines. `crypto` is deliberately not part of that ask — shildik has PKCE's
+verifying half and a client needs the generating half, which is genuinely the client's.
 
 **Consequence 1.6d1 — it was, and it found a defect on the first try (2026-09-02,
 [B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md)).**
@@ -623,8 +626,8 @@ defect in the unscripted one — which is worth recording as a shape, not only a
 **Nothing is worked around in shashki.** Mailpit needs no credentials, so the receipt path does not
 call `authenticate` and is not blocked; a real relay would be, on the first attempt. The check that
 `SmtpReceiptSender` would naturally make — "am I encrypted?" — cannot be made, so it is written as
-the test's negative control instead, which demonstrates more anyway. **Not filed upstream**: that is
-asked about first.
+the test's negative control instead, which demonstrates more anyway. **Filed upstream 2026-09-02**:
+youndie/smtpkn#4, with the suggested one-line fix and the reason the suite misses it.
 
 **Consequence 1.6d — shashki would be smtpkn's first JVM consumer of consequence.** The library says
 plainly that the JVM target is unclaimed. That is a feature of this project, not a defect — a
