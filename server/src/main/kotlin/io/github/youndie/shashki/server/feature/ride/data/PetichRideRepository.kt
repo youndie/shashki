@@ -6,17 +6,33 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
+import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichPhase
 import ru.workinprogress.petich.PetichRepository
 import ru.workinprogress.petich.PetichStatus
 import ru.workinprogress.petich.SimpleEnrichedPayload
 
-/** The ride, read straight off the saga's row. */
+/**
+ * The ride, read off the saga's row — and, once a driver has started driving, off the trip's.
+ *
+ * **The trip is an overlay and not a second source of truth.** Everything about the ride is the
+ * order saga's: who, where, what it costs, which driver. What the trip row adds is one field, the
+ * status, and only after `ASSIGNED` — which is precisely research §1.4c's "a stretch of no saga".
+ * A ride with no trip row is a ride nobody has started driving, and that is the honest reading of an
+ * absent row rather than a missing record (B-37).
+ */
 public class PetichRideRepository(
     private val petiches: PetichRepository,
+    private val trips: TripRepository,
 ) : RideRepository {
-    override suspend fun find(id: String): RideView? = petiches.findById(id)?.toRideView()
+    override suspend fun find(id: String): RideView? {
+        val ride = petiches.findById(id)?.toRideView() ?: return null
+        // Only forward. A cancelled order saga stays cancelled even if a stale trip row says the car
+        // was arriving, because the saga is the record and the trip is the overlay.
+        val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED } ?: return ride
+        return ride.copy(status = trip.status)
+    }
 }
 
 /**

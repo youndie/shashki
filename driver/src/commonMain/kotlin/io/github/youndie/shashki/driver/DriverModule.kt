@@ -11,6 +11,7 @@ import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
 import io.github.youndie.shashki.driver.feature.shift.domain.ShiftRepository
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.driver.feature.trip.data.HttpTripRepository
+import io.github.youndie.shashki.driver.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripViewModel
@@ -94,6 +95,7 @@ public fun driverModule(config: DriverConfig): Module =
 
         single<TripRepository> { HttpTripRepository(get()) }
         factory { ObserveTripUseCase(get()) }
+        factory { AdvanceTripUseCase(get()) }
 
         single {
             CrashReporting(
@@ -119,5 +121,5 @@ public fun driverModule(config: DriverConfig): Module =
                 answerOffer = get(),
             )
         }
-        viewModel { (rideId: String) -> DriverTripViewModel(rideId, get()) }
+        viewModel { (rideId: String) -> DriverTripViewModel(rideId, config.driverId, get(), get()) }
     }

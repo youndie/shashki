@@ -89,6 +89,9 @@ screen shows what was taken and what the server says about it, and has no button
 posted to an endpoint which does not exist would be worse than its absence. Turn-by-turn stays out
 by B-23.
 
+**[B-37](B-37-the-settlement-saga.md) built the routes and the screen has one button now** — the next
+transition, and the last press is what captures the rider's fare. Turn-by-turn is still out.
+
 **Not covered and not pretended:** there is no geolocation. The browser's API needs a permission
 prompt and a device that is going somewhere; a fabricated drift would be the client inventing data
 the server indexes as fact. The bundle sends its configured point, which is enough to be a candidate,

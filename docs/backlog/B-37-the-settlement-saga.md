@@ -1,7 +1,7 @@
 ---
 id: B-37
 title: "The settlement saga, whose parts are all written and none of them called"
-status: open
+status: done
 priority: P0
 size: L
 stage: stage-2-saga
@@ -66,3 +66,67 @@ reachable:
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/billing/PaymentGateway.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderSaga.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/receipt/domain/SendReceiptUseCase.kt`
+
+## What it turned out to be
+
+**The saga was the easy half. What was missing was everything that reaches it.**
+
+`PaymentGateway.capture` had been implemented since B-11 and called by nobody. `SendReceiptUseCase`
+was written, tested against a real SMTP server in B-14, and constructed in no DI module. There was no
+way to move a ride past `ASSIGNED` at all, so nothing could ever have called either. Three pieces at
+one end of a mechanism, joined at neither — the same shape as B-32's kompot finding and B-29's 409.
+
+**The trip needed a table, not a saga**, which §1.4c had said in words and nobody had had to act on.
+Four states, driver-driven, nothing to compensate. The row appears on the driver's *first* transition
+rather than when the order saga completes: creating it inside a saga step would be a side effect with
+no compensation, and the absence of a row is a perfectly good way of saying "assigned, not started".
+The ride a rider reads is the saga's row overlaid by the trip's, and only while the saga says
+`ASSIGNED` — a cancelled saga stays cancelled whatever a stale trip row claims.
+
+**One engine runs both sagas.** `supports(payload)` is what petich filters the interceptor list by,
+so the settlement's five steps live beside the order's in one list. `orderSagaEngine` became
+`sagaEngine`, because the old name would have been a lie the moment the second saga existed.
+
+**A capture needs an amount, and the fee test is what said so.** The first version captured the whole
+hold — correct for a fare, and for a cancellation it charges a rider the entire journey for a car
+they sent away. The test expected a quarter and got the lot. That is the whole of the difference
+between the two settlements: five identical phases and one number, and the number was the one thing
+not being carried. `PaymentGateway.capture(hold, amountCents)` now, with a partial capture like a
+real provider's.
+
+**And the compensation of a capture is a refund, not a release.** The gateway grew a fourth method
+rather than reusing the third: releasing lets go of money nobody took, refunding gives back money
+that moved, and in a real provider they are a different call, a different fee and a different line on
+somebody's statement. Saying so in a mock is the point of having one.
+
+**"Captured exactly once" lives in two places and both are asserted.** petich does not re-run a step
+it has already committed, so a process that dies after AUTHORIZATION resumes at EXECUTION — the
+abandoned-settlement test reconstructs exactly that row and requires the money not to move again. And
+underneath it the gateway refuses a second capture of a hold that is gone, which is the difference
+between a bug that is found and a bug that is a bank statement.
+
+**The two cancellations diverge, which is most of why this product exists.** Before a driver is
+assigned, cancelling compensates the order saga: the hold released, nobody charged. After, the order
+saga is finished and cannot be rolled back, so what runs is this saga with a fee — a quarter of the
+fare, captured, a fifth of that to the driver. Same word, two mechanisms, one test that shows both
+numbers.
+
+**A fixture bug the new tables exposed.** `PostgresHarness.truncateAll` cleared two tables of four,
+so a payout left by one test made the next fail on a primary key — reported as a *systemic saga
+failure*, which is a message about petich for a fact about the fixture.
+
+**The driver's screen has a button now**, and B-29's note about why it did not is answered rather
+than left. One action, not four: a trip is a sequence and the driver is at one point in it. The order
+moved to `:protocol` as `TripProgression` — the server refuses a transition that is not next and the
+client has to know which button to draw, and two copies of that list is a client offering a button
+the server refuses. The screen takes its state from the answer and never from the intention: the last
+press is the one that takes the rider's money.
+
+**Not covered, and named:** the receipt goes to the address on the token, so a stand with no provider
+sends none and records that it sent none. `ReceiptConfig` is the switch, `UnsentReceipts` is the
+honest absence, and the route-level test asserts exactly that — the settlement completes and writes
+`receipt.sent = false`. Sending it for real is `SettlementSagaTest`, where a payload with an address
+can be built directly, and against a real relay it is still B-14's gated test.
+
+Nineteen new tests: seven through the routes, six against the saga and a real Postgres, three on the
+driver's view model, plus the schema and the graph.

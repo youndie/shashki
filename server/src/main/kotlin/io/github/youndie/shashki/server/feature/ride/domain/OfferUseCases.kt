@@ -3,12 +3,17 @@ package io.github.youndie.shashki.server.feature.ride.domain
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.OfferView
+import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.common.UseCase
 import io.github.youndie.shashki.server.common.suspendRunCatching
 import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswer
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
+import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
+import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
+import io.github.youndie.shashki.server.feature.trip.domain.Trip
+import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichRepository
@@ -65,24 +70,48 @@ public class ExpireOfferUseCase(
 }
 
 /**
- * The rider cancels. While the saga is waiting for a driver this is compensation from the middle:
- * the offer withdrawn, the driver freed, the hold released. After a driver is assigned it is a trip
- * ending early and a settlement — not this saga, not this item (research §1.4c).
+ * The rider cancels — **one word and two mechanisms**, which is research §1.4c's point and, since
+ * B-37, something this product can actually show.
+ *
+ * While the saga is waiting for a driver, cancelling is compensation from the middle: the offer
+ * withdrawn, the driver freed, the hold released, nobody charged. After a driver is assigned there
+ * is a driver who set off, so the order saga is finished and cannot be rolled back — what happens
+ * instead is a **settlement with a fee**, which is the same five phases as a fare and a smaller
+ * number. The two paths diverge here and nowhere else.
+ *
+ * A ride already finished is neither: `CANCELLED` after `COMPLETED` would be a second settlement
+ * against a hold that has been captured, and the gateway would refuse it — loudly, and one layer too
+ * late to say anything useful.
  */
 public class CancelRideUseCase(
     private val engine: PetichEngine,
     private val sagas: PetichRepository,
     private val rides: RideRepository,
+    private val trips: TripRepository,
+    private val settle: SettleRideUseCase,
 ) : UseCase<String, RideView> {
     override suspend fun invoke(params: String): Result<RideView> =
         suspendRunCatching {
             val saga = sagas.findById(params) ?: throw RideNotFoundException(params)
-            require(saga.status == PetichStatus.PENDING_SIGNATURE) {
-                "ride $params is not waiting for a driver (saga is ${saga.status}); cancelling an assigned ride is the trip's business"
+            if (saga.status == PetichStatus.PENDING_SIGNATURE) {
+                resume(engine, sagas, params, RiderCancelled())
+                return@suspendRunCatching rides.find(params) ?: throw RideNotFoundException(params)
             }
-            resume(engine, sagas, params, RiderCancelled())
+
+            val ride = rides.find(params) ?: throw RideNotFoundException(params)
+            require(ride.status in CANCELLABLE) {
+                "ride $params is ${ride.status} and cannot be cancelled"
+            }
+            val driver = ride.driverId ?: throw RideNotFoundException(params)
+            trips.advance(Trip(params, driver, RideStatus.CANCELLED))
+            settle(SettleRideUseCase.Params(params, SettlementPayload.Kind.FEE)).getOrThrow()
             rides.find(params) ?: throw RideNotFoundException(params)
         }
+
+    private companion object {
+        /** Assigned, or on the way. Once the rider is in the car the fare is the fare. */
+        val CANCELLABLE = setOf(RideStatus.ASSIGNED, RideStatus.ARRIVING, RideStatus.ARRIVED)
+    }
 }
 
 /** What the driver's app polls: the offer on the board, joined with the ride it is for. */

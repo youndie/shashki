@@ -1,13 +1,17 @@
 package io.github.youndie.shashki.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
@@ -21,21 +25,31 @@ public data class DriverAssignedRideState(
     val pickup: String,
     val dropoff: String,
     val legMeta: String,
+    /**
+     * The one thing the driver can do next, or `null` when the ride is over.
+     *
+     * **One action and not four buttons**, because a trip is a sequence: the driver is always at
+     * exactly one point in it, and offering the other three is offering three refusals.
+     */
+    val action: String? = null,
+    val working: Boolean = false,
 )
 
 /**
  * D2, minus the half this repository cannot honestly draw.
  *
- * **There is no map here and no "I have arrived" button, and both absences are decisions.**
- * Turn-by-turn is out of scope for the reference (B-23) and nothing has changed that; the trip's
- * own transitions — `ARRIVING → ARRIVED → IN_PROGRESS → COMPLETED` — have no route on the server
- * yet, so a button for them would post to nothing. A screen that shows what was accepted and what
- * the server currently says about it is the true version of this screen today; a screen with dead
- * controls on it would be the false one.
+ * **There is no map here, and that absence is still a decision.** Turn-by-turn is out of scope for
+ * the reference (B-23) and nothing has changed that.
+ *
+ * **The button, on the other hand, is new and is the point.** B-29 shipped this screen with nothing
+ * to press because the server had no route for the trip's transitions, and said so rather than
+ * drawing a dead control. B-37 built them, so there is one action here — the next one — and pressing
+ * it the last time is what captures the rider's money.
  */
 @Composable
 public fun DriverAssignedRide(
     state: DriverAssignedRideState,
+    onAdvance: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = KvadrantTheme.colors
@@ -63,9 +77,29 @@ public fun DriverAssignedRide(
             // two different kinds of row rather than as a from and a to.
             KvadrantText("dropoff · ${state.legMeta}", style = type.meta.copy(color = colors.subtle))
         }
+
+        Spacer(Modifier.weight(1f))
+
+        // The kit's accept strip, reused: a filled accent bar at the app bar's height, drawn here
+        // rather than taken from the library — the same answer B-15 gave for `OfferCard`.
+        state.action?.let { label ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(BAR)
+                    .background(if (state.working) colors.inactive else colors.accent)
+                    .clickable(enabled = !state.working, onClick = onAdvance),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                KvadrantText(label, style = type.body.copy(color = colors.onAccent))
+            }
+            Spacer(Modifier.height(MARGIN))
+        }
     }
 }
 
 private val MARGIN = 12.dp
 private val GAP = 12.dp
 private val TOP = 24.dp
+private val BAR = 54.dp

@@ -16,6 +16,10 @@ import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.route.routeRoutes
+import io.github.youndie.shashki.server.feature.settlement.domain.NothingToSettleException
+import io.github.youndie.shashki.server.feature.trip.domain.NotThisDriversRideException
+import io.github.youndie.shashki.server.feature.trip.domain.OutOfOrderTransitionException
+import io.github.youndie.shashki.server.feature.trip.tripRoutes
 import io.github.youndie.shashki.server.pricing.RouteEstimator
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -98,6 +102,18 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
         }
         // 409 rather than 404: the offer existed and the driver's answer was well formed — somebody
         // else has it now. That is a race the client should say out loud, not a missing resource.
+        // A transition out of order, or a ride that is not this driver's: the request is well formed
+        // and the server understood it, and the answer is about state rather than about syntax.
+        exception<OutOfOrderTransitionException> { call, e ->
+            call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "not the next state"))
+        }
+        exception<NotThisDriversRideException> { call, e ->
+            // 404 rather than 403: confirming that somebody else's ride exists is itself an answer.
+            call.respond(HttpStatusCode.NotFound, ErrorBody(e.message ?: "not found"))
+        }
+        exception<NothingToSettleException> { call, e ->
+            call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "nothing to settle"))
+        }
         exception<OfferGoneException> { call, e ->
             call.respond(
                 HttpStatusCode.Conflict,
@@ -158,6 +174,7 @@ public fun Application.shashki(
 
     routing {
         rideRoutes(protected = oidc != null)
+        tripRoutes()
         routeRoutes()
         quoteRoutes()
         promoRoutes()

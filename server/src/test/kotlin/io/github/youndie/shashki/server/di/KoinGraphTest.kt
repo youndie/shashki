@@ -1,9 +1,14 @@
 package io.github.youndie.shashki.server.di
 
+import io.github.youndie.shashki.server.billing.PayoutRepository
+import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
+import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
+import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
+import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.module.dsl.factoryOf
@@ -33,7 +38,7 @@ import kotlin.test.assertTrue
  * anything, which is why a module that needs a `Database` can be verified without one. Two things
  * follow, and the first run of this file found both:
  *
- * - a value the lambda supplies by hand — `orderSagaEngine(get(), get())` passing the step list to
+ * - a value the lambda supplies by hand — `sagaEngine(get(), get())` passing the step list to
  *   `PetichEngine`'s constructor — is a parameter `verify()` still asks the container for. It is
  *   declared with `injections`, per type, so the exemption is as narrow as the fact;
  * - a `factoryOf` over a constructor with a defaulted `() -> String` is reported as a missing
@@ -48,7 +53,7 @@ class KoinGraphTest {
     @Test
     fun `every definition in the ride module can be resolved`() {
         rideModule(noDatabase, noScope).verify(
-            // `PetichEngine` is built by `orderSagaEngine`, which hands its constructor every
+            // `PetichEngine` is built by `sagaEngine`, which hands its constructor every
             // argument itself; `verify()` cannot see that and asks the container for each one in
             // turn. All six are named, per definition rather than as a global `extraTypes`, so a
             // genuinely missing `List` or `PetichRepository` elsewhere is still reported.
@@ -76,6 +81,17 @@ class KoinGraphTest {
         // saga storage and the tables — built, not connected: Exposed's `connect` is lazy.
         val koin = koinApplication { modules(rideModule(noDatabase, noScope)) }.koin
         assertNotNull(koin.get<RideRepository>(), "the ride repository is not in the graph")
+
+        // **The settlement's own bindings, resolved rather than verified** (B-37). `verify()` is
+        // reflection over a constructor and the two repositories are bound behind interfaces by
+        // explicit lambdas, so it has nothing to look at; only building them says they are here.
+        // `SendReceiptUseCase` is the one that matters most: it existed, was tested against a real
+        // SMTP server, and was constructed by nobody until the settlement called it.
+        assertNotNull(koin.get<TripRepository>(), "the trip is not in the graph")
+        assertNotNull(koin.get<PayoutRepository>(), "the payout ledger is not in the graph")
+        assertNotNull(koin.get<AdvanceTripUseCase>(), "the driver cannot move a trip")
+        assertNotNull(koin.get<SettleRideUseCase>(), "nothing can start a settlement")
+        assertNotNull(koin.get<SendReceiptUseCase>(), "the receipt is written and unbound again")
     }
 
     /**

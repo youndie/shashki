@@ -23,6 +23,18 @@ public class OrderPayload(
     public val dropoff: GeoPoint,
     public val rideClass: RideClass,
     public val paymentMethodId: String,
+    /**
+     * Where a receipt would go, taken from the token at the moment the ride was asked for.
+     *
+     * **From the token and not from the request body**, which is the whole reason B-26 put
+     * authentication in front of this route: an email a client can choose is an email a client can
+     * choose for somebody else. `null` when no provider is configured — a demo pointed at nothing
+     * has no token — and the settlement says so rather than inventing a recipient.
+     *
+     * A default, because it has to be: `OrderPayload` is serialised into a `json` column, and a new
+     * field without one makes every saga already on disk unreadable.
+     */
+    public val riderEmail: String? = null,
 ) : PetichPayload()
 
 /**

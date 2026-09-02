@@ -503,6 +503,29 @@ before `ASSIGNED` it is the order saga compensating from the middle; after it, a
 and a settlement that charges a fee. B-11's acceptance — "no held payment and no reserved driver at
 any phase boundary" — is a claim about the first saga only, and the KDoc now says which is which.
 
+**Consequence 1.4c1 — the second saga was built and the trip turned out to need a table
+(2026-09-02, [B-37](../backlog/B-37-the-settlement-saga.md)).** §1.4c described three things and only
+the first existed. What building the other two found:
+
+| Fact | Where |
+|---|---|
+| The trip has no saga and needs a **row**: four states, driver-driven, nothing to compensate. The row appears on the driver's first transition, because creating it inside the order saga would be a side effect with no compensation in a saga step | `trips`, `TripRepository` |
+| The ride's status is the order saga's row **overlaid** by the trip's, and only while the saga says `ASSIGNED`. A cancelled saga stays cancelled whatever a stale trip row says | `PetichRideRepository` |
+| One petich engine runs **both** sagas: `supports(payload)` is what the interceptor list is filtered by, so two step lists in one engine is the design rather than a compromise | `sagaEngine`, renamed from `orderSagaEngine` |
+| A capture needs an **amount**. The first version captured the whole hold, which is right for a fare and charges a rider the entire journey for a car they sent away | `PaymentGateway.capture(hold, amountCents)` |
+| A settlement's AUTHORIZATION compensation is a **refund**, not a release: the money moved. `PaymentGateway` grew a fourth method rather than reusing the third | `CaptureStep.compensate` |
+
+**The amount is the finding worth keeping.** `capture(hold)` read correctly, passed the fare tests,
+and was wrong for the other half of §1.4c — the cancellation fee — in a way no fare test could see.
+It was the *fee* test that caught it, expecting a quarter and getting the lot: a settlement is five
+phases and one number, and the number was the one thing not being carried.
+
+**And three pieces were already written and joined to nothing**: `capture` implemented since B-11 and
+called by nobody, `SendReceiptUseCase` tested against a real SMTP server (B-14) and bound in no DI
+module, `PayoutRepository` not existing at all. That is the same shape as
+[B-32](../backlog/B-32-which-screens-the-server-sends.md)'s kompot finding and
+[§1.7e](#consequence-17e)'s 409 — a mechanism built at one end and joined at neither.
+
 **Consequence 1.4d — EXECUTION has nothing to offer until something produces candidates.** The
 offer cascade (D5, B-12) is only a cascade if there are several drivers to cascade over: a geo-index
 of online drivers, a candidate query by class and distance, and — for a demo with no real drivers —

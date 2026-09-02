@@ -75,7 +75,13 @@ internal fun ShiftWithAnOffer() {
     }
 }
 
-/** What was accepted. No map and no "I have arrived": see `DriverAssignedRide` for why. */
+/**
+ * What was accepted, and the one thing to do about it.
+ *
+ * **The button is the golden's subject** (B-37): B-29 photographed this screen with nothing to press
+ * because the server had no route for the trip's transitions. The state here is `ASSIGNED`, so the
+ * action is "on my way" — and the last one, pressed at the end of the trip, is what takes the money.
+ */
 @ViddikScreenshot(name = "assigned ride", group = "driver", width = 390, height = 844)
 @Composable
 internal fun AssignedRide() {
@@ -93,6 +99,7 @@ internal fun AssignedRide() {
                         driverId = "driver-1",
                     ),
                 ),
+            onAction = { },
         )
     }
 }

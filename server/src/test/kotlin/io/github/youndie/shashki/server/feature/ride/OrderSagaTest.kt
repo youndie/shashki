@@ -19,7 +19,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RideAssignedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
-import io.github.youndie.shashki.server.feature.ride.saga.orderSagaEngine
+import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
@@ -89,7 +89,7 @@ class OrderSagaTest {
     @Test
     fun `a ride runs through every phase, holds the fare, reserves a driver and leaves one event in the outbox`() =
         runTest {
-            val result = runToAssigned(orderSagaEngine(steps, storage, clock), "ride-ok")
+            val result = runToAssigned(sagaEngine(steps, storage, clock), "ride-ok")
 
             assertIs<PetichResult.Success>(result)
             assertEquals(PetichStatus.COMPLETED, result.petich.status)
@@ -116,7 +116,7 @@ class OrderSagaTest {
                 PetichPhase.EXECUTION,
                 PetichPhase.POST_PROCESSING,
             )) {
-                val engine = orderSagaEngine(steps.withDeathAt(dieBefore), storage, clock)
+                val engine = sagaEngine(steps.withDeathAt(dieBefore), storage, clock)
                 val id = "ride-dies-before-$dieBefore"
 
                 var result = engine.process(order(id))
@@ -170,7 +170,7 @@ class OrderSagaTest {
             // A fresh process picks the row up: the sweeper, a retried request, or the next call
             // for that id. It continues at EXECUTION — not re-running AUTHORIZATION and holding
             // twice — asks a driver and parks; the driver's answer finishes it.
-            val engineB = orderSagaEngine(steps, storage, clock)
+            val engineB = sagaEngine(steps, storage, clock)
             val firstPass = engineB.process(checkNotNull(storage.petiches.findById("ride-resumed")))
             assertIs<PetichResult.ActionRequired>(firstPass)
             assertEquals(
@@ -197,7 +197,7 @@ class OrderSagaTest {
     fun `no cars nearby compensates the hold rather than leaving the rider charged`() =
         runTest {
             val result =
-                orderSagaEngine(
+                sagaEngine(
                     stepsWith(FixedCandidateSource(emptyList())),
                     storage,
                     clock,
@@ -212,7 +212,7 @@ class OrderSagaTest {
         runTest {
             val far = order("ride-far", pickup = GeoPoint(48.8566, 2.3522))
 
-            val result = orderSagaEngine(steps, storage, clock).process(far)
+            val result = sagaEngine(steps, storage, clock).process(far)
 
             assertIs<PetichResult.Error>(result)
             assertEquals(emptyList(), payments.activeHolds().toList())

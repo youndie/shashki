@@ -31,6 +31,35 @@ public enum class RideStatus {
     CANCELLED,
 }
 
+/**
+ * The order a trip goes in, and the only place it is written down.
+ *
+ * **On the wire rather than in the server, because both sides need it and a copy would drift.** The
+ * server refuses a transition that is not the next one; the driver's client has to know which button
+ * to draw. Those are two questions with one answer, and the moment they are two lists the client
+ * offers a button the server refuses.
+ *
+ * A list and not four booleans: the property worth testing is that it is a *sequence*, and a refusal
+ * has to be able to name which state was expected.
+ */
+public object TripProgression {
+    public val ORDER: List<RideStatus> =
+        listOf(
+            RideStatus.ASSIGNED,
+            RideStatus.ARRIVING,
+            RideStatus.ARRIVED,
+            RideStatus.IN_PROGRESS,
+            RideStatus.COMPLETED,
+        )
+
+    public fun next(from: RideStatus): RideStatus? = ORDER.getOrNull(ORDER.indexOf(from) + 1)
+
+    public fun isNext(
+        from: RideStatus,
+        to: RideStatus,
+    ): Boolean = next(from) == to
+}
+
 /** The service class a rider chooses, and the only axis pricing varies on today. */
 @Serializable
 public enum class RideClass {
@@ -148,6 +177,34 @@ public data class OfferView(
     val dropoff: GeoPoint,
     val expiresAtEpochMs: Long,
     val nowEpochMs: Long,
+)
+
+/**
+ * How a driver moves a trip along: `POST /api/driver/rides/{rideId}/advance`.
+ *
+ * **One route with a target rather than four verbs**, because the interesting behaviour is the
+ * *order*: `ARRIVING → ARRIVED → IN_PROGRESS → COMPLETED`, one step at a time, and a driver who
+ * skips one has to be refused. Four verbs would spread that rule across four handlers; one route
+ * puts it in one place with one test.
+ *
+ * The trip is not a saga (research §1.4c): these transitions are the driver's own and there is
+ * nothing to compensate. What `COMPLETED` starts *is* a saga, and that is the settlement.
+ */
+@Resource("/api/driver/rides")
+public class DriverRides {
+    @Resource("{rideId}/advance")
+    public class Advance(
+        public val parent: DriverRides = DriverRides(),
+        public val rideId: String,
+    )
+}
+
+/** `driverId` is a field until B-09 puts it in the driver's token, like every other one here. */
+@Serializable
+public data class TripAdvance(
+    val driverId: String,
+    /** The state the driver says the trip has reached. Only the next one is accepted. */
+    val to: RideStatus,
 )
 
 /**

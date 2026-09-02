@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride.saga
 
+import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -24,7 +25,10 @@ public fun sagaJson(): Json =
         ignoreUnknownKeys = true
         serializersModule =
             SerializersModule {
-                polymorphic(PetichPayload::class) { subclass(OrderPayload::class) }
+                polymorphic(PetichPayload::class) {
+                    subclass(OrderPayload::class)
+                    subclass(SettlementPayload::class)
+                }
                 polymorphic(EnrichedPayload::class) { subclass(SimpleEnrichedPayload::class) }
             }
     }
@@ -41,7 +45,13 @@ public class SagaStorage(
 }
 
 /**
- * The order saga's engine, and the two settings that are decisions rather than defaults.
+ * The engine, and the two settings that are decisions rather than defaults.
+ *
+ * **One engine for both sagas, because that is what `supports` is for.** The order saga and the
+ * settlement (B-37) have different steps and different payloads; each interceptor answers whether it
+ * handles the payload in front of it, so one engine over both step lists runs whichever saga the row
+ * carries. Two engines would be two configurations to keep in step and two places to forget
+ * `requireOutbox`.
  *
  * **`requireOutbox = true`.** Without it an engine whose repository cannot store events drops them,
  * the saga completes, its state is correct, and only the consumer at the far end never runs
@@ -52,7 +62,7 @@ public class SagaStorage(
  * if it ever does, something has changed under this constructor, and a counter nobody reads is not
  * the place to find out.
  */
-public fun orderSagaEngine(
+public fun sagaEngine(
     steps: List<PetichInterceptor<*>>,
     storage: SagaStorage,
     clock: PetichClock = PetichClock { System.currentTimeMillis() },

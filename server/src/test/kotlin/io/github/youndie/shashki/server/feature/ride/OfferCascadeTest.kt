@@ -19,7 +19,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
-import io.github.youndie.shashki.server.feature.ride.saga.orderSagaEngine
+import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
@@ -74,7 +74,7 @@ class OfferCascadeTest {
             DriverAnswerStep(FixedCandidateSource(), reservations, offers),
             PublishAssignedStep(json),
         )
-    private val engine = orderSagaEngine(steps, storage, clock)
+    private val engine = sagaEngine(steps, storage, clock)
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()

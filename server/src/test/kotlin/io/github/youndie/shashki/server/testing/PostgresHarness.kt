@@ -36,7 +36,12 @@ object PostgresHarness {
 
     fun truncateAll() {
         dataSource.connection.use { connection ->
-            connection.createStatement().use { it.execute("TRUNCATE TABLE petiches, outbox_events") }
+            // **Every table the server writes, not the two it used to have.** A payout left behind
+            // by one test made the next one fail on a primary key and report it as a systemic saga
+            // failure — a message about petich for a fact about the fixture (B-37).
+            connection.createStatement().use {
+                it.execute("TRUNCATE TABLE petiches, outbox_events, trips, payouts")
+            }
             connection.commit()
         }
     }

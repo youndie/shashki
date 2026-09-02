@@ -1,6 +1,8 @@
 package io.github.youndie.shashki.server.db
 
+import io.github.youndie.shashki.server.billing.PayoutsTable
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
+import io.github.youndie.shashki.server.feature.trip.data.TripsTable
 import io.github.youndie.shashki.server.testing.PostgresHarness
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -16,10 +18,12 @@ import kotlin.test.assertEquals
  * request runs one first.
  */
 class SchemaTest {
-    private val tables: List<Table> = listOf(PetichTable(sagaJson()), OutboxEventsTable())
+    // petich's two, plus the two the settlement needs: a trip is not a saga and a payout is a
+    // ledger row (research §1.4c, B-37).
+    private val tables: List<Table> = listOf(PetichTable(sagaJson()), OutboxEventsTable(), TripsTable, PayoutsTable)
 
     @Test
-    fun `the migrated schema needs no further DDL for petich's tables`() {
+    fun `the migrated schema needs no further DDL for the tables the server declares`() {
         val required =
             transaction(PostgresHarness.database) {
                 MigrationUtils.statementsRequiredForDatabaseMigration(*tables.toTypedArray())
@@ -27,13 +31,13 @@ class SchemaTest {
         assertEquals(
             emptyList(),
             required,
-            "V1 does not match the Exposed tables; still required:\n" + required.joinToString("\n"),
+            "the migrations do not match the Exposed tables; still required:\n" + required.joinToString("\n"),
         )
     }
 
     @Test
     fun `the schema test is looking at something`() {
         // The guard on the guard: an empty list is also what an empty table list produces.
-        assertEquals(2, tables.size)
+        assertEquals(4, tables.size)
     }
 }
