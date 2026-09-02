@@ -31,6 +31,15 @@ public class SettlementPayload(
     public val riderEmail: String? = null,
     public val pickup: String,
     public val dropoff: String,
+    /**
+     * How the rider pays, for the settlement that has no hold behind it (B-44).
+     *
+     * A tip arrives after the fare has been captured and the hold is gone, so it is a fresh charge
+     * against the card rather than a bigger capture — and a charge needs the card.
+     */
+    public val paymentMethodId: String = "",
+    /** What the rider gave on top, in cents. Nought for the two settlements that are not a tip. */
+    public val tipCents: Long = 0,
 ) : PetichPayload() {
     /**
      * Which of the two settlements this is.
@@ -40,7 +49,19 @@ public class SettlementPayload(
      * charged. After it, the trip ended early and somebody is owed something anyway: that is this
      * saga with [FEE] instead of [FARE], and it is the same five phases.
      */
-    public enum class Kind { FARE, FEE }
+    public enum class Kind {
+        FARE,
+        FEE,
+
+        /**
+         * Money on top, after everything else is over (B-44).
+         *
+         * **A settlement of its own rather than a sixth phase**, because by definition it arrives
+         * after the one that finished: the five phases are the same, what differs is that
+         * AUTHORIZATION charges instead of capturing, and the driver keeps all of it.
+         */
+        TIP,
+    }
 }
 
 /** Keys into the settlement's enriched payload — what each step leaves for the ones after it. */
@@ -49,6 +70,9 @@ public object Settled {
     public const val PAYOUT_AMOUNT: String = "payout.amountCents"
     public const val CURRENCY: String = "charge.currency"
     public const val RECEIPT: String = "receipt.sent"
+
+    /** What the gateway called the tip's charge, so the compensation can give it back. */
+    public const val CHARGE_ID: String = "charge.id"
 }
 
 /** The saga's `type` column, and the only string that names it. */

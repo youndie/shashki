@@ -41,11 +41,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (8)
+## Open (7)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[ ]` | Finished: rate the driver and tip, and the tip is a second charge | P1 | M | - |
 | [B-45](docs/backlog/B-45-history-from-the-broker.md) `[ ]` | History: the rider's rides, drawn natively from the broker's projection | P1 | M | - |
 | [B-46](docs/backlog/B-46-driver-earnings-from-payouts.md) `[ ]` | Driver earnings: today, this week, and the payouts that already exist | P1 | S | - |
 | [B-48](docs/backlog/B-48-light-goldens-for-every-screen.md) `[ ]` | Every screen fixture gains its light variant, which open question 1 promised | P1 | S | - |
@@ -54,7 +53,7 @@ re-prioritising one must never move its file.
 | [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
 | [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
-## Closed (44)
+## Closed (45)
 
 **Remove the unknowns**
 
@@ -116,6 +115,7 @@ re-prioritising one must never move its file.
 **The rest of the kit, and the hole the endpoint table names**
 
 - [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[x]` - The rider sees the wait and its end: matching, no cars nearby, and cancel
+- [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[x]` - Finished: rate the driver and tip, and the tip is a second charge
 - [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[x]` - The driver's four routes stop being public: the hole the endpoint table names
 
 <!-- END INDEX -->

@@ -19,6 +19,7 @@ import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
+import io.github.youndie.shashki.rider.feature.ride.ui.FinishedScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.MatchingScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.TripScreen
 import io.github.youndie.shashki.ui.RiderTheme
@@ -146,7 +147,25 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                 entry<RiderRoute.Trip> { route ->
                     TripScreen(
                         rideId = route.rideId,
-                        onFinished = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
+                        // **A finished ride is R8 and not the picker** (B-44). `COMPLETED` used to
+                        // pop the trip and leave the rider back where they started, with no sum, no
+                        // rating and nowhere to put a tip.
+                        onFinished = {
+                            if (backStack.isNotEmpty()) backStack.removeAt(backStack.size - 1)
+                            backStack.add(RiderRoute.Finished(route.rideId))
+                        },
+                        onFailed = { },
+                    )
+                }
+                entry<RiderRoute.Finished> { route ->
+                    FinishedScreen(
+                        rideId = route.rideId,
+                        // Done means done: back to the picker, with nothing of this ride on the
+                        // stack to come back to.
+                        onDone = {
+                            while (backStack.size > 1) backStack.removeAt(backStack.size - 1)
+                            backStack[0] = RiderRoute.ClassPicker
+                        },
                         onFailed = { },
                     )
                 }
@@ -214,6 +233,7 @@ private val SAVED_STATE =
                 polymorphic(NavKey::class) {
                     subclass(RiderRoute.ClassPicker::class)
                     subclass(RiderRoute.Callback::class)
+                    subclass(RiderRoute.Finished::class)
                     subclass(RiderRoute.Matching::class)
                     subclass(RiderRoute.Trip::class)
                     subclass(RiderRoute.Promo::class)

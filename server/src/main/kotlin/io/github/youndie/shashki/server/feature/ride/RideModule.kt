@@ -15,6 +15,7 @@ import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.dispatch.OfferBoard
+import io.github.youndie.shashki.server.dispatch.RatedCandidates
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.EventsConfig
 import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
@@ -23,6 +24,9 @@ import io.github.youndie.shashki.server.feature.events.domain.InMemoryRideHistor
 import io.github.youndie.shashki.server.feature.events.domain.RideHistory
 import io.github.youndie.shashki.server.feature.promo.DegradationCounter
 import io.github.youndie.shashki.server.feature.quote.PickupEta
+import io.github.youndie.shashki.server.feature.rating.data.ExposedRatingRepository
+import io.github.youndie.shashki.server.feature.rating.domain.RateRideUseCase
+import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
@@ -147,12 +151,16 @@ public fun rideModule(
         // **One candidate list for the wait and for the dispatch** (B-42). Both used to ask
         // `GeoCandidateSource` and only one of them filtered out drivers who were already carrying
         // somebody, so a rider was shown a wait for a car no order could get.
-        single<CandidateSource> { FreeCandidates(GeoCandidateSource(get(), get()), get()) }
+        single<CandidateSource> { FreeCandidates(RatedCandidates(GeoCandidateSource(get(), get()), get()), get()) }
         single<DriverReservations> { InMemoryDriverReservations() }
         single<OfferBoard> { InMemoryOfferBoard() }
         // The socket's half of the driver's token, and the count of frames that did not match it
         // (B-52). Both in memory and per process: a ticket outlives its socket by thirty seconds and
         // a count is for a graph.
+        // What the rider thought of the ride, and the one number the candidate sort has that is not
+        // geometry (B-44).
+        single<RatingRepository> { ExposedRatingRepository(database) }
+        factory { RateRideUseCase(rides = get(), ratings = get()) }
         single { DriverTickets(get()) }
         single { DroppedFrames() }
 

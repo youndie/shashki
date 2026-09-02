@@ -1,7 +1,7 @@
 ---
 id: B-44
 title: "Finished: rate the driver and tip, and the tip is a second charge"
-status: open
+status: done
 priority: P1
 size: M
 stage: stage-5-the-rest-of-the-kit
@@ -42,3 +42,44 @@ on top of it.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/billing/PaymentGateway.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/GeoCandidateSource.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/`
+
+## What it turned out to be
+
+**A tip is not a bigger number, it is a different mechanism — and saying so cost four small things
+rather than one big one.** `capture` cannot exceed its hold, here or at a real provider, and the hold
+was the quote and is gone by the time R8 is on screen. So the gateway grew `charge`, and everything
+downstream of it needed its own key: the payout table's primary key became `(ride_id, kind)`, the
+saga's row id became `<ride>:tip`, and the outbox event became `<ride>:tipped`. **The last one was
+found by a test rather than by thinking**: the tip's settlement failed with a
+`BatchUpdateException` wearing a saga's clothes — "settlement `<ride>:tip` failed systemically" —
+because the outbox key is the idempotence of one settlement and a tip is a second one.
+
+**The driver keeps the whole tip.** A platform cut of a tip is a policy, and a demo that invented one
+would be teaching it. What the compensation refunds is the tip's *own* charge — the id the step left
+in the enriched payload — and not the payload's hold, which for a tip is the fare the rider was happy
+with.
+
+**The rating is the first time the candidate sort's second key is not a constant.** It used to arrive
+in the driver's own position frame, so the sorted party chose it; it is now the average of what riders
+recorded, with the frame's value left as the fallback for a driver nobody has rated. What did *not*
+change is the order — the item allowed either answer provided the research says why, and
+[§1.6d](../research/research-architecture.md) does: any coefficient that makes "a three-star car
+fifty metres away sorts behind a five-star one at a hundred" come out right is a number chosen to
+make that one example come out right.
+
+**Two guards did their jobs on the way past.** `GlyphCoverageTest` refused `★`/`☆` — the bundled face
+has neither, and a character no bundled font can draw falls back to whatever the host has, which is a
+different width and moves its neighbours; the stars are a vector now. And `SchemaTest` refused the
+migration until the `DEFAULT 'FARE'` came back off the new column: a default that lives only in the
+database is a rule the application cannot see. The fixture had its own version of the same
+carelessness — `truncateAll` did not know about `ratings`, so one test's five averaged into the
+next test's three and the assertion read 4.0.
+
+- AC 1: `POST /api/rides/{id}/rating` and `/tip`, both on the rider's tier, both 409 before
+  `COMPLETED`; the tip is a `charge` with a payout row of its own, and
+  `a tip that dies before its payout gives the money back` is the B-11 shape for money with no hold.
+- AC 2: `screens_rider_finished`, with the sum read from `RideView.chargedCents`. Light variants when
+  [B-48](B-48-light-goldens-for-every-screen.md) lands, as with B-43's three.
+- AC 3: answered by the research rather than by a coefficient, which is the branch the item offered.
+  What the code does hold is that the number is the riders' — `a rating a rider gave is the rating
+  dispatch sees` asserts a 3 where the socket reported 4.9.

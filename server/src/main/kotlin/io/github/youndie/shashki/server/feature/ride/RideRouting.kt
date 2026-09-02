@@ -1,13 +1,20 @@
 package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.shashki.protocol.AssignedDriverView
+import io.github.youndie.shashki.protocol.RideRating
 import io.github.youndie.shashki.protocol.RideRequest
+import io.github.youndie.shashki.protocol.RideStatus
+import io.github.youndie.shashki.protocol.RideTip
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.server.dispatch.DriverIndex
+import io.github.youndie.shashki.server.feature.rating.domain.NotFinishedException
+import io.github.youndie.shashki.server.feature.rating.domain.RateRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
+import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
+import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
@@ -52,6 +59,8 @@ public fun Route.rideRoutes(protected: Boolean = false) {
 private fun Route.riderRoutes() {
     val requestRide by inject<RequestRideUseCase>()
     val cancelRide by inject<CancelRideUseCase>()
+    val rateRide by inject<RateRideUseCase>()
+    val settle by inject<SettleRideUseCase>()
     val rides by inject<RideRepository>()
     val index by inject<DriverIndex>()
     val clock by inject<PetichClock>()
@@ -66,6 +75,32 @@ private fun Route.riderRoutes() {
     }
 
     get<Rides.ById> { route ->
+        call.respond(rides.find(route.id) ?: throw RideNotFoundException(route.id))
+    }
+
+    // **R8's two, and they are the rider's** (B-44): the same tier as ordering, because rating a
+    // driver and giving them money are things somebody does about their own ride. Declared here
+    // rather than in their own `Route.` function so the switch that protects them stays one switch.
+    post<Rides.Rate> { route ->
+        val body = call.receive<RideRating>()
+        rateRide(RateRideUseCase.Params(route.id, body.stars)).getOrThrow()
+        // **204 and not the rating back.** `Rating` is a domain type and answering with it would put
+        // it on the wire, which is the thing `:protocol` exists to prevent — the first version did
+        // exactly that and the client got "Serializer for class 'Rating' is not found". There is
+        // nothing to show either: the screen knows what it sent.
+        call.respond(HttpStatusCode.NoContent)
+    }
+
+    post<Rides.Tip> { route ->
+        val body = call.receive<RideTip>()
+        val ride = rides.find(route.id) ?: throw RideNotFoundException(route.id)
+        // Refused before the ride is over, like the rating: a tip for a journey still running is a
+        // charge for something nobody has received.
+        if (ride.status != RideStatus.COMPLETED) throw NotFinishedException(route.id, ride.status)
+        require(body.amountCents > 0) { "a tip of ${body.amountCents} cents is not a tip" }
+        settle(
+            SettleRideUseCase.Params(route.id, SettlementPayload.Kind.TIP, tipCents = body.amountCents),
+        ).getOrThrow()
         call.respond(rides.find(route.id) ?: throw RideNotFoundException(route.id))
     }
 

@@ -85,13 +85,18 @@ public class ChargeAndPayoutStep(
             when (payload.kind) {
                 SettlementPayload.Kind.FARE -> payload.quote.amountCents
                 SettlementPayload.Kind.FEE -> commission.feeOf(payload.quote.amountCents)
+                SettlementPayload.Kind.TIP -> payload.tipCents
             }
+        // **The whole tip goes to the driver** (B-44). A platform cut of a tip is a policy, and a
+        // demo that invented one would be teaching it; the rider gave the money to a person.
+        val payout =
+            if (payload.kind == SettlementPayload.Kind.TIP) charge else commission.payoutOf(charge)
         return InterceptorResult.Proceed(
             enrichedPayload =
                 SimpleEnrichedPayload(
                     mapOf(
                         Settled.CHARGE_AMOUNT to charge.toString(),
-                        Settled.PAYOUT_AMOUNT to commission.payoutOf(charge).toString(),
+                        Settled.PAYOUT_AMOUNT to payout.toString(),
                         Settled.CURRENCY to payload.quote.currency,
                     ),
                 ),
@@ -173,6 +178,15 @@ public class CaptureStep(
     ): InterceptorResult {
         val charge =
             petich.enriched(Settled.CHARGE_AMOUNT)?.toLongOrNull() ?: error("AUTHORIZATION reached with no amount")
+        // **A tip has no hold to take, so it is a charge** (B-44): the fare's hold was captured when
+        // the trip ended and is gone, and `capture` cannot exceed a hold in this gateway or in a
+        // real one. What comes back is the id the refund below needs.
+        if (payload.kind == SettlementPayload.Kind.TIP) {
+            val id = payments.charge(payload.paymentMethodId, charge, payload.quote.currency)
+            return InterceptorResult.Proceed(
+                enrichedPayload = SimpleEnrichedPayload(mapOf(Settled.CHARGE_ID to id.value)),
+            )
+        }
         payments.capture(HoldId(payload.holdId), charge)
         return InterceptorResult.Proceed()
     }
@@ -181,7 +195,10 @@ public class CaptureStep(
         petich: Petich,
         payload: SettlementPayload,
     ) {
-        payments.refund(HoldId(payload.holdId))
+        // The tip's own charge, or the fare's hold. A compensation that refunded the hold for a tip
+        // would give back the fare — the ride the rider was happy with.
+        val id = petich.enriched(Settled.CHARGE_ID) ?: payload.holdId
+        payments.refund(HoldId(id))
     }
 }
 
@@ -197,7 +214,7 @@ public class PayoutStep(
     ): InterceptorResult {
         val amount = petich.enriched(Settled.PAYOUT_AMOUNT)?.toLongOrNull() ?: error("EXECUTION reached with no payout")
         val currency = petich.enriched(Settled.CURRENCY) ?: error("EXECUTION reached with no currency")
-        payouts.record(Payout(payload.rideId, payload.driverId, amount, currency))
+        payouts.record(Payout(payload.rideId, payload.driverId, amount, currency, payload.payoutKind()))
         return InterceptorResult.Proceed()
     }
 
@@ -205,9 +222,15 @@ public class PayoutStep(
         petich: Petich,
         payload: SettlementPayload,
     ) {
-        payouts.remove(payload.rideId)
+        payouts.remove(payload.rideId, payload.payoutKind())
     }
 }
+
+/** The outbox key's tail: one event per settlement, and a tip is a second settlement. */
+private fun SettlementPayload.eventSuffix(): String = if (kind == SettlementPayload.Kind.TIP) "tipped" else "settled"
+
+/** A tip is the ride's second payout row; everything else is its first. */
+private fun SettlementPayload.payoutKind(): String = if (kind == SettlementPayload.Kind.TIP) Payout.TIP else Payout.FARE
 
 /**
  * POST_PROCESSING: the event, and the receipt.
@@ -235,7 +258,9 @@ public class PublishSettledStep(
     ): InterceptorResult {
         val charge = petich.enriched(Settled.CHARGE_AMOUNT)?.toLongOrNull() ?: error("nothing was charged")
         val payout = petich.enriched(Settled.PAYOUT_AMOUNT)?.toLongOrNull() ?: error("nothing was paid out")
-        val sent = sendReceipt(payload, charge)
+        // **No receipt for a tip** (B-44): the rider was already sent what the ride cost, and a
+        // second mail saying "you were generous" is a mail nobody asked for.
+        val sent = if (payload.kind == SettlementPayload.Kind.TIP) false else sendReceipt(payload, charge)
 
         val event =
             RideSettledEvent(
@@ -252,7 +277,12 @@ public class PublishSettledStep(
             outboxEvents =
                 listOf(
                     RideOutboxEvent(
-                        id = "${payload.rideId}:settled",
+                        // **A tip's event is its own row.** The outbox key is the idempotence — one
+                        // settlement, one event — and a tip is a second settlement about the same
+                        // ride, so it needs a second key rather than a collision. The first version
+                        // did not have one, and the failure arrived as a `BatchUpdateException`
+                        // wearing a saga's clothes: "settlement <ride>:tip failed systemically".
+                        id = "${payload.rideId}:${payload.eventSuffix()}",
                         type = RideSettledEvent.TYPE,
                         payload = json.encodeToString(RideSettledEvent.serializer(), event),
                     ),

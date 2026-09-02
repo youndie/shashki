@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.HoldId
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
+import io.github.youndie.shashki.server.billing.Payout
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
@@ -108,6 +109,48 @@ class SettlementSagaTest {
             assertEquals(fee * 80 / 100, assertNotNull(payouts.find(RIDE)).amountCents)
             // The rest of the hold is not taken and not held: a rider who cancelled owes the fee.
             assertEquals(emptyList(), payments.activeHolds().toList())
+        }
+
+/**
+     * **A tip is the same five phases and a different kind of money** (B-44).
+     *
+     * There is no hold behind it — the fare's was captured when the trip ended — so AUTHORIZATION
+     * charges the card instead, EXECUTION writes a *second* payout row for the ride, and the driver
+     * keeps all of it: a platform cut of a tip is a policy this product would be teaching if it
+     * invented one.
+     */
+    @Test
+    fun `a tip charges the card, pays the driver in full and leaves the fare alone`() =
+        runTest {
+            val result =
+                sagaEngine(steps(), storage, clock)
+                    .process(settlement(HoldId("no-hold"), SettlementPayload.Kind.TIP, tip = TIP))
+
+            assertIs<PetichResult.Success>(result)
+            assertEquals(listOf(TIP), payments.captured().map { it.amountCents }, "the tip was not charged")
+            assertEquals(TIP, assertNotNull(payouts.find(RIDE, Payout.TIP)).amountCents)
+            assertNull(payouts.find(RIDE), "a tip wrote itself over the fare's payout")
+        }
+
+    /**
+     * **The B-11 shape, for the money that has no hold** (B-44): a process that dies between the
+     * charge and the payout row must leave neither half standing. The compensation refunds the
+     * *charge* — the id the step left behind — and not the payload's hold, which for a tip is the
+     * fare the rider was happy with.
+     */
+    @Test
+    fun `a tip that dies before its payout gives the money back`() =
+        runTest {
+            val engine = sagaEngine(steps().withDeathAt(PetichPhase.EXECUTION), storage, clock)
+
+            val result =
+                engine.process(
+                    settlement(HoldId("no-hold"), SettlementPayload.Kind.TIP, id = "tip-death", tip = TIP),
+                )
+
+            assertTrue(result !is PetichResult.Success)
+            assertEquals(emptyList(), payments.captured().toList(), "the tip stayed charged")
+            assertNull(payouts.find(RIDE, Payout.TIP), "a payout survived the death")
         }
 
     /** B-37's second and third criteria, at every boundary. */
@@ -233,6 +276,7 @@ class SettlementSagaTest {
         hold: HoldId,
         kind: SettlementPayload.Kind,
         id: String = RIDE_SAGA,
+        tip: Long = 0,
     ) = Petich(
         id = id,
         type = SETTLEMENT_SAGA_TYPE,
@@ -249,6 +293,8 @@ class SettlementSagaTest {
                 riderEmail = EMAIL,
                 pickup = "46.0511, 14.5051",
                 dropoff = "46.2237, 14.4576",
+                paymentMethodId = "card-4417",
+                tipCents = tip,
             ),
     )
 
@@ -284,6 +330,9 @@ class SettlementSagaTest {
         const val RIDE = "ride-1"
         const val RIDE_SAGA = "ride-1:settlement"
         const val EMAIL = "rider@example.com"
+
+        /** What the kit's R8 offers as its middle button. */
+        const val TIP = 500L
         const val FARE = 2_690L
     }
 }

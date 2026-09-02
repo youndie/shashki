@@ -41,6 +41,21 @@ public interface PaymentGateway {
      */
     public fun refund(hold: HoldId)
 
+    /**
+     * Money on top of a ride that is already paid for: a tip (B-44).
+     *
+     * **Not a larger capture, and the interface is where that is said.** `capture` cannot exceed its
+     * hold — a real provider's cannot either — and the hold was the quote. Raising the hold at quote
+     * time to leave room for a tip charges every rider for one they may never give, which is the
+     * kind of thing that gets a product a headline. So this is what it is: a fresh authorisation and
+     * capture in one, with no hold behind it, refundable like any other capture.
+     */
+    public fun charge(
+        paymentMethodId: String,
+        amountCents: Long,
+        currency: String,
+    ): HoldId
+
     /** What is currently held, for the one question the saga's tests ask: is anything left. */
     public fun activeHolds(): Collection<Hold>
 
@@ -97,6 +112,17 @@ public class InMemoryPaymentGateway : PaymentGateway {
         }
         holds.remove(hold)
         captured[hold] = held.copy(amountCents = amountCents)
+    }
+
+    override fun charge(
+        paymentMethodId: String,
+        amountCents: Long,
+        currency: String,
+    ): HoldId {
+        require(amountCents > 0) { "a charge of $amountCents cents is not a charge" }
+        val id = HoldId("charge-${++next}")
+        captured[id] = Hold(id, paymentMethodId, amountCents, currency)
+        return id
     }
 
     override fun refund(hold: HoldId) {

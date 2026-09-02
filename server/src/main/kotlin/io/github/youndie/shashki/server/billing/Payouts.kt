@@ -1,7 +1,9 @@
 package io.github.youndie.shashki.server.billing
 
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -15,7 +17,20 @@ public data class Payout(
     val driverId: String,
     val amountCents: Long,
     val currency: String,
-)
+    /**
+     * Which settlement owes it (B-44).
+     *
+     * **A tip is a second payout for the same ride**, so this is half the primary key. It is not the
+     * settlement running twice — that still collides, which is the idempotence the table was built
+     * for — it is a different settlement about the same ride.
+     */
+    val kind: String = FARE,
+) {
+    public companion object {
+        public const val FARE: String = "FARE"
+        public const val TIP: String = "TIP"
+    }
+}
 
 /**
  * The payout ledger, such as it is.
@@ -31,9 +46,18 @@ public data class Payout(
 public interface PayoutRepository {
     public fun record(payout: Payout)
 
-    public fun remove(rideId: String)
+    public fun remove(
+        rideId: String,
+        kind: String = Payout.FARE,
+    )
 
-    public fun find(rideId: String): Payout?
+    public fun find(
+        rideId: String,
+        kind: String = Payout.FARE,
+    ): Payout?
+
+    /** Everything owed for a ride — the fare's share and the tip, when there is one. */
+    public fun forRide(rideId: String): List<Payout>
 }
 
 public object PayoutsTable : Table("payouts") {
@@ -42,8 +66,9 @@ public object PayoutsTable : Table("payouts") {
     public val amountCents: Column<Long> = long("amount_cents")
     public val currency: Column<String> = varchar("currency", 3)
     public val createdAt: Column<Long> = long("created_at")
+    public val kind: Column<String> = varchar("kind", 20)
 
-    override val primaryKey: PrimaryKey = PrimaryKey(rideId)
+    override val primaryKey: PrimaryKey = PrimaryKey(rideId, kind)
 }
 
 public class ExposedPayoutRepository(
@@ -58,27 +83,46 @@ public class ExposedPayoutRepository(
                 it[amountCents] = payout.amountCents
                 it[currency] = payout.currency
                 it[createdAt] = now()
+                it[kind] = payout.kind
             }
         }
     }
 
-    override fun remove(rideId: String) {
-        transaction(database) { PayoutsTable.deleteWhere { PayoutsTable.rideId eq rideId } }
+    override fun remove(
+        rideId: String,
+        kind: String,
+    ) {
+        transaction(database) {
+            PayoutsTable.deleteWhere { (PayoutsTable.rideId eq rideId) and (PayoutsTable.kind eq kind) }
+        }
     }
 
-    override fun find(rideId: String): Payout? =
+    override fun find(
+        rideId: String,
+        kind: String,
+    ): Payout? =
+        transaction(database) {
+            PayoutsTable
+                .selectAll()
+                .where { (PayoutsTable.rideId eq rideId) and (PayoutsTable.kind eq kind) }
+                .singleOrNull()
+                ?.toPayout()
+        }
+
+    override fun forRide(rideId: String): List<Payout> =
         transaction(database) {
             PayoutsTable
                 .selectAll()
                 .where { PayoutsTable.rideId eq rideId }
-                .singleOrNull()
-                ?.let {
-                    Payout(
-                        it[PayoutsTable.rideId],
-                        it[PayoutsTable.driverId],
-                        it[PayoutsTable.amountCents],
-                        it[PayoutsTable.currency],
-                    )
-                }
+                .map { it.toPayout() }
         }
 }
+
+private fun ResultRow.toPayout() =
+    Payout(
+        this[PayoutsTable.rideId],
+        this[PayoutsTable.driverId],
+        this[PayoutsTable.amountCents],
+        this[PayoutsTable.currency],
+        this[PayoutsTable.kind],
+    )

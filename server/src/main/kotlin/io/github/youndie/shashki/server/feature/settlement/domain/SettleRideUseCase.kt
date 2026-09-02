@@ -53,8 +53,10 @@ public class SettleRideUseCase(
                     riderEmail = payload.riderEmail,
                     pickup = payload.pickup.asText(),
                     dropoff = payload.dropoff.asText(),
+                    paymentMethodId = payload.paymentMethodId,
+                    tipCents = params.tipCents,
                 )
-            val id = settlementId(params.rideId)
+            val id = settlementId(params.rideId, params.kind)
             when (
                 val result =
                     engine.process(
@@ -69,6 +71,8 @@ public class SettleRideUseCase(
     public class Params(
         public val rideId: String,
         public val kind: SettlementPayload.Kind,
+        /** What the rider gave on top, for [SettlementPayload.Kind.TIP] and nothing else. */
+        public val tipCents: Long = 0,
     )
 
     private fun Map<String, String>.quote(): Quote? {
@@ -88,8 +92,17 @@ public class SettleRideUseCase(
         "${(lat * PLACES).toLong() / PLACES}, ${(lon * PLACES).toLong() / PLACES}"
 
     public companion object {
-        /** The settlement's row id for a ride. One string, in one place, used by both sides. */
-        public fun settlementId(rideId: String): String = "$rideId:settlement"
+        /**
+         * The settlement's row id for a ride. One string, in one place, used by both sides.
+         *
+         * **A tip gets its own** (B-44): it is a second settlement about the same ride, arriving
+         * after the first has completed, and writing it under the same key would overwrite the
+         * record of what the ride itself cost.
+         */
+        public fun settlementId(
+            rideId: String,
+            kind: SettlementPayload.Kind = SettlementPayload.Kind.FARE,
+        ): String = if (kind == SettlementPayload.Kind.TIP) "$rideId:tip" else "$rideId:settlement"
 
         private const val PLACES = 10_000.0
     }

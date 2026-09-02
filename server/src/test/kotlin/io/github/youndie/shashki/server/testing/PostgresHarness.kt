@@ -40,7 +40,10 @@ object PostgresHarness {
             // by one test made the next one fail on a primary key and report it as a systemic saga
             // failure — a message about petich for a fact about the fixture (B-37).
             connection.createStatement().use {
-                it.execute("TRUNCATE TABLE petiches, outbox_events, trips, payouts")
+                // `ratings` joined the list with B-44 — and left the same footprint on the way
+                // in: a rating from one test averaged into the next one's, and the assertion about
+                // a sort key read 4.0 for a driver the test had just given a 3.
+                it.execute("TRUNCATE TABLE petiches, outbox_events, trips, payouts, ratings")
             }
             connection.commit()
         }

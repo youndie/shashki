@@ -9,6 +9,7 @@ import io.github.youndie.shashki.server.feature.events.eventRoutes
 import io.github.youndie.shashki.server.feature.promo.degradationRoutes
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
+import io.github.youndie.shashki.server.feature.rating.domain.NotFinishedException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
@@ -137,6 +138,11 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
         }
         exception<NothingToSettleException> { call, e ->
             call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "nothing to settle"))
+        }
+        // Rating or tipping a ride that has not finished (B-44). A 409 and not a 400: the request is
+        // well formed and will be correct in a few minutes.
+        exception<NotFinishedException> { call, e ->
+            call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "the ride is not over"))
         }
         exception<OfferGoneException> { call, e ->
             call.respond(

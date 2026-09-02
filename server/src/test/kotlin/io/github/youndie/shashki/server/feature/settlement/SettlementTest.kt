@@ -10,14 +10,18 @@ import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.Quotes
 import io.github.youndie.shashki.protocol.QuotesView
 import io.github.youndie.shashki.protocol.RideClass
+import io.github.youndie.shashki.protocol.RideRating
 import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.RideStatus
+import io.github.youndie.shashki.protocol.RideTip
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.protocol.RouteRequest
 import io.github.youndie.shashki.protocol.TripAdvance
 import io.github.youndie.shashki.server.billing.PaymentGateway
+import io.github.youndie.shashki.server.billing.Payout
 import io.github.youndie.shashki.server.billing.PayoutRepository
+import io.github.youndie.shashki.server.dispatch.CandidateSource
 import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
@@ -34,6 +38,7 @@ import io.ktor.client.plugins.resources.post
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -335,6 +340,92 @@ class SettlementTest {
             )
         }
 
+/**
+     * **R8, through the routes** (B-44): the rating and the tip, each refused while the ride is
+     * still running, and each landing where it belongs afterwards.
+     */
+    @Test
+    fun `rating and tipping are refused until the ride is over`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+
+            assertEquals(HttpStatusCode.Conflict, client.rate(ride.id, stars = 5).status, "a ride in progress")
+            assertEquals(HttpStatusCode.Conflict, client.tip(ride.id, TIP).status, "a ride in progress")
+
+            drive(client, ride.id)
+
+            val rated = client.rate(ride.id, stars = 5)
+            assertEquals(HttpStatusCode.NoContent, rated.status, rated.bodyAsText())
+            val tipped = client.tip(ride.id, TIP)
+            assertEquals(HttpStatusCode.OK, tipped.status, tipped.bodyAsText())
+        }
+
+    /**
+     * **The tip is money on top, and the driver keeps it all.** The fare's capture is what the ride
+     * cost; the tip is a second charge with its own payout row, and the two are visible side by
+     * side — which is the assertion that the tip did not quietly grow the capture.
+     */
+    @Test
+    fun `a tip is a second charge with a payout row of its own`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+            drive(client, ride.id)
+            val fare = assertNotNull(ride.quote).amountCents
+
+            client.tip(ride.id, TIP)
+
+            val taken =
+                app
+                    .get<PaymentGateway>()
+                    .captured()
+                    .map { it.amountCents }
+                    .sorted()
+            assertEquals(listOf(TIP, fare).sorted(), taken, "the tip was not a charge of its own")
+
+            val payouts = app.get<PayoutRepository>().forRide(ride.id).associateBy { it.kind }
+            assertEquals(fare * PLATFORM_REMAINDER / HUNDRED, assertNotNull(payouts[Payout.FARE]).amountCents)
+            assertEquals(TIP, assertNotNull(payouts[Payout.TIP]).amountCents, "the platform took a cut of a tip")
+        }
+
+    /**
+     * **The rating becomes the number the candidate sort reads** (B-44) — the first time that key is
+     * something other than every driver's default. What it does *not* do is reorder by rating alone:
+     * distance is still first, and research §1.6d says why no coefficient was invented.
+     */
+    @Test
+    fun `a rating a rider gave is the rating dispatch sees`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+            drive(client, ride.id)
+
+            // The socket reports 4.9 and the rider says three: the sort must read the rider's.
+            client.rate(ride.id, stars = 3)
+
+            val candidates = app.get<CandidateSource>().candidates(PICKUP, RideClass.ECONOMY)
+            assertEquals(3.0, assertNotNull(candidates.firstOrNull { it.driverId == DRIVER }).rating)
+        }
+
     /** The order is the point of the route: a driver cannot arrive at a ride they have not started. */
     @Test
     fun `a transition that is not the next one is refused`() =
@@ -394,6 +485,22 @@ class SettlementTest {
         }.body()
 
     private suspend fun HttpClient.read(rideId: String): RideView = get(Rides.ById(id = rideId)).body()
+
+    private suspend fun HttpClient.rate(
+        rideId: String,
+        stars: Int,
+    ) = post(Rides.Rate(id = rideId)) {
+        contentType(ContentType.Application.Json)
+        setBody(RideRating(stars))
+    }
+
+    private suspend fun HttpClient.tip(
+        rideId: String,
+        amountCents: Long,
+    ) = post(Rides.Tip(id = rideId)) {
+        contentType(ContentType.Application.Json)
+        setBody(RideTip(amountCents))
+    }
 
     /** What the rider's class tile shows for economy: a wait in seconds, or nothing. */
     private suspend fun HttpClient.economyWait(): Int? =
@@ -475,6 +582,9 @@ class SettlementTest {
         /** `Commission.DEFAULT`, restated so the test fails when somebody changes the split. */
         const val PLATFORM_REMAINDER = 80L
         const val CANCELLATION_PERCENT = 25L
+
+        /** The kit's middle tip button. */
+        const val TIP = 500L
         const val HUNDRED = 100L
     }
 }

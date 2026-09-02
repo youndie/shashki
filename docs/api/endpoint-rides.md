@@ -67,6 +67,26 @@ puts it in the token, so a token proves somebody signed in and not that the ride
 That divergence is [research §1.4c](../research/research-architecture.md) and is most of why this
 product exists; `SettlementTest` shows both numbers in one test.
 
+## The two things a rider does when it is over (B-44)
+
+| Method and path | Auth tier | Purpose |
+|---|---|---|
+| `POST /api/rides/{id}/rating` | rider token | one to five, once, and only after `COMPLETED` (204) |
+| `POST /api/rides/{id}/tip` | rider token | money on top: a **charge**, not a bigger capture |
+
+**A tip is a settlement of its own.** The hold the order saga took was the quote and the fare's
+capture consumed it; `capture` cannot exceed a hold here or at a real provider, so a tip is a fresh
+authorisation and capture against the card — `PaymentGateway.charge` — with its own payout row
+(`payouts.kind = TIP`), its own saga id (`<ride>:tip`), its own outbox event (`<ride>:tipped`) and
+its own compensation, which refunds *that* charge and not the fare. The driver keeps all of it: a
+platform cut of a tip is a policy, and a demo that invented one would be teaching it.
+
+**Both are refused with 409 before the ride is over**, which is the same answer for the same reason
+as the settlement's own: the request is well formed and will be correct in a few minutes.
+
+**`RideView.chargedCents` is what was actually taken**, which is what R8 shows. The quote is what the
+ride was going to cost; for a cancellation the two differ by three quarters.
+
 **`RideView.cancellationFeeCents` is that table as a number** (B-43): `0` while the saga is waiting,
 the fee once a driver is assigned, `null` when the ride can no longer be cancelled. It is on the wire
 because R10 shows the amount before the button, and a client that multiplied the fare by 0.25 itself

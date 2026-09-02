@@ -776,6 +776,23 @@ another driver is dropped and counted. Rewriting it would file somebody else's p
 connected driver, and a count is what makes a client whose id and token disagree visible instead of
 merely absent.
 
+**Consequence 1.6d — the sort key stopped being a constant, and no coefficient was invented for it
+(2026-09-02, [B-44](../backlog/B-44-finished-rate-and-tip.md)).** B-20 sorts candidates by distance
+and then by rating; until R8 existed the rating came from the driver's own position frame, so the
+second key was a number the sorted party chose and every one of them chose the same. It is now the
+average of what riders recorded, and a driver nobody has rated keeps the frame's value — `null`
+rather than a flattering five, because "not rated yet" and "rated three" are different facts.
+
+**What did *not* change is the order, and the item allowed either answer provided this paragraph
+exists.** A trade — a three-star car fifty metres away sorting behind a five-star one at a hundred —
+needs a coefficient converting stars into metres, and any number that makes that one example come out
+right is a number chosen to make that one example come out right. The honest reasons for keeping
+distance first: the wait is what a rider actually experiences and it is measured in the same units as
+itself; a rating in this product is an average of a handful of values, so the difference between 4.6
+and 4.9 is noise; and a driver who is further away is further away for everybody, while a rating is a
+fact about a person that a sort can quietly turn into a livelihood. The place to spend a rating is a
+floor — below it, no offers — and a floor needs a volume of ratings this product does not have.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

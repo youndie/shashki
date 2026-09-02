@@ -13,6 +13,7 @@ import io.github.youndie.shashki.ui.screens.CancelPrompt
 import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
+import io.github.youndie.shashki.ui.screens.RiderFinished
 import io.github.youndie.shashki.ui.screens.RiderMatching
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
@@ -143,6 +144,37 @@ internal fun RiderCancelConfirmFixture() {
                     confirmLabel = "cancel the ride",
                     dismissLabel = "keep waiting",
                 ),
+        )
+    }
+}
+
+/**
+ * R8: what the ride cost, how it was, and whether to add anything (B-44).
+ *
+ * **The sum is the settlement's capture and not the quote**, which is the same number for a fare and
+ * a quarter of it for a cancellation — a screen showing the quote would be right until the first
+ * ride that ended early. Three stars are filled because a still has to choose one; the interaction
+ * is that tapping the third means three.
+ *
+ * *skip* sits in the tip row at the size of the other buttons: the common answer is no tip, and a
+ * product whose refusal is harder to find than its consent is doing something else.
+ */
+@ViddikScreenshot(name = "rider finished", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderFinishedFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderFinished(
+            total = "$ 28.96",
+            destination = "airport · 22.8 km",
+            driver = "driver-1",
+            stars = 3,
+            tips = listOf("$ 2", "$ 5", "$ 10"),
+            selectedTip = 1,
+            doneLabel = "done",
+            onStars = {},
+            onTip = {},
+            onDone = {},
         )
     }
 }

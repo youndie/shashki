@@ -48,6 +48,21 @@ public object ShashkiIcons {
             stroked("M13 13.5V24")
         }
 
+    /**
+     * A rating, one glyph per star (B-44).
+     *
+     * **A vector and not `★`.** The bundled face has neither U+2605 nor U+2606, and
+     * `GlyphCoverageTest` said so the moment the first version of R8 used them: a character no
+     * bundled font can draw falls back to whatever the host happens to have, which is a different
+     * width and moves everything beside it. Filled and hollow are the same path with and without a
+     * fill, so the two states cannot drift apart.
+     */
+    public fun star(filled: Boolean): ImageVector =
+        vector("star-$filled") {
+            val points = "M13 3.5l3 6.2 6.8 1-4.9 4.8 1.2 6.8-6.1-3.2-6.1 3.2 1.2-6.8L3.2 10.7l6.8-1z"
+            if (filled) filled(points) else stroked(points)
+        }
+
     /** Confirm: order, accept, arrived. The kit's tick. */
     public val check: ImageVector =
         vector("check") {

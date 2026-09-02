@@ -26,6 +26,18 @@ public interface RideRepository {
 
     public suspend fun cancel(rideId: String)
 
+    /** R8's first half: one to five, once, and only after the ride is over (B-44). */
+    public suspend fun rate(
+        rideId: String,
+        stars: Int,
+    )
+
+    /** R8's second half. Cents, because the server must not have to agree about what 10% is. */
+    public suspend fun tip(
+        rideId: String,
+        amountCents: Long,
+    )
+
     /** The road between two points, for the line the rider watches the car travel along. */
     public suspend fun route(
         from: GeoPoint,

@@ -6,7 +6,9 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
+import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
+import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichPhase
@@ -34,8 +36,21 @@ public class PetichRideRepository(
         // was arriving, because the saga is the record and the trip is the overlay.
         val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED }
         val current = trip?.let { ride.copy(status = it.status) } ?: ride
-        return current.copy(cancellationFeeCents = current.cancellationFee())
+        return current.copy(
+            cancellationFeeCents = current.cancellationFee(),
+            // **What the settlement took, read off the settlement's own row** (B-44). It lives in a
+            // different saga — `<ride>:settlement` — because the ride's row is the order's; reading
+            // it here is what lets R8 show a sum rather than a promise.
+            chargedCents = charged(id),
+        )
     }
+
+    private suspend fun charged(rideId: String): Long? =
+        petiches
+            .findById(SettleRideUseCase.settlementId(rideId))
+            ?.let { (it.enrichedPayload as? SimpleEnrichedPayload)?.data }
+            ?.get(Settled.CHARGE_AMOUNT)
+            ?.toLongOrNull()
 
     /**
      * What cancelling this ride would cost right now (B-43).

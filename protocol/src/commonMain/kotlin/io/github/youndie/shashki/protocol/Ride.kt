@@ -123,6 +123,14 @@ public data class RideView(
      * `0` and `null` are different answers: free to cancel, and too late to cancel.
      */
     val cancellationFeeCents: Long? = null,
+    /**
+     * What was actually taken, once the settlement has taken it (B-44).
+     *
+     * **The quote is what the ride was going to cost and this is what it did.** R8 shows a sum, and
+     * showing the quote there would be a screen that is right until the first cancellation fee — a
+     * quarter of the fare, charged and displayed as the whole of it.
+     */
+    val chargedCents: Long? = null,
 )
 
 /**
@@ -133,6 +141,29 @@ public data class RideView(
  */
 @Resource("/api/rides")
 public class Rides {
+    /**
+     * `POST /api/rides/{id}/rating` — the kit's R8, first half (B-44).
+     *
+     * Refused before `COMPLETED`: a rating of a ride that has not ended is a rating of nothing.
+     */
+    @Resource("{id}/rating")
+    public class Rate(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
+
+    /**
+     * `POST /api/rides/{id}/tip` — R8's second half.
+     *
+     * **A charge and not a bigger capture**: the hold was the quote and it is gone by the time this
+     * is called. See the settlement's `Kind.TIP`.
+     */
+    @Resource("{id}/tip")
+    public class Tip(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
+
     @Resource("{id}")
     public class ById(
         public val parent: Rides = Rides(),
@@ -245,6 +276,24 @@ public class DriverRides {
         public val rideId: String,
     )
 }
+
+/** What the rider thought of it: one to five, and nothing else — R8 has no comment box. */
+@Serializable
+public data class RideRating(
+    val stars: Int,
+)
+
+/**
+ * What the rider gave on top, in cents.
+ *
+ * **Cents and not a percentage**, because the screen offers amounts and the server must not have to
+ * agree with the client about what 10% of a fare is. The fare is already known to both of them; the
+ * number that moves money is the one that travels.
+ */
+@Serializable
+public data class RideTip(
+    val amountCents: Long,
+)
 
 /** `driverId` is a field until B-09 puts it in the driver's token, like every other one here. */
 @Serializable

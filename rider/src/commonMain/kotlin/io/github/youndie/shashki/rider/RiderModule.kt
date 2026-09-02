@@ -20,10 +20,14 @@ import io.github.youndie.shashki.rider.feature.ride.data.HttpRideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
+import io.github.youndie.shashki.rider.feature.ride.domain.RateRideUseCase
+import io.github.youndie.shashki.rider.feature.ride.domain.ReadRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RideRepository
+import io.github.youndie.shashki.rider.feature.ride.domain.TipRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.WatchDriverUseCase
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerViewModel
+import io.github.youndie.shashki.rider.feature.ride.ui.FinishedViewModel
 import io.github.youndie.shashki.rider.feature.ride.ui.MatchingViewModel
 import io.github.youndie.shashki.rider.feature.ride.ui.TripViewModel
 import io.github.youndie.shashki.ui.map.CanvasMapSurface
@@ -155,6 +159,9 @@ public fun riderModule(
         factory { QuoteJourneyUseCase(get()) }
         factory { RequestRideUseCase(get()) }
         factory { CancelRideUseCase(get()) }
+        factory { ReadRideUseCase(get()) }
+        factory { RateRideUseCase(get()) }
+        factory { TipRideUseCase(get()) }
         factory { ObserveRideUseCase(get()) }
         factory { WatchDriverUseCase(get()) }
 
@@ -202,6 +209,7 @@ public fun riderModule(
         }
         viewModel { (rideId: String) -> MatchingViewModel(rideId, get(), get()) }
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
+        viewModel { (rideId: String) -> FinishedViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
     }
 

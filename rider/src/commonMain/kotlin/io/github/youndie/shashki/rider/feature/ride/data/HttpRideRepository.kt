@@ -4,7 +4,9 @@ import io.github.youndie.shashki.protocol.AssignedDriverView
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.Quotes
 import io.github.youndie.shashki.protocol.QuotesView
+import io.github.youndie.shashki.protocol.RideRating
 import io.github.youndie.shashki.protocol.RideRequest
+import io.github.youndie.shashki.protocol.RideTip
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.protocol.RouteRequest
@@ -38,6 +40,20 @@ public class HttpRideRepository(
 
     override suspend fun cancel(rideId: String) {
         client.post(Rides.Cancel(id = rideId))
+    }
+
+    override suspend fun rate(
+        rideId: String,
+        stars: Int,
+    ) {
+        client.post(Rides.Rate(id = rideId)) { setBody(RideRating(stars)) }
+    }
+
+    override suspend fun tip(
+        rideId: String,
+        amountCents: Long,
+    ) {
+        client.post(Rides.Tip(id = rideId)) { setBody(RideTip(amountCents)) }
     }
 
     override suspend fun route(

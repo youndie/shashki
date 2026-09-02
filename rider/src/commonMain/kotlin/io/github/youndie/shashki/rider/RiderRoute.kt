@@ -50,6 +50,14 @@ public sealed interface RiderRoute : NavKey {
         override val path: String get() = "/matching/$rideId"
     }
 
+    /** R8: what the ride cost, and the two things a rider can still do about it (B-44). */
+    @Serializable
+    public data class Finished(
+        val rideId: String,
+    ) : RiderRoute {
+        override val path: String get() = "/finished/$rideId"
+    }
+
     @Serializable
     public data class Trip(
         val rideId: String,
@@ -84,6 +92,10 @@ public sealed interface RiderRoute : NavKey {
                     path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 }
 
+                path.startsWith(FINISHED_PREFIX) -> {
+                    path.removePrefix(FINISHED_PREFIX).takeIf { it.isNotBlank() }?.let(::Finished)
+                }
+
                 path.startsWith(MATCHING_PREFIX) -> {
                     path.removePrefix(MATCHING_PREFIX).takeIf { it.isNotBlank() }?.let(::Matching)
                 }
@@ -95,5 +107,6 @@ public sealed interface RiderRoute : NavKey {
 
         private const val TRIP_PREFIX = "/trip/"
         private const val MATCHING_PREFIX = "/matching/"
+        private const val FINISHED_PREFIX = "/finished/"
     }
 }

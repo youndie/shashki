@@ -88,6 +88,39 @@ public class ObserveRideUseCase(
     }
 }
 
+/** The ride, once. R8 needs what was charged, and that is a read rather than a loop (B-44). */
+public class ReadRideUseCase(
+    private val rides: RideRepository,
+) : UseCase<String, RideView> {
+    override suspend fun invoke(params: String): Result<RideView> = suspendRunCatching { rides.read(params) }
+}
+
+/** One to five, once, after the ride is over. The server refuses the rest. */
+public class RateRideUseCase(
+    private val rides: RideRepository,
+) : UseCase<RateRideUseCase.Params, Unit> {
+    override suspend fun invoke(params: Params): Result<Unit> =
+        suspendRunCatching { rides.rate(params.rideId, params.stars) }
+
+    public class Params(
+        public val rideId: String,
+        public val stars: Int,
+    )
+}
+
+/** Money on top, in cents: the server charges the card again rather than growing a hold that is gone. */
+public class TipRideUseCase(
+    private val rides: RideRepository,
+) : UseCase<TipRideUseCase.Params, Unit> {
+    override suspend fun invoke(params: Params): Result<Unit> =
+        suspendRunCatching { rides.tip(params.rideId, params.amountCents) }
+
+    public class Params(
+        public val rideId: String,
+        public val amountCents: Long,
+    )
+}
+
 /** Calling it off. Kept a use case rather than a repository call because the saga compensates. */
 public class CancelRideUseCase(
     private val rides: RideRepository,

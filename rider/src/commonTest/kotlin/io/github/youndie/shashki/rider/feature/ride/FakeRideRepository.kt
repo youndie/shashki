@@ -27,6 +27,8 @@ internal class FakeRideRepository(
 ) : RideRepository {
     var requested: RideRequest? = null
     var cancelled: String? = null
+    var rated: Int? = null
+    var tipped: Long? = null
     var reads: Int = 0
 
     override suspend fun quotes(
@@ -47,6 +49,20 @@ internal class FakeRideRepository(
 
     override suspend fun cancel(rideId: String) {
         cancelled = rideId
+    }
+
+    override suspend fun rate(
+        rideId: String,
+        stars: Int,
+    ) {
+        rated = stars
+    }
+
+    override suspend fun tip(
+        rideId: String,
+        amountCents: Long,
+    ) {
+        tipped = amountCents
     }
 
     override suspend fun route(
