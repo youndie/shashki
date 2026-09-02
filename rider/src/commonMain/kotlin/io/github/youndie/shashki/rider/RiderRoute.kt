@@ -94,6 +94,15 @@ public sealed interface RiderRoute : NavKey {
                     Promo
                 }
 
+                // **R9 was addressable outbound and unrecognised inbound.** B-45 gave History a
+                // path, the address bar pushed it, and this `when` never learned it: refreshing the
+                // page on the rider's own trips — or pasting the link — landed on the class picker
+                // with the address rewritten to `/`. Found by opening the product; the round-trip
+                // test listed three routes of seven by hand and this was not one of them.
+                path == History.path -> {
+                    History
+                }
+
                 path.startsWith(TRIP_PREFIX) -> {
                     path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 }

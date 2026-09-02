@@ -14,7 +14,26 @@ import kotlin.test.assertNull
 class RiderRouteTest {
     @Test
     fun `every route survives a round trip through its own address`() {
-        val routes = listOf(RiderRoute.ClassPicker, RiderRoute.Callback, RiderRoute.Trip("ride-7"))
+        // **All seven, because three of seven is how `/trips` got out.** This list used to name
+        // `ClassPicker`, `Callback` and `Trip`; `History` was one of the four nobody added, so R9's
+        // address went out into the address bar and came back `null` — a refresh on the rider's own
+        // trips landed on the class picker with the URL rewritten to `/`. Found by opening the
+        // product, not here.
+        //
+        // Asking the sealed serializer for its subclasses would make this self-maintaining and does
+        // not work: the descriptor of a sealed root is `type` + `value`, and the `value` element is
+        // CONTEXTUAL rather than a closed set on this version. So the list is by hand, and the rule
+        // is written where it can be read: **a route added to `RiderRoute` is added here.**
+        val routes =
+            listOf(
+                RiderRoute.ClassPicker,
+                RiderRoute.Callback,
+                RiderRoute.History,
+                RiderRoute.Promo,
+                RiderRoute.Trip("ride-7"),
+                RiderRoute.Matching("ride-7"),
+                RiderRoute.Finished("ride-7"),
+            )
 
         for (route in routes) {
             assertEquals(route, RiderRoute.ofPath(route.path), "${route.path} did not come back as itself")
