@@ -33,6 +33,7 @@ re-prioritising one must never move its file.
 | `stage-2-saga` | The order survives the process dying | The core of the demo: phases, compensations, the outbox, and an offer that waits for a human without holding anything. |
 | `stage-3-surface` | Everything past the core | Receipts, crash reports, rebuildability — the parts that are ordinary work once the three above are settled. |
 | `stage-4-elsewhere` | It runs somewhere that is not this laptop | Packaging and deployment. A separate stage because the question changes: the four above ask whether it works, this one asks whether somebody else can run it — and the answers are artefacts rather than code. |
+| `stage-5-the-rest-of-the-kit` | The rest of the kit, and the hole the endpoint table names | v2. v1 closed with every library placed and about seven of the kit's twenty-five screens drawn (research §5). What is left is the product's surface — the wait, the cancel, the rating, the history, the earnings — and one documented hole, the driver's public routes, which goes first because it is the one item that makes a written guarantee false. |
 
 ## Marks
 
@@ -40,11 +41,21 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (1)
+## Open (11)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-42](docs/backlog/B-42-a-driver-is-reserved-for-life.md) `[ ]` | A driver who finishes a ride is reserved for ever, and the rider is still shown their wait | P0 | S | - |
+| [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[ ]` | The rider sees the wait and its end: matching, no cars nearby, and cancel | P0 | M | - |
+| [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[ ]` | The driver's four routes stop being public: the hole the endpoint table names | P0 | M | - |
+| [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[ ]` | Finished: rate the driver and tip, and the tip is a second charge | P1 | M | - |
+| [B-45](docs/backlog/B-45-history-from-the-broker.md) `[ ]` | History: the rider's rides, drawn natively from the broker's projection | P1 | M | - |
+| [B-46](docs/backlog/B-46-driver-earnings-from-payouts.md) `[ ]` | Driver earnings: today, this week, and the payouts that already exist | P1 | S | - |
+| [B-48](docs/backlog/B-48-light-goldens-for-every-screen.md) `[ ]` | Every screen fixture gains its light variant, which open question 1 promised | P1 | S | - |
+| [B-47](docs/backlog/B-47-driver-onboarding-and-the-object-store.md) `[?]` | Driver onboarding, which is the one scenario the object store has left | P2 | L | B-52 |
+| [B-49](docs/backlog/B-49-the-drivers-real-position.md) `[?]` | The driver's real position, from the browser, or the reason it stays configured | P2 | S | B-52 |
+| [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
+| [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
 ## Closed (41)
 
@@ -148,6 +159,17 @@ settlement saga. Research §1.4c records it because the first `RideStatus` KDoc 
 the saga, and a matching design built on that reading would have put the trip's states inside
 EXECUTION. Matching itself, and the simulated drivers a cascade needs, were not items at all until
 [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md).
+
+**v1 is a boundary, not a finish line, and the boundary is written down.** Forty-one items closed
+on 2026-09-02 with an empty backlog, and an empty backlog reads as "everything is done" rather than
+"what was decided is done". Research §5 records the difference: every library in the brief is used,
+hosted or explicitly dropped, both sagas run and are killed at their boundaries, and about seven of
+the kit's twenty-five artboards are screens. The v2 stage exists so that the other eighteen are a
+list rather than an impression — and so that the one documented hole, the driver's public routes,
+does not survive as a sentence in an endpoint table. The first thing the stand found once v1 was
+"done" — [B-42](docs/backlog/B-42-a-driver-is-reserved-for-life.md), a driver reserved for life after
+one ride — is the same finding as B-32, B-37 and B-41 in a fourth place: two ends of one fact, joined
+nowhere. That shape is now the thing to grep for before calling anything done.
 
 **A missing target is a finding, not a blocker.** Research §1.6 found four libraries whose published
 targets do not match what the brief assumes — booblik's client is JVM-only, katcher's has no browser

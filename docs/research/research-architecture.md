@@ -1807,7 +1807,13 @@ for an audience of nobody.
 
 ---
 
-## 4. What happens next
+## 4. What happens next — as written on 2026-09-01, kept as the record of what was expected
+
+*All four landed on 2026-09-02, and not in the shape this section predicted: D1's spike became a
+compilation rather than four prototypes, the hooks needed a publication and not just a merge, and
+the golden measurement was done before the components existed rather than after. §5 is what actually
+happened; this section stays because a plan that is deleted once it is overtaken is a plan nobody
+can compare with the result.*
 
 The order of work and the acceptance criteria live in [backlog.md](../../backlog.md). Four things
 have to be nailed down before anything else is worth building:
@@ -1828,9 +1834,87 @@ have to be nailed down before anything else is worth building:
 The server layers wait on none of these and can start in parallel: §1.4 and §1.5 verified that the
 saga and the server-driven screens map onto the brief as written.
 
+## 5. What v1 shows, and what it does not
+
+Written on 2026-09-02, the day the backlog reached zero open items and one item was filed against
+the running stand within the hour. This section is the boundary of v1, stated so that an empty
+backlog is not read as a finished product. Every claim below names the item that made it.
+
+### 5.1 The stack, library by library
+
+| Library | In v1 | How |
+|---|---|---|
+| kvadrant-ui | **used** | base of every screen; 0.2.0 grew two hooks for the kit (D3, B-22) |
+| viddik | **used** | the acceptance gate: goldens inside `check`, portable across hosts (B-02), wasm suite run in a headless browser (B-34) |
+| petich | **used** | two sagas on one engine, killed at every phase boundary (B-11, B-37) |
+| booblik | **used** | `ride-events` from the outbox, one consumer that shares nothing with the saga (B-38) |
+| kompot | **used** | one screen the server owns, degradation as a golden, the sink bound (D11, B-32, B-39) |
+| shildik | **used** | both bundles sign in; the rider's routes are behind the token (B-26, B-41) |
+| katcher | **used** | browser crash reports over the ingest endpoint, no client library (D6, B-10) |
+| metrik, tracy | **used** | wired and checked against each other, 8 = 8 = 8 (B-39) |
+| smtpkn | **used, on the JVM** | the receipt, gated on a real relay — its first JVM consumer (B-14) |
+| bochka | **a host, not a dependency** | serves the tile archive over public ranged HTTP (D12, B-07) |
+| GraphHopper | **used** | embedded, prepared at build time, 2.57 ms a route (B-23, B-35) |
+| s3kn | **not in the graph** | its one remaining scenario is a question, B-47 (D12) |
+| telek | **not used** | a bot toolkit, not an alerting system; the item that assumed otherwise says so (B-39) |
+| kompot-realtime-redis, maplibre-compose, appframe, mongkn | **not used** | one process (D7); no wasm artefact (D1); a browser product; Postgres |
+
+### 5.2 What a stranger can do with it
+
+Order a ride from a browser and watch a car come along real roads, on a map this product draws
+itself; be the driver in a second tab, take the offer inside fifteen seconds, drive the trip to its
+end with one button, and see the rider's money move — a hold taken by one saga, captured by another,
+a fee instead of a fare if the rider cancels after a driver was assigned. Kill the server at any
+phase boundary and find no held payment and no reserved driver. Read what happened to the ride off
+the broker rather than off the database. Run all of it with `docker compose up`.
+
+### 5.3 What it does not show, by kit artboard
+
+Of the kit's eighteen screens and seven state branches, v1 draws about seven: R1 sign-in, R4 class
+picker, R7 trip, R9's *promo* item, D0 sign-in, D2 shift, D3 offer, D4 assigned ride. Not drawn, and
+each is now an item rather than an impression:
+
+| Artboard | State of the mechanism behind it | Item |
+|---|---|---|
+| R5 matching, R5·a no cars, R10 cancel | the server produces every state; the rider is shown a trip screen with no car | B-43 |
+| R8 finished: rate and tip | no rating stored, so the candidate sort's second key is a constant; no tip, because a tip exceeds the hold | B-44 |
+| R9 trips, profile | `GET /api/rides/{id}/history` exists per ride; nothing lists a rider's rides; `TripRow` is registered and drawn nowhere | B-45 |
+| D6 earnings | payout rows exist for every settlement; nothing sums them | B-46 |
+| D1 onboarding | the object store's one client scenario; a question, not a plan | B-47 |
+| D2 offline branch, D5 trip complete | drawn partially — the shift screen has offline; the driver sees the settlement only as the ride's status | B-46 |
+| every light variant | promised by open question 1 and not recorded; the light theme is verified for a list row | B-48 |
+
+### 5.4 What it does not show, by property
+
+- **The driver's routes are public.** `endpoint-driver.md` says so, with "temporarily" — B-52 is the
+  item, and it is P0 because it is the one line that makes a documented guarantee false.
+- **Two ends of one fact, joined nowhere** — the shape this backlog found four times (kompot in
+  B-32, the settlement's pieces in B-37, sign-in in B-41, the reservation in B-42). None was found by
+  a test; each was found by asking whether something was *called*. B-42 is the first found by the
+  stand, and its own text names the check that would have found it earlier: "the class the ETA offers
+  is a class the saga can serve".
+- **One replica** (B-36), by the code rather than by caution; what lifting it costs is an option in
+  §1.6a's terms, not work.
+- **569 MB** (B-35), of which the process needs about a third. B-50.
+- **No real position** for a real driver; the bundle sends its configured point and says so. B-49.
+- **The map is a renderer, not an engine.** `TileRenderer` transcribes the two style documents' filters
+  and widths; it does not interpret style JSON. A third style would be code. Whether that engine
+  becomes its own library is the portfolio question §1.8 left open, and it is still open.
+
+### 5.5 What the two days were actually about
+
+Not the libraries. Every one of them did what its page said, and the four that did not reach a
+browser cost a paragraph each (§1.6). The work was the seams, and the seams were found in a pattern
+worth stating once: a mechanism gets built at both ends because each end is an item, and the join is
+nobody's — until something asks whether it is called. The documentation layer (B-40) found one of
+those; the stand (B-42) found another the same hour v1 closed. That is what a reference is for, and
+it is the sentence for the page (B-51).
+
 ## Code anchors
 
-There is no shashki source tree yet. What follows is what §1 was verified against; the paths are
+There is no shashki source tree yet. *(2026-09-02: there is, and its anchors live in the layer
+documents under `docs/features`, `docs/screens`, `docs/api` and `docs/services` (B-40) rather than
+here. What follows is unchanged: the sibling repositories §1 was verified against.)* What follows is what §1 was verified against; the paths are
 inside the sibling repositories of this stack, and they are what `code_anchors.py --repos ..`
 resolves.
 
