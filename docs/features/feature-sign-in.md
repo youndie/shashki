@@ -84,6 +84,20 @@ accept a token no client of ours can produce.
 * **Then:** `201` — and the same request with one character of the signature changed is `401`
 * **Automated:** `shashki ProtectedRidesTest`
 
+### Scenario: the application signs in and orders with what it got
+
+* **Given:** a running shildik and a running server that requires a token
+* **When:** the application's own `Session` runs the flow and orders a ride
+* **Then:** `201` — and the same request without the token is `401`
+* **Automated:** `shashki SignInJoinsUpTest`
+
+### Scenario: the verifier never goes out through the address bar
+
+* **Given:** an attempt about to redirect
+* **When:** the URL it hands the browser is examined
+* **Then:** it carries the challenge and the state, and not the verifier
+* **Automated:** `shashki SessionTest`
+
 ### Scenario: no token at all
 
 * **Given:** a server with a provider configured
@@ -107,9 +121,11 @@ accept a token no client of ours can produce.
   needed yet.
 * **The rider's email is on the order saga's payload**, taken from the token when there is one. It is
   what the receipt is sent to, and `null` is why a stand with no provider sends none.
-* **The rider application never sends the token, and this document found that out.** `SignInAttempt`
-  is built, tested against a live provider and proven in a browser; nothing in `:rider` calls it, and
-  the application's HTTP client attaches no `Authorization` header. So the two halves are each proven
-  against the other and **the product joins them nowhere** — with a provider configured, the rider
-  bundle gets 401 on every ride route. That is [B-41](../backlog/B-41-the-rider-actually-signs-in.md),
-  and it is why `docker/compose.yaml` has `SHASHKI_OIDC_ISSUER` commented out.
+* **The provider must have one address, and a container network makes that awkward.** The validator
+  reads `jwks_uri` out of the discovery document, which carries the *issuer's* own address — so a
+  server given an internal name is then sent to an address only a browser can reach, and refuses
+  every token with a 401 that looks exactly like a bad token. The stand uses the machine's own
+  address for both; `SHASHKI_HOST` is why.
+* **There is still no sign-in on open, and that is the tier rather than an omission.** Prices are
+  public, so the class picker loads anonymously and the redirect happens on the first protected
+  call.

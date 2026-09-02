@@ -15,9 +15,17 @@ public sealed interface RiderRoute : NavKey {
     /** The address this route occupies. **The browser's address bar is part of the interface.** */
     public val path: String
 
+    /**
+     * Where the provider sends the browser back to.
+     *
+     * **A route rather than a screen**, and it draws nothing: the application arrives here with a
+     * code in the query, exchanges it and goes to the start. What makes it a route at all is that the
+     * redirect URI has to be an address the provider will accept and this application will answer —
+     * `RiderRoute.ofPath` has to recognise it or the page after a sign-in is a shrug.
+     */
     @Serializable
-    public data object SignIn : RiderRoute {
-        override val path: String get() = "/sign-in"
+    public data object Callback : RiderRoute {
+        override val path: String get() = "/callback"
     }
 
     @Serializable
@@ -50,7 +58,7 @@ public sealed interface RiderRoute : NavKey {
         public fun ofPath(path: String): RiderRoute? =
             when {
                 path == "/" || path.isEmpty() -> ClassPicker
-                path == SignIn.path -> SignIn
+                path == Callback.path -> Callback
                 path == Promo.path -> Promo
                 path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 else -> null

@@ -16,6 +16,7 @@ import io.github.youndie.kompot.KompotActionHandler
 import io.github.youndie.kompot.standard.NavigateAction
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.crash.installCrashReporting
+import io.github.youndie.shashki.rider.feature.auth.domain.Session
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.TripScreen
@@ -146,17 +147,40 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                             },
                     )
                 }
-                entry<RiderRoute.SignIn> {
-                    // B-26's screen. The PKCE client is built and tested; what it needs is a shildik
-                    // to redirect to, which is that item's own precondition.
-                    ClassPickerScreen(
-                        scene = MapScene(camera = MapCamera(RiderConfig.LJUBLJANA_CENTRE)),
-                        onOrdered = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
-                        onFailed = { },
+                entry<RiderRoute.Callback> {
+                    // **Nothing is drawn here and nothing should be.** The provider has just sent
+                    // the browser back with a code in the query; what happens is an exchange and a
+                    // navigation, and a screen would be a flash of something on the way past.
+                    SignInCallback(
+                        onDone = {
+                            while (backStack.size > 1) backStack.removeAt(backStack.size - 1)
+                            backStack[0] = RiderRoute.ClassPicker
+                        },
                     )
                 }
             },
     )
+}
+
+/**
+ * The other half of the redirect: the code out of the query, exchanged, and then away from here.
+ *
+ * **The query is read from the address bar rather than from a route parameter.** Navigation 3's keys
+ * are `@Serializable` objects and the callback's payload is whatever the provider chose to put in the
+ * URL — including a `state` this application must compare and an `error` it may send instead. Parsing
+ * it where the browser keeps it is the honest place.
+ */
+@Composable
+private fun SignInCallback(onDone: () -> Unit) {
+    val session = koinInject<Session>()
+    val bar = remember { addressBar() }
+    LaunchedEffect(Unit) {
+        val query = bar.queryAt()
+        val code = query["code"]
+        val state = query["state"]
+        if (code != null && state != null) session.complete(code, state)
+        onDone()
+    }
 }
 
 /** The one deeplink this application answers. A name the server sends, not a path it chooses. */
@@ -172,7 +196,7 @@ private val SAVED_STATE =
             SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(RiderRoute.ClassPicker::class)
-                    subclass(RiderRoute.SignIn::class)
+                    subclass(RiderRoute.Callback::class)
                     subclass(RiderRoute.Trip::class)
                     subclass(RiderRoute.Promo::class)
                 }

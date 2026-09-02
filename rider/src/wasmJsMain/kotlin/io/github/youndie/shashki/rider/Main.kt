@@ -4,6 +4,7 @@ package io.github.youndie.shashki.rider
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
+import io.github.youndie.shashki.auth.SignInConfig
 import kotlinx.browser.document
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ public fun main() {
                     serverUrl = origin(),
                     riderId = "rider-1",
                     paymentMethodId = "card-4417",
+                    signIn = signInConfig(),
                     tilesUrl = tilesUrl().takeIf { it.isNotBlank() },
                     katcherUrl = katcherUrl().takeIf { it.isNotBlank() },
                     katcherAppKey = katcherAppKey().takeIf { it.isNotBlank() },
@@ -57,3 +59,30 @@ private external fun katcherAppKey(): String
 
 @JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.release) || 'dev'")
 private external fun release(): String
+
+/**
+ * The provider, read from the page like everything else about a deployment.
+ *
+ * **The redirect URI is this bundle's own origin plus `/callback`**, computed rather than configured:
+ * it has to be an address the provider accepts *and* this application answers, and a value somebody
+ * types into two places is a value that disagrees with itself. The provider's registered URI still
+ * has to match — that is the one part of this a deployment cannot derive.
+ */
+private fun signInConfig(): SignInConfig? {
+    val issuer = oidcIssuer().takeIf { it.isNotBlank() } ?: return null
+    return SignInConfig(
+        issuer = issuer,
+        realm = oidcRealm(),
+        clientId = oidcClient(),
+        redirectUri = origin() + RiderRoute.Callback.path,
+    )
+}
+
+@JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.oidcIssuer) || ''")
+private external fun oidcIssuer(): String
+
+@JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.oidcRealm) || 'shashki'")
+private external fun oidcRealm(): String
+
+@JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.oidcClient) || 'rider'")
+private external fun oidcClient(): String

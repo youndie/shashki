@@ -108,8 +108,8 @@ address search.
 * **The wait and the car are `4 min · Kia Rio` in the kit and only the first is real.** The vehicle is
   a dash, because `RideView` carries a `driverId` and nothing about the car, and the registration is
   what a rider checks a real car against.
-* **This screen cannot work against a server with a provider configured.** Its two calls are behind
-  the rider's token and the application attaches none — see
-  [B-41](../backlog/B-41-the-rider-actually-signs-in.md).
+* **This screen loads without a token and orders with one.** Prices are public, so it draws before
+  anybody signs in; `POST /api/rides` is not, so the first order redirects to the provider and comes
+  back. That asymmetry is the tier table doing its job rather than an inconsistency.
 * **The opening selection follows the cars.** `ECONOMY` is the default before anything is known; if
   nobody is driving one, staying there would leave a greyed row with the order bar live under it.

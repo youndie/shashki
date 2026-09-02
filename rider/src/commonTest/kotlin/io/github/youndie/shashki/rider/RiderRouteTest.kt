@@ -14,7 +14,7 @@ import kotlin.test.assertNull
 class RiderRouteTest {
     @Test
     fun `every route survives a round trip through its own address`() {
-        val routes = listOf(RiderRoute.ClassPicker, RiderRoute.SignIn, RiderRoute.Trip("ride-7"))
+        val routes = listOf(RiderRoute.ClassPicker, RiderRoute.Callback, RiderRoute.Trip("ride-7"))
 
         for (route in routes) {
             assertEquals(route, RiderRoute.ofPath(route.path), "${route.path} did not come back as itself")
@@ -24,7 +24,9 @@ class RiderRouteTest {
     @Test
     fun `the addresses are the ones somebody would paste`() {
         assertEquals("/", RiderRoute.ClassPicker.path)
-        assertEquals("/sign-in", RiderRoute.SignIn.path)
+        // The provider redirects here, so this string is registered in shildik as well as written
+        // here — the one address in this application that two systems have to agree about.
+        assertEquals("/callback", RiderRoute.Callback.path)
         assertEquals("/trip/ride-7", RiderRoute.Trip("ride-7").path)
     }
 

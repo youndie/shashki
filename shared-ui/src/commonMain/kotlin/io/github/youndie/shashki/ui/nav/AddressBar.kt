@@ -20,6 +20,15 @@ public interface AddressBar {
     /** Where the application was opened. `/` when there is no such notion. */
     public fun openedAt(): String
 
+    /**
+     * The query string of the current address, parsed.
+     *
+     * **A route is a path and a redirect answers with a query**, which is the one thing a
+     * `@Serializable` navigation key cannot carry: the provider chooses those parameters, including
+     * an `error` it may send instead of a `code`. Empty where there is no address bar.
+     */
+    public fun queryAt(): Map<String, String>
+
     /** Put [path] in the bar as a new entry, so the back button has somewhere to go. */
     public fun push(path: String)
 
@@ -36,6 +45,8 @@ public interface AddressBar {
  */
 public object NoAddressBar : AddressBar {
     override fun openedAt(): String = "/"
+
+    override fun queryAt(): Map<String, String> = emptyMap()
 
     override fun push(path: String): Unit = Unit
 

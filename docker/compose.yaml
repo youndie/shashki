@@ -41,7 +41,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SHILDIK_ISSUER: http://127.0.0.1:18081
+      # The address goes into every token as `iss` and into the discovery document as the host of
+      # `jwks_uri`, so it is the one both the browser and the shashki container must be able to reach.
+      SHILDIK_ISSUER: http://${SHASHKI_HOST:-127.0.0.1}:18081
       # Set explicitly, as shildik's own e2e harness does. Left out, the image died on start with a
       # panic from its native driver and nothing else in the log.
       SHILDIK_PORT: 8080
@@ -52,7 +54,9 @@ services:
       SHILDIK_MASTER_KEYS: change-me
       SHILDIK_BOOTSTRAP_TOKEN: bootstrap
     ports:
-      - "127.0.0.1:18081:8080"
+      # **Not loopback-bound, unlike everything else here.** A container cannot reach the host's
+      # loopback, and this is the one service the shashki container has to call.
+      - "18081:8080"
       - "127.0.0.1:19001:9000"
 
   # Where `city.pmtiles` lives. B-07 measured the load this takes — many small ranged reads into one
@@ -120,10 +124,21 @@ services:
       DB_URL: jdbc:postgresql://shashki-db:5432/shashki
       DB_USER: shashki
       DB_PASSWORD: secret
-      # The provider, so the rider signs in and the receipt has an address to go to. Commented out
-      # rather than absent: without `bootstrap-shildik.sh` the realm does not exist, and a server
-      # pointed at a realm nobody created refuses every token it is given.
-      # SHASHKI_OIDC_ISSUER: http://shildik:8080
+      # **One address for the provider, and it has to be one.** Giving the server an internal name
+      # and the browser an external one does not work: the validator reads `jwks_uri` out of the
+      # discovery document, which carries the *issuer's* own address — so a container that fetched
+      # discovery from inside the network was then sent to an address only a browser can reach, and
+      # answered 401 to every token.
+      #
+      # So `SHASHKI_HOST` is the machine's own address on its network: a container reaches it, and so
+      # does a browser on that machine. `127.0.0.1` is the default and works for everything except
+      # the container, which is why the stand asks for it:
+      #
+      #     SHASHKI_HOST=$(hostname -I | awk '{print $1}') docker compose up -d
+      #
+      # `bootstrap-shildik.sh` has to have run: a server pointed at a realm nobody created refuses
+      # every token, and the redirect URI registered there must be this bundle's origin + `/callback`.
+      SHASHKI_OIDC_ISSUER: http://${SHASHKI_HOST:-127.0.0.1}:18081
       #
       # Where the browser fetches tiles from. Not this server: B-07 settled that the archive is a
       # static object somewhere else, and 127.0.0.1 is the address a *browser* reaches bochka at.

@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server
 
+import io.github.youndie.shashki.server.feature.auth.AuthConfig
 import io.ktor.http.ContentType
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.response.respondText
@@ -89,7 +90,14 @@ private fun String.escaped(): String = replace("\\", "\\\\").replace("\"", "\\\"
 public fun pageValues(env: (String) -> String? = System::getenv): Map<String, String> =
     buildMap {
         for ((key, variable) in PAGE_VALUES) env(variable)?.takeIf { it.isNotBlank() }?.let { put(key, it) }
+        // The fallback, so a deployment with one address for the provider sets one variable.
+        if ("oidcIssuer" !in this) {
+            env(AuthConfig.ISSUER_VARIABLE)?.takeIf { it.isNotBlank() }?.let { put("oidcIssuer", it) }
+        }
     }
+
+/** Where a *browser* reaches the provider, when that is not where this server reaches it. */
+public const val PUBLIC_ISSUER_VARIABLE: String = "SHASHKI_OIDC_PUBLIC_ISSUER"
 
 private val PAGE_VALUES =
     listOf(
@@ -97,5 +105,17 @@ private val PAGE_VALUES =
         "katcherUrl" to "SHASHKI_KATCHER_URL",
         "katcherAppKey" to "SHASHKI_KATCHER_KEY",
         "release" to "SHASHKI_RELEASE",
+        // **The provider must have one address, and that is a deployment constraint rather than a
+        // simplification.** The first attempt at this gave the server an internal address and the
+        // browser an external one, on the theory that each could use what it could reach. It does
+        // not work: the validator reads `jwks_uri` out of the *discovery document*, which carries
+        // the issuer's own address — so the container fetched discovery from inside the network and
+        // was then sent to an address only the browser can reach, and refused every token with 401.
+        //
+        // `SHASHKI_OIDC_PUBLIC_ISSUER` remains for the case where the two genuinely differ behind a
+        // proxy, and falls back to the one the server verifies against (B-41).
+        "oidcIssuer" to PUBLIC_ISSUER_VARIABLE,
+        "oidcRealm" to AuthConfig.REALM_VARIABLE,
+        "oidcClient" to AuthConfig.CLIENT_VARIABLE,
         "driverId" to "SHASHKI_DRIVER_ID",
     )

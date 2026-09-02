@@ -10,6 +10,7 @@ import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundExceptio
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.resources.get
 import io.ktor.server.resources.post
@@ -17,6 +18,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
 import ru.workinprogress.oidc.JWT_AUTH_OIDC
+import ru.workinprogress.oidc.OidcPrincipal
 import ru.workinprogress.petich.PetichClock
 
 /**
@@ -56,7 +58,11 @@ private fun Route.riderRoutes() {
 
     post<Rides> {
         val request = call.receive<RideRequest>()
-        call.respond(HttpStatusCode.Created, requestRide(request).getOrThrow())
+        // **The one claim this server reads off a token.** Not the rider's identity — `riderId` is
+        // still a body field until B-09 — but the address a receipt goes to, which is the one thing
+        // a client must not be able to choose for somebody else.
+        val email = call.principal<OidcPrincipal>()?.email
+        call.respond(HttpStatusCode.Created, requestRide(RequestRideUseCase.Params(request, email)).getOrThrow())
     }
 
     get<Rides.ById> { route ->

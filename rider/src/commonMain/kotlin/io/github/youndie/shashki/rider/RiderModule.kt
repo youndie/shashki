@@ -1,8 +1,15 @@
 package io.github.youndie.shashki.rider
 
+import io.github.youndie.shashki.auth.SignInConfig
+import io.github.youndie.shashki.auth.TokenStore
+import io.github.youndie.shashki.auth.redirectTo
+import io.github.youndie.shashki.auth.tokenStore
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.rider.feature.auth.data.HttpTokenExchange
+import io.github.youndie.shashki.rider.feature.auth.domain.Session
+import io.github.youndie.shashki.rider.feature.auth.domain.TokenExchange
 import io.github.youndie.shashki.rider.feature.promo.data.HttpPromoRepository
 import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase
 import io.github.youndie.shashki.rider.feature.promo.domain.PromoRepository
@@ -24,16 +31,20 @@ import io.github.youndie.shashki.ui.map.tiles.PmtilesArchive
 import io.github.youndie.shashki.ui.map.tiles.PmtilesTileSource
 import io.github.youndie.shashki.ui.map.tiles.TilePalette
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /** The crash reporter, or the fact that none is configured. */
@@ -41,11 +52,20 @@ public class CrashReporting(
     public val reporter: CrashReporter?,
 )
 
-/** Where the server is and who the rider is until B-26 signs them in. */
+/** Where the server is, who the rider is, and where they sign in. */
 public data class RiderConfig(
     val serverUrl: String,
     val riderId: String,
     val paymentMethodId: String,
+    /**
+     * The provider, or `null` for a demo that signs nobody in.
+     *
+     * **Both halves have to agree**: a server with no `SHASHKI_OIDC_ISSUER` leaves its rider routes
+     * open, and a bundle with no `signIn` sends no token. Either one alone is the broken
+     * configuration — a bundle that signs in against a server that ignores tokens is harmless, a
+     * bundle that does not against a server that requires them is 401 on every screen (B-41).
+     */
+    val signIn: SignInConfig? = null,
     /** Where `city.pmtiles` is served from, or `null` for a map with no streets on it. */
     val tilesUrl: String?,
     val katcherUrl: String?,
@@ -72,7 +92,19 @@ public data class RiderConfig(
 public fun riderModule(config: RiderConfig): Module =
     module {
         single { config }
+        // **The session first**, because the client below asks it for a token on every request.
+        single<TokenStore> { tokenStore() }
+        single<TokenExchange> { HttpTokenExchange(get(named(PROVIDER_CLIENT))) }
+        single { Session(store = get(), config = config.signIn, exchange = get(), redirect = ::redirectTo) }
+
+        // The provider's client: no base URL and no bearer token. One request per sign-in, to a
+        // different service, and it must not carry the token it is about to replace. `CrashReporter`
+        // shares the application's client for the opposite reason. (A `//` comment and not a KDoc:
+        // ktlint forbids one inside a block, which B-33 met in the server's build script.)
+        single(named(PROVIDER_CLIENT)) { HttpClient() }
+
         single {
+            val session = get<Session>()
             HttpClient {
                 install(Resources)
                 install(ContentNegotiation) {
@@ -83,6 +115,21 @@ public fun riderModule(config: RiderConfig): Module =
                 defaultRequest {
                     url(config.serverUrl)
                     contentType(ContentType.Application.Json)
+                    // **One place, so a route added tomorrow is authenticated tomorrow.** A header
+                    // attached per repository is a header somebody forgets on the next repository.
+                    session.token()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+                }
+                // **A 401 is a sign-in, not an error banner.** An expired token is the ordinary case
+                // — the alternative is a screen telling somebody to try again at something they
+                // cannot do anything about. The redirect ends this page, so what the failed call
+                // would have returned does not matter.
+                expectSuccess = false
+                HttpResponseValidator {
+                    validateResponse { response ->
+                        if (response.status == HttpStatusCode.Unauthorized && session.configured) {
+                            session.renew()
+                        }
+                    }
                 }
             }
         }
@@ -142,3 +189,6 @@ public fun riderModule(config: RiderConfig): Module =
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
     }
+
+/** The provider's client, told apart from the application's by a name rather than by a type. */
+private const val PROVIDER_CLIENT = "provider"

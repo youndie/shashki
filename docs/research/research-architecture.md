@@ -609,6 +609,25 @@ would guess. [B-41](../backlog/B-41-the-rider-actually-signs-in.md) is the work.
 (§1.4c1, B-37), and now the token. Each was built at both ends by an item that was about one end, and
 each was found by something that had to look at both: a client, a saga, a document.
 
+**Consequence 1.6c4 — joining the two halves cost three findings, none of them about PKCE
+(2026-09-02, [B-41](../backlog/B-41-the-rider-actually-signs-in.md)).** §1.6c3 recorded that the
+application called neither half. Writing the join found:
+
+| Fact | How it presented |
+|---|---|
+| **A provider must have one address.** The validator reads `jwks_uri` out of the *discovery document*, which carries the issuer's own address — so giving the server an internal name and the browser an external one sends the server to an address only a browser can reach | every token refused with 401, which reads exactly like a token that is wrong |
+| **A relative script URL breaks every deep link.** `index.html` asked for `rider.js`, which at `/trip/ride-1` resolves to `/trip/rider.js` — answered by the static route with the page itself | a blank window on any address but `/`, and an HTML file served as JavaScript. `<base href>` is the fix |
+| **A test that navigates cannot be a browser test.** `Session.begin` called `redirectTo` directly, so running its tests in Chrome took karma's own page to shildik | the whole wasm suite failed, in a way that looked like the suite rather than the test |
+
+The first is the one worth carrying: **discovery makes "each side uses the address it can reach" a
+wrong model**, and the symptom is indistinguishable from a bad token.
+
+**And the build's own guard earned its place.** The first version of the join test was
+`fun … = runBlocking { … }`, whose last expression returns a value — so the method is non-void and
+JUnit does not collect it. It ran nothing, reported nothing and passed; sborka's `Test` wrapper failed
+the build with "declares 1 @Test and reported nothing at all". That is the difference between a test
+that fails and a test that is not there.
+
 **Consequence 1.6a1 — the broker was joined at one end for a month (2026-09-02,
 [B-38](../backlog/B-38-ride-events-on-booblik.md)).** §1.6a settled what does *not* go through
 booblik and the boundary held; what nobody noticed is that nothing went through it at all. The

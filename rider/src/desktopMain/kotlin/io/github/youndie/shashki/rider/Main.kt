@@ -30,6 +30,9 @@ public fun main() {
                         serverUrl = System.getenv("SHASHKI_SERVER") ?: "http://127.0.0.1:8080",
                         riderId = "rider-1",
                         paymentMethodId = "card-4417",
+                        // No provider: a window has no redirect to come back from, and the
+                        // desktop build exists to be photographed rather than signed into.
+                        signIn = null,
                         tilesUrl = System.getenv("SHASHKI_TILES"),
                         katcherUrl = System.getenv("SHASHKI_KATCHER_URL"),
                         katcherAppKey = System.getenv("SHASHKI_KATCHER_KEY"),

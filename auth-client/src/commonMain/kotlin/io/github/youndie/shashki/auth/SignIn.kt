@@ -7,6 +7,32 @@ import io.ktor.resources.serialization.ResourcesFormat
 import ru.workinprogress.shildik.shared.OAuth2
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+/**
+ * Where the code is exchanged, from shildik's own `@Resource` rather than as a string.
+ *
+ * **It is here and not where the request is made**, because this module has the resource classes and
+ * deliberately has no HTTP client: `:auth-client` is the flow and the arithmetic, and the transport
+ * belongs to whoever already has one. So the caller gets an address rather than a path to assemble.
+ */
+public fun SignInConfig.tokenUrl(): String {
+    val builder = URLBuilder(issuer)
+    href(ResourcesFormat(), OAuth2.Token(OAuth2(realm = realm)), builder)
+    return builder.buildString()
+}
+
+/**
+ * An attempt in the form that survives a page navigation.
+ *
+ * **Three strings and a warning.** The verifier is the secret half of PKCE: whatever a client stores
+ * it in is readable by anything else that can read that store, so putting it in the browser's
+ * `sessionStorage` is a decision with a cost, taken in `TokenStore` and written down there.
+ */
+public data class ParkedAttempt(
+    val verifier: String,
+    val state: String,
+    val nonce: String,
+)
+
 /** Where the provider is and who we are to it. Everything here is public by definition. */
 public data class SignInConfig(
     val issuer: String,
@@ -86,7 +112,42 @@ public class SignInAttempt internal constructor(
         )
     }
 
+    /** What has to survive the redirect. Everything else is derivable or is the configuration. */
+    public fun parked(): ParkedAttempt = ParkedAttempt(verifier.value, state, nonce)
+
     public companion object {
+        /**
+         * The attempt again, after the page it started on is gone.
+         *
+         * **The redirect destroys the tab, and the verifier is the one thing that must outlive it.**
+         * Everything else about an attempt is either the configuration or derivable — the challenge
+         * is a hash of the verifier and only the provider needs it now. So what is stored is three
+         * strings, and this is where they become an attempt that can still refuse a `state` it did
+         * not issue.
+         *
+         * Reconstructed here rather than by exposing `tokenForm` as a free function, because
+         * `tokenForm`'s own note is that the state check belongs where the code is spent — and a
+         * caller with a code in its hand is exactly who forgets.
+         *
+         * `suspend` because the challenge is recomputed: it is a hash, and in a browser a hash is
+         * WebCrypto and therefore asynchronous. A resumed attempt does not need it — only
+         * `authorizeUrl` does — but a type with a field that is sometimes absent is worse than one
+         * `await` on a path that already has several.
+         */
+        public suspend fun resume(
+            config: SignInConfig,
+            parked: ParkedAttempt,
+        ): SignInAttempt {
+            val verifier = CodeVerifier(parked.verifier)
+            return SignInAttempt(
+                config = config,
+                verifier = verifier,
+                challenge = Pkce.challenge(verifier),
+                state = parked.state,
+                nonce = parked.nonce,
+            )
+        }
+
         /** A new attempt: fresh verifier, its challenge, and fresh `state` and `nonce`. */
         public suspend fun begin(config: SignInConfig): SignInAttempt {
             val verifier = Pkce.newVerifier()

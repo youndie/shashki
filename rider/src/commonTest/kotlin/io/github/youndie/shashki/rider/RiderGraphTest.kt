@@ -92,6 +92,7 @@ class RiderGraphTest {
                 riderId = "rider-1",
                 paymentMethodId = "card-4417",
                 tilesUrl = null,
+                signIn = null,
                 katcherUrl = null,
                 katcherAppKey = null,
                 release = "test",

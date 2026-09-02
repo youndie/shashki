@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!--
+      **`base` is what makes a deep link work.** Every URL on this page is relative — the script, and
+      the two `.wasm` files the script asks for — and a relative URL resolves against the *document's*
+      address. Opened at `/trip/ride-1` the browser therefore asked for `/trip/rider.js`, which the
+      static route answered with this very page: an HTML file served as JavaScript, no application,
+      and a blank window. B-28 promised that `/trip/{id}` is a real address; this is the line that
+      keeps the promise.
+    -->
+    <base href="/driver/">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>shashki · driver</title>
     <!--

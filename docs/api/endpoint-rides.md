@@ -38,6 +38,9 @@ switch that is off by default, and therefore one nobody notices is off. Both sid
 `ProtectedRidesTest` requires a 401 with no token and success with one, and points the validator at an
 address nothing answers on so the refusal cannot be happening after a network call.
 
+**The rider application satisfies this tier since [B-41](../backlog/B-41-the-rider-actually-signs-in.md).**
+For thirty-nine items it did not: the token was obtainable and nothing attached it.
+
 **What is *not* checked by any tier: ownership.** `riderId` is a field of the request body until B-09
 puts it in the token, so a token proves somebody signed in and not that the ride is theirs.
 

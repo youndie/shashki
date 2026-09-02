@@ -40,15 +40,14 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-41](docs/backlog/B-41-the-rider-actually-signs-in.md) `[ ]` | The rider application actually signs in, and puts the token on its requests | P0 | M | - |
 | [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
 | [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[ ]` | The service can be watched: metrik, tracy, telek and kompot's degradation sink | P2 | M | B-35 |
 
-## Closed (38)
+## Closed (39)
 
 **Remove the unknowns**
 
@@ -98,6 +97,7 @@ re-prioritising one must never move its file.
 - [B-33](docs/backlog/B-33-take-the-upstream-fixes.md) `[x]` - The three upstream fixes landed; take them and delete what they replace
 - [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[x]` - A headless browser on the build box, so the wasm target is run and not only compiled
 - [B-40](docs/backlog/B-40-the-documentation-layers.md) `[x]` - The layers below the research, which the rule about main has been holding empty
+- [B-41](docs/backlog/B-41-the-rider-actually-signs-in.md) `[x]` - The rider application actually signs in, and puts the token on its requests
 
 **It runs somewhere that is not this laptop**
 

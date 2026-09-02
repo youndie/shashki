@@ -66,6 +66,9 @@ kotlin {
         }
         getByName("desktopTest").dependencies {
             implementation(compose.desktop.currentOs)
+            // A real engine for the one test that signs in against a real provider and then calls a
+            // real server with what it got.
+            implementation(libs.ktor.client.cio)
         }
         getByName("desktopMain").dependencies {
             implementation(libs.ktor.client.cio)

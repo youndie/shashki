@@ -23,18 +23,20 @@ public class RequestRideUseCase(
     private val engine: PetichEngine,
     private val rides: RideRepository,
     private val ids: () -> String = { UUID.randomUUID().toString() },
-) : UseCase<RideRequest, RideView> {
-    override suspend fun invoke(params: RideRequest): Result<RideView> =
+) : UseCase<RequestRideUseCase.Params, RideView> {
+    override suspend fun invoke(params: Params): Result<RideView> =
         suspendRunCatching {
             val rideId = ids()
+            val request = params.request
             val payload =
                 OrderPayload(
                     rideId = rideId,
-                    riderId = params.riderId,
-                    pickup = params.pickup,
-                    dropoff = params.dropoff,
-                    rideClass = params.rideClass,
-                    paymentMethodId = params.paymentMethodId,
+                    riderId = request.riderId,
+                    pickup = request.pickup,
+                    dropoff = request.dropoff,
+                    rideClass = request.rideClass,
+                    paymentMethodId = request.paymentMethodId,
+                    riderEmail = params.riderEmail,
                 )
             when (
                 val result =
@@ -49,4 +51,16 @@ public class RequestRideUseCase(
             }
             rides.find(rideId) ?: error("order saga $rideId ran and left no row")
         }
+
+    /**
+     * The request, and the one thing about the rider that does not come from it.
+     *
+     * **The email is the token's, never the body's** — that is the whole reason B-26 put
+     * authentication in front of this route. An address a client can choose is an address a client
+     * can choose for somebody else, and what it would be chosen for is a receipt.
+     */
+    public class Params(
+        public val request: RideRequest,
+        public val riderEmail: String? = null,
+    )
 }
