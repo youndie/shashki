@@ -7,6 +7,7 @@ import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOutcome
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.remainingAtReceipt
 import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.OfferView
@@ -29,6 +30,14 @@ public data class ShiftUiState(
     val online: Boolean = false,
     /** Reports the socket has taken. A shift with a rising count is a socket that is actually up. */
     val reported: Int = 0,
+    /**
+     * Where the position in those reports comes from (B-49).
+     *
+     * It starts at [PositionSource.CONFIGURED] and stays there unless a device actually produces a
+     * fix — a denied permission, a desktop window and a browser with no geolocation all look the
+     * same from here, and all three are honestly "configured".
+     */
+    val positionSource: PositionSource = PositionSource.CONFIGURED,
     val offer: OfferView? = null,
     val secondsLeft: Int = 0,
     val secondsTotal: Int = 0,
@@ -116,8 +125,12 @@ public class ShiftViewModel(
         shift =
             scope.launch {
                 runCatching {
-                    goOnline(driverId, rideClass, rating, at).collect {
-                        _uiState.value = _uiState.value.copy(reported = _uiState.value.reported + 1)
+                    goOnline(driverId, rideClass, rating, at).collect { sent ->
+                        _uiState.value =
+                            _uiState.value.copy(
+                                reported = _uiState.value.reported + 1,
+                                positionSource = sent.source,
+                            )
                     }
                 }.onFailure {
                     // A socket that will not open is the whole feature failing, and silently looking

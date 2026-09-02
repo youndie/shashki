@@ -1880,6 +1880,16 @@ directly above it was already plain — so the accent would have been the odd on
 screen. What made this visible is that the light variant is now a fixture rather than an intention:
 the picture refused a rule a reader would have applied correctly.
 
+**And a second site of the same defect, which B-48's own goldens had already photographed.** The
+shift screen's `waiting` — the largest word on the driver's screen, and the one that says the socket
+is up — is drawn in the accent because the kit reserves amber for online. On white it measures
+**2.11:1**, read out of `driver_shift_waiting_light.png` with the same code as the table above. It is
+not fixed, for B-48's own reason and by its own precedent: the hue is the kit's, "amber means online"
+is the design being demonstrated, and this product changing it would be this product editing the
+thing it exists to show. What is recorded is that the light goldens *had* this in them for a day
+before anybody read the picture — a golden is a photograph and not an assertion, and it only reports
+what somebody looks at.
+
 What is *not* fixed and is recorded instead: a bar's label in accent on light chrome sits at 2.13:1.
 It is a control with a shape and a position, it is the kit's palette used as the kit uses it, and
 changing the hue would be this product editing the design it is demonstrating.
@@ -2037,7 +2047,11 @@ each is now an item rather than an impression:
   (1 999 / 2 018 / 2 025 ms against B-35's 1.5–3.7 s) and the first request measured is a route,
   because the memory-mapped graph is what a change of base would break. Distroless was not a
   candidate: its Java images stop at 21.
-- **No real position** for a real driver; the bundle sends its configured point and says so. B-49.
+- ~~**No real position** for a real driver; the bundle sends its configured point and says so.~~
+  **Since B-49 the browser's own position is sent when a person grants it**, behind the same port, so
+  a phone in a car is a demo this project gives. The configured point is the fallback and the screen
+  names which of the two is on the wire. What is still not given is background location, which a
+  browser does not hand a page anyway.
 - **The map is a renderer, not an engine.** `TileRenderer` transcribes the two style documents' filters
   and widths; it does not interpret style JSON. A third style would be code. Whether that engine
   becomes its own library is the portfolio question §1.8 left open, and it is still open.

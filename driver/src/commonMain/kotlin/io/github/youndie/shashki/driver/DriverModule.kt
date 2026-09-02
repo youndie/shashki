@@ -22,8 +22,10 @@ import io.github.youndie.shashki.driver.feature.offer.data.HttpOfferRepository
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.OfferRepository
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
+import io.github.youndie.shashki.driver.feature.shift.data.DevicePositionFixes
 import io.github.youndie.shashki.driver.feature.shift.data.WebSocketShiftRepository
 import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionFixes
 import io.github.youndie.shashki.driver.feature.shift.domain.ShiftRepository
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.driver.feature.trip.data.HttpTripRepository
@@ -160,7 +162,11 @@ public fun driverModule(config: DriverConfig): Module =
                 },
             )
         }
-        factory { GoOnlineUseCase(get()) }
+        // The platform's own positions are behind this binding, and on the desktop there are none
+        // (B-49). The `device` parameter has a default, so the lambda is explicit — see the note on
+        // this module.
+        single<PositionFixes> { DevicePositionFixes() }
+        factory { GoOnlineUseCase(get(), get()) }
 
         single<OfferRepository> { HttpOfferRepository(get()) }
         factory { WatchOfferUseCase(get()) }

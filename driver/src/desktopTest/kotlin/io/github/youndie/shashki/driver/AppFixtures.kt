@@ -2,6 +2,7 @@ package io.github.youndie.shashki.driver
 
 import androidx.compose.runtime.Composable
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftContent
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftUiState
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripContent
@@ -60,6 +61,38 @@ private fun ShiftWaitingBody(dark: Boolean) {
     Fixture(dark) {
         ShiftContent(
             uiState = ShiftUiState(driverLabel = "driver-1", online = true, reported = 42),
+            onAction = { },
+        )
+    }
+}
+
+/**
+ * The same shift on a phone that granted the permission (B-49).
+ *
+ * **This is the only place the difference is visible**, which is why it is photographed: the reports
+ * on the wire are identical either way, and a driver looking at "waiting · 42 positions sent" cannot
+ * otherwise tell a moving car from a parked one. The line is the whole feature.
+ */
+@ViddikScreenshot(name = "shift on a device", group = "driver", width = 390, height = 844)
+@Composable
+internal fun ShiftOnDevice(): Unit = ShiftOnDeviceBody(dark = true)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "shift on a device light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun ShiftOnDeviceLight(): Unit = ShiftOnDeviceBody(dark = false)
+
+@Composable
+private fun ShiftOnDeviceBody(dark: Boolean) {
+    Fixture(dark) {
+        ShiftContent(
+            uiState =
+                ShiftUiState(
+                    driverLabel = "driver-1",
+                    online = true,
+                    reported = 42,
+                    positionSource = PositionSource.DEVICE,
+                ),
             onAction = { },
         )
     }

@@ -97,5 +97,10 @@ The rider watches the same four states from the other side, with the car moving 
 * **The driver's client takes its state from the answer, never from the button.** The request that
   moves a trip to `COMPLETED` is the one that captures money, so a screen that advanced optimistically
   would show a finished ride whenever the network hiccuped.
-* **There is no geolocation.** The driver's bundle sends a configured point: a fabricated drift would
-  be the client inventing data the server indexes as fact.
+* **The geolocation is real where there is one, and named where there is not** (B-49). The bundle
+  watches `navigator.geolocation` and sends what it produces; with no permission, no device or no
+  browser API it sends its configured point and the shift screen says `position: configured`. What
+  has not changed is the thing B-29 refused: nothing here fabricates a drift, because that is the
+  client inventing data the server indexes as fact. The cadence stays the bundle's — a report every
+  four seconds, carrying the newest fix — rather than the device's, which in a moving car is several
+  a second and in a parked one is none.

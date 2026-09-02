@@ -30,6 +30,14 @@ public data class DriverShiftState(
     val classLabel: String,
     /** Reports the socket has taken. `null` while offline — a zero would read as a broken socket. */
     val reported: Int?,
+    /**
+     * Where the position being sent comes from, already worded — `null` while offline.
+     *
+     * **A parked driver is a fact and not a bug**, and this is the line that makes the difference
+     * visible: a bundle sending its configured point looks exactly like one sending a device's
+     * until the screen says which (B-49).
+     */
+    val positionLabel: String? = null,
     val offer: DriverOfferState? = null,
 )
 
@@ -137,7 +145,10 @@ public fun DriverShift(
                     )
                     state.reported?.let { taken ->
                         Spacer(Modifier.height(GAP))
-                        KvadrantText("$taken positions sent", style = type.meta.copy(color = colors.subtle))
+                        // Beside the count rather than under it: the count says the socket is alive
+                        // and the source says what is travelling over it, and they are one fact.
+                        val line = listOfNotNull("$taken positions sent", state.positionLabel).joinToString(" · ")
+                        KvadrantText(line, style = type.meta.copy(color = colors.subtle))
                     }
                 }
             }

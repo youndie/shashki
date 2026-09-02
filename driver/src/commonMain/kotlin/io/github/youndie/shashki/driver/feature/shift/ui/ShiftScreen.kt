@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.ui.format.asCoordinates
 import io.github.youndie.shashki.ui.format.asDistance
@@ -68,6 +69,15 @@ public fun ShiftContent(
                         ?.name
                         ?.lowercase() ?: "on shift",
                 reported = uiState.reported.takeIf { uiState.online },
+                // **The word for it, chosen here.** The view model holds an enum and the screen
+                // draws a string; "configured" is the one a driver has to be able to read as "this
+                // is where I said I am", not as an error (B-49).
+                positionLabel =
+                    when {
+                        !uiState.online -> null
+                        uiState.positionSource == PositionSource.DEVICE -> "position: device"
+                        else -> "position: configured"
+                    },
                 offer = uiState.offer?.asOfferState(uiState.secondsLeft, uiState.secondsTotal),
             ),
         onToggleOnline = { onAction(ShiftUiAction.ToggleOnline) },

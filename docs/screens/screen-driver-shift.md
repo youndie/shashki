@@ -22,6 +22,7 @@ source: driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/sh
 | Screen / Content | `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/shift/ui/ShiftScreen.kt` |
 | Drawing | `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/DriverShift.kt` |
 | The socket | `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/shift/data/WebSocketShiftRepository.kt` |
+| Where the position comes from | `driver/src/commonMain/.../feature/shift/domain/PositionFixes.kt`, `.../data/DevicePositionFixes.kt` and its two `actual`s |
 
 ## 0. Entry point and visibility
 
@@ -58,9 +59,17 @@ offer poll, and — when an offer arrives — the countdown.
 
 ### 4.2. The waiting state
 
-- **Field:** `uiState.reported`
-- **Display:** `42 positions sent`. **The count is the point**: "waiting" is a word an application can
-  print over a dead socket, and a number that has stopped rising is not.
+- **Fields:** `uiState.reported`, `uiState.positionSource`
+- **Display:** `42 positions sent · position: configured`. **The count is the point**: "waiting" is a
+  word an application can print over a dead socket, and a number that has stopped rising is not.
+- **The source is beside it because the two are one fact** (B-49). The count says the socket is alive
+  and the source says what is travelling over it: a bundle sending its configured point and one
+  sending a phone's look identical on the wire and identical on this screen without that line. A
+  parked driver is then a fact rather than a bug somebody has to go and find.
+- **`position: device` appears only where a person granted the permission.** A denial, a desktop
+  window, and a page served over plain HTTP to anything but `localhost` — where browsers withhold the
+  API rather than prompt — are the same case: no fix, the configured point, and the screen saying so. Nothing here invents movement; B-29 refused a fake walk and the reason has not
+  changed.
 
 ### 4.3. The offer card
 
