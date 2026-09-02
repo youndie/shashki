@@ -6,6 +6,7 @@ import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
 import io.github.youndie.shashki.server.feature.auth.AuthConfig
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
+import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.driverRoutes
@@ -93,6 +94,14 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
             call.respond(
                 HttpStatusCode.NotFound,
                 ErrorBody(e.message ?: "not found"),
+            )
+        }
+        // 409 rather than 404: the offer existed and the driver's answer was well formed — somebody
+        // else has it now. That is a race the client should say out loud, not a missing resource.
+        exception<OfferGoneException> { call, e ->
+            call.respond(
+                HttpStatusCode.Conflict,
+                ErrorBody(e.message ?: "the offer has gone"),
             )
         }
         exception<IllegalArgumentException> { call, e ->

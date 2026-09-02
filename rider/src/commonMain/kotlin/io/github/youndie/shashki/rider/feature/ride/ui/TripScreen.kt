@@ -5,8 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.youndie.shashki.rider.format.asDistance
-import io.github.youndie.shashki.rider.format.asDuration
+import io.github.youndie.shashki.ui.format.asDistance
+import io.github.youndie.shashki.ui.format.asDuration
 import io.github.youndie.shashki.ui.screens.RiderTripInProgress
 import io.github.youndie.shashki.ui.screens.TripDriver
 import io.github.youndie.shashki.ui.screens.TripStage

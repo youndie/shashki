@@ -1,6 +1,6 @@
 @file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
 
-package io.github.youndie.shashki.rider
+package io.github.youndie.shashki.ui.nav
 
 /**
  * `history.pushState` out, `popstate` in.

@@ -126,7 +126,19 @@ public data class OfferAnswer(
     val decision: DriverDecision,
 )
 
-/** The offer as the driver sees it: the kit's OfferCard, minus the seconds — those the client counts from [expiresAtEpochMs]. */
+/**
+ * The offer as the driver sees it: the kit's OfferCard, minus the seconds — those the client counts.
+ *
+ * **Both ends of the deadline are here, and the second one is why.** A client that had only
+ * [expiresAtEpochMs] would have to subtract its *own* clock from it, and a browser's clock is
+ * whatever the machine says — a laptop an hour out draws a countdown an hour wrong, or fifteen
+ * seconds that never start. With [nowEpochMs] beside it the client counts a **duration** it was
+ * handed rather than a difference it computed, and the only thing its clock still contributes is
+ * the rate at which seconds pass.
+ *
+ * The deadline is still the server's in the sense that matters: the answer is checked there, and a
+ * driver whose tab was asleep gets 409 rather than a ride (see `OfferGoneException`).
+ */
 @Serializable
 public data class OfferView(
     val rideId: String,
@@ -135,6 +147,7 @@ public data class OfferView(
     val pickup: GeoPoint,
     val dropoff: GeoPoint,
     val expiresAtEpochMs: Long,
+    val nowEpochMs: Long,
 )
 
 /**

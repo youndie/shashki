@@ -1,0 +1,86 @@
+plugins {
+    alias(wip.plugins.kotlinMultiplatform)
+    alias(wip.plugins.composeMultiplatform)
+    alias(wip.plugins.composeCompiler)
+    alias(wip.plugins.kotlinSerialization)
+    alias(wip.plugins.ksp)
+    alias(libs.plugins.viddik)
+    id("ru.workinprogress.sborka.kmp")
+    id("ru.workinprogress.sborka.lint")
+}
+
+kotlin {
+    // The same two targets as `:rider`, for the same two reasons: `wasmJs` is what ships (D1), and
+    // `jvm("desktop")` is the only target viddik can photograph on a box with no browser.
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            // **No browser on the build box, so this would run nothing and fail loudly about it.**
+            // The tests live in `commonTest` and run on the desktop target, which is the same code;
+            // what wasm owes the project is that it compiles, and `check` is made to depend on both
+            // its compilations below rather than on a suite that cannot start. Running them in a
+            // browser needs a browser — the same limit B-09 and B-10 recorded.
+            testTask { enabled = false }
+        }
+        binaries.executable()
+    }
+
+    jvm("desktop")
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.sharedUi)
+            implementation(projects.crashClient)
+            api(projects.protocol)
+
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
+            implementation(libs.kvadrant.core)
+            implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.contentNegotiation)
+            // The position stream is a socket, which is the one thing the rider bundle never needed.
+            implementation(libs.ktor.client.websockets)
+            implementation(libs.ktor.client.resources)
+            implementation(libs.ktor.serialization.json)
+
+            implementation(project.dependencies.platform(wip.koin.bom))
+            implementation(wip.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.composeViewmodel)
+            implementation(libs.koin.composeNavigation3)
+            implementation(libs.navigation3.ui)
+
+            implementation(wip.kotlinx.coroutines.core)
+            implementation(wip.kotlinx.serialization.json)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(wip.kotlinx.coroutines.test)
+        }
+        getByName("wasmJsMain").dependencies {
+            implementation(libs.ktor.client.js)
+        }
+        getByName("desktopTest").dependencies {
+            implementation(compose.desktop.currentOs)
+        }
+        getByName("desktopMain").dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(compose.desktop.currentOs)
+        }
+    }
+}
+
+// **The driver's own screens are photographed, and the Screen/Content split is what allows it.**
+// `ShiftContent` takes a state and a callback, so a golden of the offer — the one screen in this
+// product with a deadline on it — needs neither a socket nor a server.
+viddik {
+    verifyOnCheck = true
+}
+
+// The wasm target is compiled by `check`, tests included: a target nobody compiles is a decision
+// that quietly stops being true, and the test sources are where a JVM-only idiom would first appear.
+tasks.named("check") {
+    dependsOn(tasks.named("compileKotlinWasmJs"), tasks.named("compileTestKotlinWasmJs"))
+}

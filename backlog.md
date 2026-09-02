@@ -39,16 +39,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-29](docs/backlog/B-29-the-driver-bundle.md) `[ ]` | The driver bundle, which is the second one D10 chose | P1 | L | - |
 | [B-30](docs/backlog/B-30-tiles-over-the-wire.md) `[ ]` | The map fetches its tiles, so the streets are there | P1 | L | - |
 | [B-31](docs/backlog/B-31-the-wait-for-a-car.md) `[ ]` | The wait for a car, which the kit puts on every class tile | P2 | S | - |
 | [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[ ]` | A headless browser on the build box, so the wasm target is run and not only compiled | P2 | M | - |
 
-## Closed (30)
+## Closed (31)
 
 **Remove the unknowns**
 
@@ -89,6 +88,7 @@ re-prioritising one must never move its file.
 - [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[x]` - The kit's composition rules live in the kompot renderer, not in the protocol
 - [B-25](docs/backlog/B-25-rider-trip-in-progress.md) `[x]` - The rider's trip-in-progress screen, on the map that D1 chose
 - [B-28](docs/backlog/B-28-the-client-application-shell.md) `[x]` - A client application exists to put the screens in
+- [B-29](docs/backlog/B-29-the-driver-bundle.md) `[x]` - The driver bundle, which is the second one D10 chose
 - [B-32](docs/backlog/B-32-which-screens-the-server-sends.md) `[x]` - Which screens the server sends, and which the client draws
 - [B-33](docs/backlog/B-33-take-the-upstream-fixes.md) `[x]` - The three upstream fixes landed; take them and delete what they replace
 

@@ -1,4 +1,4 @@
-package io.github.youndie.shashki.rider
+package io.github.youndie.shashki.ui.nav
 
 /**
  * The browser's address bar and its back button, as a port.
@@ -11,6 +11,10 @@ package io.github.youndie.shashki.rider
  *
  * A port rather than `expect fun` on the call site so the desktop target has something to bind that
  * is honestly nothing — see [NoAddressBar].
+ *
+ * **It lives here rather than in one bundle because two bind it.** It was written for the rider and
+ * moved when the driver needed the same thing (B-29) — which is the test of whether it was a port or
+ * that application's own arrangement. Nothing in it changed on the way.
  */
 public interface AddressBar {
     /** Where the application was opened. `/` when there is no such notion. */

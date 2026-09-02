@@ -774,6 +774,27 @@ would have been shown one number and charged another the first time a coefficien
 The trip screen draws those four as em dashes, because the registration is the field a rider checks a
 real car against and fiction there is worse than a blank.
 
+**Consequence 1.7e — the second bundle found a defect the first could not have
+(2026-09-02, [B-29](../backlog/B-29-the-driver-bundle.md)).**
+
+`DriverAnswerStep` refuses an answer from a driver who is not the one currently being offered: it
+resuspends, keeps waiting for the right driver, and is completely correct. It is also completely
+silent — the route then answered `200 OK` with the ride unchanged, so a driver whose tab had been
+asleep for twenty seconds would have been shown a trip that belonged to somebody else.
+
+Nothing on the server was wrong, which is why nothing on the server had found it. `RideRoutesTest`
+covered accept and decline by the driver who *was* asked; there was no client to make the other call
+until there was one, and no screen to be wrong. The fix is `OfferGoneException` → 409, checked by
+comparing the answer to the ride that came back rather than trusting that nothing threw; the test
+was verified by removing the guard, which turns the 409 back into the `200 OK` described above.
+
+The same item found the second half of the same shape on the client: **the countdown had no clock it
+could trust.** `OfferView` carried only `expiresAtEpochMs`, so a browser had to subtract its own wall
+clock from it — and a laptop an hour out draws fifteen seconds that never start. It now carries
+`nowEpochMs` beside it, and the client counts a duration it was handed. The deadline is still the
+server's where it matters: reaching zero drops the card, and whether an answer was in time is settled
+by the saga.
+
 ### 1.8 A tile renderer of our own: what it would actually have to implement
 
 Added after the first pass, when the brief's "own render on Compose Canvas — an optional v2 demo, not
@@ -1220,6 +1241,28 @@ and 100 128 of JavaScript: still a third of the runtime it rides in, and still t
 
 The third row is also the answer to a question nobody asked: at 174 kB before DCE, the cost of route
 4's whole tile pipeline is invisible next to the runtime it rides in.
+
+**Both bundles now exist, and the third measurement is the one this decision was really resting on
+(2026-09-02, [B-29](../backlog/B-29-the-driver-bundle.md)).** Two bundles are only cheap if the
+second is *assembled* rather than written, and that was an intention until there was a second one.
+What it cost:
+
+| What the driver bundle bound | Where it came from | New code |
+|---|---|---|
+| the address bar, both directions | `:rider`, moved to `:shared-ui` unchanged | none |
+| `installCrashReporting` | `:crash-client`, already a port | none |
+| money, distance, duration, coordinates | `:rider`'s `format`, moved to `:shared-ui` | one function, `asCoordinates` |
+| `OfferCard` and its countdown | `:shared-ui`, drawn in B-04 | none |
+| the theme | `DriverTheme`, which existed and had never been used | none |
+
+Two of those moved rather than being copied, and moving them is the evidence: a port that only ever
+had one binder is an arrangement somebody has called a port. The formatting had written its own
+argument in advance — "how a price ends up rendered differently in the two bundles" — and a copy in
+each bundle would have been that failure with extra steps.
+
+What is genuinely the driver's and could not be borrowed is the **socket**: the rider polls, and each
+of its requests fails on its own; a driver's shift *is* a connection being up. That is one repository
+and one use case, and it is the only place the two applications are a different shape.
 
 ### D11. The server owns one screen, and it is the promo
 

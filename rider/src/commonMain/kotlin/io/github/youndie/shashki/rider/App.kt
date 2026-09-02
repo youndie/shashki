@@ -25,6 +25,7 @@ import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.MapSurface
+import io.github.youndie.shashki.ui.nav.addressBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic

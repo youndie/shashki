@@ -17,3 +17,15 @@ public class RideNotFoundException(
 public class OfferNotFoundException(
     public val driverId: String,
 ) : RuntimeException("no offer for driver $driverId")
+
+/**
+ * The driver answered an offer that is no longer theirs.
+ *
+ * **The saga refuses this silently and correctly**, by resuspending for the driver who *is* being
+ * asked — so without this the answer would be a 200 carrying somebody else's ride. A tab that went
+ * to sleep for twenty seconds and woke up to press accept is the ordinary case, not the exotic one.
+ */
+public class OfferGoneException(
+    public val rideId: String,
+    public val driverId: String,
+) : RuntimeException("offer for ride $rideId is no longer $driverId's")

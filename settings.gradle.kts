@@ -63,8 +63,7 @@ dependencyResolutionManagement {
 //
 // The clients waited on B-01 deliberately — a module whose target list is a guess is a module that
 // gets rewritten — and D1 answered it: `wasmJs`, with a desktop target beside it because viddik
-// photographs JVM targets and a screen nobody can see is a screen nobody can review. The driver
-// client is not here; it is the second bundle D10 chose and nothing in the backlog schedules it yet.
+// photographs JVM targets and a screen nobody can see is a screen nobody can review.
 include(":protocol")
 include(":server")
 include(":shared-ui")
@@ -76,3 +75,6 @@ include(":auth-client")
 include(":crash-client")
 // The rider application: the shell every other module's work hangs in. See B-28.
 include(":rider")
+// The driver application: the second bundle D10 chose, and the test of whether the rider's shell was
+// made of ports. See B-29.
+include(":driver")

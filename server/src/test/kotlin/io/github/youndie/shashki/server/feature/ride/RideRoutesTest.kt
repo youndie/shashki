@@ -26,6 +26,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -42,6 +43,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /** The routes, through the same `@Resource` classes a client would build its URLs from. */
 class RideRoutesTest {
@@ -137,6 +139,63 @@ class RideRoutesTest {
 
             // Cancelling again: the saga is no longer waiting, and that is a 400 rather than a repeat.
             assertEquals(HttpStatusCode.BadRequest, client.post(Rides.Cancel(id = ride.id)).status)
+        }
+
+    /**
+     * **The answer of a driver who is not the one being asked is refused, and says so.**
+     *
+     * `DriverAnswerStep` already ignores it — correctly, and completely silently: it resuspends for
+     * the driver who *is* offered, and the ride comes back unchanged. Before B-29 that reached the
+     * client as `200 OK` carrying somebody else's ride, which is the shape of every "I accepted it
+     * and got a trip that was not mine" bug. The tab that was asleep for twenty seconds is the
+     * ordinary case here, not the exotic one.
+     */
+    @Test
+    fun `a driver who is not the one being asked cannot take the ride`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            parkDriver(client, app, "driver-1", RideClass.ECONOMY)
+            val ride =
+                client
+                    .post(Rides()) {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            RideRequest(
+                                "rider-1",
+                                PICKUP,
+                                GeoPoint(46.2237, 14.4576),
+                                RideClass.ECONOMY,
+                                "card-4417",
+                            ),
+                        )
+                    }.body<RideView>()
+            // The positive control. Without it a 409 could mean "there was no offer at all", which
+            // is a different server and the same green tick.
+            val offered = client.get(DriverOffers.ForDriver(driverId = "driver-1"))
+            assertEquals(HttpStatusCode.OK, offered.status, "nothing was offered, so nothing can be stolen")
+            val view = offered.body<OfferView>()
+            assertEquals(ride.id, view.rideId)
+            // Both ends of the deadline, so the driver's client counts a duration rather than
+            // subtracting its own wall clock from a timestamp. See `OfferView`.
+            assertTrue(view.expiresAtEpochMs > view.nowEpochMs, "the offer expires before the clock that measured it")
+
+            val stranger =
+                client.post(DriverOffers.Answer(rideId = ride.id)) {
+                    contentType(ContentType.Application.Json)
+                    setBody(OfferAnswer("driver-9", DriverDecision.ACCEPT))
+                }
+
+            assertEquals(HttpStatusCode.Conflict, stranger.status, stranger.bodyAsText().take(200))
+            // And the ride is untouched: still being offered to the driver who was asked.
+            val after = client.get(Rides.ById(id = ride.id)).body<RideView>()
+            assertEquals(RideStatus.MATCHING, after.status)
+            assertEquals(null, after.driverId)
         }
 
     @Test

@@ -1,0 +1,152 @@
+package io.github.youndie.shashki.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import io.github.youndie.kvadrant.foundation.KvadrantText
+import io.github.youndie.kvadrant.theme.KvadrantTheme
+import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.OfferCard
+
+/** What the shift screen has to say, as plain values. The bundle formats; this draws. */
+public data class DriverShiftState(
+    val online: Boolean,
+    val driverLabel: String,
+    val classLabel: String,
+    /** Reports the socket has taken. `null` while offline — a zero would read as a broken socket. */
+    val reported: Int?,
+    val offer: DriverOfferState? = null,
+)
+
+/** An offer, already formatted. The seconds are counted by whoever holds the deadline. */
+public data class DriverOfferState(
+    val fare: String,
+    val classAndPayment: String,
+    val secondsLeft: Int,
+    val secondsTotal: Int,
+    val pickup: String,
+    val pickupMeta: String,
+    val dropoff: String,
+    val dropoffMeta: String,
+)
+
+/**
+ * D1: the driver's shift. Off, waiting, or holding an offer.
+ *
+ * **Three states and one screen, because that is how a shift feels.** The card does not arrive on a
+ * new page — the driver was looking at this screen, and now there is something on it. The rejected
+ * shape was an offer route of its own, and `DriverRoute` says why: an address for a thing that lives
+ * fifteen seconds is a link that is broken by design.
+ *
+ * **Waiting is deliberately dull.** The whole of the driver's attention is meant to be available for
+ * the card when it comes, so the waiting state is a word and a count and nothing that moves. The one
+ * animated thing in this application is the offer's own bar, which is [OfferCard]'s and drains left
+ * to right.
+ *
+ * The count is the honest part: `reported` rises each time the socket actually took a position, so a
+ * driver who is "online" over a socket that quietly died sees a number that has stopped. Amber for
+ * online is `DriverTheme`'s accent — the kit reserves red for cancellation in both applications.
+ */
+@Composable
+public fun DriverShift(
+    state: DriverShiftState,
+    onToggleOnline: () -> Unit,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = KvadrantTheme.colors
+    val type = ShashkiTheme.typography
+
+    Column(
+        modifier
+            .fillMaxSize()
+            .background(colors.background)
+            .padding(horizontal = MARGIN),
+    ) {
+        Spacer(Modifier.height(TOP))
+        KvadrantText(state.driverLabel, style = type.meta.copy(color = colors.subtle))
+        KvadrantText(state.classLabel, style = type.rowEmphasis)
+
+        Spacer(Modifier.height(GAP))
+
+        val offer = state.offer
+        if (offer != null) {
+            OfferCard(
+                fare = offer.fare,
+                classAndPayment = offer.classAndPayment,
+                secondsLeft = offer.secondsLeft,
+                secondsTotal = offer.secondsTotal,
+                pickup = offer.pickup,
+                pickupMeta = offer.pickupMeta,
+                dropoff = offer.dropoff,
+                dropoffMeta = offer.dropoffMeta,
+                onAccept = onAccept,
+                onDecline = onDecline,
+            )
+            Spacer(Modifier.weight(1f))
+        } else {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    KvadrantText(
+                        if (state.online) ONLINE else OFFLINE,
+                        style =
+                            type.stateHeadline.copy(
+                                color = if (state.online) colors.accent else colors.inactive,
+                                textAlign = TextAlign.Center,
+                            ),
+                    )
+                    state.reported?.let { taken ->
+                        Spacer(Modifier.height(GAP))
+                        KvadrantText("$taken positions sent", style = type.meta.copy(color = colors.subtle))
+                    }
+                }
+            }
+        }
+
+        // The shift switch, at the app bar's height and drawn here rather than taken from the
+        // library: B-15 answered "may an app bar carry a filled action" with *simplify*, and this is
+        // the same answer OfferCard's strip already gives.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(BAR)
+                .border(RING, if (state.online) colors.accent else colors.inactive)
+                .clickable(onClick = onToggleOnline),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            KvadrantText(
+                if (state.online) GO_OFFLINE else GO_ONLINE,
+                style = if (state.online) type.body.copy(color = colors.accent) else type.body,
+            )
+        }
+        Spacer(Modifier.size(MARGIN))
+    }
+}
+
+private const val ONLINE = "waiting"
+private const val OFFLINE = "offline"
+private const val GO_ONLINE = "go online"
+private const val GO_OFFLINE = "go offline"
+
+private val MARGIN = 12.dp
+private val GAP = 12.dp
+private val TOP = 24.dp
+private val BAR = 54.dp
+private val RING = 1.dp

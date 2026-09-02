@@ -9,6 +9,7 @@ import io.github.youndie.shashki.server.common.suspendRunCatching
 import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswer
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
+import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichRepository
 import ru.workinprogress.petich.PetichResult
@@ -32,7 +33,16 @@ public class AnswerOfferUseCase(
                     DriverDecision.DECLINE -> DriverAnswer.Outcome.DECLINE
                 }
             resume(engine, sagas, params.rideId, DriverAnswer(params.answer.driverId, outcome))
-            rides.find(params.rideId) ?: throw RideNotFoundException(params.rideId)
+            val ride = rides.find(params.rideId) ?: throw RideNotFoundException(params.rideId)
+            // **An accept the saga ignored must not come back as 200.** `DriverAnswerStep` already
+            // refuses an answer from a driver who is not the one currently offered — it resuspends,
+            // which is correct and completely silent: the ride comes back unchanged, and a client
+            // that assumed success would show a trip that belongs to somebody else. So the outcome
+            // is read off the ride rather than off the fact that nothing threw.
+            if (outcome == DriverAnswer.Outcome.ACCEPT && ride.driverId != params.answer.driverId) {
+                throw OfferGoneException(params.rideId, params.answer.driverId)
+            }
+            ride
         }
 
     public class Params(
@@ -79,6 +89,7 @@ public class CancelRideUseCase(
 public class FindOfferUseCase(
     private val board: OfferBoard,
     private val rides: RideRepository,
+    private val clock: PetichClock,
 ) {
     public suspend fun forDriver(driverId: String): OfferView? {
         val offer = board.forDriver(driverId) ?: return null
@@ -91,6 +102,10 @@ public class FindOfferUseCase(
             pickup = ride.pickup,
             dropoff = ride.dropoff,
             expiresAtEpochMs = offer.expiresAtEpochMs,
+            // **The driver's client is told what the clock said here.** It counts the difference
+            // rather than subtracting its own wall clock from a deadline it did not set; see
+            // `OfferView`.
+            nowEpochMs = clock.nowEpochMs(),
         )
     }
 }
