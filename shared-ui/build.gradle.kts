@@ -44,9 +44,12 @@ kotlin {
             // The client speaks the wire types rather than copying them: a `GeoPoint` on a map is
             // the same `GeoPoint` the server sent, and a second one would drift within a sprint.
             api(projects.protocol)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.ui)
+            // Named rather than reached through `compose.*`: those accessors are deprecated in
+            // Compose 1.12, and they say so only when the build script is compiled — which happens
+            // on an empty Gradle home and nowhere else. See B-27.
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
             implementation(libs.kvadrant.core)
             // The server-driven subset. B-17 puts the kit's composition rules in the renderer,
             // because only a renderer can decide what happens to a payload a rule forbids.
@@ -54,7 +57,9 @@ kotlin {
             api(libs.kompot.core)
             implementation(libs.kompot.registryAnnotations)
         }
-        val desktopTest by getting {
+        // `getByName` rather than `by getting`: the delegate is deprecated in Gradle 9.6, and its
+        // warning is a script-compilation warning like the ones above.
+        getByName("desktopTest") {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(compose.desktop.currentOs)
@@ -97,13 +102,31 @@ ksp { arg("kompotModuleTag", "ShashkiUi") }
 
 tasks.named("check") { dependsOn(tasks.named("compileKotlinWasmJs")) }
 
-// **`ui-test` is versioned by hand, so the hand is checked.** `compose.uiTest` would have carried
-// the plugin's own version, but it is deprecated in Compose 1.12 and says so only on a clean
-// configuration — a warm cache never re-reads the script, which is why this surfaced during B-13's
-// empty-cache build and not in five hundred incremental ones. Naming the artefact directly means a
-// number that can drift from the Compose the plugin applies, and a test harness one minor behind
-// its runtime is exactly the `NoSuchMethodError` research §1.2 describes.
-check(libs.versions.composeUiTest.get() == wip.versions.composeMultiplatform.get()) {
-    "compose-uiTest is ${libs.versions.composeUiTest.get()} but Compose is " +
-        "${wip.versions.composeMultiplatform.get()}; the test harness must be on the runtime's line"
+// **Every Compose artefact named by hand is checked against the version the plugin applies.**
+//
+// The accessors would have carried the plugin's own version; they are deprecated in Compose 1.12 and
+// say so only when the build script is compiled, which is why this surfaced during B-13's empty-cache
+// build and not in five hundred incremental ones. Naming the artefacts trades a warning for numbers
+// that can drift, and a Compose UI a minor away from its runtime is the `NoSuchMethodError` research
+// §1.2 describes.
+//
+// **By group rather than by alias**, so an artefact added tomorrow is covered without anybody
+// remembering to extend a list here — which is the difference between a guard and an inventory.
+run {
+    val expected = wip.versions.composeMultiplatform.get()
+    val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+    val named =
+        catalog.libraryAliases
+            .mapNotNull { alias -> catalog.findLibrary(alias).orElse(null)?.get() }
+            .filter { it.module.group.startsWith("org.jetbrains.compose") }
+
+    // The vacuity guard. A check over an empty list passes for ever and reports nothing, and the day
+    // somebody puts these back behind an accessor this should say so rather than go quiet.
+    check(named.isNotEmpty()) { "no Compose artefact is named by hand any more; this check passes over nothing" }
+
+    val drifted = named.filter { it.versionConstraint.requiredVersion != expected }
+    check(drifted.isEmpty()) {
+        "Compose is $expected but ${drifted.size} artefact(s) are pinned elsewhere: " +
+            drifted.joinToString { "${it.module} at ${it.versionConstraint.requiredVersion}" }
+    }
 }

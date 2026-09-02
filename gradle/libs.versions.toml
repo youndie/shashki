@@ -38,7 +38,11 @@ smtpkn = "0.1.0-20260809.051147-2"
 smtpknTransport = "0.1.0-20260809.051147-1"
 graphhopper = "11.0"
 cryptography = "0.6.0"
-# Kept equal to the shared catalog's `composeMultiplatform` by the check in shared-ui/build.gradle.kts.
+# **Every Compose artefact this repository names by hand rides this one reference**, and
+# shared-ui/build.gradle.kts checks it against the version the plugin applies. Compose 1.12 deprecated
+# the `compose.runtime` / `compose.foundation` / `compose.ui` / `compose.uiTest` accessors in favour
+# of naming the artefacts — which trades a warning for a number that can drift, so the number is
+# guarded. The name is historical: it was `ui-test` alone until B-27.
 composeUiTest = "1.12.0"
 # Server-driven UI. A CI-numbered publish, not a `-SNAPSHOT`.
 kompot = "0.34.1.101"
@@ -96,6 +100,9 @@ kompot-registryProcessor = { module = "io.github.youndie:kompot-registry-process
 # build, because a warm configuration cache never re-evaluated the script. The version rides
 # `wip.versions.composeMultiplatform`, so it cannot drift from the Compose the plugin applies.
 compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeUiTest" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeUiTest" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeUiTest" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeUiTest" }
 
 smtpkn-client = { module = "io.github.youndie:smtp-client", version.ref = "smtpkn" }
 smtpkn-transportKtor = { module = "io.github.youndie:smtp-transport-ktor", version.ref = "smtpknTransport" }
