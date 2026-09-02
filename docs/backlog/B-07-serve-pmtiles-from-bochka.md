@@ -62,6 +62,11 @@ serving tiles from bochka means depending on bochka. It does not: the browser fe
 wherever the archive lives, so what is pinned is the image tag. Saying that plainly is better than
 adding a dependency to satisfy a criterion.
 
+**That sentence turned out to be a decision about the stack rather than a note about this item**, and
+it now lives where decisions live: research §2 D12, together with the consequence nobody had drawn —
+that s3kn is left with exactly one plausible scenario in this product (a driver uploading documents
+at onboarding) and no item that builds it.
+
 **The client is committed** (`map/tile_serving.py`) for the same reason `label_coverage.py` is: a
 measurement nobody can repeat is a number in prose. It signs SigV4 on the standard library rather
 than pulling in boto3, because a retrying, pooling client between the measurement and the thing being

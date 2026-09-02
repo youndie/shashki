@@ -2,7 +2,7 @@
 id: B-37
 title: "The settlement saga, whose parts are all written and none of them called"
 status: open
-priority: P1
+priority: P0
 size: L
 stage: stage-2-saga
 ---
@@ -13,6 +13,12 @@ Research §1.4c says one ride is **two** sagas and a stretch of no saga: the ord
 `REQUESTED → ASSIGNED`, the trip is the driver's own transitions with nothing to compensate, and
 `COMPLETED` opens the settlement — capture, payout, receipt, events. The first one is built and
 killed at every phase boundary by its own tests. The second does not exist.
+
+**P0, and the priority is the point of the item.** Stage 2 is called "the order survives the process
+dying" and the goal at the top of the backlog names what a stranger judges this product by: the
+driver was assigned, the process died, and *the card was not left holding money*. Half of that
+sentence is demonstrated. The other half cannot be, because nothing ever completes a ride — so every
+completed ride would leave a hold for ever, if one could complete.
 
 What makes it worth an item rather than a note is that its pieces are all here and none of them is
 reachable:

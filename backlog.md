@@ -40,13 +40,16 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (6)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
+| [B-37](docs/backlog/B-37-the-settlement-saga.md) `[ ]` | The settlement saga, whose parts are all written and none of them called | P0 | L | - |
 | [B-35](docs/backlog/B-35-the-server-as-an-image.md) `[ ]` | The server as an image, and the graph that has to be inside it | P1 | M | - |
-| [B-37](docs/backlog/B-37-the-settlement-saga.md) `[ ]` | The settlement saga, whose parts are all written and none of them called | P1 | L | - |
+| [B-38](docs/backlog/B-38-ride-events-on-booblik.md) `[ ]` | Ride events reach booblik, so the broker stops being a comment | P1 | M | - |
+| [B-40](docs/backlog/B-40-the-documentation-layers.md) `[ ]` | The layers below the research, which the rule about main has been holding empty | P1 | L | - |
 | [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
+| [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[ ]` | The service can be watched: metrik, tracy, telek and kompot's degradation sink | P2 | M | B-35 |
 
 ## Closed (34)
 

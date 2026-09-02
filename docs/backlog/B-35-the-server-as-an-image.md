@@ -48,6 +48,11 @@ every machine except the one somebody would want to show it on.
   native call, which for this server is GraphHopper's.
 - AC: where the two browser bundles are served from is decided and written down, not left to the
   reader of a compose file.
+- AC: `docker compose -f docker/compose.yaml up` brings up **the whole stand** — this server on its
+  image beside the Postgres, shildik and bochka that are already there — and a browser reaches a
+  priced class picker. Today that file stands up the services shashki *talks to* and says in its own
+  first line that it is not a deployment; what it cannot do is run shashki. An image nobody has
+  started next to its dependencies is an artefact rather than a demo.
 - Anchors: `server/build.gradle.kts`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/route/RoutingConfig.kt`,
   `docker/compose.yaml`

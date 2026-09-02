@@ -1400,6 +1400,35 @@ is not translated.
 
 ---
 
+
+### D12. The object store is a host, not a dependency — and s3kn has no scenario left
+
+[B-07](../backlog/B-07-serve-pmtiles-from-bochka.md) closed with a sentence in its tail that is
+actually a decision about the stack, and it belongs here rather than there: **shashki links nothing
+from bochka.** The browser fetches tiles over ordinary ranged HTTP from wherever the archive is
+hosted, so bochka is the host and not a library — what is pinned is the image, `ghcr.io/youndie/bochka:v0.5.0`,
+and the dependency graph is untouched. That is the right shape and it was reached by building the
+thing, not by preferring it.
+
+**The consequence nobody stated is that s3kn left the stack silently.** §1 records it among the five
+`-SNAPSHOT` libraries the brief assumed and the graph never contained; four of the other five have
+since been used or explicitly excluded, and this one has not. An S3 client from Kotlin has exactly
+one plausible scenario left in this product — **a driver uploading documents at onboarding**: a
+licence, an insurance certificate, a photo of the car, written by a client that is not a browser
+fetching a public object.
+
+Three ways this can go, and the point of writing it down is that all three are decisions rather than
+drift:
+
+| | What it means |
+|---|---|
+| build the onboarding | s3kn gets its scenario, the driver bundle gets a screen, and the stack's object store is shown from both ends — a host for public reads and a client for authenticated writes |
+| drop it | the stack table says so, with this paragraph as the reason, and nobody spends an afternoon looking for where it went |
+| leave it | the version table keeps naming a library the product does not use, which is the state that produced this note |
+
+Not resolved here: this is the record that a choice is owed, and the first option is the only one
+that is an item.
+
 ## 3. Risks and open questions
 
 ### Risk 1. The browser target has no released path
@@ -1598,10 +1627,18 @@ turning out slow.
 missed: the airport is at **26.3 km · 20 min** by road, not the kit's 18.4 km · 26 min, so the
 fixtures took the router's numbers. The city is no longer a proposal.
 
-### Open question 4. Whether `shashki-api` is published
+### Open question 4. Whether `shashki-api` is published — **answered: no, and the condition is named**
 
-A separate KMP artifact for the protocol, as groundwork for mobile clients. Deferred: it costs
-nothing to defer and something to get wrong, and the answer is clearer once one client exists.
+A separate KMP artifact for the protocol, as groundwork for mobile clients. It was deferred because
+deferring costs nothing and getting it wrong costs something, and because the answer would be clearer
+once a client existed.
+
+**Two exist now, and the answer is no** (2026-09-02). Both consume `:protocol` as a project
+dependency and neither has ever needed it as a coordinate; publishing it would add a release cycle,
+a compatibility promise and a version to keep in step, in exchange for nothing this repository can
+use. The condition that would change it is a consumer that cannot be a module in this build — a
+mobile client, or somebody else's service — and until one appears the artifact would be published
+for an audience of nobody.
 
 ---
 
