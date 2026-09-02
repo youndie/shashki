@@ -77,9 +77,11 @@ picture, which is worse than having none. `labelText()` lower-cases now, the thr
 re-recorded, and [B-05](B-05-glyph-coverage-guard.md)'s pinned label list caught the change on the
 first run — which is the first time that guard has bitten on something other than its own control.
 
-**One thing deliberately not done.** `downcase` lower-cases the road number too, so the A2 reads
-"a2". The item's own argument for `ref` was that it "is short, uppercase and reads correctly", which
+**One thing deliberately not done, and now decided.** `downcase` lower-cases the road number too,
+so the A2 reads "a2". The item's own argument for `ref` was that it "is short, uppercase and reads correctly", which
 the `downcase` wrapper defeats — but the kit's street labels are lower case by design and a number
 exempted from that would be the only capital letter on the map. Keeping the one-token fix means the
 renderer and the style agree; making the number an exception is a design decision and belongs to
-whoever drew the kit, not to this item.
+whoever drew the kit, not to this item. **Put to the owner on 2026-09-02 and answered: leave it.**
+So the lower-case number is the design, not a side effect tolerated for now — recorded here
+because the next reader will notice "a2" and wonder whether anybody did.
