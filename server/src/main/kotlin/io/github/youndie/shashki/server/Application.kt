@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
+import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
@@ -132,6 +133,7 @@ public fun Application.shashki(
         rideRoutes()
         routeRoutes()
         quoteRoutes()
+        promoRoutes()
         driverRoutes()
         driverPositionRoutes()
     }

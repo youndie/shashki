@@ -53,7 +53,10 @@ kotlin {
             implementation(libs.kvadrant.core)
             // The server-driven subset. B-17 puts the kit's composition rules in the renderer,
             // because only a renderer can decide what happens to a payload a rule forbids.
-            implementation(libs.kompot.client)
+            // `api`, because `ServerScreen` takes a `KompotActionHandler` and returns a screen built
+            // from `KompotComponent`: both are this module's public surface, and a consumer that
+            // cannot name them cannot call it.
+            api(libs.kompot.client)
             api(libs.kompot.core)
             implementation(libs.kompot.registryAnnotations)
         }
@@ -90,15 +93,45 @@ viddik {
 // **The wasmJs claim is checked, not stated.** With the browser test task disabled, nothing in
 // `check` would otherwise touch this target, and a target nobody compiles is a decision that quietly
 // stops being true. D1 rests on `map/` being buildable for Kotlin/Wasm, so `check` compiles it.
-// The registry processor, per target: KSP runs once per compilation and the tag keeps the two
-// generated files from colliding on a name. `kompotModuleTag` is required — the processor errors
-// without it rather than guessing, which is why it is here and not defaulted.
+// **The registry processor runs on the common metadata, not per target.**
+//
+// Per target was the obvious wiring and it puts the generated registry in `desktopMain` and
+// `wasmJsMain`, where `commonMain` cannot see it — so a common composable that renders a tree cannot
+// name its own renderers, and neither can a consumer's `commonMain`. Generating into the metadata
+// compilation puts `generatedShashkiUiRenderers` in the common source set, which is where a
+// multiplatform library's API belongs.
+//
+// `kompotModuleTag` is required: the processor errors without it rather than guessing, because two
+// modules generating `GeneratedKompotRegistration.kt` into one package would collide.
 dependencies {
-    add("kspDesktop", libs.kompot.registryProcessor)
-    add("kspWasmJs", libs.kompot.registryProcessor)
+    add("kspCommonMainMetadata", libs.kompot.registryProcessor)
 }
 
 ksp { arg("kompotModuleTag", "ShashkiUi") }
+
+kotlin.sourceSets.named("commonMain") {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/kotlin"))
+}
+
+/** Every task that walks `commonMain` — compilations, the other processors, and the linter. */
+fun String.readsCommonMain(): Boolean =
+    startsWith("compile") || startsWith("ksp") || contains("ktlint", ignoreCase = true)
+
+// Every compilation reads the generated file, and so does viddik's own per-target processor — its
+// task walks `commonMain`, which now contains a directory this one writes. Gradle refuses an
+// undeclared read of another task's output, and it is right to: without the dependency the first
+// build of a clean checkout would compile before KSP had run.
+tasks
+    .matching { it.name != "kspCommonMainKotlinMetadata" && it.name.readsCommonMain() }
+    .configureEach { dependsOn("kspCommonMainKotlinMetadata") }
+
+// **And ktlint does not lint it.** Generated code is written by nobody, and holding it to a house
+// style produces failures whose fix is in a processor in another repository. It still has to be
+// *seen* by ktlint's task for the dependency above to be honest, so this is a filter rather than a
+// source directory taken away.
+ktlint {
+    filter { exclude { it.file.path.contains("/generated/") } }
+}
 
 tasks.named("check") { dependsOn(tasks.named("compileKotlinWasmJs")) }
 

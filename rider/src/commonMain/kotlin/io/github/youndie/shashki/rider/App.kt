@@ -12,8 +12,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import io.github.youndie.kompot.KompotActionHandler
+import io.github.youndie.kompot.standard.NavigateAction
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.crash.installCrashReporting
+import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.TripScreen
 import io.github.youndie.shashki.ui.RiderTheme
@@ -128,6 +131,20 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                         onFailed = { },
                     )
                 }
+                entry<RiderRoute.Promo> {
+                    PromoScreen(
+                        // **The server may say "go somewhere", and where is this application's to
+                        // decide.** A deeplink is a name, not a route: the client maps the names it
+                        // knows and ignores the rest, which is what keeps a backend from navigating
+                        // somebody into a screen this build does not have.
+                        onAction =
+                            KompotActionHandler { action ->
+                                if (action is NavigateAction && action.deeplink == RIDES_DEEPLINK) {
+                                    while (backStack.size > 1) backStack.removeAt(backStack.size - 1)
+                                }
+                            },
+                    )
+                }
                 entry<RiderRoute.SignIn> {
                     // B-26's screen. The PKCE client is built and tested; what it needs is a shildik
                     // to redirect to, which is that item's own precondition.
@@ -141,6 +158,9 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
     )
 }
 
+/** The one deeplink this application answers. A name the server sends, not a path it chooses. */
+private const val RIDES_DEEPLINK = "shashki://rides"
+
 /**
  * The polymorphic registration Navigation 3 requires outside Android, where there is no reflection to
  * restore a back stack with. Every route is named here, and one that is not will fail to restore.
@@ -153,6 +173,7 @@ private val SAVED_STATE =
                     subclass(RiderRoute.ClassPicker::class)
                     subclass(RiderRoute.SignIn::class)
                     subclass(RiderRoute.Trip::class)
+                    subclass(RiderRoute.Promo::class)
                 }
             }
     }

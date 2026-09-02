@@ -25,6 +25,12 @@ public sealed interface RiderRoute : NavKey {
         override val path: String get() = "/"
     }
 
+    /** The one screen the server owns. See research §2 D11. */
+    @Serializable
+    public data object Promo : RiderRoute {
+        override val path: String get() = "/promo"
+    }
+
     @Serializable
     public data class Trip(
         val rideId: String,
@@ -45,6 +51,7 @@ public sealed interface RiderRoute : NavKey {
             when {
                 path == "/" || path.isEmpty() -> ClassPicker
                 path == SignIn.path -> SignIn
+                path == Promo.path -> Promo
                 path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 else -> null
             }

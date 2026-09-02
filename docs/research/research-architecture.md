@@ -1154,6 +1154,61 @@ and 100 128 of JavaScript: still a third of the runtime it rides in, and still t
 The third row is also the answer to a question nobody asked: at 174 kB before DCE, the cost of route
 4's whole tile pipeline is invisible next to the runtime it rides in.
 
+### D11. The server owns one screen, and it is the promo
+
+Brief: "server-driven screens beside natively drawn ones". The kit's section 08 is "composition rules
+for the screens the server sends as a tree". **Which screens was never recorded**, and the question
+surfaced when somebody asked — [B-32](../backlog/B-32-which-screens-the-server-sends.md) is where it
+was written down and this is the answer.
+
+**Decision: one screen, entirely the server's, with no native version — the promotion. Nothing in the
+ride flow is server-driven.**
+
+**Why a whole screen rather than a panel.** A panel inside a native screen shows the seam at its
+narrowest and never exercises the thing BDUI is for: a client meeting a component it does not know
+and continuing. With a fallback beside it, the degradation is never reached and the kit's three
+composition rules stay decorative. A screen with no native version has nowhere to fall back to, so
+the property is load-bearing or the screen is blank — and which of those it is, is now a golden.
+
+**Why the promo and not something in the flow.** Because it is the piece a product actually changes
+between releases, and because nothing depends on it: if the server says nothing, the rider sees
+"nothing on offer today" and orders a car exactly as before. Putting the fare breakdown or the trip
+screen behind a tree would make the demo's core flow depend on a mechanism the demo is meant to
+*show*, which is the opposite way round.
+
+**The boundary, in one sentence: the server names roles and never values.**
+
+| | |
+|---|---|
+| On the wire | component types and **token names** — `page_title`, `accent`, `body` — from `ShashkiTokens` in `:protocol`, so the vocabulary is declared once for both sides |
+| In the client | `ShashkiDesignSystem` resolves those names into kvadrant's palette and shashki's ramp, and an unknown name falls back rather than failing |
+| Never on the wire | a colour, a size, a font, a shape. A backend cannot paint an unreadable screen because it has no way to say what a colour is |
+
+That property is kompot's, not ours — its tokens are open strings precisely so the toolkit assumes no
+design system — and it is what makes handing a screen to a backend safe rather than reckless.
+
+**What is built.** `GET /api/screens/promo` on the server, in kompot's own DSL out of kompot's own
+components; `ServerScreen` in `:shared-ui` combining three renderer registries — kompot's core, its
+standard set, and shashki's three from
+[B-17](../backlog/B-17-kompot-renderer-invariants.md); a `/promo` route in the rider. Two goldens: the
+tree drawn in this kit, and the same tree with one component type this build does not know, where the
+rest still draws.
+
+**Two costs, stated.**
+
+- **The hole is silent.** kompot's `KompotDegradationSink` exists because "a hole is reported by
+  nobody" and this application binds none, so a component nobody rendered is invisible to everyone
+  including the deployment that shipped it. §1.7c already records that the sink has no kind for a
+  *property* outside its allowed set; this is the other half.
+- **The server names tokens with no compiler behind it.** `ShashkiTokens` is a shared vocabulary and
+  nothing makes the server use it — kompot's tokens are strings by design. `PromoTreeTest` walks the
+  encoded document and fails on a token outside the vocabulary, which is the only place that check
+  can live.
+
+**Deliberately not done: live updates.** `kompot-realtime` is a separate mechanism and §1.5a already
+decided against Redis. A tree that changes under the reader is a second demo, and this one has not
+been shown yet.
+
 ### D9. Documentation is in English
 
 Code, comments, test names, exception messages and commit subjects in English, as everywhere in this

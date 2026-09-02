@@ -3,6 +3,10 @@ package io.github.youndie.shashki.rider
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.rider.feature.promo.data.HttpPromoRepository
+import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase
+import io.github.youndie.shashki.rider.feature.promo.domain.PromoRepository
+import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
 import io.github.youndie.shashki.rider.feature.ride.data.HttpRideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
@@ -78,6 +82,9 @@ public fun riderModule(config: RiderConfig): Module =
         }
         single<RideRepository> { HttpRideRepository(get()) }
 
+        single<PromoRepository> { HttpPromoRepository(get()) }
+        factory { LoadPromoUseCase(get()) }
+
         factory { QuoteJourneyUseCase(get()) }
         factory { RequestRideUseCase(get()) }
         factory { CancelRideUseCase(get()) }
@@ -116,4 +123,5 @@ public fun riderModule(config: RiderConfig): Module =
             )
         }
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
+        viewModel { PromoViewModel(get()) }
     }

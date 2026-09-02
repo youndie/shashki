@@ -39,6 +39,12 @@ dependencies {
 
     // The order saga: the engine, its Postgres repository, and the outbox relay. petich-postgres
     // ships no driver, no pool and no DDL on purpose — those three are the application's, below.
+    // The one screen the server owns, as a tree. `kompot-core` is the component model and
+    // `kompot-standard` its vocabulary — neither carries Compose, which is what lets a headless
+    // server build a screen at all. See B-32 and research §2 D11.
+    implementation(libs.kompot.core)
+    implementation(libs.kompot.standard)
+
     // The receipt, over SMTP written from the RFC rather than through a JVM mail library — which is
     // the only thing this part of the demo demonstrates. See B-14 and research §1.6d.
     implementation(libs.smtpkn.client)

@@ -40,6 +40,10 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)
             implementation(libs.kvadrant.core)
+            // The component model and its vocabulary. The renderers come with `:shared-ui`; what the
+            // rider needs is the types, so it can hold a tree and hand it over.
+            implementation(libs.kompot.core)
+            implementation(libs.kompot.standard)
 
             implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
             implementation(libs.ktor.client.core)
