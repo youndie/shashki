@@ -65,7 +65,12 @@ public class RequestRideUseCase(
                     )
             ) {
                 // A refusal, a rollback and a completion all leave a row; the rider reads the row.
-                is PetichResult.Success, is PetichResult.ActionRequired, is PetichResult.Error -> Unit
+                is PetichResult.Success, is PetichResult.ActionRequired -> Unit
+
+                // **And a refusal leaves its reason on the row too** (B-58). `Reject` and
+                // `Compensate` each take one and petich keeps neither, so it is written here, where
+                // the engine has finished with the row and the answer is in hand.
+                is PetichResult.Error -> rides.recordRejection(rideId, result.reason)
 
                 is PetichResult.SystemFailure -> error("order saga $rideId failed systemically: ${result.details}")
             }

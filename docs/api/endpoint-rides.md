@@ -17,6 +17,15 @@ parent_feature: feature-order-a-ride
 > classes named in `contract_source`; they are compiled into both sides, so there is nothing here to
 > copy and nothing to keep in step.
 
+## Why a ride was cancelled (B-58)
+
+`RideView.cancellationReason` carries the sentence the saga refused with — `no cars nearby` for a
+cascade that ran out — and the rider's R5·a shows it rather than assuming it.
+
+**It was `null` for every ride until B-58**, and not by an oversight in one place: petich's `Reject`
+and `Compensate` take a reason and keep it nowhere, and only the results that are *not* refusals
+carry an enriched payload. The reason is written from outside the engine, where `process` returns.
+
 ## Outside the city (B-57)
 
 `POST /api/rides` answers **422** with `the pickup is outside the area this service covers` — the

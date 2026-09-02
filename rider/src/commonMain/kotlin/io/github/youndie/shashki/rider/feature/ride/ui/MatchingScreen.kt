@@ -60,7 +60,7 @@ public fun MatchingContent(
 
     RiderMatching(
         stage = uiState.stage,
-        headline = if (looking) "looking for a car" else "no cars nearby",
+        headline = uiState.headline(),
         supporting =
             if (looking) {
                 "asking the drivers around you"
@@ -83,3 +83,20 @@ public fun MatchingContent(
         modifier = modifier,
     )
 }
+
+/**
+ * What the screen says when the search has ended (B-58).
+ *
+ * **The server's own sentence, when it sent one.** This used to print "no cars nearby" for every
+ * ended search, which is the client asserting a reason it does not know: a ride refused for any
+ * other reason said the same thing, and the field that carries the real one —
+ * `RideView.cancellationReason` — was read by nobody because until B-58 nobody wrote it.
+ *
+ * The fallback stays, and it is the kit's R5·a headline: a server that says nothing is, in this
+ * product, a cascade that ran out of drivers.
+ */
+internal fun MatchingUiState.headline(): String =
+    when {
+        stage == MatchingStage.LOOKING -> "looking for a car"
+        else -> ride?.cancellationReason ?: "no cars nearby"
+    }

@@ -1,7 +1,7 @@
 ---
 id: B-58
 title: "cancellationReason is on the wire, read by the repository, and written by nobody"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -35,3 +35,31 @@ nobody. The rider is told a ride was cancelled and never why.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderPayload.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderSteps.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/data/PetichRideRepository.kt`
+
+## What it turned out to be
+
+**Nobody could have written it from inside the saga, which is why nobody had.** petich's
+`InterceptorResult.Reject` and `Compensate` each take a reason and neither the row nor any of
+petich's own types carries it afterwards — only `Proceed`, `Suspend` and `Resuspend` take an
+`EnrichedPayload`, and a step that is refusing returns none of those. So `Enriched.REJECTION` had a
+reader and no possible writer, and every cancelled ride came back `null`.
+
+**It is written where `process` returns**, which is the moment the answer is in hand and the engine
+has finished with the row: `PetichResult.Error(reason)` at the request, and the same at every resume
+— a decline, an expiry, a rider's own cancel. `RideRepository.recordRejection` merges it into the
+enriched payload.
+
+**And the update was refused, silently, until the version was right.** petich's optimistic `update`
+matches the row it is *replacing* — the engine hands it a row it has already advanced — so an update
+carrying the version it had just read matched nothing and returned `false`. The reason was being
+recorded and was not being kept, which is the same defect one layer down; `row.version + 1` is the
+fix and the comment says why so the next writer does not rediscover it.
+
+**The screen stopped guessing too.** `MatchingContent` printed "no cars nearby" for every ended
+search, whatever the server had refused it for — safe only for as long as the real answer was never
+written. It shows the server's sentence now and keeps the kit's R5·a headline as the fallback, which
+is honest: a server that says nothing is, in this product, a cascade that ran out of drivers.
+
+**Asserted end to end**: with nobody online, `POST /api/rides` comes back `CANCELLED` carrying
+`no cars nearby`, and three unit tests hold the screen to the server's words. Both fail with the
+recording removed.

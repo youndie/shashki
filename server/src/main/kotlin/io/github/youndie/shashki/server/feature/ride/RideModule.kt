@@ -227,7 +227,7 @@ public fun rideModule(
         factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }
         factory { AnswerOfferUseCase(engine = get(), sagas = get(), rides = get()) }
-        factory { ExpireOfferUseCase(engine = get(), sagas = get()) }
+        factory { ExpireOfferUseCase(engine = get(), sagas = get(), rides = get()) }
         factory {
             CancelRideUseCase(
                 engine = get(),

@@ -38,7 +38,7 @@ public class AnswerOfferUseCase(
                     DriverDecision.ACCEPT -> DriverAnswer.Outcome.ACCEPT
                     DriverDecision.DECLINE -> DriverAnswer.Outcome.DECLINE
                 }
-            resume(engine, sagas, params.rideId, DriverAnswer(params.answer.driverId, outcome))
+            resume(engine, sagas, rides, params.rideId, DriverAnswer(params.answer.driverId, outcome))
             val ride = rides.find(params.rideId) ?: throw RideNotFoundException(params.rideId)
             // **An accept the saga ignored must not come back as 200.** `DriverAnswerStep` already
             // refuses an answer from a driver who is not the one currently offered — it resuspends,
@@ -61,12 +61,13 @@ public class AnswerOfferUseCase(
 public class ExpireOfferUseCase(
     private val engine: PetichEngine,
     private val sagas: PetichRepository,
+    private val rides: RideRepository,
 ) {
     public suspend fun invoke(
         rideId: String,
         driverId: String,
     ) {
-        resume(engine, sagas, rideId, DriverAnswer(driverId, DriverAnswer.Outcome.IGNORED))
+        resume(engine, sagas, rides, rideId, DriverAnswer(driverId, DriverAnswer.Outcome.IGNORED))
     }
 }
 
@@ -96,7 +97,7 @@ public class CancelRideUseCase(
         suspendRunCatching {
             val saga = sagas.findById(params) ?: throw RideNotFoundException(params)
             if (saga.status == PetichStatus.PENDING_SIGNATURE) {
-                resume(engine, sagas, params, RiderCancelled())
+                resume(engine, sagas, rides, params, RiderCancelled())
                 return@suspendRunCatching rides.find(params) ?: throw RideNotFoundException(params)
             }
 
@@ -147,12 +148,18 @@ public class FindOfferUseCase(
 private suspend fun resume(
     engine: PetichEngine,
     sagas: PetichRepository,
+    rides: RideRepository,
     rideId: String,
     payload: ru.workinprogress.petich.ResumePayload,
 ) {
     val saga = sagas.findById(rideId) ?: throw RideNotFoundException(rideId)
     when (val result = engine.process(saga.copy(resumePayload = payload))) {
-        is PetichResult.Success, is PetichResult.ActionRequired, is PetichResult.Error -> Unit
+        is PetichResult.Success, is PetichResult.ActionRequired -> Unit
+
+        // **The reason, written where it is known and the engine is not holding the row** (B-58).
+        // A cascade that runs out of drivers ends here, and this is the sentence R5·a shows.
+        is PetichResult.Error -> rides.recordRejection(rideId, result.reason)
+
         is PetichResult.SystemFailure -> error("order saga $rideId failed systemically on resume: ${result.details}")
     }
 }

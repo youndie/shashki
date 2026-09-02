@@ -31,6 +31,33 @@ public class PetichRideRepository(
     private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
+    /**
+     * Merge the reason into the row's enriched payload (B-58).
+     *
+     * **After the engine is done with the row, never during.** petich updates optimistically, so a
+     * write from inside a step would race the engine's own; both call sites here run when `process`
+     * has returned. A losing update is dropped rather than retried: the reason is a sentence on a
+     * screen, and a ride that lost the race still shows the status it really has.
+     */
+    override suspend fun recordRejection(
+        rideId: String,
+        reason: String,
+    ) {
+        val row = petiches.findById(rideId) ?: return
+        val data = (row.enrichedPayload as? SimpleEnrichedPayload)?.data.orEmpty()
+        if (data.containsKey(Enriched.REJECTION)) return
+        // **The version is the next one, not the one that was read.** petich's optimistic update
+        // matches the row it is *replacing* — the engine hands it a row it has already advanced — so
+        // an update that carried the version it had just read matched nothing and returned `false`,
+        // silently. That is how this was still null after the reason was being recorded.
+        petiches.update(
+            row.copy(
+                version = row.version + 1,
+                enrichedPayload = SimpleEnrichedPayload(data + (Enriched.REJECTION to reason)),
+            ),
+        )
+    }
+
     override suspend fun find(id: String): RideView? {
         val ride = petiches.findById(id)?.toRideView() ?: return null
         // Only forward. A cancelled order saga stays cancelled even if a stale trip row says the car

@@ -16,6 +16,25 @@ public interface RideRepository {
     public suspend fun mine(riderEmail: String?): List<RideView> = emptyList()
 
     public suspend fun find(id: String): RideView?
+
+    /**
+     * Write down why a ride was refused, so the rider can be told (B-58).
+     *
+     * **The saga cannot do this itself, and that is a fact about petich rather than an oversight
+     * here.** `InterceptorResult.Reject` and `Compensate` each take a reason, and neither the row nor
+     * any of petich's own types carries it afterwards: only `Proceed`, `Suspend` and `Resuspend` take
+     * an `EnrichedPayload`, and a step that is refusing returns none of those. So `Enriched.REJECTION`
+     * — read by the projection since it was written — had nobody to write it, and every cancelled
+     * ride came back with `cancellationReason: null`.
+     *
+     * It is written from outside the engine, at the two moments the answer is known and the engine
+     * is not holding the row: after `process` returns, and when the cascade gives up.
+     */
+    public suspend fun recordRejection(
+        rideId: String,
+        reason: String,
+    ) {
+    }
 }
 
 public class RideNotFoundException(
