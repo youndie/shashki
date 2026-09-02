@@ -721,6 +721,20 @@ to `/api/quotes` on the stand, metrik's `requests` moving by **8** across a quie
 tracy holding **8** `POST /api/quotes` spans over the same window. Two collectors on two transports —
 UDP and HTTP — and the count somebody made by hand.
 
+**Consequence 1.4c2 — a reservation is taken by the saga and released by nobody
+(2026-09-02, [B-42](../backlog/B-42-a-driver-is-reserved-for-life.md)).** §1.4c1 added the second
+saga and drew the boundary between them: the order saga hands over at acceptance and the settlement
+picks up at drop-off. What neither owns is the *driver's* availability. `OfferStep` reserves a
+candidate and keeps the reservation deliberately when the driver accepts — that is what stops a
+second offer reaching a driver who is already carrying somebody — and the ride then ends in the trip
+and the settlement, neither of which has ever heard of `DriverReservations`. A driver therefore takes
+exactly one ride per process lifetime.
+
+**It was invisible to every test and obvious on the stand within two orders**, because a test drives
+one ride and a demo drives two. The rider is told nothing: `PickupEta` reads the geo-index and not
+the reservations, so the class tile goes on offering a wait for a car the dispatch will refuse. Two
+answers about one word — "available" — computed in two places and compared nowhere.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

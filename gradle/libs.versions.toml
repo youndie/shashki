@@ -14,6 +14,11 @@ sborka = "0.1.0.23"
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
 logback = "1.5.20"
+# **The Main dispatcher for the desktop windows, and the one coroutines artefact pinned here.**
+# `wip` carries `kotlinx-coroutines-core` and not `-swing`; the two have to be the same version,
+# so this number is not free — it is whatever `wip.kotlinx.coroutines.core` resolves to (1.11.0
+# today) and moves with it. `rider/build.gradle.kts` says what happens without the artefact.
+coroutinesSwing = "1.11.0"
 # The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
 # choose — a different one here is a version conflict, not a preference.
 petich = "0.1.0.10"
@@ -155,6 +160,8 @@ cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", ver
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }
 cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-provider-jdk", version.ref = "cryptography" }
 cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptography-provider-webcrypto", version.ref = "cryptography" }
+
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutinesSwing" }
 
 [plugins]
 sborkaJvm = { id = "ru.workinprogress.sborka.jvm", version.ref = "sborka" }

@@ -40,9 +40,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (0)
+## Open (1)
 
-No open tasks.
+| Task | | Priority | Size | Blocked by |
+|---|---|---|---|---|
+| [B-42](docs/backlog/B-42-a-driver-is-reserved-for-life.md) `[ ]` | A driver who finishes a ride is reserved for ever, and the rider is still shown their wait | P0 | S | - |
 
 ## Closed (41)
 

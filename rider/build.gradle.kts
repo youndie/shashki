@@ -77,6 +77,12 @@ kotlin {
         getByName("desktopMain").dependencies {
             implementation(libs.ktor.client.cio)
             implementation(compose.desktop.currentOs)
+            // **The Main dispatcher, without which no view model can be constructed.** `viewModelScope`
+            // is `Dispatchers.Main.immediate`, and on the JVM that dispatcher arrives through a
+            // service loader — Compose Desktop does not bring it. Missing, every `viewModel { }`
+            // throws on `init`, which is how the desktop rider failed the first time anybody ran it
+            // (the goldens photograph `Content` composables and never resolve a view model).
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }

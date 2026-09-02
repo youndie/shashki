@@ -5,12 +5,15 @@ import io.github.youndie.shashki.driver.feature.offer.domain.OfferRepository
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
 import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
 import io.github.youndie.shashki.driver.feature.shift.domain.ShiftRepository
+import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
+import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripViewModel
 import io.github.youndie.shashki.protocol.RideClass
 import io.ktor.client.HttpClient
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.parameter.parametersOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -39,6 +42,23 @@ class DriverGraphTest {
         assertNotNull(koin.get<AnswerOfferUseCase>())
         assertNotNull(koin.get<TripRepository>())
         assertNotNull(koin.get<ObserveTripUseCase>())
+    }
+
+    /**
+     * **The view models, built rather than declared.** Everything above resolves what the module is
+     * made of; what the application resolves first is a view model, and constructing one is the only
+     * thing that runs its `init`. The rider's copy of this test says what that missed: a window whose
+     * JVM had no `Dispatchers.Main` failed on the first view model and on nothing else.
+     */
+    @Test
+    fun `every view model can actually be constructed`() {
+        val koin = startKoin { modules(driverModule(CONFIG)) }.koin
+
+        assertNotNull(koin.get<ShiftViewModel>(), "the driver's only entry screen")
+        assertNotNull(
+            koin.get<DriverTripViewModel> { parametersOf("ride-1") },
+            "the trip screen is resolved with the ride's id, as the route passes it",
+        )
     }
 
     @Test

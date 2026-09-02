@@ -1,17 +1,21 @@
 package io.github.youndie.shashki.rider
 
+import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.WatchDriverUseCase
+import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerViewModel
+import io.github.youndie.shashki.rider.feature.ride.ui.TripViewModel
 import io.github.youndie.shashki.ui.map.MapSurface
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.parameter.parametersOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -42,6 +46,33 @@ class RiderGraphTest {
         assertNotNull(koin.get<ObserveRideUseCase>())
         assertNotNull(koin.get<WatchDriverUseCase>())
         assertNotNull(koin.get<MapSurface>())
+    }
+
+    /**
+     * **The view models, built rather than declared — the half this test did not have.**
+     *
+     * Every test above resolved a repository or a use case, which is what the module is *made of*;
+     * what the application resolves first is a view model, and none was ever built here. The desktop
+     * rider, run against the stand for the first time, died on `Could not create instance for
+     * ClassPickerViewModel` — `init { load() }` reaches `viewModelScope`, which is
+     * `Dispatchers.Main.immediate`, and the JVM window had no Main dispatcher at all because
+     * `kotlinx-coroutines-swing` was not on the desktop runtime classpath. Nothing else in this
+     * repository builds a view model: the goldens photograph the `Content` composables, which is the
+     * point of the split and also its blind spot.
+     *
+     * So this constructs each one, which is the only thing that runs an `init`. `TripViewModel`
+     * takes the ride's id as a parameter, exactly as the screen passes it.
+     */
+    @Test
+    fun `every view model can actually be constructed`() {
+        val koin = startKoin { modules(riderModule(CONFIG, noScope)) }.koin
+
+        assertNotNull(koin.get<ClassPickerViewModel>(), "the first screen of the application")
+        assertNotNull(koin.get<PromoViewModel>())
+        assertNotNull(
+            koin.get<TripViewModel> { parametersOf("ride-1") },
+            "the trip screen is resolved with the ride's id, as the route passes it",
+        )
     }
 
     /**
