@@ -39,18 +39,17 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (6)
+## Open (5)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-09 |
-| [B-10](docs/backlog/B-10-crash-reports-from-the-browser.md) `[ ]` | Crash reports from the browser go over katcher's ingest endpoint | P2 | S | - |
 | [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[ ]` | The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit | P2 | M | - |
 | [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 | [B-27](docs/backlog/B-27-deprecations-only-a-clean-build-shows.md) `[ ]` | The deprecations only a clean configuration shows | P2 | XS | - |
 
-## Closed (21)
+## Closed (22)
 
 **Remove the unknowns**
 
@@ -82,6 +81,7 @@ re-prioritising one must never move its file.
 
 **Everything past the core**
 
+- [B-10](docs/backlog/B-10-crash-reports-from-the-browser.md) `[x]` - Crash reports from the browser go over katcher's ingest endpoint
 - [B-13](docs/backlog/B-13-pin-every-dependency.md) `[x]` - Every dependency is a release or a pinned snapshot before the demo is published
 - [B-25](docs/backlog/B-25-rider-trip-in-progress.md) `[x]` - The rider's trip-in-progress screen, on the map that D1 chose
 

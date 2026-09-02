@@ -48,6 +48,8 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets" }
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 ktor-client-resources = { module = "io.ktor:ktor-client-resources" }
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
+# The engine a test substitutes for the real one, so a crash report can be asserted without a server.
+ktor-client-mock = { module = "io.ktor:ktor-client-mock" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
 # Typed routes, declared once in :protocol and read by both sides. Publishes wasmJs and jvm — checked
 # against the module metadata before it was added, because a KMP module cannot depend on a JVM-only
