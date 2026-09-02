@@ -17,6 +17,7 @@ import io.github.youndie.kompot.standard.NavigateAction
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
+import io.github.youndie.shashki.rider.feature.history.ui.HistoryScreen
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.FinishedScreen
@@ -129,6 +130,9 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                         // screen with a hole where the driver goes.
                         onOrdered = { rideId -> backStack.add(RiderRoute.Matching(rideId)) },
                         onFailed = { },
+                        // The bar's overflow, which had the kit's shape and nothing behind it
+                        // until R9 existed (B-45).
+                        onMore = { backStack.add(RiderRoute.History) },
                     )
                 }
                 entry<RiderRoute.Matching> { route ->
@@ -167,6 +171,15 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                             backStack[0] = RiderRoute.ClassPicker
                         },
                         onFailed = { },
+                    )
+                }
+                entry<RiderRoute.History> {
+                    HistoryScreen(
+                        onTrip = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
+                        onFailed = { },
+                        // **The third pivot item is the screen the server owns** — the same
+                        // `PromoScreen`, hosted rather than reimplemented (D11).
+                        promo = { PromoScreen(onAction = KompotActionHandler { }) },
                     )
                 }
                 entry<RiderRoute.Promo> {
@@ -234,6 +247,7 @@ private val SAVED_STATE =
                     subclass(RiderRoute.ClassPicker::class)
                     subclass(RiderRoute.Callback::class)
                     subclass(RiderRoute.Finished::class)
+                    subclass(RiderRoute.History::class)
                     subclass(RiderRoute.Matching::class)
                     subclass(RiderRoute.Trip::class)
                     subclass(RiderRoute.Promo::class)

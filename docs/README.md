@@ -118,9 +118,9 @@ The product, in the order a ride goes through it, then the two capabilities that
 - [x] [feature-crash-reports](features/feature-crash-reports.md) — what a browser loses, and the two
   hooks that catch it
 
-### Screens / Flows (7)
+### Screens / Flows (8)
 
-Five in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
+Six in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
 takes a state and a callback, so a golden of it needs no graph and no server.
 
 - [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
@@ -131,6 +131,8 @@ takes a state and a callback, so a golden of it needs no graph and no server.
   the driver row whose registration is deliberately blank
 - [x] [screen-rider-finished](screens/screen-rider-finished.md) — what the ride cost, the stars, and
   a tip that is a charge of its own
+- [x] [screen-rider-history](screens/screen-rider-history.md) — the rider's own rides, drawn with
+  kompot's row renderer natively
 - [x] [screen-rider-promo](screens/screen-rider-promo.md) — whatever the server sent; the client owns
   the vocabulary and one action
 - [x] [screen-driver-shift](screens/screen-driver-shift.md) — offline, waiting, or fifteen seconds to

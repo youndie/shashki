@@ -26,6 +26,8 @@ public fun ClassPickerScreen(
     scene: MapScene,
     onOrdered: (rideId: String) -> Unit,
     onFailed: (String) -> Unit,
+    /** The bar's overflow: the rider's own pages (B-45). */
+    onMore: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ClassPickerViewModel = koinViewModel(),
 ) {
@@ -40,7 +42,7 @@ public fun ClassPickerScreen(
         }
     }
 
-    ClassPickerContent(scene, uiState, viewModel::onAction, modifier)
+    ClassPickerContent(scene, uiState, viewModel::onAction, modifier, onMore)
 }
 
 /** Stateless: `uiState` and `onAction` and nothing else. A preview or a golden needs no graph. */
@@ -50,6 +52,7 @@ public fun ClassPickerContent(
     uiState: ClassPickerUiState,
     onAction: (ClassPickerUiAction) -> Unit,
     modifier: Modifier = Modifier,
+    onMore: () -> Unit = {},
 ) {
     val order = uiState.quotes.firstOrNull { it.rideClass == uiState.selected }
 
@@ -70,6 +73,7 @@ public fun ClassPickerContent(
         onChangePayment = { },
         onOrder = { onAction(ClassPickerUiAction.Order) },
         modifier = modifier,
+        onMore = onMore,
     )
 }
 

@@ -426,6 +426,46 @@ class SettlementTest {
             assertEquals(3.0, assertNotNull(candidates.firstOrNull { it.driverId == DRIVER }).rating)
         }
 
+/**
+     * **R9's list** (B-45): the rider's own rides, newest first, with the fare each one actually
+     * cost. The two cancellations are told apart here too — one shows nothing charged, the other
+     * shows the fee — which is the same seam the settlement's own test asserts one level down.
+     */
+    @Test
+    fun `the rider's own rides come back newest first, with what each one cost`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            // One finished, one cancelled after a driver set off, one that never found a car.
+            val finished = assignedRide(client, app)
+            drive(client, finished.id)
+            val abandoned = assignedRide(client, app)
+            client.post(Rides.Cancel(id = abandoned.id))
+            val unlucky = request(client, "rider-1")
+
+            val mine = client.get(Rides(mine = true)).body<List<RideView>>()
+
+            assertEquals(
+                listOf(unlucky.id, abandoned.id, finished.id),
+                mine.map { it.id },
+                "the list is not newest first",
+            )
+            val fare = assertNotNull(finished.quote).amountCents
+            assertEquals(fare, assertNotNull(mine.last().chargedCents), "the fare is not what was taken")
+            assertEquals(
+                fare * CANCELLATION_PERCENT / HUNDRED,
+                assertNotNull(mine[1].chargedCents),
+                "the cancellation shows the whole fare rather than the fee",
+            )
+            assertNull(mine.first().chargedCents, "a ride nobody drove was charged for")
+        }
+
     /** The order is the point of the route: a driver cannot arrive at a ride they have not started. */
     @Test
     fun `a transition that is not the next one is refused`() =

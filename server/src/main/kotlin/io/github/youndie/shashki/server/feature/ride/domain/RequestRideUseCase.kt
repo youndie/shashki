@@ -7,6 +7,7 @@ import io.github.youndie.shashki.server.common.suspendRunCatching
 import io.github.youndie.shashki.server.feature.ride.saga.ORDER_SAGA_TYPE
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
 import ru.workinprogress.petich.Petich
+import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichResult
 import ru.workinprogress.petich.PetichStatus
@@ -22,6 +23,7 @@ import java.util.UUID
 public class RequestRideUseCase(
     private val engine: PetichEngine,
     private val rides: RideRepository,
+    private val clock: PetichClock,
     private val ids: () -> String = { UUID.randomUUID().toString() },
 ) : UseCase<RequestRideUseCase.Params, RideView> {
     override suspend fun invoke(params: Params): Result<RideView> =
@@ -37,6 +39,7 @@ public class RequestRideUseCase(
                     rideClass = request.rideClass,
                     paymentMethodId = request.paymentMethodId,
                     riderEmail = params.riderEmail,
+                    requestedAtEpochMs = clock.nowEpochMs(),
                 )
             when (
                 val result =

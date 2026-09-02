@@ -30,6 +30,7 @@ internal class FakeRideRepository(
     var rated: Int? = null
     var tipped: Long? = null
     var reads: Int = 0
+    var history: List<RideView> = emptyList()
 
     override suspend fun quotes(
         from: GeoPoint,
@@ -46,6 +47,8 @@ internal class FakeRideRepository(
         reads++
         return failWith?.let { throw it } ?: ride
     }
+
+    override suspend fun mine(): List<RideView> = failWith?.let { throw it } ?: history
 
     override suspend fun cancel(rideId: String) {
         cancelled = rideId

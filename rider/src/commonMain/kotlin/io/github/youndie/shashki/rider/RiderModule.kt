@@ -6,11 +6,13 @@ import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.auth.SignInConfig
 import io.github.youndie.shashki.auth.TokenExchange
 import io.github.youndie.shashki.auth.TokenStore
+import io.github.youndie.shashki.auth.emailClaim
 import io.github.youndie.shashki.auth.redirectTo
 import io.github.youndie.shashki.auth.tokenStore
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.rider.feature.history.ui.HistoryViewModel
 import io.github.youndie.shashki.rider.feature.promo.data.HttpPromoRepository
 import io.github.youndie.shashki.rider.feature.promo.data.ReportingDegradationSink
 import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase
@@ -18,6 +20,7 @@ import io.github.youndie.shashki.rider.feature.promo.domain.PromoRepository
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
 import io.github.youndie.shashki.rider.feature.ride.data.HttpRideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
+import io.github.youndie.shashki.rider.feature.ride.domain.MyRidesUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RateRideUseCase
@@ -160,6 +163,7 @@ public fun riderModule(
         factory { RequestRideUseCase(get()) }
         factory { CancelRideUseCase(get()) }
         factory { ReadRideUseCase(get()) }
+        factory { MyRidesUseCase(get()) }
         factory { RateRideUseCase(get()) }
         factory { TipRideUseCase(get()) }
         factory { ObserveRideUseCase(get()) }
@@ -211,6 +215,19 @@ public fun riderModule(
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
         viewModel { (rideId: String) -> FinishedViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
+        // **Who the rider is, as far as this bundle knows.** The name is the configured id and the
+        // address is the token's `email` claim, read without verification because verifying is the
+        // server's job and this is a label on a screen (B-45).
+        viewModel {
+            HistoryViewModel(
+                myRides = get(),
+                profile =
+                    listOfNotNull(
+                        "name" to config.riderId,
+                        get<Session>().token()?.let { token -> emailClaim(token)?.let { "email" to it } },
+                    ),
+            )
+        }
     }
 
 /** The provider's client, told apart from the application's by a name rather than by a type. */

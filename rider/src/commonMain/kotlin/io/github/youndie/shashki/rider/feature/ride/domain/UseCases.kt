@@ -95,6 +95,13 @@ public class ReadRideUseCase(
     override suspend fun invoke(params: String): Result<RideView> = suspendRunCatching { rides.read(params) }
 }
 
+/** R9's list: the rider's own rides, newest first, straight from the server (B-45). */
+public class MyRidesUseCase(
+    private val rides: RideRepository,
+) : UseCase<Unit, List<RideView>> {
+    override suspend fun invoke(params: Unit): Result<List<RideView>> = suspendRunCatching { rides.mine() }
+}
+
 /** One to five, once, after the ride is over. The server refuses the rest. */
 public class RateRideUseCase(
     private val rides: RideRepository,

@@ -33,6 +33,12 @@ public sealed interface RiderRoute : NavKey {
         override val path: String get() = "/"
     }
 
+    /** R9: the rider's own pages — trips, profile, and the promo the server owns (B-45). */
+    @Serializable
+    public data object History : RiderRoute {
+        override val path: String get() = "/trips"
+    }
+
     /** The one screen the server owns. See research §2 D11. */
     @Serializable
     public data object Promo : RiderRoute {

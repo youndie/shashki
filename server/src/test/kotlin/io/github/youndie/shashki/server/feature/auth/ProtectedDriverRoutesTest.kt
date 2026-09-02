@@ -116,9 +116,10 @@ class ProtectedDriverRoutesTest {
             startApplication()
 
             val session = client.webSocketSession(DRIVER_POSITIONS_PATH)
-            session.send(Frame.Text(Json.encodeToString(DriverReport.serializer(), report(DRIVER))))
-            // `receiveCatching` on a closed channel answers a failure rather than a frame: the
-            // server shut the socket instead of reading what was sent.
+            // **Nothing is sent, and that is the fix rather than the test being lazy.** Sending into
+            // a socket the server has already closed throws `CancellationException` from the
+            // client's own channel — a race between the close and the write that made this test
+            // flaky. What is being asserted is the close, and the close needs no frame.
             assertTrue(session.incoming.receiveCatching().isFailure, "the socket stayed open")
 
             assertTrue(

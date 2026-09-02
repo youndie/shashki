@@ -74,6 +74,14 @@ private fun Route.riderRoutes() {
         call.respond(HttpStatusCode.Created, requestRide(RequestRideUseCase.Params(request, email)).getOrThrow())
     }
 
+    get<Rides> { route ->
+        // **No "everybody's rides".** The only list this server has is the caller's own, so a
+        // request without `mine` is a request for something that does not exist here — 400 rather
+        // than a default that would one day answer with somebody else's journeys.
+        require(route.mine == true) { "GET /api/rides answers only ?mine=true" }
+        call.respond(rides.mine(call.principal<OidcPrincipal>()?.email))
+    }
+
     get<Rides.ById> { route ->
         call.respond(rides.find(route.id) ?: throw RideNotFoundException(route.id))
     }

@@ -140,7 +140,17 @@ public data class RideView(
  * and a route renamed is a route the compiler notices.
  */
 @Resource("/api/rides")
-public class Rides {
+public class Rides(
+    /**
+     * `GET /api/rides?mine=true` — the rider's own, newest first (B-45).
+     *
+     * **A parameter on the collection rather than a route of its own**, because "which rides" is a
+     * filter on the same resource and `/api/rides/mine` would be a path segment competing with an
+     * id. Absent means the collection is not being asked for at all: this server has no "everybody's
+     * rides" and answers 400 rather than inventing one.
+     */
+    public val mine: Boolean? = null,
+) {
     /**
      * `POST /api/rides/{id}/rating` — the kit's R8, first half (B-44).
      *

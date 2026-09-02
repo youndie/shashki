@@ -28,6 +28,7 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
 public class PetichRideRepository(
     private val petiches: PetichRepository,
     private val trips: TripRepository,
+    private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
     override suspend fun find(id: String): RideView? {
@@ -43,6 +44,26 @@ public class PetichRideRepository(
             // it here is what lets R8 show a sum rather than a promise.
             chargedCents = charged(id),
         )
+    }
+
+    /**
+     * The rider's own rides, newest first (B-45).
+     *
+     * **Whose a ride is comes from the token's address**, which is the one thing about a rider the
+     * order saga did not take from a request body — B-26 put it there so a receipt could not be sent
+     * to somebody else's inbox, and it is the only identity the store has. With no provider
+     * configured there is no address on any row and no principal on any request, and every ride
+     * belongs to the one rider the demo has; that is written down here rather than answered with an
+     * empty list nobody can explain.
+     */
+    override suspend fun mine(riderEmail: String?): List<RideView> {
+        val index = sagaIndex ?: return emptyList()
+        return index
+            .rideIds()
+            .mapNotNull { id -> petiches.findById(id) }
+            .filter { riderEmail == null || (it.payload as? OrderPayload)?.riderEmail == riderEmail }
+            .sortedByDescending { (it.payload as? OrderPayload)?.requestedAtEpochMs ?: 0 }
+            .mapNotNull { find(it.id) }
     }
 
     private suspend fun charged(rideId: String): Long? =

@@ -67,6 +67,24 @@ puts it in the token, so a token proves somebody signed in and not that the ride
 That divergence is [research §1.4c](../research/research-architecture.md) and is most of why this
 product exists; `SettlementTest` shows both numbers in one test.
 
+## `GET /api/rides?mine=true` (B-45)
+
+The rider's own rides, newest first. **A parameter on the collection rather than a route of its own**,
+because "which rides" is a filter and `/api/rides/mine` would be a path segment competing with an id.
+Without `mine` the request is refused with 400: this server has no "everybody's rides" and will not
+invent one.
+
+**Whose a ride is comes from the token's address** — the one thing about a rider the order saga did
+not take from a request body, put there by B-26 so a receipt could not be sent to somebody else's
+inbox. With no provider configured there is no address on any row and no principal on any request,
+and every ride belongs to the one rider the demo has; that is the honest reading of it rather than an
+empty list nobody can explain.
+
+**Newest first needs a timestamp, and petich's table has none** — `id, type, phase, index, status,
+payload, enriched, version, suspended_until`. Rather than adding a column to a schema petich owns,
+`OrderPayload` carries `requestedAtEpochMs`; rows written before it sort last, which is what a `0`
+honestly means.
+
 ## The two things a rider does when it is over (B-44)
 
 | Method and path | Auth tier | Purpose |

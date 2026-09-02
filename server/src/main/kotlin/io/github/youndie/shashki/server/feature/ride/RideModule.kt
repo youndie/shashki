@@ -31,6 +31,7 @@ import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.data.PetichRideRepository
+import io.github.youndie.shashki.server.feature.ride.data.SagaIndex
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.ExpireOfferUseCase
@@ -200,7 +201,9 @@ public fun rideModule(
         single<TripRepository> { ExposedTripRepository(get()) { get<PetichClock>().nowEpochMs() } }
         single<PayoutRepository> { ExposedPayoutRepository(get()) { get<PetichClock>().nowEpochMs() } }
 
-        single<RideRepository> { PetichRideRepository(get<SagaStorage>().petiches, get()) }
+        single<RideRepository> {
+            PetichRideRepository(get<SagaStorage>().petiches, get(), sagaIndex = SagaIndex(database, get()))
+        }
         factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }
         factory { AnswerOfferUseCase(engine = get(), sagas = get(), rides = get()) }
@@ -220,5 +223,5 @@ public fun rideModule(
         // constructor parameter through Koin, default values included, and the use case's `ids`
         // is a `() -> String` with a default that no binding provides. Compilation is silent about
         // it; the first request answers 500 with NoDefinitionFoundException for `Function0`.
-        factory { RequestRideUseCase(engine = get(), rides = get()) }
+        factory { RequestRideUseCase(engine = get(), rides = get(), clock = get()) }
     }

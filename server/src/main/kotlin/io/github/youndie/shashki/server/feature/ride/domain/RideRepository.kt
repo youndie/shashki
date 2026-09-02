@@ -7,6 +7,14 @@ import io.github.youndie.shashki.protocol.RideView
  * does not cover (research §1.4c); a second table now would be a copy that drifts.
  */
 public interface RideRepository {
+    /**
+     * The rides that belong to this address, newest first — R9's list (B-45).
+     *
+     * `null` means "no provider is configured", which is not the same as "nobody": see the
+     * implementation, where the demo's single rider is the honest reading of it.
+     */
+    public suspend fun mine(riderEmail: String?): List<RideView> = emptyList()
+
     public suspend fun find(id: String): RideView?
 }
 

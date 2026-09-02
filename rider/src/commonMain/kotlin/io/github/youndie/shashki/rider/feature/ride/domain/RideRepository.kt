@@ -24,6 +24,9 @@ public interface RideRepository {
 
     public suspend fun read(rideId: String): RideView
 
+    /** The rider's own rides, newest first — R9's list (B-45). */
+    public suspend fun mine(): List<RideView>
+
     public suspend fun cancel(rideId: String)
 
     /** R8's first half: one to five, once, and only after the ride is over (B-44). */

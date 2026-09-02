@@ -132,7 +132,9 @@ class KoinGraphTest {
     @Test
     fun `verify() passes a factoryOf over a defaulted lambda parameter that resolution then fails`() {
         val trap = module { factoryOf(::RequestRideUseCase) }
-        val provided = listOf(PetichEngine::class, RideRepository::class)
+        // The three real parameters. `PetichClock` joined them in B-45, when the ride's own row
+        // needed a timestamp — and the control is about the *fourth*, which has a default.
+        val provided = listOf(PetichEngine::class, RideRepository::class, PetichClock::class)
 
         // Static: nothing reported.
         trap.verify(extraTypes = provided)
@@ -148,6 +150,7 @@ class KoinGraphTest {
                     module {
                         single<PetichEngine> { PetichEngine(interceptors = emptyList(), repository = NoSagas) }
                         single<RideRepository> { NoRides }
+                        single { PetichClock { 0 } }
                     },
                 )
             }.koin

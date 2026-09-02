@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.ui.kompot.TripRow
 import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
 import io.github.youndie.shashki.ui.map.MapPin
@@ -14,6 +15,7 @@ import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderFinished
+import io.github.youndie.shashki.ui.screens.RiderHistory
 import io.github.youndie.shashki.ui.screens.RiderMatching
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
@@ -175,6 +177,57 @@ internal fun RiderFinishedFixture() {
             onStars = {},
             onTip = {},
             onDone = {},
+        )
+    }
+}
+
+/**
+ * R9: the rider's own pages, with the trips list on the first (B-45).
+ *
+ * **The rows are the kompot renderer, drawn natively.** `TripRow` stays a registered component and
+ * this screen calls its renderer directly — the property D11 argues for, rather than a contradiction
+ * of it: a list of somebody's own rides has an obvious native version, and the server keeps the
+ * screen that does not.
+ *
+ * The fare on each row is what the settlement took, which is why the cancelled ride shows a quarter
+ * of its journey and the one nobody drove shows nothing at all.
+ */
+@ViddikScreenshot(name = "rider history", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderHistoryFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderHistory(
+            titles = listOf("trips", "profile", "promo"),
+            trips =
+                listOf(
+                    TripRow("ride-3", "airport", "today · 22.8 km", "$ 28.96", accent = true),
+                    TripRow("ride-2", "airport", "yesterday · cancelled", "$ 7.24"),
+                    TripRow("ride-1", "airport", "monday · no cars nearby", "—"),
+                ),
+            emptyLine = "no trips yet",
+            profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
+            onTrip = {},
+        )
+    }
+}
+
+/**
+ * The same pivot with nothing in it: **the kit's section 08 empty list** — one line in the disabled
+ * brush and no action. A button here would invite the rider to fix something they have not done
+ * wrong; they have simply not taken a ride yet.
+ */
+@ViddikScreenshot(name = "rider history empty", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderHistoryEmptyFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderHistory(
+            titles = listOf("trips", "profile", "promo"),
+            trips = emptyList(),
+            emptyLine = "no trips yet",
+            profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
+            onTrip = {},
         )
     }
 }

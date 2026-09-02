@@ -38,6 +38,8 @@ public class HttpRideRepository(
 
     override suspend fun read(rideId: String): RideView = client.get(Rides.ById(id = rideId)).body()
 
+    override suspend fun mine(): List<RideView> = client.get(Rides(mine = true)).body()
+
     override suspend fun cancel(rideId: String) {
         client.post(Rides.Cancel(id = rideId))
     }

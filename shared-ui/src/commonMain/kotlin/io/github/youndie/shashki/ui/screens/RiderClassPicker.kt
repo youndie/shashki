@@ -67,6 +67,8 @@ public fun RiderClassPicker(
     onChangePayment: () -> Unit,
     onOrder: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The overflow: the rider's own pages (B-45). Does nothing where there is nowhere to go. */
+    onMore: () -> Unit = {},
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
@@ -109,7 +111,7 @@ public fun RiderClassPicker(
             PaymentRow(paymentLabel, onChangePayment)
         }
 
-        OrderBar(orderLabel, onOrder)
+        OrderBar(orderLabel, onOrder, onMore)
     }
 }
 
@@ -156,6 +158,7 @@ private fun PaymentRow(
 private fun OrderBar(
     label: String,
     onOrder: () -> Unit,
+    onMore: () -> Unit,
 ) {
     val colors = KvadrantTheme.colors
     val type = ShashkiTheme.typography
@@ -180,7 +183,13 @@ private fun OrderBar(
             KvadrantText(label, style = type.body)
         }
         Spacer(Modifier.size(0.dp))
-        KvadrantText("···", style = type.tileLabel.copy(color = colors.border))
+        // **The dots go somewhere now** (B-45). They were the kit's shape with nothing behind them
+        // until R9 existed; the rider's own pages are what an overflow on this screen is for.
+        KvadrantText(
+            "···",
+            Modifier.clickable(onClick = onMore),
+            style = type.tileLabel.copy(color = colors.border),
+        )
     }
 }
 

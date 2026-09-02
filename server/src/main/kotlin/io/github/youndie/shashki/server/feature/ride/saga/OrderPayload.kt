@@ -35,6 +35,18 @@ public class OrderPayload(
      * field without one makes every saga already on disk unreadable.
      */
     public val riderEmail: String? = null,
+    /**
+     * When the ride was asked for (B-45).
+     *
+     * **The saga's row has no timestamp and this is where one had to go.** petich's table is
+     * `id, type, phase, index, status, payload, enriched, version, suspended_until` — no clock
+     * anywhere — and "the rider's rides, newest first" needs one. Adding a column to somebody else's
+     * table would put a fact petich does not know about into a schema it owns; putting it in the
+     * payload keeps it where the rest of the ride is.
+     *
+     * `0` for the rows written before this field existed, which sort last and say so honestly.
+     */
+    public val requestedAtEpochMs: Long = 0,
 ) : PetichPayload()
 
 /**
