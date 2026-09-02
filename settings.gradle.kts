@@ -47,13 +47,24 @@ dependencyResolutionManagement {
                 includeGroupByRegex("io\\.github\\.youndie.*")
             }
         }
+        // Navigation 3's runtime half is published by Google and not mirrored to Maven Central —
+        // `androidx.navigation3:navigation3-runtime` is a 404 there. Filtered like the others: an
+        // unfiltered repository takes part in resolving every dependency.
+        google {
+            content {
+                includeGroupByRegex("androidx\\..*")
+                includeGroupByRegex("com\\.google\\.android.*")
+            }
+        }
     }
 }
 
-// The protocol both halves read, and the server that speaks it. The clients are not here yet: their
-// target is what B-01 decides, and a module whose target list is a guess is a module that gets
-// rewritten. :shared-ui is, because its desktop target is the one viddik can photograph and that
-// does not depend on B-01 at all.
+// The protocol both halves read, the server that speaks it, and the rider that speaks to it.
+//
+// The clients waited on B-01 deliberately — a module whose target list is a guess is a module that
+// gets rewritten — and D1 answered it: `wasmJs`, with a desktop target beside it because viddik
+// photographs JVM targets and a screen nobody can see is a screen nobody can review. The driver
+// client is not here; it is the second bundle D10 chose and nothing in the backlog schedules it yet.
 include(":protocol")
 include(":server")
 include(":shared-ui")
@@ -63,3 +74,5 @@ include(":auth-client")
 // The browser half of crash reporting. Separate from :auth-client because it needs an HTTP client
 // and that module deliberately has none. See B-10.
 include(":crash-client")
+// The rider application: the shell every other module's work hangs in. See B-28.
+include(":rider")

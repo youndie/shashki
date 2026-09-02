@@ -103,6 +103,13 @@ public class Rides {
         public val parent: Rides = Rides(),
         public val id: String,
     )
+
+    /** `GET /api/rides/{id}/driver` — where the car this ride is waiting for has got to. */
+    @Resource("{id}/driver")
+    public class Driver(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
 }
 
 /** What a driver does with an offer. Not answering is not a decision — the server times it out. */
@@ -148,3 +155,17 @@ public class DriverOffers {
         public val rideId: String,
     )
 }
+
+/**
+ * Where the rider's own car is, while it is on its way.
+ *
+ * **`null` positions are a real answer, not an error.** A driver's application goes quiet in a lift
+ * or a tunnel, and the rider's screen should keep the last thing it drew rather than show a failure
+ * — so the absence is in the type and the screen decides what to do with it.
+ */
+@Serializable
+public data class AssignedDriverView(
+    val driverId: String,
+    val at: GeoPoint? = null,
+    val bearingDegrees: Float = 0f,
+)

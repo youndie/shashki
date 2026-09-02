@@ -682,6 +682,31 @@ exactly that, but its vocabulary covers types and actions, not values. Reporting
 `UNRENDERABLE_COMPONENT` would be a lie — the component is renderable, its size is not — so the drop
 stays silent and `EarningsTileRenderer` says so where it happens.
 
+**Consequence 1.7d — building the shell found two questions the server could not answer
+(2026-09-02, [B-28](../backlog/B-28-the-client-application-shell.md)).**
+
+Every screen in `:shared-ui` was built from values and photographed that way, and both were correct.
+What neither could show is that the values have nowhere to come from:
+
+| The screen asks | The server had | What it needed |
+|---|---|---|
+| R4 draws three prices, one per class, before anything is ordered | `POST /api/rides`, which *creates* a ride, and `POST /api/routes`, which prices nothing | `POST /api/quotes` — one road estimate, three prices |
+| The trip screen draws the car moving | `RideView.driverId` and nothing about where that driver is | `GET /api/rides/{id}/driver`, and a `whereIs` on the index to answer it |
+
+Neither is a large piece of work — forty lines each — and both are the kind of gap a screenshot
+suite cannot have: a golden is a picture of a screen fed values, so a screen whose values do not
+exist photographs exactly as well as one whose values do. **That is the argument for the shell being
+an item rather than a formality**: the first thing it did was find two endpoints nobody had missed.
+
+The pricing one is the more instructive. The alternative to adding it was the client holding a copy
+of the fare formula to fill in three tiles — and a copy of a rule is a rule that drifts, so the rider
+would have been shown one number and charged another the first time a coefficient moved.
+
+**One thing the server still cannot answer, and the screen says so rather than inventing it.**
+`RideView` carries a `driverId` and nothing about the person: no name, no car, no plate, no rating.
+The trip screen draws those four as em dashes, because the registration is the field a rider checks a
+real car against and fiction there is worse than a blank.
+
 ### 1.8 A tile renderer of our own: what it would actually have to implement
 
 Added after the first pass, when the brief's "own render on Compose Canvas — an optional v2 demo, not
@@ -1111,9 +1136,20 @@ roles. Everything this project has authored is **5 % of it**. So:
   role's screens as a slice of 174 kB on top.
 - **Two bundles cost the server a second copy** and cost nobody who uses one role. A person who uses
   both pays the runtime twice **unless** the content-hashed skiko file is byte-identical and served
-  at the same path from both — which it should be, since the hash is of Compose's own artefact and
-  both bundles would build against the same version. That is a property to verify when the second
-  bundle exists rather than a measurement taken here; B-16 records it as such.
+  at the same path from both.
+
+**That last clause was written as an assumption and is now measured (2026-09-02, B-28).** The rider
+bundle exists, so there are two:
+
+| Bundle | File | Size | sha256 |
+|---|---|---|---|
+| `:shared-ui` | `bfa5198fb2fe683c613a.wasm` | 8 640 316 | `089052ba37e2a6e8345117bf…` |
+| `:rider` | `bfa5198fb2fe683c613a.wasm` | 8 640 316 | `089052ba37e2a6e8345117bf…` |
+
+Same name, same size, same hash, from two independent webpack runs. So the second bundle is free for
+a person who has already loaded the first, **provided both are served from one path** — which is now
+a deployment instruction rather than a hope. The rider's own half is 1 087 188 gzipped bytes of wasm
+and 100 128 of JavaScript: still a third of the runtime it rides in, and still the smaller number.
 
 The third row is also the answer to a question nobody asked: at 174 kB before DCE, the cost of route
 4's whole tile pipeline is invisible next to the runtime it rides in.

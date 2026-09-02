@@ -9,10 +9,11 @@ dying halfway; the events it emits leave the same transaction as the state chang
 drawn natively and some are sent by the server; the design is accepted by a screenshot suite that
 fails when the layout moves.
 
-**Status: the seams first.** The order saga runs against a real Postgres and survives the process
-dying at any phase; the offer is a suspended saga with a deadline; the map is drawn from the city's
-own tiles onto a Compose canvas, and that image is a golden. The clients themselves are not built
-yet. What holds it together is the architecture research — what was verified against the stack's own
+**Status: the seams first, and now a client around them.** The order saga runs against a real
+Postgres and survives the process dying at any phase; the offer is a suspended saga with a deadline;
+the map is drawn from the city's own tiles onto a Compose canvas, and that image is a golden. The
+rider is a Kotlin/Wasm bundle that prices a journey, orders a car and watches it arrive; the driver
+bundle is not built. What holds it together is the architecture research — what was verified against the stack's own
 artefacts and against upstream metadata, the decisions taken, and the risks with the machinery that
 mitigates each — and a backlog ordered by it.
 

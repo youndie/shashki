@@ -45,6 +45,10 @@ cryptography = "0.6.0"
 # guarded. The name is historical: it was `ui-test` alone until B-27.
 composeUiTest = "1.12.0"
 # Server-driven UI. A CI-numbered publish, not a `-SNAPSHOT`.
+# Navigation 3 for Compose Multiplatform. **An alpha, and the only line published for `wasmJs`** —
+# pinned like everything else, but pre-release quality, and the runtime half comes from Google's
+# repository rather than Maven Central.
+navigation3 = "1.2.0-alpha02"
 kompot = "0.34.1.101"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
@@ -89,6 +93,12 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kvadrant" }
+
+navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+koin-compose = { module = "io.insert-koin:koin-compose" }
+koin-composeViewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
+koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
+ktor-client-js = { module = "io.ktor:ktor-client-js" }
 
 kompot-client = { module = "io.github.youndie:kompot-client", version.ref = "kompot" }
 kompot-core = { module = "io.github.youndie:kompot-core", version.ref = "kompot" }

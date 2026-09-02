@@ -38,3 +38,28 @@ public data class RouteRequest(
  */
 @Resource("/api/routes")
 public class Routes
+
+/**
+ * What each class would cost for a journey, before anybody asks for a car.
+ *
+ * **The server answers this because the server owns pricing.** The alternative is the client holding
+ * a copy of the fare formula so it can fill in R4's three tiles, and a copy of a rule is a rule that
+ * drifts — the rider would be shown one number and charged another the first time a coefficient
+ * moved.
+ */
+@Serializable
+public data class ClassQuote(
+    val rideClass: RideClass,
+    val quote: Quote,
+)
+
+@Serializable
+public data class QuotesView(
+    val distanceMetres: Int,
+    val durationSeconds: Int,
+    val classes: List<ClassQuote>,
+)
+
+/** `/api/quotes` — the same two points as `/api/routes`, priced for every class. */
+@Resource("/api/quotes")
+public class Quotes

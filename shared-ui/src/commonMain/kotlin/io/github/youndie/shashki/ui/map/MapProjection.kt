@@ -15,7 +15,28 @@ public data class TileCoordinate(
     val zoom: Int,
     val x: Int,
     val y: Int,
-)
+) {
+    public companion object {
+        /**
+         * The tile a point falls in, at [zoom]. **A camera of one tile**, which is what route 4 has
+         * until tile fetching exists — enough to place a route, a car and two pins where they
+         * actually are, and not enough to pan.
+         */
+        public fun containing(
+            point: GeoPoint,
+            zoom: Int = DEFAULT_ZOOM,
+        ): TileCoordinate {
+            val tiles = 2.0.pow(zoom)
+            val latitude = point.lat * PI / 180.0
+            val worldX = (point.lon + 180.0) / 360.0 * tiles
+            val worldY = (1.0 - ln(tan(latitude) + 1 / cos(latitude)) / PI) / 2.0 * tiles
+            return TileCoordinate(zoom, worldX.toInt(), worldY.toInt())
+        }
+
+        /** The zoom the style documents are cut and drawn at. */
+        public const val DEFAULT_ZOOM: Int = 14
+    }
+}
 
 /**
  * Web Mercator, between a place on the earth and a pixel on one tile drawn at [side] pixels square.

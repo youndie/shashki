@@ -38,11 +38,13 @@ decoder, the projection — is 173 808 before dead-code elimination.** Five per 
 would save a person nothing, because they fetch the same runtime either way; it would only add the
 other role's screens to what they download.
 
-**One thing is asserted and not measured, and it is marked as such.** Two bundles make a person who
-uses both roles pay the runtime twice unless the content-hashed skiko file is byte-identical and
-served at the same path from both. It should be — the hash is of Compose's own artefact and both
-bundles build against one version — but there is one bundle today, so this is a property to verify
-when the second exists rather than a number taken here.
+**One thing was asserted and not measured. It is measured now.**
+
+At the time there was one bundle, so whether a second would share the runtime was a hope with a
+mechanism behind it. [B-28](B-28-the-client-application-shell.md) built the rider bundle, and the two
+skiko files are the same name, the same 8 640 316 bytes and the same sha256 from two independent
+webpack runs. The second bundle is therefore free to somebody who has loaded the first — **provided
+both are served from one path**, which is a deployment instruction and is now written down as one.
 
 **And a third reading came free.** At 174 kB before DCE, route 4's whole tile pipeline — decoder,
 renderer, curved labels, projection — is invisible beside the runtime it rides in. The cost §1.8b

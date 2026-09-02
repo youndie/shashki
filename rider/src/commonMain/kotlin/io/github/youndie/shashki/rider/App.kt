@@ -1,0 +1,158 @@
+package io.github.youndie.shashki.rider
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import io.github.youndie.kvadrant.foundation.kvadrantLatin
+import io.github.youndie.shashki.crash.installCrashReporting
+import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
+import io.github.youndie.shashki.rider.feature.ride.ui.TripScreen
+import io.github.youndie.shashki.ui.RiderTheme
+import io.github.youndie.shashki.ui.ShashkiTypography
+import io.github.youndie.shashki.ui.map.LocalMapSurface
+import io.github.youndie.shashki.ui.map.MapCamera
+import io.github.youndie.shashki.ui.map.MapScene
+import io.github.youndie.shashki.ui.map.MapSurface
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import org.koin.dsl.koinConfiguration
+
+/**
+ * The rider application: one Koin graph, one back stack, one theme.
+ *
+ * **This is the shell every other module's work has been waiting for** (B-28). The screens, the map
+ * surface, the PKCE client and the crash reporter were all built and tested with nothing to hang
+ * them in; here they hang.
+ */
+@Composable
+public fun RiderApp(
+    config: RiderConfig,
+    scope: CoroutineScope,
+    modifier: Modifier = Modifier,
+) {
+    KoinApplication(koinConfiguration { modules(riderModule(config)) }) {
+        CrashReporting(scope)
+
+        val latin = kvadrantLatin()
+        RiderTheme(latin = latin, typography = ShashkiTypography.of(latin)) {
+            CompositionLocalProvider(LocalMapSurface provides koinInject<MapSurface>()) {
+                RiderNavigation(modifier)
+            }
+        }
+    }
+}
+
+/**
+ * B-10's hook, called.
+ *
+ * **Inside the Koin scope and not at `main`**, because the reporter needs the application's own HTTP
+ * client — a second one would be a second connection pool for the rarest request the application
+ * makes. `null` when no katcher is configured: a demo pointed at nothing should not report to
+ * nothing and pretend otherwise.
+ */
+@Composable
+private fun CrashReporting(scope: CoroutineScope) {
+    val reporting = koinInject<CrashReporting>()
+    DisposableEffect(reporting) {
+        reporting.reporter?.let { installCrashReporting(it, scope) }
+        onDispose { }
+    }
+}
+
+/**
+ * The back stack, and the address bar kept in step with it.
+ *
+ * **Both directions, because a browser has both.** Following a link pushes an address; pressing back
+ * pops one and forward pushes it again — a handler that only popped would break forward silently.
+ * The stack is Navigation 3's, restored across process death by its own serializer, which is what
+ * the routes are `@Serializable` for.
+ */
+@Composable
+private fun RiderNavigation(modifier: Modifier = Modifier) {
+    val bar = remember { addressBar() }
+    val start = remember { RiderRoute.ofPath(bar.openedAt()) ?: RiderRoute.ClassPicker }
+    val backStack = rememberNavBackStack(SAVED_STATE, start)
+
+    // Out: the address follows the top of the stack.
+    LaunchedEffect(backStack.lastOrNull()) {
+        (backStack.lastOrNull() as? RiderRoute)?.let { bar.push(it.path) }
+    }
+
+    // In: the browser's buttons move the stack. An address this application has no screen for is
+    // ignored rather than crashed on — somebody else's link is not this application's bug.
+    DisposableEffect(bar) {
+        bar.onNavigate { path ->
+            val route = RiderRoute.ofPath(path)
+            if (route != null && backStack.lastOrNull() != route) {
+                val existing = backStack.indexOfLast { it == route }
+                if (existing >= 0) {
+                    while (backStack.size > existing + 1) backStack.removeAt(backStack.size - 1)
+                } else {
+                    backStack.add(route)
+                }
+            }
+        }
+        onDispose { }
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        modifier = modifier.fillMaxSize(),
+        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
+        entryProvider =
+            entryProvider {
+                entry<RiderRoute.ClassPicker> {
+                    ClassPickerScreen(
+                        scene = MapScene(camera = MapCamera(RiderConfig.LJUBLJANA_CENTRE)),
+                        onOrdered = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
+                        onFailed = { },
+                    )
+                }
+                entry<RiderRoute.Trip> { route ->
+                    TripScreen(
+                        rideId = route.rideId,
+                        onFinished = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
+                        onFailed = { },
+                    )
+                }
+                entry<RiderRoute.SignIn> {
+                    // B-26's screen. The PKCE client is built and tested; what it needs is a shildik
+                    // to redirect to, which is that item's own precondition.
+                    ClassPickerScreen(
+                        scene = MapScene(camera = MapCamera(RiderConfig.LJUBLJANA_CENTRE)),
+                        onOrdered = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
+                        onFailed = { },
+                    )
+                }
+            },
+    )
+}
+
+/**
+ * The polymorphic registration Navigation 3 requires outside Android, where there is no reflection to
+ * restore a back stack with. Every route is named here, and one that is not will fail to restore.
+ */
+private val SAVED_STATE =
+    SavedStateConfiguration {
+        serializersModule =
+            SerializersModule {
+                polymorphic(NavKey::class) {
+                    subclass(RiderRoute.ClassPicker::class)
+                    subclass(RiderRoute.SignIn::class)
+                    subclass(RiderRoute.Trip::class)
+                }
+            }
+    }

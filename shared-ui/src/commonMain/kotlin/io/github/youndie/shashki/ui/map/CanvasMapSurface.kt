@@ -52,8 +52,22 @@ import io.github.youndie.shashki.ui.map.tiles.TileRenderer
  * that ran rather than something imagined.
  */
 public class CanvasMapSurface(
-    private val tile: MvtTile,
-    private val coordinate: TileCoordinate,
+    /**
+     * The basemap, or **`null` for none**.
+     *
+     * Null is not a degraded mode, it is the honest one until tile fetching exists (§1.8b): the
+     * background is the style document's own, and everything the server actually said — the road,
+     * the car, the pins — is drawn on it, in the right place. A surface that had refused to draw
+     * without a tile would have made the trip screen wait on a transport nobody has written.
+     */
+    private val tile: MvtTile? = null,
+    /**
+     * Which tile the drawing is projected through, or `null` to take it from the scene's camera.
+     *
+     * Fixed for a golden of one known tile; derived for an application, where the ride decides where
+     * the map is looking.
+     */
+    private val coordinate: TileCoordinate? = null,
     private val palette: TilePalette = TilePalette.Dark,
 ) : MapSurface {
     private val renderer = TileRenderer(palette)
@@ -68,13 +82,18 @@ public class CanvasMapSurface(
         // The projection needs the drawn size, and the markers need the projection — so the size is
         // read once from the layout and shared, rather than each half measuring for itself.
         var side by remember { mutableStateOf(0f) }
-        val projection = remember(side) { TileProjection(coordinate, side) }
+        val frame = coordinate ?: TileCoordinate.containing(scene.camera.centre, scene.camera.zoom.toInt())
+        val projection = remember(side, frame) { TileProjection(frame, side) }
 
         Box(modifier.clipToBounds().onSizeChanged { side = maxOf(it.width, it.height).toFloat() }) {
             Canvas(Modifier.fillMaxSize()) {
                 with(renderer) {
-                    drawTile(tile)
-                    drawStreetLabels(tile, measurer, labelStyle)
+                    if (tile == null) {
+                        drawRect(palette.background, size = size)
+                    } else {
+                        drawTile(tile)
+                        drawStreetLabels(tile, measurer, labelStyle)
+                    }
                     scene.route?.let { drawRoute(it, projection) }
                 }
             }

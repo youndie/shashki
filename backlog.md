@@ -39,14 +39,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-28 |
-| [B-28](docs/backlog/B-28-the-client-application-shell.md) `[ ]` | A client application exists to put the screens in | P1 | L | - |
 
-## Closed (26)
+## Closed (27)
 
 **Remove the unknowns**
 
@@ -85,6 +84,7 @@ re-prioritising one must never move its file.
 - [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[x]` - The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit
 - [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[x]` - The kit's composition rules live in the kompot renderer, not in the protocol
 - [B-25](docs/backlog/B-25-rider-trip-in-progress.md) `[x]` - The rider's trip-in-progress screen, on the map that D1 chose
+- [B-28](docs/backlog/B-28-the-client-application-shell.md) `[x]` - A client application exists to put the screens in
 
 <!-- END INDEX -->
 

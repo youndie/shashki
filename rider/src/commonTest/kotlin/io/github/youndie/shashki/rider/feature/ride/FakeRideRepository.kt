@@ -1,0 +1,81 @@
+package io.github.youndie.shashki.rider.feature.ride
+
+import io.github.youndie.shashki.protocol.AssignedDriverView
+import io.github.youndie.shashki.protocol.ClassQuote
+import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.Quote
+import io.github.youndie.shashki.protocol.QuotesView
+import io.github.youndie.shashki.protocol.RideClass
+import io.github.youndie.shashki.protocol.RideRequest
+import io.github.youndie.shashki.protocol.RideStatus
+import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.RouteView
+import io.github.youndie.shashki.rider.feature.ride.domain.RideRepository
+
+/**
+ * The server, as a hand-written fake.
+ *
+ * **No mocking library**, per the project's own rule: an object with the four methods overridden is
+ * cheaper than a dependency, and it is the thing that makes a view-model test readable — what the
+ * server said is written where the test can see it.
+ */
+internal class FakeRideRepository(
+    var quotes: QuotesView = QUOTES,
+    var ride: RideView = REQUESTED,
+    var driver: AssignedDriverView = AssignedDriverView("driver-1", GeoPoint(46.05, 14.51)),
+    var failWith: Throwable? = null,
+) : RideRepository {
+    var requested: RideRequest? = null
+    var cancelled: String? = null
+    var reads: Int = 0
+
+    override suspend fun quotes(
+        from: GeoPoint,
+        to: GeoPoint,
+    ): QuotesView = failWith?.let { throw it } ?: quotes
+
+    override suspend fun request(request: RideRequest): RideView {
+        failWith?.let { throw it }
+        requested = request
+        return ride
+    }
+
+    override suspend fun read(rideId: String): RideView {
+        reads++
+        return failWith?.let { throw it } ?: ride
+    }
+
+    override suspend fun cancel(rideId: String) {
+        cancelled = rideId
+    }
+
+    override suspend fun route(
+        from: GeoPoint,
+        to: GeoPoint,
+    ): RouteView = RouteView(geometry = listOf(from, to), distanceMetres = 1_000, durationSeconds = 120)
+
+    override suspend fun driver(rideId: String): AssignedDriverView = driver
+
+    companion object {
+        val QUOTES =
+            QuotesView(
+                distanceMetres = 22_806,
+                durationSeconds = 2_079,
+                classes =
+                    listOf(
+                        ClassQuote(RideClass.ECONOMY, Quote(22_806, 2_079, 2_490, "USD")),
+                        ClassQuote(RideClass.COMFORT, Quote(22_806, 2_079, 3_890, "USD")),
+                    ),
+            )
+
+        val REQUESTED =
+            RideView(
+                id = "ride-1",
+                status = RideStatus.MATCHING,
+                rideClass = RideClass.ECONOMY,
+                pickup = GeoPoint(46.0511, 14.5051),
+                dropoff = GeoPoint(46.2237, 14.4576),
+                quote = Quote(22_806, 2_079, 2_490, "USD"),
+            )
+    }
+}

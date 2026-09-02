@@ -35,6 +35,19 @@ public interface DriverIndex {
     /** The driver's app said goodbye. A crash is covered by [STALE_AFTER_MS] instead. */
     public fun goOffline(driverId: String)
 
+    /**
+     * Where one driver was last seen, or `null` if they are offline or their last report is stale.
+     *
+     * **Added for the rider's trip screen, and by name rather than through [near].** A rider watching
+     * a car does not want the nearest driver, they want *theirs*; asking [near] and filtering would
+     * be a search of the whole neighbourhood for an answer the index already holds by key — and it
+     * would silently return somebody else's car when the right one had gone quiet.
+     */
+    public fun whereIs(
+        driverId: String,
+        nowEpochMs: Long,
+    ): DriverPresence?
+
     /** Nearest first, then best rated. Drivers of another class, stale or offline are not here. */
     public fun near(
         point: GeoPoint,
@@ -90,6 +103,11 @@ public class GridDriverIndex : DriverIndex {
         }
         byCell.computeIfAbsent(cell) { ConcurrentHashMap.newKeySet() }.add(report.driverId)
     }
+
+    override fun whereIs(
+        driverId: String,
+        nowEpochMs: Long,
+    ): DriverPresence? = byDriver[driverId]?.takeIf { nowEpochMs - it.reportedAtEpochMs <= DriverIndex.STALE_AFTER_MS }
 
     override fun goOffline(driverId: String) {
         byDriver.remove(driverId)?.let { byCell[cellOf(it.at)]?.remove(driverId) }
