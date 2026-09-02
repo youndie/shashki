@@ -9,6 +9,10 @@ import io.github.youndie.shashki.auth.redirectTo
 import io.github.youndie.shashki.auth.tokenStore
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
+import io.github.youndie.shashki.driver.feature.earnings.data.HttpEarningsRepository
+import io.github.youndie.shashki.driver.feature.earnings.domain.EarningsRepository
+import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
+import io.github.youndie.shashki.driver.feature.earnings.ui.EarningsViewModel
 import io.github.youndie.shashki.driver.feature.offer.data.HttpOfferRepository
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.OfferRepository
@@ -157,6 +161,9 @@ public fun driverModule(config: DriverConfig): Module =
         factory { WatchOfferUseCase(get()) }
         factory { AnswerOfferUseCase(get()) }
 
+        single<EarningsRepository> { HttpEarningsRepository(get(), config.driverId) }
+        factory { ReadEarningsUseCase(get()) }
+
         single<TripRepository> { HttpTripRepository(get()) }
         factory { ObserveTripUseCase(get()) }
         factory { AdvanceTripUseCase(get()) }
@@ -186,6 +193,7 @@ public fun driverModule(config: DriverConfig): Module =
             )
         }
         viewModel { (rideId: String) -> DriverTripViewModel(rideId, config.driverId, get(), get()) }
+        viewModel { EarningsViewModel(get()) }
     }
 
 /** The provider's client, told apart from the application's by a name rather than by a type. */

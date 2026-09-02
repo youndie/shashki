@@ -118,9 +118,9 @@ The product, in the order a ride goes through it, then the two capabilities that
 - [x] [feature-crash-reports](features/feature-crash-reports.md) — what a browser loses, and the two
   hooks that catch it
 
-### Screens / Flows (8)
+### Screens / Flows (9)
 
-Six in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
+Six in the rider bundle, three in the driver's. Every one of them is photographed: the `Content` half
 takes a state and a callback, so a golden of it needs no graph and no server.
 
 - [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
@@ -137,6 +137,8 @@ takes a state and a callback, so a golden of it needs no graph and no server.
   the vocabulary and one action
 - [x] [screen-driver-shift](screens/screen-driver-shift.md) — offline, waiting, or fifteen seconds to
   decide. One screen, because that is how a shift feels
+- [x] [screen-driver-earnings](screens/screen-driver-earnings.md) — today, this week and all time,
+  summed from the payout rows
 - [x] [screen-driver-assigned-ride](screens/screen-driver-assigned-ride.md) — what was accepted, and
   the one button that moves it along
 

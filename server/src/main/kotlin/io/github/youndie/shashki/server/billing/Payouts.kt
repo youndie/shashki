@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -58,6 +59,18 @@ public interface PayoutRepository {
 
     /** Everything owed for a ride — the fare's share and the tip, when there is one. */
     public fun forRide(rideId: String): List<Payout>
+
+    /**
+     * What this driver has been owed since [sinceEpochMs], in cents (B-46).
+     *
+     * **A sum of payout rows and not of fares.** The two agree until the first refund, and then the
+     * recomputed figure is the driver's word against the bank's — a tip whose saga rolled back has
+     * no row, and a screen adding up journeys would still be showing it.
+     */
+    public fun sumFor(
+        driverId: String,
+        sinceEpochMs: Long,
+    ): Long
 }
 
 public object PayoutsTable : Table("payouts") {
@@ -107,6 +120,17 @@ public class ExposedPayoutRepository(
                 .where { (PayoutsTable.rideId eq rideId) and (PayoutsTable.kind eq kind) }
                 .singleOrNull()
                 ?.toPayout()
+        }
+
+    override fun sumFor(
+        driverId: String,
+        sinceEpochMs: Long,
+    ): Long =
+        transaction(database) {
+            PayoutsTable
+                .selectAll()
+                .where { (PayoutsTable.driverId eq driverId) and (PayoutsTable.createdAt greaterEq sinceEpochMs) }
+                .sumOf { it[PayoutsTable.amountCents] }
         }
 
     override fun forRide(rideId: String): List<Payout> =

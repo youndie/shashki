@@ -2,9 +2,11 @@ package io.github.youndie.shashki.server.feature.settlement
 
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DriverDecision
+import io.github.youndie.shashki.protocol.DriverEarnings
 import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.DriverReport
 import io.github.youndie.shashki.protocol.DriverRides
+import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.Quotes
@@ -466,6 +468,75 @@ class SettlementTest {
             assertNull(mine.first().chargedCents, "a ride nobody drove was charged for")
         }
 
+/**
+     * **D6's numbers, and what they are a sum of** (B-46).
+     *
+     * The tile shows what was *paid* — the payout rows — because that is the number a driver cares
+     * about and the one that survives a refund. A figure recomputed from fares would agree with it
+     * until the first rolled-back tip, and then it would be the driver's word against the bank's.
+     */
+    @Test
+    fun `earnings are the sum of the payout rows, fare and fee and tip alike`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            assertEquals(0, client.earnings().allTimeCents, "a driver who has driven nothing is owed nothing")
+
+            val ride = assignedRide(client, app)
+            drive(client, ride.id)
+            val fare = assertNotNull(ride.quote).amountCents
+            val share = fare * PLATFORM_REMAINDER / HUNDRED
+
+            assertEquals(share, client.earnings().todayCents)
+
+            client.tip(ride.id, TIP)
+            assertEquals(share + TIP, client.earnings().todayCents, "the tip is not in the day it was charged")
+
+            // A cancellation after a driver set off pays a share of the fee, and it lands in the
+            // same day — the second settlement is a settlement like any other.
+            val abandoned = assignedRide(client, app)
+            client.post(Rides.Cancel(id = abandoned.id))
+            val feeShare = fare * CANCELLATION_PERCENT / HUNDRED * PLATFORM_REMAINDER / HUNDRED
+
+            val earned = client.earnings()
+            assertEquals(share + TIP + feeShare, earned.todayCents)
+            assertEquals(earned.todayCents, earned.weekCents, "today is not inside this week")
+            assertEquals(earned.todayCents, earned.allTimeCents)
+        }
+
+    /**
+     * **The half that says it is a sum of payouts rather than of fares**: a tip whose saga rolled
+     * back has no row, and the number must not remember it.
+     */
+    @Test
+    fun `a tip that was rolled back is not in the earnings`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+            drive(client, ride.id)
+            val before = client.earnings().allTimeCents
+
+            client.tip(ride.id, TIP)
+            // The tip's compensation is what a refund is here: the charge given back and the row
+            // removed. `SettlementSagaTest` drives the death that causes it; from outside, what can
+            // be seen is that removing the row moves the number.
+            app.get<PayoutRepository>().remove(ride.id, Payout.TIP)
+
+            assertEquals(before, client.earnings().allTimeCents, "the earnings remembered a payout that is gone")
+        }
+
     /** The order is the point of the route: a driver cannot arrive at a ride they have not started. */
     @Test
     fun `a transition that is not the next one is refused`() =
@@ -525,6 +596,12 @@ class SettlementTest {
         }.body()
 
     private suspend fun HttpClient.read(rideId: String): RideView = get(Rides.ById(id = rideId)).body()
+
+    private suspend fun HttpClient.earnings(): EarningsView {
+        val response = get(DriverEarnings(driverId = DRIVER))
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return response.body()
+    }
 
     private suspend fun HttpClient.rate(
         rideId: String,

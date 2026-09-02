@@ -69,6 +69,8 @@ public fun DriverShift(
     onAccept: () -> Unit,
     onDecline: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The driver's earnings (B-46). Does nothing where there is nowhere to go. */
+    onEarnings: () -> Unit = {},
 ) {
     val colors = KvadrantTheme.colors
     val type = ShashkiTheme.typography
@@ -80,8 +82,13 @@ public fun DriverShift(
             .padding(horizontal = MARGIN),
     ) {
         Spacer(Modifier.height(TOP))
-        KvadrantText(state.driverLabel, style = type.meta.copy(color = colors.subtle))
-        KvadrantText(state.classLabel, style = type.rowEmphasis)
+        // **The header is the way to D6.** A driver looks at what they have earned between rides,
+        // and this screen is where they are between rides; a second control at the bottom would
+        // crowd the one switch that matters while a shift is running.
+        Column(Modifier.clickable(onClick = onEarnings)) {
+            KvadrantText(state.driverLabel, style = type.meta.copy(color = colors.subtle))
+            KvadrantText(state.classLabel, style = type.rowEmphasis)
+        }
 
         Spacer(Modifier.height(GAP))
 

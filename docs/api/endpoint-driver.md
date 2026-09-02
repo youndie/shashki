@@ -22,6 +22,7 @@ parent_feature: feature-the-trip
 | `GET /api/driver/offers/{driverId}` | driver token | the offer waiting for this driver, or 404 |
 | `POST /api/driver/offers/{rideId}/answer` | driver token | accept or decline |
 | `POST /api/driver/rides/{rideId}/advance` | driver token | move the trip to the next state |
+| `GET /api/driver/earnings` | driver token | today, this week and all time, from payout rows (B-46) |
 
 **The hole is shut** (B-52). It said "public, temporarily" here for two stages, and what it meant was
 that anybody who knew a driver's id could read the offer waiting for them, accept it, and advance the
@@ -38,6 +39,12 @@ the upgrade carries a one-shot ticket minted at `POST /api/driver/ticket` behind
 check — thirty seconds, single use, and worth nothing in an access log. And a frame is *compared*
 rather than replaced: a position for anybody but the connected driver is dropped and counted, because
 relabelling it would file somebody else's car under this driver.
+
+**The earnings are sums of payout rows and not of fares** (B-46). The row is what the settlement
+wrote down as owed — a completed ride, a cancellation fee, a tip — and it is the number that survives
+a refund; a figure recomputed from journeys agrees with it until the first rolled-back tip. The day
+and the week are **UTC**, which is a seam: a driver in another timezone sees their day roll at the
+wrong hour, and fixing it needs a driver record this product does not have.
 
 What has not moved: the class and the rating are still self-reported, because there is no driver
 record to read them from. The second lock on the last route is still there and is still worth having

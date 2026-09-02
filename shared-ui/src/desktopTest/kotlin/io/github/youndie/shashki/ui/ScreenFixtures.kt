@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.ui.kompot.EarningsTile
 import io.github.youndie.shashki.ui.kompot.TripRow
 import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
@@ -11,6 +12,7 @@ import io.github.youndie.shashki.ui.map.MapPin
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
 import io.github.youndie.shashki.ui.screens.CancelPrompt
+import io.github.youndie.shashki.ui.screens.DriverEarnings
 import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
@@ -228,6 +230,36 @@ internal fun RiderHistoryEmptyFixture() {
             emptyLine = "no trips yet",
             profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
             onTrip = {},
+        )
+    }
+}
+
+/**
+ * D6: today, this week, and everything — from the payout rows (B-46).
+ *
+ * **One `54` on the screen and it is today's sum**, drawn as the page's own figure; the tiles below
+ * carry `32`s through `EarningsTileRenderer`, which is the kit's section 08 rule 3. A grid of `54`s
+ * would be four page titles.
+ *
+ * The digits are tabular — `ShashkiTypography` makes both figures `tnum` — so a number that changes
+ * while a driver watches it does not shuffle its neighbours.
+ */
+@ViddikScreenshot(name = "driver earnings", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverEarningsFixture() {
+    val latin = kvadrantLatin()
+    DriverTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        DriverEarnings(
+            titles = listOf("today", "week", "history"),
+            today = "$ 23.16",
+            todayLabel = "today, 1 ride",
+            tiles =
+                listOf(
+                    EarningsTile("today", "today", "$ 23.16", size = 2, accent = true),
+                    EarningsTile("week", "week", "$ 118.40", size = 2),
+                ),
+            history = listOf("airport · today" to "$ 23.16"),
+            emptyLine = "nothing yet",
         )
     }
 }

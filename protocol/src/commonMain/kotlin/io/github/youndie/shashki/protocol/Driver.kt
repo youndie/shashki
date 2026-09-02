@@ -41,6 +41,35 @@ public data class DriverTicket(
     val expiresInSeconds: Int,
 )
 
+/**
+ * What the driver has earned, in three periods (B-46).
+ *
+ * **Sums of payout rows, not of fares.** The driver's number is what was written down as owed; a
+ * figure recomputed from journeys agrees with it until the first refund and then argues with the
+ * bank.
+ *
+ * The day and the week are the server's, in UTC — see the route, which says what that costs a driver
+ * in another timezone.
+ */
+@Serializable
+public data class EarningsView(
+    val todayCents: Long,
+    val weekCents: Long,
+    val allTimeCents: Long,
+    val currency: String,
+)
+
+/**
+ * `GET /api/driver/earnings` — D6's three tiles.
+ *
+ * [driverId] is the same seam every other driver route carries (B-52): **ignored the moment there is
+ * a token**, and the only source there is on a server with no provider configured, which is the demo.
+ */
+@Resource("/api/driver/earnings")
+public class DriverEarnings(
+    public val driverId: String? = null,
+)
+
 /** `POST /api/driver/ticket` — the driver's token, exchanged for something a socket can carry. */
 @Resource("/api/driver/ticket")
 public class DriverTickets

@@ -1,7 +1,7 @@
 ---
 id: B-46
 title: "Driver earnings: today, this week, and the payouts that already exist"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-5-the-rest-of-the-kit
@@ -36,3 +36,32 @@ what the server says about it; it never shows a number with a currency sign on i
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/`,
   `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/kompot/ServerDrivenComponents.kt`
+
+## What it turned out to be
+
+**The item's own sentence was the whole design and it held.** Sum the payout rows, do not recompute
+the fares: `PayoutRepository.sumFor(driverId, since)` is three queries and the route is a dozen
+lines, because the settlement had already written down everything a driver is owed — the fare's
+share, the fee's share when a rider cancelled after a driver set off, and since
+[B-44](B-44-finished-rate-and-tip.md) the tip.
+
+**What the item did not say, and what the code now does, is the timezone.** The day and the week are
+UTC. That is a seam and it is named where it lives: a driver in another timezone sees their day roll
+at the wrong hour, and fixing it needs a driver record — the same missing thing that leaves the class
+and the rating on a position frame self-reported.
+
+**The route needed the same escape every other driver route carries.** `GET /api/driver/earnings`
+has no path segment and no body to put an id in, so with no provider configured it could not say
+whose money it was answering about — the first version threw `no driver identity on this request`
+against the demo. `DriverEarnings(driverId)` is that seam, ignored the moment there is a token, and
+it is the fourth time B-52's rule has been written out rather than the first time it was needed.
+
+- AC 1: the route, behind the driver's token, answering the three periods from payout rows alone.
+- AC 2: `screens_driver_earnings` — one `54` (today's sum, `tnum`) and `32`s in the tiles, drawn by
+  kompot's `EarningsTileRenderer` natively.
+- AC 3: `earnings are the sum of the payout rows, fare and fee and tip alike` walks a completed ride,
+  a tip and a cancellation fee through one day; `a tip that was rolled back is not in the earnings`
+  is the half that says it is a sum of payouts rather than of fares.
+- Deliberately still open: the per-ride list on the *history* page. The payout rows carry a ride id
+  and joining them to the rides is B-45's shape a second time; the screen says so rather than
+  drawing an empty grid.

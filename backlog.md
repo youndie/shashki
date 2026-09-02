@@ -41,18 +41,17 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (6)
+## Open (5)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-46](docs/backlog/B-46-driver-earnings-from-payouts.md) `[ ]` | Driver earnings: today, this week, and the payouts that already exist | P1 | S | - |
 | [B-48](docs/backlog/B-48-light-goldens-for-every-screen.md) `[ ]` | Every screen fixture gains its light variant, which open question 1 promised | P1 | S | - |
 | [B-47](docs/backlog/B-47-driver-onboarding-and-the-object-store.md) `[?]` | Driver onboarding, which is the one scenario the object store has left | P2 | L | B-52 |
 | [B-49](docs/backlog/B-49-the-drivers-real-position.md) `[?]` | The driver's real position, from the browser, or the reason it stays configured | P2 | S | B-52 |
 | [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
 | [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
-## Closed (46)
+## Closed (47)
 
 **Remove the unknowns**
 
@@ -116,6 +115,7 @@ re-prioritising one must never move its file.
 - [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[x]` - The rider sees the wait and its end: matching, no cars nearby, and cancel
 - [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[x]` - Finished: rate the driver and tip, and the tip is a second charge
 - [B-45](docs/backlog/B-45-history-from-the-broker.md) `[x]` - History: the rider's rides, drawn natively from the broker's projection
+- [B-46](docs/backlog/B-46-driver-earnings-from-payouts.md) `[x]` - Driver earnings: today, this week, and the payouts that already exist
 - [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[x]` - The driver's four routes stop being public: the hole the endpoint table names
 
 <!-- END INDEX -->

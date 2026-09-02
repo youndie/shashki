@@ -27,6 +27,8 @@ public fun ShiftScreen(
     onGone: () -> Unit,
     onFailed: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /** The header opens D6 — where a driver looks between rides (B-46). */
+    onEarnings: () -> Unit = {},
     viewModel: ShiftViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -41,7 +43,7 @@ public fun ShiftScreen(
         }
     }
 
-    ShiftContent(uiState, viewModel::onAction, modifier)
+    ShiftContent(uiState, viewModel::onAction, modifier, onEarnings)
 }
 
 /** Stateless: `uiState` and `onAction`. No graph, no socket, no server. */
@@ -50,6 +52,7 @@ public fun ShiftContent(
     uiState: ShiftUiState,
     onAction: (ShiftUiAction) -> Unit,
     modifier: Modifier = Modifier,
+    onEarnings: () -> Unit = {},
 ) {
     DriverShift(
         state =
@@ -68,6 +71,7 @@ public fun ShiftContent(
         onAccept = { onAction(ShiftUiAction.Accept) },
         onDecline = { onAction(ShiftUiAction.Decline) },
         modifier = modifier,
+        onEarnings = onEarnings,
     )
 }
 

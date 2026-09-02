@@ -2,7 +2,9 @@ package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.DriverTicket
+import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.OfferAnswer
+import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.DriverTickets
 import io.github.youndie.shashki.server.feature.auth.driverIdentity
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
@@ -16,6 +18,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
 import ru.workinprogress.oidc.JWT_AUTH_OIDC
+import ru.workinprogress.petich.PetichClock
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.ZoneOffset
+import io.github.youndie.shashki.protocol.DriverEarnings as DriverEarningsResource
 import io.github.youndie.shashki.protocol.DriverTickets as DriverTicketsResource
 
 /**
@@ -41,6 +48,8 @@ private fun Route.driverEndpoints() {
     val findOffer by inject<FindOfferUseCase>()
     val answerOffer by inject<AnswerOfferUseCase>()
     val tickets by inject<DriverTickets>()
+    val payouts by inject<PayoutRepository>()
+    val clock by inject<PetichClock>()
 
     get<DriverOffers.ForDriver> { route ->
         val driverId = call.driverIdentity(route.driverId)
@@ -52,6 +61,43 @@ private fun Route.driverEndpoints() {
         val driverId = call.driverIdentity(answer.driverId)
         call.respond(
             answerOffer(AnswerOfferUseCase.Params(route.rideId, answer.copy(driverId = driverId))).getOrThrow(),
+        )
+    }
+
+    // **D6's three numbers, from the payout rows alone** (B-46). What a driver is owed is what was
+    // written down as owed; a figure recomputed from fares agrees with it until the first refund.
+    //
+    // **The day and the week are UTC**, and that is a seam rather than a decision: a driver in
+    // another timezone sees their day roll at the wrong hour. Fixing it needs the driver's zone,
+    // which needs a driver record — the same missing thing that makes the class and the rating on a
+    // position frame self-reported.
+    get<DriverEarningsResource> { route ->
+        val driverId = call.driverIdentity(route.driverId)
+        val now = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(ZoneOffset.UTC)
+        call.respond(
+            EarningsView(
+                todayCents =
+                    payouts.sumFor(
+                        driverId,
+                        now
+                            .toLocalDate()
+                            .atStartOfDay(ZoneOffset.UTC)
+                            .toInstant()
+                            .toEpochMilli(),
+                    ),
+                weekCents =
+                    payouts.sumFor(
+                        driverId,
+                        now
+                            .toLocalDate()
+                            .with(DayOfWeek.MONDAY)
+                            .atStartOfDay(ZoneOffset.UTC)
+                            .toInstant()
+                            .toEpochMilli(),
+                    ),
+                allTimeCents = payouts.sumFor(driverId, 0),
+                currency = "USD",
+            ),
         )
     }
 
