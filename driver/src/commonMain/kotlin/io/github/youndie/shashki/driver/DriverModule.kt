@@ -172,11 +172,16 @@ public fun driverModule(config: DriverConfig): Module =
         factory { WatchOfferUseCase(get()) }
         factory { AnswerOfferUseCase(get()) }
 
-        single<DocumentsRepository> { HttpDocumentsRepository(get(), config.driverId) }
+        // **Who this bundle is, asked rather than captured** (B-53). Everything below used to take
+        // `config.driverId`, which is `SHASHKI_DRIVER_ID` — a value the token contradicts the moment
+        // anybody signs in, and the socket answers a contradiction by dropping the frame.
+        single<DriverIdentity> { TokenDriverIdentity(get(), config.driverId) }
+
+        single<DocumentsRepository> { HttpDocumentsRepository(get(), get()) }
         factory { ReadDocumentsUseCase(get()) }
         factory { UploadDocumentUseCase(get()) }
 
-        single<EarningsRepository> { HttpEarningsRepository(get(), config.driverId) }
+        single<EarningsRepository> { HttpEarningsRepository(get(), get()) }
         factory { ReadEarningsUseCase(get()) }
 
         single<TripRepository> { HttpTripRepository(get()) }
@@ -198,7 +203,7 @@ public fun driverModule(config: DriverConfig): Module =
 
         viewModel {
             ShiftViewModel(
-                driverId = config.driverId,
+                identity = get(),
                 rideClass = config.rideClass,
                 rating = config.rating,
                 at = config.at,
@@ -207,7 +212,7 @@ public fun driverModule(config: DriverConfig): Module =
                 answerOffer = get(),
             )
         }
-        viewModel { (rideId: String) -> DriverTripViewModel(rideId, config.driverId, get(), get()) }
+        viewModel { (rideId: String) -> DriverTripViewModel(rideId, get(), get(), get()) }
         viewModel { EarningsViewModel(get()) }
         // The picker is the platform's and is left at its default here: the graph has nothing to say
         // about a file dialog, and a test hands in its own.

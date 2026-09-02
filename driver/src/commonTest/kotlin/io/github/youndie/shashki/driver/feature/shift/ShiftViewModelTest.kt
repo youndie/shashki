@@ -255,7 +255,7 @@ class ShiftViewModelTest {
 
     private fun viewModel(scope: CoroutineScope) =
         ShiftViewModel(
-            driverId = "driver-1",
+            identity = { "driver-1" },
             rideClass = RideClass.ECONOMY,
             rating = 4.9,
             at = FakeOfferRepository.PICKUP,

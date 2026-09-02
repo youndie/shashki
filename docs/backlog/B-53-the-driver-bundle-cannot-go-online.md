@@ -1,7 +1,7 @@
 ---
 id: B-53
 title: "The driver bundle sends an id the token contradicts, so every position frame is dropped"
-status: open
+status: done
 priority: P0
 size: S
 stage: stage-6-what-running-it-said
@@ -44,3 +44,31 @@ no candidate and cancels.
 - Anchors: `driver/src/wasmJsMain/kotlin/io/github/youndie/shashki/driver/Main.kt`,
   `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/shift/domain/GoOnlineUseCase.kt`,
   `auth-client/src/commonMain/kotlin/io/github/youndie/shashki/auth/`
+
+## What it turned out to be
+
+**One line of client code, and the reason it survived so long is that nothing but a browser could
+see it.** `DriverConfig.driverId` was read once at startup — before anybody signs in — so it was
+`SHASHKI_DRIVER_ID` for the life of the page. The fix is a `DriverIdentity` that is *asked* rather
+than held: the token's subject when there is a token, the configured id when there is not. Every
+place in the bundle that used to carry the captured string now takes it — the report, the offers
+poll, the answer, the advance, the documents and earnings paths, and the label on the shift screen,
+which had been showing `driver-1` while the server worked with somebody else.
+
+**Measured on the stand, before and after.** Before: one
+`WARN shashki.positions - a socket reported a position for a driver it is not signed in as` per
+frame, `pickupEtaSeconds` null for every class, every order cancelled for want of a candidate. After:
+signed in through the real flow, *go online*, **19 frames accepted and zero warnings**, the shift
+screen reading `rider@example.com` instead of `driver-1`, `ECONOMY eta=0`, and the ride offered to
+that subject — the client's own poll answering `200` for the whole fifteen seconds the offer lived.
+
+**The guard that would have caught it is a three-line test, and it is the third of its kind here.**
+`DriverIdentityTest` asserts that signing in *after* the object exists changes its answer; with the
+value captured at construction that test fails, which is the control. The two before it were
+`KoinGraphTest` resolving a binding behind an interface and `RiderRouteTest` enumerating all seven
+routes — the same shape each time: a guard pointed by hand at a subset.
+
+**And verifying it found the next defect, which is a different one.** The offer now reaches the
+client and does not reach the screen: [B-64](B-64-the-offer-reaches-the-client-and-not-the-screen.md)
+has the measurements. That is filed rather than folded in, because the identity was the item and the
+card is not.

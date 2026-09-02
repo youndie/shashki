@@ -36,7 +36,12 @@ services:
   shildik:
     # A numbered tag, not `latest`: a demo that cannot be stood up again in six months is a
     # screenshot of a demo (research §3 Risk 3).
-    image: ghcr.io/youndie/shildik:0.2.0.8
+    # **0.2.0.13 and not 0.2.0.8, because a browser cannot finish the exchange against the older
+    # one** (B-55). Both bundles run the code exchange in the page, so the token request is
+    # cross-origin in every configuration this stand supports, and the image published before
+    # 2026-09-02 answered it with no `Access-Control-Allow-Origin` — the page went blank and sign-in
+    # looked like a client bug. youndie/shildik#22 is the whole story.
+    image: ghcr.io/youndie/shildik:0.2.0.13
     depends_on:
       postgres:
         condition: service_healthy

@@ -132,7 +132,7 @@ class DriverTripViewModelTest {
     private fun viewModel(scope: CoroutineScope) =
         DriverTripViewModel(
             rideId = "ride-1",
-            driverId = "driver-1",
+            identity = { "driver-1" },
             observeTrip = ObserveTripUseCase(trips),
             advanceTrip = AdvanceTripUseCase(trips),
             loopScope = scope,

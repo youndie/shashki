@@ -2026,6 +2026,7 @@ What is worth keeping here is not the list but which kind of guard was blind to 
 | the driver bundle's every position frame is dropped: it claims `driver-1` and the token says otherwise, so the driver never enters the index and no ride can be matched (B-53) | the socket's tests send a frame whose id matches the subject — written by the same hand as the rule |
 | ...and the shift screen counts those frames as sent (B-54) | the count is emitted after `send` returns, which is the client's own intention; nothing on the wire disagrees with it |
 | browser sign-in cannot finish: the provider's token response carries no `Access-Control-Allow-Origin` (B-55) | every test of sign-in runs outside a browser; B-41 said so in its own tail — "the page's half was checked by hand" |
+| ...and it is fixed the same evening by a **release**, not a change: shildik's `PageReadable` had been on `main` for four days and no published image carried it | a pinned dependency is not a released one, and nothing in either repository can tell the difference |
 | the earnings grid put three two-column tiles in one four-column row and the third hung off the screen | the fixture sends **two** tiles; a golden photographs the fixture, not the product |
 | `/trips` went out into the address bar and came back unrecognised | the round-trip test listed three routes of seven, by hand |
 | the quickstart named `Ljubljana.pmtiles`, which nothing in this repository produces | no check reads the compose file's prose, and a 404 on the archive is a black page rather than a message (B-56) |

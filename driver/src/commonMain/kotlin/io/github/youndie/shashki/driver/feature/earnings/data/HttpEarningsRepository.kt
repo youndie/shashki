@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.driver.feature.earnings.data
 
+import io.github.youndie.shashki.driver.DriverIdentity
 import io.github.youndie.shashki.driver.feature.earnings.domain.EarningsRepository
 import io.github.youndie.shashki.protocol.DriverEarnings
 import io.github.youndie.shashki.protocol.EarningsView
@@ -15,7 +16,7 @@ import io.ktor.client.plugins.resources.get
  */
 public class HttpEarningsRepository(
     private val client: HttpClient,
-    private val driverId: String,
+    private val identity: DriverIdentity,
 ) : EarningsRepository {
-    override suspend fun earnings(): EarningsView = client.get(DriverEarnings(driverId = driverId)).body()
+    override suspend fun earnings(): EarningsView = client.get(DriverEarnings(driverId = identity.current())).body()
 }

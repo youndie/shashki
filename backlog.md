@@ -42,13 +42,12 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (11)
+## Open (10)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-53](docs/backlog/B-53-the-driver-bundle-cannot-go-online.md) `[ ]` | The driver bundle sends an id the token contradicts, so every position frame is dropped | P0 | S | - |
 | [B-54](docs/backlog/B-54-the-shift-counter-counts-frames-nobody-took.md) `[ ]` | The shift's count rises for frames the server threw away | P0 | S | B-53 |
-| [B-55](docs/backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md) `[ ]` | Browser sign-in cannot finish: the provider's CORS headers are unreleased | P0 | XS | - |
+| [B-64](docs/backlog/B-64-the-offer-reaches-the-client-and-not-the-screen.md) `[ ]` | The offer reaches the driver's client and never reaches the driver's screen | P0 | M | - |
 | [B-56](docs/backlog/B-56-an-uncaught-failure-is-a-blank-page.md) `[ ]` | An uncaught failure leaves a blank page and no words at all | P1 | S | - |
 | [B-57](docs/backlog/B-57-one-condition-two-statuses.md) `[ ]` | A pickup outside the graph is 422 on two routes and 500 on the one a rider uses | P1 | S | - |
 | [B-58](docs/backlog/B-58-the-rejection-nobody-writes.md) `[ ]` | cancellationReason is on the wire, read by the repository, and written by nobody | P1 | S | - |
@@ -58,7 +57,7 @@ re-prioritising one must never move its file.
 | [B-62](docs/backlog/B-62-a-price-for-a-class-you-cannot-order.md) `[ ]` | R4 prices a class it has just said has no cars | P2 | XS | - |
 | [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[ ]` | The product has no driver record, so a rider is asked to rate an e-mail address | P2 | M | - |
 
-## Closed (52)
+## Closed (54)
 
 **Remove the unknowns**
 
@@ -129,6 +128,11 @@ re-prioritising one must never move its file.
 - [B-48](docs/backlog/B-48-light-goldens-for-every-screen.md) `[x]` - Every screen fixture gains its light variant, which open question 1 promised
 - [B-49](docs/backlog/B-49-the-drivers-real-position.md) `[x]` - The driver's real position, from the browser, or the reason it stays configured
 - [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[x]` - The driver's four routes stop being public: the hole the endpoint table names
+
+**What running it said**
+
+- [B-53](docs/backlog/B-53-the-driver-bundle-cannot-go-online.md) `[x]` - The driver bundle sends an id the token contradicts, so every position frame is dropped
+- [B-55](docs/backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md) `[x]` - Browser sign-in cannot finish: the provider's CORS headers are unreleased
 
 <!-- END INDEX -->
 

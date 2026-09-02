@@ -2,6 +2,7 @@ package io.github.youndie.shashki.driver.feature.trip.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.youndie.shashki.driver.DriverIdentity
 import io.github.youndie.shashki.driver.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
 import io.github.youndie.shashki.protocol.RideStatus
@@ -41,7 +42,7 @@ public sealed interface DriverTripUiEvent {
 /** What the driver accepted, kept up to date. */
 public class DriverTripViewModel(
     private val rideId: String,
-    private val driverId: String,
+    private val identity: DriverIdentity,
     private val observeTrip: ObserveTripUseCase,
     private val advanceTrip: AdvanceTripUseCase,
     loopScope: CoroutineScope? = null,
@@ -86,7 +87,7 @@ public class DriverTripViewModel(
         if (_uiState.value.advancing) return
         _uiState.value = _uiState.value.copy(advancing = true)
         scope.launch {
-            advanceTrip(AdvanceTripUseCase.Params(rideId, driverId, to))
+            advanceTrip(AdvanceTripUseCase.Params(rideId, identity.current(), to))
                 .onSuccess { ride ->
                     _uiState.value = DriverTripUiState(ride)
                     if (ride.status in TERMINAL) _events.send(DriverTripUiEvent.Finished)

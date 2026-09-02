@@ -2,6 +2,7 @@ package io.github.youndie.shashki.driver.feature.shift.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.youndie.shashki.driver.DriverIdentity
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOutcome
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
@@ -79,7 +80,13 @@ public sealed interface ShiftUiEvent {
  * saga is, which answers 409 when it was not.
  */
 public class ShiftViewModel(
-    private val driverId: String,
+    /**
+     * Who this bundle is, asked each time rather than captured (B-53).
+     *
+     * The view model is built before anybody has signed in; a `String` here is the configured id for
+     * the life of the page, and the socket drops every frame that carries it.
+     */
+    private val identity: DriverIdentity,
     private val rideClass: RideClass,
     private val rating: Double,
     private val at: GeoPoint,
@@ -90,7 +97,7 @@ public class ShiftViewModel(
     loopScope: CoroutineScope? = null,
 ) : ViewModel() {
     private val scope: CoroutineScope = loopScope ?: viewModelScope
-    private val _uiState = MutableStateFlow(ShiftUiState(driverLabel = driverId))
+    private val _uiState = MutableStateFlow(ShiftUiState(driverLabel = identity.current()))
     public val uiState: StateFlow<ShiftUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<ShiftUiEvent>(Channel.BUFFERED)
@@ -121,7 +128,10 @@ public class ShiftViewModel(
 
     private fun online() {
         if (shift != null) return
-        _uiState.value = _uiState.value.copy(online = true, reported = 0)
+        // Re-read on the way online: this is the first moment there is certainly a token, because
+        // the socket's ticket cannot be minted without one.
+        val driverId = identity.current()
+        _uiState.value = _uiState.value.copy(driverLabel = driverId, online = true, reported = 0)
         shift =
             scope.launch {
                 runCatching {
@@ -153,7 +163,7 @@ public class ShiftViewModel(
         countdown?.cancel()
         countdown = null
         finished = null
-        _uiState.value = ShiftUiState(driverLabel = driverId)
+        _uiState.value = ShiftUiState(driverLabel = identity.current())
     }
 
     private fun onOffer(offer: OfferView?) {
@@ -198,7 +208,7 @@ public class ShiftViewModel(
         if (_uiState.value.answering) return
         _uiState.value = _uiState.value.copy(answering = true)
         scope.launch {
-            answerOffer(AnswerOfferUseCase.Params(offer.rideId, driverId, decision))
+            answerOffer(AnswerOfferUseCase.Params(offer.rideId, identity.current(), decision))
                 .onSuccess { outcome ->
                     when (outcome) {
                         is AnswerOutcome.Accepted -> {

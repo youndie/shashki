@@ -34,6 +34,10 @@ class DriverGraphTest {
     fun `every definition the driver needs resolves`() {
         val koin = startKoin { modules(driverModule(CONFIG)) }.koin
 
+        // **Asked for by name, because a binding behind an interface is invisible to everything
+        // else** — the server's own graph shipped a 500 on exactly that hole (B-47) and this
+        // identity is what the socket compares its frames against (B-53).
+        assertNotNull(koin.get<DriverIdentity>(), "the bundle cannot say who it is")
         assertNotNull(koin.get<HttpClient>())
         assertNotNull(koin.get<ShiftRepository>())
         assertNotNull(koin.get<GoOnlineUseCase>())

@@ -18,8 +18,24 @@ import kotlin.io.encoding.ExperimentalEncodingApi
  * getting it wrong is a wrong label, and the consequence of not having it is a screen that knows who
  * somebody is and will not say.
  */
+public fun emailClaim(token: String): String? = claim(token, "email")
+
+/**
+ * The subject — who the server will say this request is from.
+ *
+ * **The driver bundle needs this one for a reason the e-mail did not have**: after
+ * [B-52](../../../../../../../docs/backlog/B-52-driver-routes-behind-the-token.md) the identity of
+ * every driver request is the token's subject, and a client that goes on claiming a configured id
+ * has its position frames dropped by the socket — measured, in B-53. The same caveat applies as
+ * above: this reads, it does not verify, and the server decides.
+ */
+public fun subjectClaim(token: String): String? = claim(token, "sub")
+
 @OptIn(ExperimentalEncodingApi::class)
-public fun emailClaim(token: String): String? {
+private fun claim(
+    token: String,
+    name: String,
+): String? {
     val payload = token.split(".").getOrNull(1) ?: return null
     val json =
         runCatching {
@@ -30,5 +46,5 @@ public fun emailClaim(token: String): String? {
                 .decodeToString()
         }.getOrNull() ?: return null
     val claims = runCatching { Json.parseToJsonElement(json) as? JsonObject }.getOrNull() ?: return null
-    return claims["email"]?.jsonPrimitive?.content
+    return claims[name]?.jsonPrimitive?.content
 }

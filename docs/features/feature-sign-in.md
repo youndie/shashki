@@ -23,15 +23,15 @@ that comes back is one this server accepts on the routes that change something.
 client can be handed a token by a provider whose keys the server never fetches, and a server can
 accept a token no client of ours can produce.
 
-> **Amended 2026-09-02: this does not work in a browser today, and the reason is not in this
-> repository.** Both bundles run the code exchange in the page, so the token request is cross-origin
-> — a different port is a different origin, in every configuration this stand supports — and
-> `ghcr.io/youndie/shildik:0.2.0.8` answers it without `Access-Control-Allow-Origin`, so the browser
-> refuses to hand the response to the page. shildik has the fix on `main` and has not published it
-> ([youndie/shildik#22](https://github.com/youndie/shildik/issues/22)); the pin is
-> [B-55](../backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md). Everything below is true
-> of a non-browser client and of the bundles once that image ships — the redirect, the parked
-> attempt, the code on the callback and the verifier are all exercised and correct.
+> **Amended 2026-09-02, twice in one evening.** The first amendment said this did not work in a
+> browser at all: both bundles run the code exchange in the page, the token request is cross-origin
+> in every configuration this stand supports, and every published shildik image answered it without
+> `Access-Control-Allow-Origin`. shildik released `0.2.0.13` in answer to
+> [issue #22](https://github.com/youndie/shildik/issues/22), the compose file pins it, and the walk
+> below was then done end to end in a real browser — redirect, password form, callback, exchange, and
+> a protected screen. It is left here rather than deleted because the shape is worth keeping: the fix
+> existed on `main` for four days and no image carried it, and "merged" is not a sentence about
+> anything a deployment can pull.
 
 ## 2. Business rules
 

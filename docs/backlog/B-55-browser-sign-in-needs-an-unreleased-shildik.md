@@ -1,7 +1,7 @@
 ---
 id: B-55
 title: "Browser sign-in cannot finish: the provider's CORS headers are unreleased"
-status: open
+status: done
 priority: P0
 size: XS
 stage: stage-6-what-running-it-said
@@ -40,3 +40,25 @@ commit. Filed as [youndie/shildik#22](https://github.com/youndie/shildik/issues/
 - AC: until then, `feature-sign-in` and research §5 say what does not work and name the issue.
 - Anchors: `docker/compose.yaml`, `docs/features/feature-sign-in.md`,
   `docs/research/research-architecture.md`
+
+## What it turned out to be
+
+**Released the same evening, and the pin was the whole fix.** shildik published `0.2.0.13` from
+`a62db6d` in answer to [issue #22](https://github.com/youndie/shildik/issues/22); `docker/compose.yaml`
+moved one version string. The token endpoint now answers a cross-origin `POST` with
+`Access-Control-Allow-Origin: *`, `Allow-Headers: Content-Type` and `Allow-Methods: GET, POST,
+OPTIONS`, and deliberately without `Allow-Credentials` — checked against the running stand with
+`curl` before a browser was pointed at it.
+
+**Then the flow was walked end to end in a real browser, which is what this item existed for.**
+Pressing *go online* with nobody signed in redirects to the provider; the password form posts;
+`/driver/callback` comes back with the code; the exchange succeeds; and the shift screen returns
+carrying `rider@example.com` — the subject, drawn by [B-53](B-53-the-driver-bundle-cannot-go-online.md)'s
+identity. Before the bump the same walk ended on a blank page, which is
+[B-56](B-56-an-uncaught-failure-is-a-blank-page.md)'s subject and still open.
+
+**What this says about the stack is worth keeping.** The fix was in shildik's `main` for four days,
+written for exactly this consumer, and no published image carried it — `latest`, `0.2.0.8` and
+`sha-ed689c5` were one digest. A pinned dependency does not mean a *released* one, and "the fix is
+merged" is not a sentence about anything a deployment can pull. The stack's own answer was a manual
+image workflow that nobody had run; shildik is filing the release trigger separately.
