@@ -1,15 +1,48 @@
 # The server, as one artefact: the application, the road graph it routes on, and the two browser
 # bundles it serves.
 #
-# **One stage, and that is a decision.** A multistage build would run Gradle inside the image, which
-# means fetching the whole dependency graph on a machine that has no Gradle cache — minutes, every
-# time — and it would put a build image and a runtime image in the same file, which have to be a pair
-# by their C library or the JVM fails at its first native call. `./gradlew :server:image` assembles
-# the context outside and this copies it, so there is one base image and nothing to pair it with.
+# **Two stages, and the second one is a Java runtime rather than a build** (B-50). The objection this
+# file used to carry — that a multistage build runs Gradle inside the image, fetching a whole
+# dependency graph on a machine with no cache — still stands and still holds: `./gradlew :server:image`
+# assembles the application outside and this copies it. What the first stage builds is the *JVM*,
+# with `jlink` over the modules `jdeps` finds in the application's own jars, and that is a different
+# argument with a measured answer:
 #
-# The base is pinned by digest as well as by tag. A tag moves; a digest is the thing that was
+# | base | image | to healthy | `POST /api/routes` |
+# |---|---|---|---|
+# | Temurin's JRE on Ubuntu (what shipped) | 577 MB | 2 025 ms | 200 |
+# | this runtime on `ubuntu:noble` | 371 MB | 2 025 ms | 200 |
+# | this runtime on `alpine` | **263 MB** | 1 999 / 2 018 / 2 025 ms | 200 |
+#
+# `docker/measure-bases.sh` is that table, and B-35's start-up range (1.5–3.7 s) is what "unchanged"
+# means here. The first request measured is a route on purpose: it is the call that touches the
+# memory-mapped graph and its native file lock, which is what a change of base would break.
+#
+# **The two stages are paired by their C library, which is the whole reason the builder is Alpine
+# too.** A runtime linked against glibc and run on musl fails at its first native call, not at build
+# time — research §3's "the build image and the runtime image are a pair" as a Dockerfile.
+#
+# Both bases are pinned by digest as well as by tag. A tag moves; a digest is the thing that was
 # actually tested, and research §3 Risk 3 is about exactly this class of surprise.
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
+FROM eclipse-temurin:25-jdk-alpine AS runtime
+
+# **The module list comes from `jdeps` rather than from a hand-written `--add-modules`.** A list
+# somebody wrote is right until a library reaches for `java.sql` on a path no test exercised, and
+# `jlink` cannot warn about what it left out: the symptom is a `NoClassDefFoundError` in production.
+# `--ignore-missing-deps` is needed because the application's graph carries optional pieces — a
+# logging backend it does not use, a processor's leftovers — and the three modules named after it are
+# the ones nothing references statically: TLS curves, `sun.misc.Unsafe`, and JMX for metrik.
+COPY app /app
+RUN MODULES=$(jdeps --print-module-deps --ignore-missing-deps --multi-release 25 --recursive \
+        --class-path "/app/lib/*" /app/lib/*.jar 2>/dev/null | tail -1) && \
+    jlink --add-modules "${MODULES:-java.base}",jdk.crypto.ec,jdk.unsupported,java.management \
+        --strip-debug --no-header-files --no-man-pages --compress=zip-6 \
+        --output /javaruntime
+
+FROM alpine:3.21
+COPY --from=runtime /javaruntime /opt/java
+ENV JAVA_HOME=/opt/java
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 # **The graph is baked and the extract is not.** GraphHopper reads the `.osm.pbf` only when the graph
 # directory is empty, so 14 MB of prepared graph replaces 41 MB of extract *and* the 3.2 seconds of

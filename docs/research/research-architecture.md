@@ -1998,7 +1998,12 @@ each is now an item rather than an impression:
   is a class the saga can serve".
 - **One replica** (B-36), by the code rather than by caution; what lifting it costs is an option in
   §1.6a's terms, not work.
-- **569 MB** (B-35), of which the process needs about a third. B-50.
+- ~~**569 MB** (B-35), of which the process needs about a third.~~ **264 MB since B-50**: a `jlink`
+  runtime built from `jdeps`' own module list, on Alpine, with the builder on Alpine too because a
+  build image and a runtime image are a pair by their C library. The start-up did not move
+  (1 999 / 2 018 / 2 025 ms against B-35's 1.5–3.7 s) and the first request measured is a route,
+  because the memory-mapped graph is what a change of base would break. Distroless was not a
+  candidate: its Java images stop at 21.
 - **No real position** for a real driver; the bundle sends its configured point and says so. B-49.
 - **The map is a renderer, not an engine.** `TileRenderer` transcribes the two style documents' filters
   and widths; it does not interpret style JSON. A third style would be code. Whether that engine
