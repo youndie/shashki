@@ -2,6 +2,11 @@ plugins {
     alias(wip.plugins.kotlinMultiplatform)
     alias(wip.plugins.composeMultiplatform)
     alias(wip.plugins.composeCompiler)
+    // **Needed by the server-driven components, and its absence compiles.** `@Serializable` without
+    // this plugin is an annotation with nothing behind it: the class builds, the generated registry
+    // builds, and the first decode throws "Serializer for class 'TripRow' is not found". B-17 found
+    // it that way round.
+    alias(wip.plugins.kotlinSerialization)
     alias(wip.plugins.ksp)
     alias(libs.plugins.viddik)
     id("ru.workinprogress.sborka.kmp")
@@ -43,6 +48,11 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(libs.kvadrant.core)
+            // The server-driven subset. B-17 puts the kit's composition rules in the renderer,
+            // because only a renderer can decide what happens to a payload a rule forbids.
+            implementation(libs.kompot.client)
+            api(libs.kompot.core)
+            implementation(libs.kompot.registryAnnotations)
         }
         val desktopTest by getting {
             dependencies {
@@ -75,6 +85,16 @@ viddik {
 // **The wasmJs claim is checked, not stated.** With the browser test task disabled, nothing in
 // `check` would otherwise touch this target, and a target nobody compiles is a decision that quietly
 // stops being true. D1 rests on `map/` being buildable for Kotlin/Wasm, so `check` compiles it.
+// The registry processor, per target: KSP runs once per compilation and the tag keeps the two
+// generated files from colliding on a name. `kompotModuleTag` is required — the processor errors
+// without it rather than guessing, which is why it is here and not defaulted.
+dependencies {
+    add("kspDesktop", libs.kompot.registryProcessor)
+    add("kspWasmJs", libs.kompot.registryProcessor)
+}
+
+ksp { arg("kompotModuleTag", "ShashkiUi") }
+
 tasks.named("check") { dependsOn(tasks.named("compileKotlinWasmJs")) }
 
 // **`ui-test` is versioned by hand, so the hand is checked.** `compose.uiTest` would have carried

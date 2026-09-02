@@ -40,6 +40,8 @@ graphhopper = "11.0"
 cryptography = "0.6.0"
 # Kept equal to the shared catalog's `composeMultiplatform` by the check in shared-ui/build.gradle.kts.
 composeUiTest = "1.12.0"
+# Server-driven UI. A CI-numbered publish, not a `-SNAPSHOT`.
+kompot = "0.34.1.101"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
 
@@ -83,6 +85,11 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kvadrant" }
+
+kompot-client = { module = "io.github.youndie:kompot-client", version.ref = "kompot" }
+kompot-core = { module = "io.github.youndie:kompot-core", version.ref = "kompot" }
+kompot-registryAnnotations = { module = "io.github.youndie:kompot-registry-annotations", version.ref = "kompot" }
+kompot-registryProcessor = { module = "io.github.youndie:kompot-registry-processor", version.ref = "kompot" }
 
 # Compose's UI test harness, named directly rather than through `compose.uiTest` — that accessor is
 # deprecated in 1.12 ("specify dependency directly") and the deprecation only surfaced on a clean

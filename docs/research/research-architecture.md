@@ -653,6 +653,32 @@ implementation of the server silently drops it.
 margin 12" is the same 4/3 as everything else in the kit. The renderer takes its grid from
 `ShashkiMetrics`, so it inherits whatever B-15 answers and needs no separate decision.
 
+**Consequence 1.7c — built 2026-09-02 ([B-17](../backlog/B-17-kompot-renderer-invariants.md)), and
+three things came out of it.**
+
+The three rules are renderers now: `TripRowRenderer`, `EarningsTileRenderer`, `FareBreakdownRenderer`
+in `:shared-ui`, registered by kompot's KSP processor into `generatedShashkiUiRenderers` and
+`generatedShashkiUiSerializersModule`. Each has a golden fed the payload that breaks its rule — two
+rows both asking for the accent, a tile at `size = 3`, a card with a second figure in it — and each
+image is the degraded form. A fixture sent a *legal* tree would have photographed the rule working
+and proved nothing.
+
+| Fact | Where verified |
+|---|---|
+| `@Serializable` **without the serialization plugin compiles**. The annotation resolves through a transitive dependency, the class builds, the generated registry builds, and the first decode throws `Serializer for class 'TripRow' is not found` | `:shared-ui` had no `kotlinSerialization` plugin; adding it fixed three failing tests |
+| kompot's `KompotDegradationSink` has three kinds — unknown component, unrenderable component, unknown action — and **none for a property outside its allowed set** | `kompot-client/.../Degradation.kt` |
+| The registry is a KSP side effect: a component that lost its annotation would still compile, still render locally, and be an `UnknownComponent` on the wire | the control test decodes the same payload without the module and gets exactly that |
+
+The first row is the one worth keeping. It is a build-configuration mistake with no compile-time
+symptom at all, in a module that already had six plugins and looked complete — the failure surfaced
+only because something decoded, and nothing in this repository had decoded before.
+
+The second is a gap rather than a defect, and it has consequences for the rule it touches: a dropped
+tile is invisible. kompot's own file argues that "a hole is reported by nobody" and builds a sink for
+exactly that, but its vocabulary covers types and actions, not values. Reporting a bad `size` through
+`UNRENDERABLE_COMPONENT` would be a lie — the component is renderable, its size is not — so the drop
+stays silent and `EarningsTileRenderer` says so where it happens.
+
 ### 1.8 A tile renderer of our own: what it would actually have to implement
 
 Added after the first pass, when the brief's "own render on Compose Canvas — an optional v2 demo, not
