@@ -42,12 +42,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (5)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[?]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
+| [B-66](docs/backlog/B-66-the-class-picker-asks-once.md) `[ ]` | R4 asks the server for a quote once and never again | P1 | S | - |
 | [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | B-65 |
+| [B-67](docs/backlog/B-67-no-way-back-in-the-window.md) `[ ]` | The desktop build can enter a screen and not leave it | P2 | S | - |
+| [B-68](docs/backlog/B-68-a-state-drawn-as-an-identifier.md) `[ ]` | D4 draws in_progress where every other state is a word | P3 | XS | - |
 
 ## Closed (63)
 

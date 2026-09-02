@@ -78,3 +78,16 @@ like. Three candidates, one disappearance, and saying which would be a guess.
 `$ 6.48`, the timer at 11, the bar draining, accept and decline. The count beside *waiting* reads
 `11 positions taken`, which is B-54's number and the first time this screen has said something the
 server agrees with.
+
+## An observation from the desktop walkthrough (2026-09-03), not a verdict
+
+Tapping the same history row twice, in two sessions minutes apart, opened **two different screens**:
+first R8 with the fare, the stars and the tips; then R7 with the driver card and the headline *on its
+way* — for a ride the API reports as `COMPLETED`, with no `ASSIGNED` ride anywhere in the rider's
+list. The list's own order had not changed between the two taps.
+
+Recorded here rather than as an item because one contradicted observation is a symptom and not a
+mechanism, and because it is the same family as this item's subject: a screen showing a state the
+server does not have. What the next look should establish is whether the routing reads a status the
+list has cached, and whether R7's own state starts optimistic — both are cheap to answer with the
+window open.
