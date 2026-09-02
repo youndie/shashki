@@ -34,6 +34,7 @@ re-prioritising one must never move its file.
 | `stage-3-surface` | Everything past the core | Receipts, crash reports, rebuildability — the parts that are ordinary work once the three above are settled. |
 | `stage-4-elsewhere` | It runs somewhere that is not this laptop | Packaging and deployment. A separate stage because the question changes: the four above ask whether it works, this one asks whether somebody else can run it — and the answers are artefacts rather than code. |
 | `stage-5-the-rest-of-the-kit` | The rest of the kit, and the hole the endpoint table names | v2. v1 closed with every library placed and about seven of the kit's twenty-five screens drawn (research §5). What is left is the product's surface — the wait, the cancel, the rating, the history, the earnings — and one documented hole, the driver's public routes, which goes first because it is the one item that makes a written guarantee false. |
+| `stage-6-what-running-it-said` | What running it said | v1 and v2 both closed with a green `check` over a product that could not be signed into and a driver that could not go online. This stage is what one evening of opening the thing produced: eleven items, none of which a test had asked about, and the pattern is the repository's own — a mechanism written at both ends and joined at neither, plus a guard that covered the cases somebody remembered. |
 
 ## Marks
 
@@ -41,9 +42,21 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (0)
+## Open (11)
 
-No open tasks.
+| Task | | Priority | Size | Blocked by |
+|---|---|---|---|---|
+| [B-53](docs/backlog/B-53-the-driver-bundle-cannot-go-online.md) `[ ]` | The driver bundle sends an id the token contradicts, so every position frame is dropped | P0 | S | - |
+| [B-54](docs/backlog/B-54-the-shift-counter-counts-frames-nobody-took.md) `[ ]` | The shift's count rises for frames the server threw away | P0 | S | B-53 |
+| [B-55](docs/backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md) `[ ]` | Browser sign-in cannot finish: the provider's CORS headers are unreleased | P0 | XS | - |
+| [B-56](docs/backlog/B-56-an-uncaught-failure-is-a-blank-page.md) `[ ]` | An uncaught failure leaves a blank page and no words at all | P1 | S | - |
+| [B-57](docs/backlog/B-57-one-condition-two-statuses.md) `[ ]` | A pickup outside the graph is 422 on two routes and 500 on the one a rider uses | P1 | S | - |
+| [B-58](docs/backlog/B-58-the-rejection-nobody-writes.md) `[ ]` | cancellationReason is on the wire, read by the repository, and written by nobody | P1 | S | - |
+| [B-59](docs/backlog/B-59-the-finished-screen-writes-and-never-reads.md) `[ ]` | R8 asks for a rating it already has, and puts its one accent on skip | P2 | S | - |
+| [B-60](docs/backlog/B-60-d1-says-in-words-what-the-kit-says-in-glyphs.md) `[ ]` | D1 states a document's status in words where the kit states it in a glyph | P2 | S | - |
+| [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | - |
+| [B-62](docs/backlog/B-62-a-price-for-a-class-you-cannot-order.md) `[ ]` | R4 prices a class it has just said has no cars | P2 | XS | - |
+| [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[ ]` | The product has no driver record, so a rider is asked to rate an e-mail address | P2 | M | - |
 
 ## Closed (52)
 

@@ -2014,6 +2014,27 @@ item. **The pattern in §5.5 held through all of it**: B-42 came from the stand,
 from a table with no clock in it, and B-48's defect came from the first light picture of a card the
 kit had only ever drawn dark.
 
+**Amended 2026-09-02, in the evening: that paragraph was written with the backlog empty, and then
+somebody opened the product.** All 52 items closed, `LOCAL=1 make check` and `./gradlew check` green
+on both machines, and an acceptance pass against the running stand produced eleven items — the
+`stage-6-what-running-it-said` block of the backlog. Four were fixed on the spot; the rest are open.
+What is worth keeping here is not the list but which kind of guard was blind to each:
+
+| What was wrong | Why the suite was green |
+|---|---|
+| every document route answered **500** in every configuration — the store's binding asks the graph for an `HttpClient` and nothing bound one | `verify()` reflects over the **bound type's** constructor and `DocumentStore` is an interface; what a lambda asks the container for is invisible to it, and the resolve half of `KoinGraphTest` is a hand-written list that never named it |
+| the driver bundle's every position frame is dropped: it claims `driver-1` and the token says otherwise, so the driver never enters the index and no ride can be matched (B-53) | the socket's tests send a frame whose id matches the subject — written by the same hand as the rule |
+| ...and the shift screen counts those frames as sent (B-54) | the count is emitted after `send` returns, which is the client's own intention; nothing on the wire disagrees with it |
+| browser sign-in cannot finish: the provider's token response carries no `Access-Control-Allow-Origin` (B-55) | every test of sign-in runs outside a browser; B-41 said so in its own tail — "the page's half was checked by hand" |
+| the earnings grid put three two-column tiles in one four-column row and the third hung off the screen | the fixture sends **two** tiles; a golden photographs the fixture, not the product |
+| `/trips` went out into the address bar and came back unrecognised | the round-trip test listed three routes of seven, by hand |
+| the quickstart named `Ljubljana.pmtiles`, which nothing in this repository produces | no check reads the compose file's prose, and a 404 on the archive is a black page rather than a message (B-56) |
+
+The common shape is not "tests are weak". Every one of these guards is good at what it was pointed
+at, and each was pointed by hand at a subset: a list of bindings, a list of routes, a fixture's data,
+a frame's id. **A guard whose coverage is a hand-written list is a guard that covers what somebody
+remembered** — and the way to find the rest, on this evidence, is to run the thing and look.
+
 ### 5.3 What it does not show, by kit artboard
 
 Of the kit's eighteen screens and seven state branches, v1 draws about seven: R1 sign-in, R4 class

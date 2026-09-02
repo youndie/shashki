@@ -23,6 +23,16 @@ that comes back is one this server accepts on the routes that change something.
 client can be handed a token by a provider whose keys the server never fetches, and a server can
 accept a token no client of ours can produce.
 
+> **Amended 2026-09-02: this does not work in a browser today, and the reason is not in this
+> repository.** Both bundles run the code exchange in the page, so the token request is cross-origin
+> — a different port is a different origin, in every configuration this stand supports — and
+> `ghcr.io/youndie/shildik:0.2.0.8` answers it without `Access-Control-Allow-Origin`, so the browser
+> refuses to hand the response to the page. shildik has the fix on `main` and has not published it
+> ([youndie/shildik#22](https://github.com/youndie/shildik/issues/22)); the pin is
+> [B-55](../backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md). Everything below is true
+> of a non-browser client and of the bundles once that image ships — the redirect, the parked
+> attempt, the code on the callback and the verifier are all exercised and correct.
+
 ## 2. Business rules
 
 * The verifier never leaves the browser; what goes to the provider is its `S256` challenge.
