@@ -731,9 +731,16 @@ and the settlement, neither of which has ever heard of `DriverReservations`. A d
 exactly one ride per process lifetime.
 
 **It was invisible to every test and obvious on the stand within two orders**, because a test drives
-one ride and a demo drives two. The rider is told nothing: `PickupEta` reads the geo-index and not
-the reservations, so the class tile goes on offering a wait for a car the dispatch will refuse. Two
-answers about one word — "available" — computed in two places and compared nowhere.
+one ride and a demo drives two. The rider was told nothing either: `PickupEta` read the geo-index and
+not the reservations, so the class tile went on offering a wait for a car the dispatch would refuse
+— two answers about one word, "available", computed in two places and compared nowhere.
+
+**Both halves are fixed and the second half is the one worth copying.** The rule got an owner —
+`releaseFor(rideId)`, called where a ride ends, in `AdvanceTripUseCase` and `CancelRideUseCase` — and
+the word got one meaning: `FreeCandidates` wraps the index once, both the wait and the dispatch read
+that list, and the saga still reserves atomically because a filter is a read and a race is a race.
+The assertion that would have caught this without a stand is now in `SettlementTest`: *a wait is only
+shown for a class the dispatch can actually serve*, with a positive control ahead of it.
 
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.

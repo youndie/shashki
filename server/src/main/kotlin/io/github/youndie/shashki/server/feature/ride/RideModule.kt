@@ -7,6 +7,7 @@ import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.CandidateSource
 import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.dispatch.DriverReservations
+import io.github.youndie.shashki.server.dispatch.FreeCandidates
 import io.github.youndie.shashki.server.dispatch.GeoCandidateSource
 import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
@@ -141,7 +142,10 @@ public fun rideModule(
         // The index is a cache of the last known positions, held by one process and rebuilt from
         // the socket after a restart — no repository, no migration, nothing through the broker.
         single<DriverIndex> { GridDriverIndex() }
-        single<CandidateSource> { GeoCandidateSource(get(), get()) }
+        // **One candidate list for the wait and for the dispatch** (B-42). Both used to ask
+        // `GeoCandidateSource` and only one of them filtered out drivers who were already carrying
+        // somebody, so a rider was shown a wait for a car no order could get.
+        single<CandidateSource> { FreeCandidates(GeoCandidateSource(get(), get()), get()) }
         single<DriverReservations> { InMemoryDriverReservations() }
         single<OfferBoard> { InMemoryOfferBoard() }
 
@@ -182,11 +186,20 @@ public fun rideModule(
         single<PayoutRepository> { ExposedPayoutRepository(get()) { get<PetichClock>().nowEpochMs() } }
 
         single<RideRepository> { PetichRideRepository(get<SagaStorage>().petiches, get()) }
-        factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get()) }
+        factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }
         factory { AnswerOfferUseCase(engine = get(), sagas = get(), rides = get()) }
         factory { ExpireOfferUseCase(engine = get(), sagas = get()) }
-        factory { CancelRideUseCase(engine = get(), sagas = get(), rides = get(), trips = get(), settle = get()) }
+        factory {
+            CancelRideUseCase(
+                engine = get(),
+                sagas = get(),
+                rides = get(),
+                trips = get(),
+                settle = get(),
+                reservations = get(),
+            )
+        }
         factory { FindOfferUseCase(board = get(), rides = get(), clock = get()) }
         // An explicit lambda and not `factoryOf(::RequestRideUseCase)`: `factoryOf` resolves every
         // constructor parameter through Koin, default values included, and the use case's `ids`

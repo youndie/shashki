@@ -7,15 +7,19 @@ import io.github.youndie.shashki.protocol.DriverReport
 import io.github.youndie.shashki.protocol.DriverRides
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.OfferAnswer
+import io.github.youndie.shashki.protocol.Quotes
+import io.github.youndie.shashki.protocol.QuotesView
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
+import io.github.youndie.shashki.protocol.RouteRequest
 import io.github.youndie.shashki.protocol.TripAdvance
 import io.github.youndie.shashki.server.billing.PaymentGateway
 import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.DriverIndex
+import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.shashki
@@ -48,6 +52,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -190,6 +195,96 @@ class SettlementTest {
             assertEquals(emptyList(), app.get<PaymentGateway>().activeHolds().toList())
         }
 
+    /**
+     * **B-42: a driver's second ride.** Found on the stand and not by any test here, because a test
+     * drives one ride and a demo drives two.
+     *
+     * `OfferStep` reserves a candidate and keeps the reservation when the driver accepts — that is
+     * what stops a second offer reaching somebody already carrying a passenger — and nothing gave it
+     * back. A driver therefore took exactly one ride per process, and every order after that was
+     * refused with "no cars nearby" the instant it was made.
+     */
+    @Test
+    fun `a driver who finished a ride is offered the next one`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            val first = assignedRide(client, app)
+            assertEquals(RideStatus.COMPLETED, drive(client, first.id).status)
+            assertEquals(emptyMap(), app.get<DriverReservations>().all(), "the finished ride kept its driver")
+
+            // The same driver, still where he was: the index holds a position for a minute and this
+            // is the second ride, not a second shift.
+            val second = assignedRide(client, app)
+
+            assertEquals(RideStatus.ASSIGNED, second.status)
+            assertEquals(DRIVER, second.driverId)
+            assertTrue(second.id != first.id)
+        }
+
+    /**
+     * The other end of a ride, and its own case: **a cancellation after a driver set off also frees
+     * him**. The fee is charged either way — that is the test above — and what this adds is that the
+     * driver is not left carrying a ride nobody is taking.
+     */
+    @Test
+    fun `a ride cancelled after a driver set off frees the driver for the next one`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            val abandoned = assignedRide(client, app)
+            assertEquals(RideStatus.CANCELLED, client.post(Rides.Cancel(id = abandoned.id)).body<RideView>().status)
+            assertEquals(emptyMap(), app.get<DriverReservations>().all(), "the cancelled ride kept its driver")
+
+            assertEquals(DRIVER, assignedRide(client, app).driverId)
+        }
+
+    /**
+     * **The two answers about one word, compared** — the assertion that would have caught B-42
+     * without a stand.
+     *
+     * "Available" was computed twice out of two different facts: `PickupEta` asked the index, which
+     * knows geography, and the saga asked the index *and then reserved*, which is geography plus who
+     * is busy. So a rider was shown `0 min` for a car that was carrying somebody else — and, while
+     * the reservation leaked, went on being shown it for ever. One list now answers both.
+     */
+    @Test
+    fun `a wait is only shown for a class the dispatch can actually serve`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                // The straight-line estimator, like every other test here: the fixture graph is an
+                // L a kilometre wide and this test's dropoff is the airport, which is outside it.
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            // The positive control first: with the driver free, the wait exists. Without this the
+            // assertion below would pass over a server that never names a wait at all.
+            parkDriver(client, app)
+            assertNotNull(client.economyWait(), "no wait at all, so the assertion below proves nothing")
+
+            val ride = assignedRide(client, app)
+            assertNull(client.economyWait(), "a wait for a car that is carrying somebody else")
+
+            drive(client, ride.id)
+            assertNotNull(client.economyWait(), "the driver finished and is still nobody's candidate")
+        }
+
     /** The order is the point of the route: a driver cannot arrive at a ride they have not started. */
     @Test
     fun `a transition that is not the next one is refused`() =
@@ -249,6 +344,16 @@ class SettlementTest {
         }.body()
 
     private suspend fun HttpClient.read(rideId: String): RideView = get(Rides.ById(id = rideId)).body()
+
+    /** What the rider's class tile shows for economy: a wait in seconds, or nothing. */
+    private suspend fun HttpClient.economyWait(): Int? =
+        post(Quotes()) {
+            contentType(ContentType.Application.Json)
+            setBody(RouteRequest(PICKUP, DROPOFF))
+        }.body<QuotesView>()
+            .classes
+            .first { it.rideClass == RideClass.ECONOMY }
+            .pickupEtaSeconds
 
     /** The whole trip, in the order a driver actually taps them. */
     private suspend fun drive(

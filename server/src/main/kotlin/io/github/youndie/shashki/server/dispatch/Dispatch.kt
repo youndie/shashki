@@ -49,6 +49,25 @@ public interface DriverReservations {
         rideId: String,
     )
 
+    /**
+     * Whether this driver is carrying somebody — or has just been offered to somebody.
+     *
+     * **Asked by the wait a rider is shown, not only by the dispatch** (B-42). "Available" was
+     * computed in two places out of two different facts: the index answered "near" and the saga
+     * answered "near and free", so a reserved driver produced a `0 min` tile for a car that could
+     * never be matched.
+     */
+    public fun isReserved(driverId: String): Boolean
+
+    /**
+     * Free whoever is reserved for this ride, at the end of it.
+     *
+     * **By ride and not by driver, because the caller knows the ride.** The two ends of a ride —
+     * `COMPLETED` and a cancellation after assignment — each have the ride's id in hand and would
+     * otherwise have to look the driver up to release him, which is one more place to get wrong.
+     */
+    public fun releaseFor(rideId: String)
+
     public fun reservedFor(rideId: String): String?
 
     public fun all(): Map<String, String>
@@ -67,6 +86,12 @@ public class InMemoryDriverReservations : DriverReservations {
         rideId: String,
     ) {
         byDriver.remove(driverId, rideId)
+    }
+
+    override fun isReserved(driverId: String): Boolean = byDriver.containsKey(driverId)
+
+    override fun releaseFor(rideId: String) {
+        byDriver.entries.removeIf { it.value == rideId }
     }
 
     override fun reservedFor(rideId: String): String? = byDriver.entries.firstOrNull { it.value == rideId }?.key

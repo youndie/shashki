@@ -7,6 +7,7 @@ import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.common.UseCase
 import io.github.youndie.shashki.server.common.suspendRunCatching
+import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswer
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
@@ -89,6 +90,7 @@ public class CancelRideUseCase(
     private val rides: RideRepository,
     private val trips: TripRepository,
     private val settle: SettleRideUseCase,
+    private val reservations: DriverReservations,
 ) : UseCase<String, RideView> {
     override suspend fun invoke(params: String): Result<RideView> =
         suspendRunCatching {
@@ -104,6 +106,9 @@ public class CancelRideUseCase(
             }
             val driver = ride.driverId ?: throw RideNotFoundException(params)
             trips.advance(Trip(params, driver, RideStatus.CANCELLED))
+            // The other end of a ride, and the same rule as `AdvanceTripUseCase`'s: whoever set off
+            // for this rider is free again (B-42). The fee is charged either way.
+            reservations.releaseFor(params)
             settle(SettleRideUseCase.Params(params, SettlementPayload.Kind.FEE)).getOrThrow()
             rides.find(params) ?: throw RideNotFoundException(params)
         }

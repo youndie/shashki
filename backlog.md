@@ -41,11 +41,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (11)
+## Open (10)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-42](docs/backlog/B-42-a-driver-is-reserved-for-life.md) `[ ]` | A driver who finishes a ride is reserved for ever, and the rider is still shown their wait | P0 | S | - |
 | [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[ ]` | The rider sees the wait and its end: matching, no cars nearby, and cancel | P0 | M | - |
 | [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[ ]` | The driver's four routes stop being public: the hole the endpoint table names | P0 | M | - |
 | [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[ ]` | Finished: rate the driver and tip, and the tip is a second charge | P1 | M | - |
@@ -57,7 +56,7 @@ re-prioritising one must never move its file.
 | [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
 | [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
-## Closed (41)
+## Closed (42)
 
 **Remove the unknowns**
 
@@ -91,6 +90,7 @@ re-prioritising one must never move its file.
 - [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[x]` - Routes and ETA through GraphHopper embedded in the server
 - [B-37](docs/backlog/B-37-the-settlement-saga.md) `[x]` - The settlement saga, whose parts are all written and none of them called
 - [B-38](docs/backlog/B-38-ride-events-on-booblik.md) `[x]` - Ride events reach booblik, so the broker stops being a comment
+- [B-42](docs/backlog/B-42-a-driver-is-reserved-for-life.md) `[x]` - A driver who finishes a ride is reserved for ever, and the rider is still shown their wait
 
 **Everything past the core**
 

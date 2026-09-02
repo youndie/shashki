@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.TripProgression
 import io.github.youndie.shashki.server.common.UseCase
 import io.github.youndie.shashki.server.common.suspendRunCatching
+import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
@@ -26,6 +27,7 @@ public class AdvanceTripUseCase(
     private val trips: TripRepository,
     private val rides: RideRepository,
     private val settle: SettleRideUseCase,
+    private val reservations: DriverReservations,
 ) : UseCase<AdvanceTripUseCase.Params, RideView> {
     override suspend fun invoke(params: Params): Result<RideView> =
         suspendRunCatching {
@@ -40,6 +42,16 @@ public class AdvanceTripUseCase(
 
             trips.advance(Trip(params.rideId, assigned, params.to))
 
+            // **The driver is free again, and this is where the ride ends** (B-42). `OfferStep`
+            // reserves a candidate and keeps the reservation when the driver accepts — that is what
+            // stops a second ride being offered to somebody already carrying a passenger — and
+            // nothing gave it back: a driver took exactly one ride per process, and every order
+            // after it was refused with "no cars nearby" while the rider was still shown their wait.
+            //
+            // Before the settlement rather than after it: money can fail and be retried, a driver
+            // held hostage by a failed capture cannot.
+            if (params.to in TERMINAL) reservations.releaseFor(params.rideId)
+
             // **The settlement runs after the trip's row is written, not inside the same breath.**
             // If it throws, the trip stays completed and the settlement can be retried; the other
             // order would leave a ride that is not finished and money that has moved.
@@ -48,6 +60,11 @@ public class AdvanceTripUseCase(
             }
             rides.find(params.rideId) ?: throw RideNotFoundException(params.rideId)
         }
+
+    private companion object {
+        /** Where a ride stops needing a driver. `CANCELLED` arrives here through `CancelRideUseCase`. */
+        val TERMINAL = setOf(RideStatus.COMPLETED, RideStatus.CANCELLED)
+    }
 
     public class Params(
         public val rideId: String,

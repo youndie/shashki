@@ -1,7 +1,7 @@
 ---
 id: B-42
 title: "A driver who finishes a ride is reserved for ever, and the rider is still shown their wait"
-status: open
+status: done
 priority: P0
 size: S
 stage: stage-2-saga
@@ -57,6 +57,43 @@ somebody looks at them:
   `/api/rides/{id}/driver` every three seconds for twenty-five minutes, for a ride that had been
   cancelled. `WatchDriverUseCase`'s loop is not on the view model's scope, or is not cancelled with
   it.
-- **The order button is dead after a refused ride.** `ClassPickerViewModel.order()` returns early
-  while `ordering` is true; on the path where the ride fails and the trip screen pops back, the flag
-  is left set, and the picker's only action does nothing for the rest of the session.
+- ~~The order button is dead after a refused ride.~~ **The guess was wrong and the real thing is
+  worse.** `ordering` is lowered on the next line and a test that "proved" the fix passed without it
+  — vacuous, and dropped rather than shipped. What was actually seen is that the picker **never
+  reloads when it is returned to**: the quotes it holds are the ones it loaded when the application
+  started, so after a failed ride the screen keeps saying "no cars nearby" — correctly disabling the
+  order bar — for a driver who has been free for minutes. The lifecycle of that wait is
+  [B-43](B-43-the-rider-sees-the-wait-and-its-end.md)'s subject, and it inherits this.
+
+## What it turned out to be
+
+**One rule with no owner, and a second answer to the same question.**
+
+The reservation is the rule: `OfferStep` takes it before offering and keeps it when the driver
+accepts — deliberately, because that is what stops a second offer reaching a driver who is already
+carrying somebody. Every path that loses the driver gives it back. The path that *finishes* the ride
+gave nothing back, because a ride finishes in `AdvanceTripUseCase` and in `CancelRideUseCase`, and
+neither of them had ever heard of `DriverReservations`. The word for that here is that the rule had
+four owners on the losing paths and none on the winning one.
+
+`releaseFor(rideId)` is what both call now — **by ride and not by driver**, so the caller cannot
+release the wrong one, and it sits before the settlement rather than after it: money can fail and be
+retried, a driver held by a failed capture cannot.
+
+**The second answer was the one that made it invisible.** "Available" was computed twice, out of two
+different facts: `PickupEta` asked the index, which knows geography; the saga asked the index and
+then reserved, which is geography plus who is busy. So the tile went on showing `0 min` for a car no
+order could get — and the two were never compared anywhere. `FreeCandidates` wraps the index once and
+both read it, which is the structural half of the fix; the assertion is
+`a wait is only shown for a class the dispatch can actually serve`, with a positive control first so
+that a server which never names a wait cannot pass it.
+
+**Every one of the three tests was checked against the unfixed code** — the second ride, the
+cancellation, and the wait all go red without their line, and the run is in this session's log. The
+`clean` in `SettlementTest` gave them a Postgres each; nothing else was needed, because the thing
+that was missing was never a mechanism.
+
+**AC4 needed no code.** The driver's screen says `waiting` after a ride, which was honest only by
+accident while no offer could ever arrive; it is honest on purpose now. The client's own leak — a
+trip watcher that outlived its screen by twenty-five minutes — is still open above and wants a
+Navigation 3 answer rather than a guess.
