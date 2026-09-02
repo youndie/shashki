@@ -5,6 +5,7 @@ package io.github.youndie.shashki.driver
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import io.github.youndie.shashki.auth.SignInConfig
+import io.github.youndie.shashki.crash.installFatalBand
 import io.github.youndie.shashki.protocol.RideClass
 import kotlinx.browser.document
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +22,11 @@ import kotlinx.coroutines.SupervisorJob
 @OptIn(ExperimentalComposeUiApi::class)
 public fun main() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // **Before the application, so it survives the application** (B-56). A composition that has
+    // thrown cannot draw its own apology; this is plain markup installed while everything still
+    // works, and it is beside the crash reporter rather than inside it — katcher hears about the
+    // failure either way.
+    installFatalBand()
     ComposeViewport(document.body!!) {
         DriverApp(
             config =

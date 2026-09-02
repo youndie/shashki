@@ -1,7 +1,11 @@
 package io.github.youndie.shashki.ui.map.tiles
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import io.github.youndie.shashki.ui.map.TileCoordinate
+import kotlinx.coroutines.CancellationException
 
 /**
  * Where a surface gets its tiles, and — just as importantly — what it already has.
@@ -20,6 +24,17 @@ public interface TileSource {
 
     /** Fetch [coordinate] and remember it, so a later [loaded] answers. Idempotent. */
     public suspend fun load(coordinate: TileCoordinate)
+
+    /**
+     * Why there will be no basemap, or `null` while there is one coming (B-56).
+     *
+     * **The absence of a tile is not an error and the absence of the archive is not fatal.** This
+     * type's own note says the map is the one part of the product that can be missing without the
+     * screen being wrong — and until this existed, an archive that answered 404 threw out of the
+     * `LaunchedEffect` that was fetching, took the composition with it, and left a black page with
+     * no words on it. A basemap that cannot be reached is a fact the surface can draw.
+     */
+    public val unavailable: String? get() = null
 }
 
 /**
@@ -79,12 +94,32 @@ public class PmtilesTileSource(
 
     private var archive: PmtilesArchive? = null
 
+    /**
+     * Set once, and it stops the source trying (B-56).
+     *
+     * **A failure to reach the archive is remembered rather than repeated**: the viewport asks for
+     * four tiles a frame, so an archive that is not there would otherwise be a failed range request
+     * per tile per pan, for ever. One attempt, one answer, and the surface says the basemap is
+     * unavailable.
+     */
+    override var unavailable: String? by mutableStateOf(null)
+        private set
+
     override suspend fun load(coordinate: TileCoordinate) {
-        if (tiles.containsKey(coordinate)) return
+        if (unavailable != null || tiles.containsKey(coordinate)) return
         misses++
-        val opened = archive ?: open().also { archive = it }
-        // Recorded even when the archive has nothing there, so a hole is asked about once rather
-        // than on every recomposition for as long as the map is pointed at the edge of the extract.
-        tiles[coordinate] = opened.tile(coordinate)?.let(::decodeMvt)
+        try {
+            val opened = archive ?: open().also { archive = it }
+            // Recorded even when the archive has nothing there, so a hole is asked about once rather
+            // than on every recomposition for as long as the map is pointed at the edge of the
+            // extract.
+            tiles[coordinate] = opened.tile(coordinate)?.let(::decodeMvt)
+        } catch (failure: CancellationException) {
+            // Going away is not the archive's fault: a cancelled load must stay cancelled, and
+            // recording it as unavailable would turn a navigation into a permanent missing map.
+            throw failure
+        } catch (failure: Throwable) {
+            unavailable = failure.message ?: "the map archive could not be read"
+        }
     }
 }

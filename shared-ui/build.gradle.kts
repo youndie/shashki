@@ -74,7 +74,12 @@ kotlin {
         // nothing had ever run (B-34). Everything else in this module's suite reads a test resource
         // or takes a screenshot, and neither exists on wasm.
         commonTest {
-            dependencies { implementation(kotlin("test")) }
+            dependencies {
+                implementation(kotlin("test"))
+                // `runTest`, for the one suite here that is about a suspend function rather than a
+                // picture: the tile source's behaviour when the archive is not there (B-56).
+                implementation(wip.kotlinx.coroutines.test)
+            }
         }
         getByName("desktopTest") {
             dependencies {

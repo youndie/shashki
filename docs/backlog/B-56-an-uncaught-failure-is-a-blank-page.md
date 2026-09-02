@@ -1,7 +1,7 @@
 ---
 id: B-56
 title: "An uncaught failure leaves a blank page and no words at all"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -36,3 +36,33 @@ WebGL context — and the failure happened in a coroutine nobody was catching.
 - Anchors: `rider/src/wasmJsMain/kotlin/io/github/youndie/shashki/rider/Main.kt`,
   `driver/src/wasmJsMain/kotlin/io/github/youndie/shashki/driver/Main.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/`
+
+## What it turned out to be
+
+**Two mechanisms, because the two failures had nothing in common except being unhandled.**
+
+**The map degrades now, which its own type had claimed all along.** `PmtilesTileSource`'s note says
+the map is the one part of this product that can be missing without the screen being wrong; the code
+threw the failure out of a `LaunchedEffect`, which takes the composition with it. It now records the
+failure, refuses to go back to an archive it knows is not there — four tiles a frame, for as long as
+the screen is open, is what "retry" would have meant here — and `CanvasMapSurface` draws
+`no map: <what failed>` in the subtle brush. `CancellationException` is re-thrown rather than
+recorded: a navigation is not a missing archive.
+
+**And there is a band, in the DOM.** A composition that has thrown cannot draw its own apology, so
+the fallback is plain markup installed before the application starts and independent of it — the
+kit's own rule for a message arriving over something else (R7·a: "a full-width band, never a floating
+card"). It is installed *beside* `installCrashReporting` rather than inside it, so neither can stop
+the other and the order they fire in does not matter.
+
+**Verified where it broke.** With the tiles bucket empty, the rider draws the whole class picker —
+title, three classes, the card row, the order bar — and says `no map: Fail to fetch` where the map
+would be. That is the same configuration that produced a black page at the start of the evening. The
+band is asserted in a real Chrome by `FatalBandTest`: a synchronous throw and a rejected promise each
+put it on the page carrying their own message, a second failure replaces the first rather than
+stacking, and removing the `error` listener makes all three fail.
+
+**What is deliberately still true**: the band appears for any uncaught failure, not only a fatal one.
+A rejection the application survives will show it over a working screen, which is the trade the kit's
+band shape was chosen for — a message about something that went wrong is not a lie just because the
+screen underneath still works.

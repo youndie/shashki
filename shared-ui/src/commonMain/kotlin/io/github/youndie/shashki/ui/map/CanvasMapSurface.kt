@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
@@ -26,6 +28,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
@@ -132,6 +135,17 @@ public class CanvasMapSurface(
                         rotation = car.bearingDegrees,
                     )
                 }
+            }
+            // **The basemap's absence, in words rather than in silence** (B-56). Everything above
+            // still draws — the route, the pins, the car — because none of them come from the
+            // archive; what is missing is the city underneath, and a screen that said nothing about
+            // it would be a screen claiming this is what the map looks like.
+            tiles.unavailable?.let { reason ->
+                KvadrantText(
+                    "no map: $reason",
+                    Modifier.align(Alignment.BottomStart).padding(8.dp),
+                    style = ShashkiTheme.typography.meta.copy(color = KvadrantTheme.colors.subtle),
+                )
             }
         }
     }

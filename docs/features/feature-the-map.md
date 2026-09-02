@@ -27,6 +27,24 @@ of such a screen can exist, and the map is a hole in the picture. This one is an
 `modifier` means what it means everywhere else, and the screen appears in the golden suite like any
 other. [D1](../research/research-architecture.md) is the argument and the three rejected routes.
 
+## 1a. What happens when the archive is not there (B-56)
+
+**The basemap can be missing without the screen being wrong**, and until B-56 it could not: a range
+read that came back 404 threw out of the `LaunchedEffect` that was fetching, took the composition
+with it, and left a black rectangle with no words on it. Following this repository's own quickstart
+produced exactly that, because the archive it told a reader to upload had a name nothing here
+produces.
+
+`PmtilesTileSource` now records the failure instead of raising it, stops going back to an archive it
+knows is not there — a viewport asks for four tiles a frame — and `CanvasMapSurface` draws
+`no map: <what failed>` in the subtle brush. Everything that is not the basemap still draws: the
+route, the pins and the car come from the server, not from the archive.
+
+Beside it, and independent of it, both bundles install a **fatal band** before the application
+starts: plain DOM markup that names an uncaught failure across the top of the page. It is in the DOM
+rather than in Compose because by the time it is needed Compose is what died, and it is beside the
+crash reporter rather than inside it — katcher hears about the failure either way.
+
 ## 2. Business rules
 
 * The map has no server of its own. The archive is a static object and the browser reads bytes of it
