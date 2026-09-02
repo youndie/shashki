@@ -39,11 +39,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (1)
+## Open (5)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-28 |
+| [B-29](docs/backlog/B-29-the-driver-bundle.md) `[ ]` | The driver bundle, which is the second one D10 chose | P1 | L | - |
+| [B-30](docs/backlog/B-30-tiles-over-the-wire.md) `[ ]` | The map fetches its tiles, so the streets are there | P1 | L | - |
+| [B-32](docs/backlog/B-32-which-screens-the-server-sends.md) `[?]` | Which screens the server sends, and which the client draws | P1 | M | - |
+| [B-31](docs/backlog/B-31-the-wait-for-a-car.md) `[ ]` | The wait for a car, which the kit puts on every class tile | P2 | S | - |
 
 ## Closed (27)
 
