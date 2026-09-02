@@ -1911,7 +1911,7 @@ reference in the generated registry an `ERROR TYPE`.
 
 | | What it costs |
 |---|---|
-| kompot scans a dependency's declarations | the toolkit's own change — `getDeclarationsFromPackage` exists in KSP for exactly this — and every consumer gets it |
+| kompot scans a dependency's declarations | the toolkit's own change — `getDeclarationsFromPackage` exists in KSP for exactly this — and every consumer gets it. Filed: [youndie/kompot#113](https://github.com/youndie/kompot/issues/113) |
 | the renderers move to the shared module | Compose in the module every headless thing depends on, which is the thing that module is for not having |
 | the component is declared twice, with a test holding the two together | a copy of the contract, guarded — the shape this repository refuses everywhere else, and the guard is the reason it would be arguable |
 

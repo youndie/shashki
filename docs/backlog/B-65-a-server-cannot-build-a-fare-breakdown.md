@@ -60,8 +60,10 @@ So the three candidates in the item are the three there are, and none of them is
 item can simply do:
 
 * **kompot scans a dependency.** The right fix, in the right place, and not this repository's to
-  make. It needs an issue there with the measurement above — and filing in somebody else's
-  repository is asked for first.
+  make. Filed as [youndie/kompot#113](https://github.com/youndie/kompot/issues/113) with the
+  measurement above, the attempted move and its error, and the three consumer-side workarounds
+  priced — the argument being that none of them is bad enough to refuse, which is what makes a
+  consumer pay for it quietly.
 * **The renderers move to `:protocol`.** That is Compose in the module every headless consumer
   depends on, which is what that module exists not to have.
 * **Declare the component twice with a test holding the two together.** Available tonight, and the
