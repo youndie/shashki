@@ -1139,6 +1139,39 @@ bochka's own measurements cover.
 record the numbers with what was measured. If it does not hold, the fallback is a static file served
 beside the app, which costs the demo one talking point and nothing else.
 
+**Closed 2026-09-02, and it holds with room to spare ([B-07](../backlog/B-07-serve-pmtiles-from-bochka.md)).**
+`ghcr.io/youndie/bochka:v0.5.0` on the Linux box, the real 16.6 MiB archive, `map/tile_serving.py`
+as the client. Both load shapes the map needs, because they are not the same shape:
+
+| Load | Requests | Bytes | p50 | p99 | max | Wall |
+|---|---|---|---|---|---|---|
+| the whole archive by range — 810 tiles plus header and root directory | 812 | 17 400 568 | 0.85–1.13 ms | 1.77–3.20 ms | 2.54 ms | 740–1 103 ms |
+| the glyph PBFs as whole objects | 512 | 1 180 298 | 0.75 ms | 2.25 ms | 2.83 ms | 453 ms |
+
+Ranges over one large object are not slower than whole reads of small ones, which was the thing in
+doubt. Three runs rather than one: the spread above is across them, and the first run's 27.67 ms
+outlier is a cold start and is not in the table for that reason.
+
+**What the numbers are and are not.** Loopback on one machine, so this isolates bochka's ranged-read
+path and says nothing about the network a browser is on. That is the right thing to isolate here —
+the question was whether the store's own behaviour changes shape under many ranges, and it does not.
+
+**The load-bearing finding is not a number.** A browser cannot sign a request, so the whole
+arrangement depends on reads that are not signed, and **two things have to be switched on for that
+and neither is a default**:
+
+| Fact | Where verified |
+|---|---|
+| With `BOCHKA_ANONYMOUS=1` alone, an unsigned `GET` is **403** | measured against the running container |
+| It becomes 206 after a public-read bucket policy — `s3:GetObject` for `Principal: *` | same |
+| Without a CORS configuration a preflight is **403**, and a plain `GET` carrying `Origin` comes back with **no `Access-Control-Allow-Origin` at all** — so the browser would refuse a response `curl` accepts | same |
+| With a CORS rule exposing `Content-Range`, `Accept-Ranges` and `Content-Length`, the preflight answers 200 and the ranged read comes back 206 with `Content-Range` and the allow-origin header | same |
+
+`Range` is not on the CORS safelist, so a browser preflights every tile read. A deployment that set
+the bucket policy and forgot the CORS rule would work from `curl` and fail in the product, which is
+the most confusing shape a failure can take — hence it being written down rather than left to be
+rediscovered.
+
 ### Open question 1. The kit's questions — answered, except the one that moves a number
 
 The three the kit addressed to the client side, and the fourth the research added, were put to the
