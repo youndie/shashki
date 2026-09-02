@@ -10,6 +10,7 @@ check:
 	python3 scripts/backlog_index.py --check
 	python3 scripts/docs_check.py
 	python3 scripts/coverage_map.py --check
+	python3 scripts/style_contract.py
 
 # Non-blocking on purpose. Demanding a percentage of automated scenarios is meaningless while there
 # is no code to automate against, and an anchor goes stale because of a refactor in somebody else's

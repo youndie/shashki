@@ -10,6 +10,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.ui.map.RouteLine
+import io.github.youndie.shashki.ui.map.TileProjection
 
 /**
  * One decoded tile, drawn on a Compose canvas. B-01's route-4 prototype.
@@ -24,6 +27,11 @@ import androidx.compose.ui.text.TextStyle
  * The projection is the simplest one that is not a lie: the tile's own 0..extent grid scaled to the
  * viewport. A camera over many tiles is Web Mercator arithmetic and a tile cache, which §1.8b lists
  * and this does not pretend to have.
+ *
+ * **The tile covers the pane rather than fitting inside it** — `maxDimension`, not `minDimension`.
+ * Fitting leaves a band of background wherever the pane is not square, which a real map never shows;
+ * covering crops, which is what every map does at the edge of a tile. It matters because the golden
+ * of a 390 × 440 map pane is design acceptance, and a band of nothing in it would be accepted.
  */
 public class TileRenderer(
     private val palette: TilePalette = TilePalette.Dark,
@@ -52,6 +60,43 @@ public class TileRenderer(
     }
 
     /**
+     * The route, in the two phases the style documents filter on.
+     *
+     * **Two strokes and not one line with a progress fraction**, because that is what the documents
+     * describe: one GeoJSON source with a `phase` property and two `line` layers reading it. Drawing
+     * it as one line and a marker would look the same on a still image and diverge the moment the
+     * design asked for a different cap or a different width on one of them — `route-travelled` is
+     * already `line-cap: butt` for a reason, and the reason is that the two ends meet.
+     *
+     * Travelled first, so the part still to drive is the one on top where they overlap at the car.
+     */
+    public fun DrawScope.drawRoute(
+        route: RouteLine,
+        projection: TileProjection,
+    ) {
+        strokePath(route.travelled, projection, palette.routeTravelled)
+        strokePath(route.ahead, projection, palette.routeAhead)
+    }
+
+    private fun DrawScope.strokePath(
+        points: List<GeoPoint>,
+        projection: TileProjection,
+        colour: Color,
+    ) {
+        if (points.size < 2) return
+        val path = Path()
+        points.forEachIndexed { index, point ->
+            val at = projection.toCanvas(point)
+            if (index == 0) path.moveTo(at.x, at.y) else path.lineTo(at.x, at.y)
+        }
+        drawPath(
+            path,
+            colour,
+            style = Stroke(width = ROUTE_WIDTH, cap = StrokeCap.Butt, join = StrokeJoin.Round),
+        )
+    }
+
+    /**
      * The named roads, each written along itself. Separate from [drawTile] because it needs the
      * theme's typography, and a renderer that took a `TextStyle` to draw a polygon would be carrying
      * text into every call that has no text in it.
@@ -62,7 +107,7 @@ public class TileRenderer(
         style: TextStyle,
     ) {
         val layer = tile.layer("transportation_name") ?: return
-        val scale = size.minDimension / layer.extent
+        val scale = size.maxDimension / layer.extent
         for (feature in layer.features) {
             val text = feature.labelText() ?: continue
             val points = feature.paths.maxByOrNull { it.size } ?: continue
@@ -78,7 +123,7 @@ public class TileRenderer(
         width: Float = 1f,
         keep: (MvtFeature) -> Boolean = { true },
     ) {
-        val scale = size.minDimension / layer.extent
+        val scale = size.maxDimension / layer.extent
         for (feature in layer.features) {
             if (!keep(feature)) continue
             for (points in feature.paths) {
@@ -114,6 +159,9 @@ public class TileRenderer(
                 RoadBand(setOf("primary", "secondary", "tertiary"), width = 6f),
                 RoadBand(setOf("motorway", "trunk"), width = 10f),
             )
+
+        /** `line-width: 6` in both documents, for both phases of the route. */
+        const val ROUTE_WIDTH = 6f
     }
 }
 
@@ -131,6 +179,10 @@ public data class TilePalette(
     val roadMinor: Color,
     val roadPrimary: Color,
     val roadMotorway: Color,
+    /** `route-travelled`'s `line-color`: white at a quarter on the dark map, black on the light. */
+    val routeTravelled: Color,
+    /** `route-ahead`'s. The accent, and the same in both documents — the route is the one accent. */
+    val routeAhead: Color,
 ) {
     internal fun road(band: RoadBand): Color =
         when (band.width) {
@@ -149,6 +201,8 @@ public data class TilePalette(
                 roadMinor = Color(0xFF1C1C1C),
                 roadPrimary = Color(0xFF262626),
                 roadMotorway = Color(0xFF3A3A3A),
+                routeTravelled = Color(0x40FFFFFF),
+                routeAhead = Color(0xFF1BA1E2),
             )
 
         public val Light: TilePalette =
@@ -160,6 +214,8 @@ public data class TilePalette(
                 roadMinor = Color(0xFFF7F7F7),
                 roadPrimary = Color(0xFFFAFAFA),
                 roadMotorway = Color(0xFFFFFFFF),
+                routeTravelled = Color(0x40000000),
+                routeAhead = Color(0xFF1BA1E2),
             )
     }
 }
@@ -171,6 +227,6 @@ internal fun tileToCanvas(
     extent: Int,
     size: Size,
 ): Offset {
-    val scale = size.minDimension / extent
+    val scale = size.maxDimension / extent
     return Offset(x * scale, y * scale)
 }

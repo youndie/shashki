@@ -1,0 +1,198 @@
+package io.github.youndie.shashki.ui.screens
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.unit.dp
+import io.github.youndie.kvadrant.components.KvadrantAppBarButton
+import io.github.youndie.kvadrant.foundation.KvadrantText
+import io.github.youndie.kvadrant.theme.KvadrantTheme
+import io.github.youndie.shashki.ui.ShashkiIcons
+import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.map.MapPane
+import io.github.youndie.shashki.ui.map.MapScene
+
+/** The driver, as the rider sees them while the car is on its way or on the road. */
+public data class TripDriver(
+    val name: String,
+    val car: String,
+    val plate: String,
+    val rating: String,
+    val carRects: Int,
+)
+
+/**
+ * What the trip is doing, and the one line the panel leads with.
+ *
+ * The three follow `RideStatus` rather than inventing a parallel vocabulary: `ARRIVING → ARRIVED →
+ * IN_PROGRESS` is the trip, and a screen with a fourth state would be a screen ahead of the server.
+ */
+public enum class TripStage { ARRIVING, ARRIVED, IN_PROGRESS }
+
+/**
+ * The rider watching the car: the route in its two phases, the car on it, and who is driving.
+ *
+ * **This screen's artboard was not read, and saying so is the point.** Every other screen in this
+ * module is transcribed from the kit — R4's 360 dp map, D3's action bar, the 12 dp margin — and the
+ * research's rule is that what was verified is separated from what was assumed. The kit's trip
+ * screen was not among the files opened during the research, so the *panel* here is built from the
+ * composition rules that were recorded (§1.7: one accent surface per screen; a row leads with a
+ * route stack, one 20 dp glyph or nothing; figures at 32 and 54) rather than from the drawing. The
+ * map half is not a guess: the route's two phases, their colours and their width come from the style
+ * documents, and a test holds them to it.
+ *
+ * So this is a screen that behaves and is composed correctly and whose *layout* is provisional. When
+ * the artboard is read, what changes is arrangement, not structure — and the golden is what will
+ * show it.
+ */
+@Composable
+public fun RiderTripInProgress(
+    scene: MapScene,
+    stage: TripStage,
+    headline: String,
+    meta: String,
+    driver: TripDriver,
+    actionLabel: String,
+    onCall: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = KvadrantTheme.colors
+    val metrics = KvadrantTheme.metrics
+    val type = ShashkiTheme.typography
+
+    Column(modifier.fillMaxSize().background(colors.background)) {
+        // More map than R4 gives it: this is the screen the rider watches rather than reads, and
+        // the panel below carries three rows where R4's carries three tiles and a payment line.
+        MapPane(scene, Modifier.fillMaxWidth().height(MAP_HEIGHT))
+
+        Column(
+            Modifier.weight(1f).padding(start = metrics.margin, top = 20.dp, end = metrics.margin),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                KvadrantText(headline, style = type.figure)
+                KvadrantText(meta, style = type.body.copy(color = colors.subtle))
+            }
+
+            DriverRow(driver)
+
+            // **One accent surface, and on this screen it is the plate.** The kit's rule allows one;
+            // R4 spends it on the selected class tile. Here nothing is being chosen, and the thing a
+            // rider looks for on a street is the registration.
+            Box(
+                Modifier
+                    .background(colors.accent)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                KvadrantText(driver.plate, style = type.rowEmphasis.copy(color = colors.onAccent))
+            }
+
+            Spacer(Modifier.height(0.dp))
+        }
+
+        TripBar(stage, actionLabel, onCall, onCancel)
+    }
+}
+
+/** Name, car and rating beside the class glyph — the kit's row shape: one glyph, then text. */
+@Composable
+private fun DriverRow(driver: TripDriver) {
+    val colors = KvadrantTheme.colors
+    val type = ShashkiTheme.typography
+    Column {
+        Box(Modifier.fillMaxWidth().height(HAIRLINE).background(colors.foreground.copy(alpha = HAIRLINE_ALPHA)))
+        Row(
+            Modifier.fillMaxWidth().padding(top = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = rememberVectorPainter(ShashkiIcons.car(driver.carRects)),
+                contentDescription = null,
+                modifier = Modifier.size(ROW_GLYPH),
+                colorFilter = ColorFilter.tint(colors.foreground),
+            )
+            Column(Modifier.weight(1f)) {
+                KvadrantText(driver.name, style = type.body)
+                KvadrantText(driver.car, style = type.meta.copy(color = colors.subtle))
+            }
+            KvadrantText(driver.rating, style = type.meta.copy(color = colors.subtle))
+        }
+    }
+}
+
+/**
+ * The same action row R4 and D3 use — ring, label, overflow dots — with the ring calling the driver.
+ *
+ * The stage decides the label beside the ring rather than a fourth control: a bar whose buttons
+ * appeared and disappeared as the trip advanced would be a bar the rider has to re-read.
+ */
+@Composable
+private fun TripBar(
+    stage: TripStage,
+    actionLabel: String,
+    onCall: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val colors = KvadrantTheme.colors
+    val type = ShashkiTheme.typography
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(KvadrantTheme.metrics.appBarHeight)
+            .background(colors.chrome)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            KvadrantAppBarButton(onClick = onCall, label = null) {
+                Image(
+                    painter = rememberVectorPainter(ShashkiIcons.card),
+                    contentDescription = null,
+                    modifier = Modifier.size(ROW_GLYPH).align(Alignment.Center),
+                    colorFilter = ColorFilter.tint(colors.foreground),
+                )
+            }
+            KvadrantText(actionLabel, style = type.body)
+        }
+        // Cancelling is behind the dots once the trip has started: the kit puts destructive actions
+        // in the overflow, and a trip in progress is not cancelled by a control the thumb rests on.
+        KvadrantText(
+            if (stage == TripStage.IN_PROGRESS) "···" else "cancel",
+            Modifier.clickable(onClick = onCancel),
+            style =
+                if (stage == TripStage.IN_PROGRESS) {
+                    type.tileLabel.copy(color = colors.border)
+                } else {
+                    type.meta.copy(color = colors.accent)
+                },
+        )
+    }
+}
+
+/** More than R4's 360: the trip screen is watched rather than read. */
+private val MAP_HEIGHT = 440.dp
+private val ROW_GLYPH = 20.dp
+private val HAIRLINE = 1.dp
+private const val HAIRLINE_ALPHA = 0.12f

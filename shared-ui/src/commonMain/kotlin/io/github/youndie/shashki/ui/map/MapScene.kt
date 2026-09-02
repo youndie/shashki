@@ -35,7 +35,21 @@ public data class MapCamera(
 public data class RouteLine(
     val travelled: List<GeoPoint>,
     val ahead: List<GeoPoint>,
-)
+) {
+    public companion object {
+        /**
+         * The `phase` values the style documents filter on — one per field above, in the order the
+         * renderer strokes them.
+         *
+         * **A list rather than a type, and it is a reminder rather than a guarantee.** Two fields
+         * cannot express a phase the styles do not know, so there is no run-time failure to write:
+         * the shape makes it unrepresentable. What *can* happen is the documents growing a third
+         * phase and this staying at two, which nothing in Kotlin would notice — so a test reads the
+         * real documents and holds them to this list.
+         */
+        public val PHASES: List<String> = listOf("travelled", "ahead")
+    }
+}
 
 /**
  * A car on the map.
