@@ -52,6 +52,7 @@ import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.SuspendedPetichSweeper
 import ru.workinprogress.petich.outbox.OutboxRecord
 import ru.workinprogress.petich.outbox.OutboxRelayWorker
+import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
 public fun main() {
@@ -60,7 +61,11 @@ public fun main() {
     LoggerFactory.getLogger("shashki").info("applied {} migrations", applied)
     val database = DatabaseFactory.connect(dataSource)
     val oidc = AuthConfig.fromEnv()
-    embeddedServer(CIO, port = PORT, host = "0.0.0.0") { shashki(database, oidc = oidc) }.start(wait = true)
+    val bundles = BundleConfig.root()
+    val page = pageValues()
+    embeddedServer(CIO, port = PORT, host = "0.0.0.0") {
+        shashki(database, oidc = oidc, bundles = bundles, page = page)
+    }.start(wait = true)
 }
 
 /** The port, here rather than in a config file until there is a config file worth having. */
@@ -156,6 +161,16 @@ public fun Application.shashki(
     database: Database,
     routeEstimator: RouteEstimator = RoutingConfig.estimator(),
     oidc: OidcConfig? = null,
+    /**
+     * Where the browser bundles are, or `null` for a server that only answers the API.
+     *
+     * `null` by default and read from the environment in `main`, for the reason the provider is:
+     * a parameter that reads `System.getenv` by default makes every test's behaviour depend on the
+     * shell it was started from.
+     */
+    bundles: File? = null,
+    /** What the served page tells the bundles about this deployment. */
+    page: Map<String, String> = emptyMap(),
 ) {
     baseModule(listOf(rideModule(database, scope = this, routeEstimator = routeEstimator)))
 
@@ -180,6 +195,13 @@ public fun Application.shashki(
         promoRoutes()
         driverRoutes()
         driverPositionRoutes()
+
+        // **Last, and a test rather than a hope.** `default("index.html")` under `/` answers any
+        // path it is given, so the question is whether a literal `/api/...` route still wins. Ktor
+        // matches by specificity rather than by declaration order and it does — `BundleRoutingTest`
+        // is what says so, because the failure mode is the whole API returning a web page.
+        configScript(page)
+        bundleRoutes(bundles)
     }
 
     // Two workers the saga cannot do without and the request path never sees. The sweeper rolls

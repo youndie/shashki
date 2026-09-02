@@ -6,6 +6,7 @@ import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
 
 /**
  * Where the city's extract is, and what happens when it is not there.
@@ -25,12 +26,44 @@ public data class RoutingConfig(
 
         private val LOG = LoggerFactory.getLogger(RoutingConfig::class.java)
 
-        /** The config, or `null` when no usable extract is configured. */
+        /**
+         * The config, or `null` when there is neither a prepared graph nor an extract to build one.
+         *
+         * **A prepared graph is enough on its own, and the first version of this said otherwise.**
+         * `importOrLoad` reads the `.osm.pbf` only when the graph directory is empty, so a container
+         * that carries 14 MB of prepared graph and no 41 MB extract routes perfectly — and this
+         * function refused it, because it checked for the extract first. The image built in B-35 is
+         * exactly that container, which is how it was found.
+         */
         public fun fromEnv(env: (String) -> String? = System::getenv): RoutingConfig? {
-            val osm = env(OSM_FILE_VARIABLE)?.let(Path::of) ?: return null
-            val graph = env(GRAPH_DIRECTORY_VARIABLE)?.let(Path::of) ?: osm.resolveSibling("graph-cache")
-            return if (osm.exists()) RoutingConfig(osm, graph) else null
+            val osm = env(OSM_FILE_VARIABLE)?.let(Path::of)
+            val graph =
+                env(GRAPH_DIRECTORY_VARIABLE)?.let(Path::of)
+                    ?: osm?.resolveSibling("graph-cache")
+                    ?: return null
+            return when {
+                graph.isPrepared() -> RoutingConfig(osm ?: graph.resolve(NO_EXTRACT), graph)
+                osm?.exists() == true -> RoutingConfig(osm, graph)
+                else -> null
+            }
         }
+
+        /**
+         * Whether the directory holds a graph rather than merely existing.
+         *
+         * GraphHopper writes several files and reads them back; an empty directory is what it treats
+         * as "import needed", so that is the question asked here rather than `exists()`.
+         */
+        private fun Path.isPrepared(): Boolean = exists() && listDirectoryEntries().isNotEmpty()
+
+        /**
+         * The path GraphHopper is told to import from when there is nothing to import.
+         *
+         * It never reads it — the directory is prepared — but the builder requires a name, and one
+         * that does not exist is better than one that might: an extract silently found beside the
+         * graph would import over a graph somebody baked deliberately.
+         */
+        private const val NO_EXTRACT = "there-is-no-extract.osm.pbf"
 
         /**
          * The binding `rideModule` uses. Separate from [fromEnv] so the decision and the reason for
@@ -39,8 +72,9 @@ public data class RoutingConfig(
         public fun estimator(config: RoutingConfig? = fromEnv()): RouteEstimator =
             if (config == null) {
                 LOG.warn(
-                    "no OSM extract at ${'$'}{OSM_FILE_VARIABLE}: distances and ETAs will be straight lines " +
-                        "over the ground, which is wrong for anything shown beside a price (B-23)",
+                    "no prepared graph at ${'$'}{GRAPH_DIRECTORY_VARIABLE} and no extract at " +
+                        "${'$'}{OSM_FILE_VARIABLE}: distances and ETAs will be straight lines over the " +
+                        "ground, which is wrong for anything shown beside a price (B-23)",
                 )
                 StraightLineRouteEstimator()
             } else {

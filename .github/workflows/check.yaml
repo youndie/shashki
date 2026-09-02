@@ -112,6 +112,13 @@ jobs:
       # comparison in now would either redden every run or, worse, pass for a reason nobody checked.
       - run: ./gradlew check --no-daemon
 
+      # **The image is built by CI and by nothing else that can forget.** `check` compiles the server
+      # and the bundles; it does not put them in a container, and a Dockerfile that only ever runs on
+      # one person's machine is a Dockerfile that stops working quietly. There is no extract here —
+      # 41 MB is not in git (B-06) — so this builds the context and stops short of the graph, which
+      # is the half a runner can check without downloading a city.
+      - run: ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+
   # Separate from the gate, and on a schedule rather than on a pull request, because an anchor rots
   # when somebody refactors a **different** repository. A pull request here is the least likely
   # moment for one to break, and running it there trains people to ignore a red build they did not

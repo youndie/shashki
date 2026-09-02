@@ -1,5 +1,14 @@
-# The services shashki talks to on a laptop and in its tests: the identity provider it signs in
-# against, and the object store its basemap is fetched from.
+# The whole stand: shashki itself, and the three services it talks to.
+#
+# **`up` and a browser, which is what a reference owes a reader.** Until B-35 this file stood up the
+# services shashki *talks to* and could not run shashki, because there was no image — so the demo was
+# a repository, a Gradle daemon and four terminal windows.
+#
+#   docker compose -f docker/compose.yaml up -d
+#   bash docker/bootstrap-shildik.sh
+#   bash docker/upload-tiles.sh ~/shashki-city/Ljubljana.pmtiles
+#   open http://127.0.0.1:18080          # the rider
+#   open http://127.0.0.1:18080/driver   # the driver
 #
 # **Not a deployment.** Secrets are strings in this file, the database has no volume, and both of
 # shildik's ports are published because there is nobody on this machine to protect them from.
@@ -65,3 +74,46 @@ services:
       BOCHKA_ANONYMOUS: "1"
     ports:
       - "127.0.0.1:19000:9000"
+
+  # shashki's own database. A second Postgres rather than a second schema in shildik's: they are two
+  # services, and a demo that shares one instance teaches the wrong shape for the sake of 30 MB.
+  shashki-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: shashki
+      POSTGRES_USER: shashki
+      POSTGRES_PASSWORD: secret
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shashki"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  # **Built, not pulled.** `./gradlew :server:image -PcommitSha=$(git rev-parse --short HEAD)` makes
+  # it; the tag here has to name the same thing. `SHASHKI_IMAGE` is how a stand runs a specific
+  # commit — the point of a tag that names one.
+  shashki:
+    image: ${SHASHKI_IMAGE:-shashki/server:dev}
+    # **Never pull.** This image is built locally and published nowhere, so a compose that tried
+    # would answer `pull access denied … or may require docker login` — a message about credentials
+    # for a problem that is "you have not built it yet". `shashki/server:dev` is what
+    # `./gradlew :server:image` tags when no commit is given, so the default here and the default
+    # there are the same string on purpose.
+    pull_policy: never
+    depends_on:
+      shashki-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://shashki-db:5432/shashki
+      DB_USER: shashki
+      DB_PASSWORD: secret
+      # The provider, so the rider signs in and the receipt has an address to go to. Commented out
+      # rather than absent: without `bootstrap-shildik.sh` the realm does not exist, and a server
+      # pointed at a realm nobody created refuses every token it is given.
+      # SHASHKI_OIDC_ISSUER: http://shildik:8080
+      #
+      # Where the browser fetches tiles from. Not this server: B-07 settled that the archive is a
+      # static object somewhere else, and 127.0.0.1 is the address a *browser* reaches bochka at.
+      SHASHKI_TILES_URL: http://127.0.0.1:19000/tiles/Ljubljana.pmtiles
+    ports:
+      - "127.0.0.1:18080:8080"

@@ -593,6 +593,25 @@ the route but the start: 3.2 seconds of import that the prepared directory turns
 the difference between a container that answers immediately and one that does not, and it is why the
 graph directory is configuration rather than a temporary file.
 
+**Consequence 1.6e1 — the graph goes in the image, and a graph is only valid for the profile that
+built it (2026-09-02, [B-35](../backlog/B-35-the-server-as-an-image.md)).** §1.6e measured 3 168 ms
+to import and 22 ms to open a prepared directory and concluded the directory is configuration rather
+than a temporary file. Packaging it found the part that measurement could not:
+
+| Fact | How it presented |
+|---|---|
+| GraphHopper stores a hash of the profile beside the data and refuses a mismatch | the first image baked a graph that happened to be on the build machine, from an older configuration, and died on start with `Profiles do not match: car\|-1705186244` against `car\|26199302` |
+| `load` takes a native file lock — `gh.lock`, created *in* the graph directory — before it maps anything | a read-only graph directory is refused: `FileNotFoundException: /app/graph/gh.lock (Permission denied)`. "It only reads it" was wrong |
+| A prepared graph needs no extract, and `RoutingConfig.fromEnv` did not know that | it checked for the `.osm.pbf` first, so a container carrying 14 MB of graph and no 41 MB extract fell back to straight lines |
+
+**So the image takes one input — the extract — and prepares the graph with the server's own code.**
+An option to supply a ready-made graph saves three seconds and buys the mismatch back; it was in the
+first version and is not in this one.
+
+Measured on the running container, three restarts: **healthy after 1 482 / 2 124 / 3 707 ms**, of
+which the graph is **180 / 324 / 400 ms**. Against 3 168 ms to import, the prepared directory turns
+the map from most of the start-up into a tenth of it.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

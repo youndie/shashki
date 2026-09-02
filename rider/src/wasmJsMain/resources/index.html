@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>shashki</title>
+    <!--
+      The page the bundle is loaded from, which until B-35 did not exist: the wasm compiled, the
+      goldens were taken on the desktop target, and nothing had ever opened either bundle in a
+      browser. There was no HTML to open.
+
+      `config.js` is the page contract B-28 named — the deployment's values, injected by whoever
+      serves the page, so the bundle stays the same bytes everywhere. Absolute, because the driver's
+      page lives under /driver and there is one server answering for both.
+    -->
+    <style>
+        html, body { margin: 0; height: 100%; background: #0A0A0A; overscroll-behavior: none; }
+    </style>
+</head>
+<body>
+<script src="/config.js"></script>
+<script type="application/javascript" src="rider.js"></script>
+</body>
+</html>
