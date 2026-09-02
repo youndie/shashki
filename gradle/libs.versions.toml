@@ -30,12 +30,13 @@ testcontainers = "1.21.4"
 # **A timestamped snapshot, pinned by build metadata.** smtpkn has released nothing — only
 # `0.1.0-SNAPSHOT` exists — so B-13's documented fallback applies: pin the resolved build rather than
 # the moving coordinate. Published 2026-08-09; these cannot change under the build.
-smtpkn = "0.1.0-20260809.051147-2"
-# **And it is two numbers, not one.** The same publish left `smtp-transport-ktor` at build **1**
-# while the other five modules are at build **2**, on the same timestamp. A single version reference
-# across the set therefore does not resolve — loudly, with "could not find", which is the good case;
-# the fallback B-13 describes quietly assumes one build number per publish and this one has two.
-smtpknTransport = "0.1.0-20260809.051147-1"
+smtpkn = "0.1.0-20260902.062954-3"
+# **And it is two numbers, not one — twice now.** The 2026-08-09 publish left `smtp-transport-ktor`
+# at build 1 with the others at 2; the 2026-09-02 one left it at 2 with the others at 3. A single
+# version reference across the set does not resolve, loudly, with "could not find" — which is the good
+# case. B-13's fallback quietly assumes one build number per publish, and this library has now
+# disproved that on both of its publishes.
+smtpknTransport = "0.1.0-20260902.062954-2"
 graphhopper = "11.0"
 cryptography = "0.6.0"
 # **Every Compose artefact this repository names by hand rides this one reference**, and
@@ -49,6 +50,11 @@ composeUiTest = "1.12.0"
 # pinned like everything else, but pre-release quality, and the runtime half comes from Google's
 # repository rather than Maven Central.
 navigation3 = "1.2.0-alpha02"
+# The OIDC surface as `@Resource` classes, so a browser client does not build the path from strings.
+# The wasmJs target arrived with youndie/shildik#20.
+shildik = "0.2.0.13"
+# katcher's own wire types. The browser target arrived with youndie/katcher#32.
+katcher = "0.6.40"
 kompot = "0.34.1.101"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
@@ -99,6 +105,10 @@ koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-composeViewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js" }
+
+katcher-shared = { module = "ru.workinprogress.katcher:shared", version.ref = "katcher" }
+
+shildik-sharedOidc = { module = "ru.workinprogress.shildik:shared-oidc", version.ref = "shildik" }
 
 kompot-standard = { module = "io.github.youndie:kompot-standard", version.ref = "kompot" }
 

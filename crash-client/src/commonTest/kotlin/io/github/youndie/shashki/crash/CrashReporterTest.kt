@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import ru.workinprogress.feature.report.CreateReportParams
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -119,8 +120,8 @@ class CrashReporterTest {
     private fun answering(status: HttpStatusCode) =
         HttpClient(MockEngine { respond("", status, headersOf(HttpHeaders.ContentType, "text/plain")) })
 
-    private fun decode(request: HttpRequestData): CrashReport =
-        Json.decodeFromString(CrashReport.serializer(), (request.body as TextContent).text)
+    private fun decode(request: HttpRequestData): CreateReportParams =
+        Json.decodeFromString(CreateReportParams.serializer(), (request.body as TextContent).text)
 
     private fun config(
         release: String = "2026.09.02-1a2b3c4",

@@ -85,3 +85,34 @@ dependencies {
     testImplementation(libs.exposed.migrationJdbc)
     testImplementation(libs.testcontainers.postgresql)
 }
+
+// **Pinning a timestamped snapshot pins the root module and not its platform variants**, which is a
+// hole in B-13's documented fallback and was found the only way such a thing is: a fix that was
+// published, resolved, and still absent from the build.
+//
+// `io.github.youndie:smtp-client:0.1.0-20260902.062954-3` resolves, and its own Gradle metadata then
+// points the JVM variant at `smtp-client-jvm:0.1.0-SNAPSHOT` — the moving coordinate, served from
+// whatever the cache last fetched. So the build was compiling yesterday's code against today's
+// version number, silently, and `--refresh-dependencies` was the difference between a test failing
+// and passing.
+//
+// This maps the variants onto the same builds. It is a workaround for a library that has released
+// nothing; the real fix is a release, and until then this is what makes "pinned" true rather than
+// stated. The transport is a build behind the rest on both of smtpkn's publishes — see the catalog.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.github.youndie" &&
+            requested.name.startsWith("smtp-") &&
+            requested.version == "0.1.0-SNAPSHOT"
+        ) {
+            val pinned =
+                if (requested.name.startsWith("smtp-transport-ktor")) {
+                    libs.versions.smtpknTransport.get()
+                } else {
+                    libs.versions.smtpkn.get()
+                }
+            useVersion(pinned)
+            because("a timestamped snapshot pins the root module only; the platform variants stay -SNAPSHOT")
+        }
+    }
+}

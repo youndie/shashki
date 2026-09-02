@@ -31,6 +31,11 @@ kotlin {
             implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
             implementation(libs.ktor.client.core)
             implementation(wip.kotlinx.serialization.json)
+            // **katcher's own wire types, not a copy of them.** This module carried a transcription
+            // of `CreateReportParams` until youndie/katcher#32 gave `shared` a browser target — and
+            // the transcription was already wrong about `Breadcrumb`, which is exactly the failure a
+            // copy of somebody else's contract produces.
+            api(libs.katcher.shared)
             implementation(wip.kotlinx.coroutines.core)
         }
         jvmTest.dependencies {

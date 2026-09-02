@@ -1,7 +1,7 @@
 ---
 id: B-33
 title: "The three upstream fixes landed; take them and delete what they replace"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-3-surface
@@ -31,14 +31,51 @@ than necessity — and debt with an expiry date already written into its own com
 - The rejected alternative is leaving it. A copy that works today is exactly the thing that goes
   stale in silence, and the argument for filing the issues was that the copy is a future bug.
 
-- AC: `:auth-client` builds its authorize URL from `shared-oidc`'s `@Resource` classes, and the
-  hand-written percent-encoder is gone. The test that searches the whole URL for the verifier still
-  passes, which is what says the change was safe.
-- AC: `:crash-client` sends katcher's own `CreateReportParams`, and `CrashReport` is deleted.
-- AC: `SmtpReceiptSender` checks `session.isEncrypted` after `startTls`, and the run against Mailpit
-  passes with it — which is the assertion B-14 wanted and could not make.
-- AC: every coordinate is a release or a build pinned by metadata, and a clean checkout on an empty
-  cache still builds.
+- ~~AC: `:auth-client` builds its authorize URL from `shared-oidc`'s `@Resource` classes, and the
+  hand-written percent-encoder is gone.~~ **Done.** `href(ResourcesFormat(), OAuth2.Authorize(…))`
+  for the path, Ktor's `URLBuilder` for the query. All eight tests passed unchanged, including the
+  one that pins the whole URL character by character — which is what says the replacement was
+  equivalent rather than merely compiling.
+- ~~AC: `:crash-client` sends katcher's own `CreateReportParams`, and `CrashReport` is deleted.~~
+  **Done, and the copy was already wrong** — see below.
+- ~~AC: `SmtpReceiptSender` checks `session.isEncrypted` after `startTls`, and the run against
+  Mailpit passes with it.~~ **Done.** Both the send and its negative control pass with the check in
+  place.
+- ~~AC: every coordinate is a release or a build pinned by metadata~~ **— and it was not, which is
+  the finding of this item.** See below; the graph of `:server`, `:auth-client` and `:crash-client`
+  now contains no `-SNAPSHOT` at all.
 - Anchors: `auth-client/src/commonMain/kotlin/io/github/youndie/shashki/auth/SignIn.kt`,
   `crash-client/src/commonMain/kotlin/io/github/youndie/shashki/crash/CrashReport.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/receipt/data/SmtpReceiptSender.kt`
+
+## What it turned out to be
+
+**Two of the three were deletions. The third found that the build was not pinned at all.**
+
+The authorize URL is shildik's `@Resource` and Ktor's `URLBuilder` now; the hand-written
+percent-encoder is gone and the eight existing tests passed unchanged, which is the only evidence
+worth having that a replacement is equivalent.
+
+**The katcher copy was already wrong.** Deleting it showed why a transcription of somebody else's
+wire type is a defect rather than a shortcut: shashki's `Breadcrumb` was
+`(message, timestamp: Long, category)` and katcher's is
+`(timestamp: LocalDateTime, type, message, data)` — a different shape, a different field name and a
+different encoding of the time. Nothing had sent a breadcrumb, so it never fired; the first report
+that carried one would have been rejected whole. The type compiled, the tests passed, and it was
+wrong. That is the argument for sharing a wire type, demonstrated instead of asserted.
+
+**And the third: `smtpkn`'s fix was published, resolved, and absent from the build.**
+
+The catalog named `0.1.0-20260902.062954-3`, `./gradlew :server:dependencies` showed it, and
+`check(session.isEncrypted)` still failed. **A timestamped snapshot pins the root module and not its
+platform variants**: the root's own Gradle metadata points the JVM variant at
+`smtp-client-jvm:0.1.0-SNAPSHOT`, and that came from a jar the cache had fetched at 02:43, four
+hours before the fix. Nothing failed to resolve and nothing warned. The symptom was a test that
+passed with `--refresh-dependencies` and failed without it — which is the shape of every
+irreproducible build there has ever been.
+
+[B-13](B-13-pin-every-dependency.md) closed Risk 3 partly on this fallback, and the fallback is
+advice written for a JVM library. **Every portfolio library here is multiplatform**, so it has a
+second coordinate the advice does not reach. A `resolutionStrategy` in `:server` now maps the
+variants onto the same builds and the graph carries no `-SNAPSHOT`; the real fix is a release, and
+research §1 records the hole so the next person pinning a snapshot knows there are two halves to pin.

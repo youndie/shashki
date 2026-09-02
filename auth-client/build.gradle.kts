@@ -32,6 +32,12 @@ kotlin {
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.random)
             implementation(wip.kotlinx.serialization.json)
+            // **The endpoint as a type, not a string.** shildik grew a browser target for this in
+            // youndie/shildik#20; before it, this module assembled `/realms/{realm}/oauth2/authorize`
+            // out of pieces, which is the one thing `@Resource` exists to prevent.
+            implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
+            implementation(libs.ktor.resources)
+            implementation(libs.shildik.sharedOidc)
         }
         commonTest.dependencies {
             implementation(wip.kotlinx.coroutines.test)

@@ -62,17 +62,13 @@ public class SmtpReceiptSender(
                 SslEngineTlsProvider,
                 TlsConfig(serverName = config.host, caBundlePath = config.caBundlePath),
             )
-            // **`session.isEncrypted` cannot be asked, and that is an upstream defect this feature
-            // found.** `SmtpSession.encrypted` is declared and never assigned, so the flag is
-            // permanently `false` on every platform — see research §1.6d1. The check that belongs
-            // here is therefore written as a test instead: `ReceiptOverSmtpTest`'s control points
-            // the same code at a CA that signed nothing and requires it to fail, which is what
-            // actually demonstrates that the certificate was verified.
-            //
-            // The same defect makes `authenticate` throw after a successful `STARTTLS` unless it is
-            // passed a flag that says the channel is *not* protected. Mailpit needs no credentials,
-            // so this is not worked around here — a relay that does will hit it, and the honest
-            // place to fix it is upstream.
+            // **Asserted, which it could not be until youndie/smtpkn#4.** `SmtpSession.encrypted` was
+            // declared and never assigned, so this flag was permanently false and the check that
+            // belongs here was impossible to write — B-14 recorded that and put the demonstration in
+            // a test's negative control instead. The fix is in build 0.1.0-20260902.062954-3, and
+            // this is the line the feature always wanted: a silent downgrade is exactly the failure
+            // it exists to catch, and now it costs one `check`.
+            check(session.isEncrypted) { "the session is not encrypted after STARTTLS" }
             if (config.username != null && config.password != null) {
                 session.authenticate(PlainMechanism(config.username, config.password))
             }

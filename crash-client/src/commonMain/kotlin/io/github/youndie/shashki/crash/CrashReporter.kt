@@ -8,6 +8,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
+import ru.workinprogress.feature.report.Breadcrumb
+import ru.workinprogress.feature.report.CreateReportParams
 
 /** Where katcher is and who we are to it. */
 public data class CrashReporterConfig(
@@ -60,7 +62,7 @@ public class CrashReporter(
         breadcrumbs: List<Breadcrumb> = emptyList(),
     ): Boolean =
         send(
-            CrashReport(
+            CreateReportParams(
                 appKey = config.appKey,
                 message = throwable.message ?: throwable::class.simpleName ?: "unknown",
                 stacktrace = throwable.stackTraceToString(),
@@ -78,7 +80,7 @@ public class CrashReporter(
         context: Map<String, String> = emptyMap(),
     ): Boolean =
         send(
-            CrashReport(
+            CreateReportParams(
                 appKey = config.appKey,
                 message = message,
                 stacktrace = stacktrace,
@@ -88,12 +90,12 @@ public class CrashReporter(
             ),
         )
 
-    private suspend fun send(report: CrashReport): Boolean =
+    private suspend fun send(report: CreateReportParams): Boolean =
         try {
             val response: HttpResponse =
                 client.post(config.serverUrl.trimEnd('/') + INGEST) {
                     contentType(ContentType.Application.Json)
-                    setBody(json.encodeToString(CrashReport.serializer(), report))
+                    setBody(json.encodeToString(CreateReportParams.serializer(), report))
                 }
             // 202, not 200: katcher queues the report and answers Accepted. Treating only 200 as
             // success would drop every report while looking like it was sending them.

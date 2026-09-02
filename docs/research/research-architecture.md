@@ -73,6 +73,28 @@ So the risk this table was raising is not yet *taken*: it arrives with
 [B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md) (smtpkn), each of which adds one of the snapshot
 libraries. That is a better place for it than a blanket item, and those three now carry it.
 
+**A timestamped snapshot pins the root module and not its platform variants, and that is a hole in
+the fallback above (found 2026-09-02, [B-33](../backlog/B-33-take-the-upstream-fixes.md)).**
+
+The catalog named `io.github.youndie:smtp-client:0.1.0-20260902.062954-3`, it resolved, and the
+build compiled **yesterday's code**. The root module's own Gradle metadata points its JVM variant at
+`smtp-client-jvm:0.1.0-SNAPSHOT` — the moving coordinate — so the platform artefact came from
+whatever the cache had last fetched, which was a build from before the fix this item exists to take.
+Nothing failed to resolve and nothing warned; the symptom was a test that passed with
+`--refresh-dependencies` and failed without it.
+
+| Fact | Where verified |
+|---|---|
+| `smtp-core:0.1.0-SNAPSHOT -> …-3` while `smtp-core-jvm:0.1.0-SNAPSHOT` stayed unpinned | `./gradlew :server:dependencies --configuration compileClasspath` |
+| The cached `smtp-client-jvm-0.1.0-SNAPSHOT.jar` was written at 02:43 and the fix was published at 06:29 | the file's own mtime on the build box |
+
+A `resolutionStrategy` in `:server` now maps the variants onto the same builds, and the whole graph
+of `:server`, `:auth-client` and `:crash-client` contains no `-SNAPSHOT`. It is a workaround for a
+library that has released nothing; the real fix is a release. What is worth keeping is the shape:
+**"pin the snapshot by build metadata" is advice written for a JVM library, and a Kotlin
+Multiplatform one has a second coordinate it does not reach.** Every portfolio library here is
+multiplatform.
+
 **What a pinned version still does not guarantee.** `0.2.0` and `0.1.0.10` are release coordinates as
 far as Gradle is concerned, so it caches them and never asks again — but they live on a self-hosted
 `/snapshots` line, where nothing but convention stops the same coordinate being republished with
@@ -573,6 +595,16 @@ this portfolio's own rule calls a future bug — `CrashReport` says so in its KD
 the duplication is a design. **Filed upstream 2026-09-02**: youndie/katcher#32, which also notes the
 public ingest and the 202 as documentation gaps rather than asks.
 
+**Fixed the same day, and the copy turned out to be already wrong (B-33).** `shared` grew a
+browser target and `:crash-client` now sends katcher's own `CreateReportParams`. Deleting the
+transcription showed what a copy of somebody else's contract costs: shashki's `Breadcrumb` was
+`(message, timestamp: Long, category)` and katcher's is
+`(timestamp: LocalDateTime, type, message, data)` — a different shape, a different name and a
+different encoding for the time. Nothing had sent a breadcrumb yet, so it never fired; any report
+that carried one would have been rejected whole. **The type compiled, the tests passed, and it
+was wrong** — which is the argument for sharing a wire type rather than transcribing it, made by
+the case rather than by assertion.
+
 The 202 is worth its own line because the obvious implementation is wrong: a reporter that accepted
 any 2xx would count a proxy's 200, a redirect target or a captive portal as a delivered crash, and
 would do it silently for exactly as long as nobody looked in katcher.
@@ -602,7 +634,11 @@ addresses that the rest of this portfolio insists on — which is why shashki's 
 authorize URL by hand today, the one place in this repository where a path exists as a string. That
 is worth proposing upstream rather than working around twice. **Filed 2026-09-02**:
 youndie/shildik#20, which carries the module's own dependency list as the argument that the
-target costs two lines. `crypto` is deliberately not part of that ask — shildik has PKCE's
+target costs two lines. **Fixed the same day**: `shared-oidc-wasm-js` exists at 0.2.0.13, and
+`SignInAttempt` builds its address from `OAuth2.Authorize` through `href` with the query assembled
+by Ktor's `URLBuilder` — so neither the path nor the percent-encoding is this module's own any
+more. The eight tests that were already there passed unchanged, including the one that pins the
+whole URL character by character, which is what says the replacement was equivalent. `crypto` is deliberately not part of that ask — shildik has PKCE's
 verifying half and a client needs the generating half, which is genuinely the client's.
 
 **Consequence 1.6d1 — it was, and it found a defect on the first try (2026-09-02,
@@ -627,7 +663,9 @@ defect in the unscripted one — which is worth recording as a shape, not only a
 call `authenticate` and is not blocked; a real relay would be, on the first attempt. The check that
 `SmtpReceiptSender` would naturally make — "am I encrypted?" — cannot be made, so it is written as
 the test's negative control instead, which demonstrates more anyway. **Filed upstream 2026-09-02**:
-youndie/smtpkn#4, with the suggested one-line fix and the reason the suite misses it.
+youndie/smtpkn#4, with the suggested one-line fix and the reason the suite misses it. **Fixed the
+same day** — `encrypted = true` after the upgrade — so `SmtpReceiptSender` now makes the check it
+always wanted, and the run against Mailpit passes with it.
 
 **Consequence 1.6d — shashki would be smtpkn's first JVM consumer of consequence.** The library says
 plainly that the JVM target is unclaimed. That is a feature of this project, not a defect — a

@@ -1,6 +1,10 @@
 package io.github.youndie.shashki.auth
 
 import dev.whyoleg.cryptography.random.CryptographyRandom
+import io.ktor.http.URLBuilder
+import io.ktor.resources.href
+import io.ktor.resources.serialization.ResourcesFormat
+import ru.workinprogress.shildik.shared.OAuth2
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /** Where the provider is and who we are to it. Everything here is public by definition. */
@@ -40,25 +44,25 @@ public class SignInAttempt internal constructor(
      * `code_challenge`, `code_challenge_method` — read from its route rather than from memory of
      * the RFC, because a provider that spelled one differently would fail at run time only.
      */
-    public fun authorizeUrl(): String =
-        buildString {
-            append(config.issuer.trimEnd('/'))
-            append("/realms/")
-            append(config.realm.encodeUrlComponent())
-            append("/oauth2/authorize?")
-            append(
-                listOf(
-                    "response_type" to "code",
-                    "client_id" to config.clientId,
-                    "redirect_uri" to config.redirectUri,
-                    "scope" to config.scope,
-                    "state" to state,
-                    "nonce" to nonce,
-                    "code_challenge" to challenge.value,
-                    "code_challenge_method" to challenge.method,
-                ).joinToString("&") { (key, value) -> "$key=${value.encodeUrlComponent()}" },
-            )
+    public fun authorizeUrl(): String {
+        // **The path is shildik's own `@Resource`, and the query is Ktor's builder.** Neither half is
+        // written as a string any more: a renamed route upstream is a compile error here, and the
+        // percent-encoding is the one the rest of the stack uses rather than eleven lines of this
+        // module's own. Both used to be hand-made and both are gone with youndie/shildik#20.
+        val builder = URLBuilder(config.issuer)
+        href(ResourcesFormat(), OAuth2.Authorize(OAuth2(realm = config.realm)), builder)
+        builder.parameters.apply {
+            append("response_type", "code")
+            append("client_id", config.clientId)
+            append("redirect_uri", config.redirectUri)
+            append("scope", config.scope)
+            append("state", state)
+            append("nonce", nonce)
+            append("code_challenge", challenge.value)
+            append("code_challenge_method", challenge.method)
         }
+        return builder.buildString()
+    }
 
     /**
      * The form body of the code exchange — the only place the verifier is used, and it goes to the
@@ -101,33 +105,3 @@ public class SignInAttempt internal constructor(
         private const val TOKEN_BYTES = 16
     }
 }
-
-/**
- * Percent-encoding for a query value, written out because this module has no HTTP client to borrow
- * one from — and taking a Ktor dependency to escape a string would put a transport in a module whose
- * whole point is that it has none.
- *
- * Unreserved set from RFC 3986 §2.3. Everything else is encoded, including `+` and `/`, which is the
- * difference that matters: a base64url value contains `-` and `_` and never `+` or `/`, but a
- * `redirect_uri` contains both.
- */
-private fun String.encodeUrlComponent(): String =
-    buildString {
-        for (byte in this@encodeUrlComponent.encodeToByteArray()) {
-            val char = byte.toInt().toChar()
-            if (char.isUnreserved()) {
-                append(char)
-            } else {
-                append('%').append(HEX[(byte.toInt() shr 4) and 0xF]).append(
-                    HEX[
-                        byte.toInt() and
-                            0xF,
-                    ],
-                )
-            }
-        }
-    }
-
-private fun Char.isUnreserved(): Boolean = this in 'A'..'Z' || this in 'a'..'z' || this in '0'..'9' || this in "-._~"
-
-private const val HEX = "0123456789ABCDEF"
