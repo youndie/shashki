@@ -372,7 +372,12 @@ private fun DriverOnboardingBody(dark: Boolean) {
                     OnboardingDocument("photo of the car", "not sent yet", OnboardingState.MISSING),
                 ),
             uploadLabel = "choose a file",
-            note = "three documents, and a person looks at them",
+            // **The sentence the product actually passes** (B-60). This said "a person looks at
+            // them", which is the opposite of what D1 is honest about: nothing here reviews a
+            // document, and a golden that showed a friendlier line was a picture of a screen nobody
+            // ships — the same gap the earnings fixture had with two tiles against the client's
+            // three.
+            note = "three documents, and nothing here reviews them yet",
             onUpload = {},
         )
     }

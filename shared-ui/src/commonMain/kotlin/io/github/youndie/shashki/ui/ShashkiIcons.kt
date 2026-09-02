@@ -83,6 +83,37 @@ public object ShashkiIcons {
             stroked("M6 6l14 14M20 6L6 20")
         }
 
+    /**
+     * A document's state, as a mark rather than a word (B-60).
+     *
+     * **The kit is explicit about this one**: *status is a glyph, not a badge — green tick, subtle
+     * timer, accent camera for what is missing.* D1 shipped with the words `pending` and `missing`
+     * right-aligned, which reads as a badge and spends a line of type on what a 20 dp mark says at a
+     * glance.
+     *
+     * The third is a circle rather than the kit's camera, and that is a decision: this product
+     * uploads a file through a picker, and a camera would promise one. An empty ring is what
+     * "nothing here yet" looks like in a language with no illustrations.
+     */
+    public val tick: ImageVector =
+        vector("tick") {
+            stroked(circle(13f, 13f, 9f))
+            stroked("M8.5 13.2l3 3 6-6.4")
+        }
+
+    /** In review: a clock, because what is being said is *not yet*. */
+    public val timer: ImageVector =
+        vector("timer") {
+            stroked(circle(13f, 13f, 9f))
+            stroked("M13 7.5V13l4 2.4")
+        }
+
+    /** Nothing sent. An empty ring: the shape of the other two with nothing in it. */
+    public val empty: ImageVector =
+        vector("empty") {
+            stroked(circle(13f, 13f, 9f))
+        }
+
     private fun vector(
         name: String,
         build: ImageVector.Builder.() -> Unit,

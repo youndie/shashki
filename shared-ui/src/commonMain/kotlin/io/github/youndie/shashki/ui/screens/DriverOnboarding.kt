@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,14 +12,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiColors
+import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
 
 /** One document, as the screen receives it: what it is, where it has got to, and what to say about it. */
@@ -92,11 +98,24 @@ private fun DocumentRow(
         }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        // **The state is a glyph in the leading slot, which is the kit's own sentence about D1**
+        // (B-60): "status is a glyph, not a badge". A right-aligned word is a badge, and composition
+        // rule 4 gives a row one glyph — this is what it is for. Three rows of marks are scanned in
+        // a look; three rows of words are read.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Image(
+                painter = rememberVectorPainter(document.state.glyph()),
+                contentDescription = null,
+                modifier = Modifier.size(GLYPH),
+                colorFilter = ColorFilter.tint(ink),
+            )
             KvadrantText(document.title, style = type.rowEmphasis)
-            KvadrantText(document.state.name.lowercase(), style = type.meta.copy(color = ink))
         }
-        KvadrantText(document.meta, style = type.meta.copy(color = colors.subtle))
+        KvadrantText(
+            document.meta,
+            Modifier.padding(start = GLYPH + 12.dp),
+            style = type.meta.copy(color = colors.subtle),
+        )
 
         // **The field is light in both themes** — the kit's rule, drawn rather than inherited: a
         // text field in Metro is a sheet of paper, and a sheet of paper is white.
@@ -121,3 +140,13 @@ private val HAIRLINE = 2.dp
 /** The kit's field: white paper and black ink, in both themes. */
 private val FIELD_SURFACE = Color.White
 private val FIELD_INK = Color.Black
+
+/** The kit's three marks. `ACCEPTED` is drawn and produced by nobody — see [DriverOnboarding]. */
+private fun OnboardingState.glyph(): ImageVector =
+    when (this) {
+        OnboardingState.MISSING -> ShashkiIcons.empty
+        OnboardingState.PENDING -> ShashkiIcons.timer
+        OnboardingState.ACCEPTED -> ShashkiIcons.tick
+    }
+
+private val GLYPH = 20.dp

@@ -1,7 +1,7 @@
 ---
 id: B-60
 title: "D1 states a document's status in words where the kit states it in a glyph"
-status: open
+status: done
 priority: P2
 size: S
 stage: stage-6-what-running-it-said
@@ -33,3 +33,23 @@ type on something the kit gives to a 20 dp mark.
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/DriverOnboarding.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/ShashkiIcons.kt`,
   `docs/screens/screen-driver-onboarding.md`
+
+## What it turned out to be
+
+**Three marks in the leading slot, which is what composition rule 4 gives a row one glyph for.** An
+amber timer for *pending*, a green tick for *accepted*, a grey ring for *missing* — the kit's
+semantic colours doing the work a right-aligned word was doing badly. The golden shows all three at
+once, which is the only way to see that they read as a set rather than as three separate decisions.
+
+**The third mark is a ring and not the kit's camera, deliberately.** The design says "accent camera
+for what is missing"; this product uploads a file through a picker and a camera would promise one.
+An empty ring is the shape of the other two with nothing in it, which is what "nothing here yet"
+looks like in a language that has no illustrations.
+
+**And the fixture was saying something the product does not.** Its note read *"three documents, and a
+person looks at them"* against the screen's own *"nothing here reviews them yet"* — a golden of a
+friendlier product than the one that ships, and the same gap the earnings fixture had with two tiles
+against the client's three. It carries the product's sentence now.
+
+`GlyphCoverageTest` passes: the three marks are `ImageVector`s built from path data like
+`ShashkiIcons.star`, so nothing new asks the bundled face for a character it does not have.

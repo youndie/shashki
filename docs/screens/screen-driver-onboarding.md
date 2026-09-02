@@ -34,8 +34,11 @@ source: driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/do
 
 ## 1. Three rows, three states, and one that nothing can produce
 
-`MISSING` is inactive, `PENDING` is amber, `ACCEPTED` is green — the kit's semantic colours, used for
-the one thing they are reserved for. **Nothing in this product writes `ACCEPTED`.** A document is
+`MISSING` is a grey ring, `PENDING` an amber timer, `ACCEPTED` a green tick — **a glyph in the row's
+leading slot, not a word at its end** (B-60). The kit says so in as many words about D1, and
+composition rule 4 gives a row one glyph for exactly this; a right-aligned word reads as a badge and
+spends a line of type on what a 20 dp mark says at a glance. The third mark is a ring rather than the
+design's camera because this product uploads through a file picker, and a camera would promise one. **Nothing in this product writes `ACCEPTED`.** A document is
 accepted by a person who does not exist here, so a driver who uploads all three sees three amber rows
 for ever. That is the feature working, not a gap in it: the alternative shows a green tick for a file
 nobody looked at.
