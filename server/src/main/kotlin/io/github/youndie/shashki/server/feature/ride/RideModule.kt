@@ -16,6 +16,8 @@ import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.dispatch.RatedCandidates
+import io.github.youndie.shashki.server.feature.documents.DocumentsConfig
+import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.EventsConfig
 import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
@@ -162,6 +164,9 @@ public fun rideModule(
         // geometry (B-44).
         single<RatingRepository> { ExposedRatingRepository(database) }
         factory { RateRideUseCase(rides = get(), ratings = get()) }
+        // The object store, or the honest absence of one (B-47). It shares the application's HTTP
+        // client: one more connection pool for three uploads a shift would be waste.
+        single<DocumentStore> { DocumentsConfig.store(get()) }
         single { DriverTickets(get()) }
         single { DroppedFrames() }
 

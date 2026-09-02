@@ -71,6 +71,10 @@ public fun DriverShift(
     modifier: Modifier = Modifier,
     /** The driver's earnings (B-46). Does nothing where there is nowhere to go. */
     onEarnings: () -> Unit = {},
+    /** The driver's documents (B-47), the other thing done between rides. */
+    onDocuments: () -> Unit = {},
+    /** What to say about the documents, or `null` when there is nothing to say. */
+    documentsLabel: String? = null,
 ) {
     val colors = KvadrantTheme.colors
     val type = ShashkiTheme.typography
@@ -88,6 +92,19 @@ public fun DriverShift(
         Column(Modifier.clickable(onClick = onEarnings)) {
             KvadrantText(state.driverLabel, style = type.meta.copy(color = colors.subtle))
             KvadrantText(state.classLabel, style = type.rowEmphasis)
+        }
+        // **A line rather than a button**, and in the foreground brush rather than the accent.
+        // B-48's rule reads "accent-coloured text is a control's label", and this is a control's
+        // label — but the light golden measured the same 2.11:1 that rule was written to stop.
+        // The rule holds where the accent is a *surface* with black ink on it; as ink on the light
+        // background this amber is unreadable wherever it lands, control or not. The header above
+        // is also tappable and is also plain, so the accent here would have been the odd one out.
+        documentsLabel?.let { label ->
+            KvadrantText(
+                label,
+                Modifier.clickable(onClick = onDocuments).padding(top = 4.dp),
+                style = type.meta.copy(color = colors.foreground),
+            )
         }
 
         Spacer(Modifier.height(GAP))

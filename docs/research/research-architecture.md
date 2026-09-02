@@ -65,6 +65,7 @@ different thing and answers the question the table was standing in for.
 | Across `:protocol`, `:server`, `:shared-ui` and `:auth-client` — 18 940 lines of resolved graph — there is **no `-SNAPSHOT` and no dynamic version** | `./gradlew :server:dependencies` and the same for the other three |
 | Nor on the plugin classpath: sborka 0.1.0.23, viddik 0.3.3.19, Kotlin 2.4.10, Compose 1.12.0, KSP 2.3.11, ktlint-gradle 14.2.0 | `./gradlew buildEnvironment` |
 | Of the five libraries this table records as `-SNAPSHOT` — booblik, bochka, s3kn, tracy, smtpkn — **none appears in the graph at all**. Neither do katcher, telek, kompot or shildik | same, zero matches each |
+| **Amended 2026-09-02**: the first and third rows above were true when read and are not now. B-47 puts `io.github.youndie:s3-client:0.1.0-SNAPSHOT` in `:server`'s graph — **the only `-SNAPSHOT` in this build**, pinned with a comment saying why (s3kn publishes no release). It is a deliberate exception to "no snapshots resolve here", not a regression to it | `gradle/libs.versions.toml`, `./gradlew :server:dependencies` |
 | What does resolve from the portfolio is kvadrant-core 0.2.0, viddik 0.3.3.19 and petich 0.1.0.10, all CI-numbered publishes rather than `-SNAPSHOT` coordinates | same |
 
 So the risk this table was raising is not yet *taken*: it arrives with
@@ -1652,6 +1653,27 @@ drift:
 Not resolved here: this is the record that a choice is owed, and the first option is the only one
 that is an item.
 
+**Resolved 2026-09-02: the first option, built** ([B-47](../backlog/B-47-driver-onboarding-and-the-object-store.md)).
+The driver bundle has D1, the server writes the three documents to bochka through s3kn, and the
+library is in the dependency graph as `io.github.youndie:s3-client:0.1.0-SNAPSHOT` — **the one
+snapshot coordinate in this product**, pinned with a comment saying so, because s3kn publishes no
+release. §5.1's row moves from "not in the graph" to used, and the sentence above about the store
+being reachable from both ends is now a fact with two artefacts behind it rather than a plan.
+
+Three things the building added that the choice above could not have predicted:
+
+- **The hop is not an implementation detail, it is the feature's shape.** B-07 learned from the read
+  side that a browser cannot sign SigV4 without the secret; the write side inherits it, so the file
+  goes to this server and this server is the store's only client. A presigned URL would put the
+  store's hostname in front of a browser and still need the same credentials here.
+- **The store's listing is what the screen shows.** `sizeBytes` on the wire is read out of
+  `ListObjectsV2` rather than out of what the client said it sent — the only fact available about a
+  file this product cannot draw, and it comes from the store.
+- **The anonymous `GET` had to be tested, not assumed.** The bootstrap script creates the bucket and
+  publishes *no* policy; `DocumentsAgainstBochkaTest` asserts a 403/401 for a reader with no token
+  against the live stand, because "we did not make it public" is a statement about our intent and not
+  about the bucket.
+
 ## 3. Risks and open questions
 
 ### Risk 1. The browser target has no released path
@@ -1847,6 +1869,17 @@ would be shashki disagreeing with the thing it exists to show: **accent-coloured
 control's label; figures take the foreground brush.** The accent still leads that card — its strip
 and its accept button are accent *surfaces*, where the ink is black.
 
+**Amended 2026-09-02 by the rule failing on its own terms** ([B-47](../backlog/B-47-driver-onboarding-and-the-object-store.md)).
+The shift screen gained a line that opens the documents, and it is a control's label — so the rule as
+written above permits the accent. The light golden measured **2.11:1 for it: the same number, the
+same amber, the same white**, at a site the rule allowed. The rule is right about what it was
+describing and too broad by one word: the accent reads because it is a **surface** carrying black
+ink, not because the thing wearing it is a control. Amber as *ink* on the light background is
+unreadable wherever it lands. The line is drawn in the foreground brush, and the tappable header
+directly above it was already plain — so the accent would have been the odd one out on its own
+screen. What made this visible is that the light variant is now a fixture rather than an intention:
+the picture refused a rule a reader would have applied correctly.
+
 What is *not* fixed and is recorded instead: a bar's label in accent on light chrome sits at 2.13:1.
 It is a control with a shape and a position, it is the kit's palette used as the kit uses it, and
 changing the hue would be this product editing the design it is demonstrating.
@@ -1938,7 +1971,7 @@ backlog is not read as a finished product. Every claim below names the item that
 | smtpkn | **used, on the JVM** | the receipt, gated on a real relay — its first JVM consumer (B-14) |
 | bochka | **a host, not a dependency** | serves the tile archive over public ranged HTTP (D12, B-07) |
 | GraphHopper | **used** | embedded, prepared at build time, 2.57 ms a route (B-23, B-35) |
-| s3kn | **not in the graph** | its one remaining scenario is a question, B-47 (D12) |
+| s3kn | **used, on the server** | the driver's three documents into bochka, the one snapshot coordinate here (D12, B-47) |
 | telek | **not used** | a bot toolkit, not an alerting system; the item that assumed otherwise says so (B-39) |
 | kompot-realtime-redis, maplibre-compose, appframe, mongkn | **not used** | one process (D7); no wasm artefact (D1); a browser product; Postgres |
 

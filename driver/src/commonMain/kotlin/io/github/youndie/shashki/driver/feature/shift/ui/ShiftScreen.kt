@@ -29,6 +29,8 @@ public fun ShiftScreen(
     modifier: Modifier = Modifier,
     /** The header opens D6 — where a driver looks between rides (B-46). */
     onEarnings: () -> Unit = {},
+    /** And the line under it opens D1 (B-47). */
+    onDocuments: () -> Unit = {},
     viewModel: ShiftViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -43,7 +45,7 @@ public fun ShiftScreen(
         }
     }
 
-    ShiftContent(uiState, viewModel::onAction, modifier, onEarnings)
+    ShiftContent(uiState, viewModel::onAction, modifier, onEarnings, onDocuments)
 }
 
 /** Stateless: `uiState` and `onAction`. No graph, no socket, no server. */
@@ -53,6 +55,7 @@ public fun ShiftContent(
     onAction: (ShiftUiAction) -> Unit,
     modifier: Modifier = Modifier,
     onEarnings: () -> Unit = {},
+    onDocuments: () -> Unit = {},
 ) {
     DriverShift(
         state =
@@ -72,6 +75,11 @@ public fun ShiftContent(
         onDecline = { onAction(ShiftUiAction.Decline) },
         modifier = modifier,
         onEarnings = onEarnings,
+        onDocuments = onDocuments,
+        // **The word, not the state.** This screen does not know what is missing — the states come
+        // from the store and are read on D1 itself; a label that guessed here would be a second
+        // answer to the same question (B-47).
+        documentsLabel = "documents",
     )
 }
 

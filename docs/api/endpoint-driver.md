@@ -8,6 +8,7 @@ services:
 contract_source:
   - shashki:protocol DriverOffers, DriverRides, DRIVER_POSITIONS_PATH
   - shashki:protocol DriverReport, OfferView, OfferAnswer, TripAdvance
+  - shashki:protocol DriverDocuments, DriverDocumentsView, DocumentKind, DocumentState
 parent_feature: feature-the-trip
 ---
 
@@ -23,6 +24,9 @@ parent_feature: feature-the-trip
 | `POST /api/driver/offers/{rideId}/answer` | driver token | accept or decline |
 | `POST /api/driver/rides/{rideId}/advance` | driver token | move the trip to the next state |
 | `GET /api/driver/earnings` | driver token | today, this week and all time, from payout rows (B-46) |
+| `GET /api/driver/documents` | driver token | the three documents and their states (B-47) |
+| `POST /api/driver/documents/{kind}` | driver token | one file, at most 2 MiB, straight into the object store |
+| `GET /api/driver/documents/{kind}` | driver token | the bytes back, for the driver who sent them |
 
 **The hole is shut** (B-52). It said "public, temporarily" here for two stages, and what it meant was
 that anybody who knew a driver's id could read the offer waiting for them, accept it, and advance the
@@ -46,6 +50,15 @@ a refund; a figure recomputed from journeys agrees with it until the first rolle
 and the week are **UTC**, which is a seam: a driver in another timezone sees their day roll at the
 wrong hour, and fixing it needs a driver record this product does not have.
 
+**The documents take no driver id at all** (B-47), which is what the rest of this surface would look
+like if it had been written after the token rather than before it. The subject is the identity, the
+key is `drivers/<subject>/<KIND>`, and there is no path segment or body field for anybody to put
+somebody else's id in. The read-back is behind the same token for the same reason: an object store
+serving a licence to an anonymous `GET` is the hole this page spent two stages describing, in a new
+place. The size limit is enforced by reading one byte past it rather than by believing
+`Content-Length`, and with no store configured every one of the three answers **503** — see
+[feature-driver-onboarding](../features/feature-driver-onboarding.md).
+
 What has not moved: the class and the rating are still self-reported, because there is no driver
 record to read them from. The second lock on the last route is still there and is still worth having
 — `AdvanceTripUseCase` compares the identity with the driver the *order saga* assigned, so a
@@ -58,6 +71,7 @@ signed-in driver cannot drive somebody else's trip.
 | the position socket | `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/DriverPositionRouting.kt` |
 | offers and answers | `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/DriverRouting.kt` |
 | advance | `server/src/main/kotlin/io/github/youndie/shashki/server/feature/trip/TripRouting.kt` |
+| the documents | `server/src/main/kotlin/io/github/youndie/shashki/server/feature/documents/DocumentRouting.kt` |
 
 ## The socket is a socket and the board is polled
 

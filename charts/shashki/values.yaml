@@ -82,6 +82,22 @@ smtp:
     name: shashki-smtp
     passwordKey: password
 
+# Where the driver's documents go (B-47). Empty means no store is configured, and the three document
+# routes answer 503 — a running configuration, and the honest one for a deployment that has no bucket.
+#
+# **The endpoint is the object store's, not this service's**, and only this service ever talks to it:
+# a browser cannot sign SigV4 without holding the key that signs it, so the bytes come here first.
+# Do not expose this endpoint to clients and do not make the bucket public — the read-back route is
+# behind the driver's token precisely so that an object store does not serve somebody's licence to an
+# anonymous GET.
+documents:
+  endpoint: ""
+  bucket: documents
+  secret:
+    name: shashki-documents
+    accessKeyKey: access-key
+    secretKeyKey: secret-key
+
 # Who watches it (B-39). Empty means the service says on start that nothing measures it — which is
 # a running configuration, and the one thing that must not happen quietly.
 #

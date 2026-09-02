@@ -14,6 +14,7 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
+import io.github.youndie.shashki.driver.feature.documents.ui.OnboardingScreen
 import io.github.youndie.shashki.driver.feature.earnings.ui.EarningsScreen
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftScreen
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripScreen
@@ -100,6 +101,9 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
         onBack = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
         entryProvider =
             entryProvider {
+                entry<DriverRoute.Onboarding> {
+                    OnboardingScreen(onFailed = { })
+                }
                 entry<DriverRoute.Earnings> {
                     EarningsScreen(onFailed = { })
                 }
@@ -107,6 +111,9 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
                     ShiftScreen(
                         onAccepted = { rideId -> backStack.add(DriverRoute.Trip(rideId)) },
                         onEarnings = { backStack.add(DriverRoute.Earnings) },
+                        // The line under the shift's title: the documents, which is the other thing
+                        // a driver does between rides (B-47).
+                        onDocuments = { backStack.add(DriverRoute.Onboarding) },
                         // An offer that went elsewhere leaves the driver where they were: still
                         // online, still waiting. There is nothing to navigate to.
                         onGone = { },
@@ -163,6 +170,7 @@ private val SAVED_STATE =
                 polymorphic(NavKey::class) {
                     subclass(DriverRoute.Callback::class)
                     subclass(DriverRoute.Earnings::class)
+                    subclass(DriverRoute.Onboarding::class)
                     subclass(DriverRoute.Shift::class)
                     subclass(DriverRoute.Trip::class)
                 }

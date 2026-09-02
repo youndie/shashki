@@ -13,7 +13,10 @@ import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
 import io.github.youndie.shashki.ui.screens.CancelPrompt
 import io.github.youndie.shashki.ui.screens.DriverEarnings
+import io.github.youndie.shashki.ui.screens.DriverOnboarding
 import io.github.youndie.shashki.ui.screens.MatchingStage
+import io.github.youndie.shashki.ui.screens.OnboardingDocument
+import io.github.youndie.shashki.ui.screens.OnboardingState
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderFinished
@@ -324,6 +327,44 @@ private fun DriverEarnings(dark: Boolean) {
                 ),
             history = listOf("airport · today" to "$ 23.16"),
             emptyLine = "nothing yet",
+        )
+    }
+}
+
+/**
+ * D1: the three documents, in all three states (B-47).
+ *
+ * **The third state is drawn and not produced**, which is the honest half of this picture: nothing
+ * in this product accepts a document, because accepting is a person and a queue. Drawing it is what
+ * makes the day a reviewer exists a change to the server rather than to the screen.
+ *
+ * The colours are the kit's semantics — the inactive brush for missing, the driver's amber for
+ * pending, green for accepted — and the upload field is white in both themes, which is one of the
+ * two places the kit says fight that instinct.
+ */
+@ViddikScreenshot(name = "driver onboarding", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverOnboardingFixture(): Unit = DriverOnboardingBody(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "driver onboarding light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverOnboardingFixtureLight(): Unit = DriverOnboardingBody(dark = false)
+
+@Composable
+private fun DriverOnboardingBody(dark: Boolean) {
+    val latin = kvadrantLatin()
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        DriverOnboarding(
+            documents =
+                listOf(
+                    OnboardingDocument("driving licence", "sent 2 minutes ago · 1.2 MB", OnboardingState.PENDING),
+                    OnboardingDocument("insurance", "checked yesterday", OnboardingState.ACCEPTED),
+                    OnboardingDocument("photo of the car", "not sent yet", OnboardingState.MISSING),
+                ),
+            uploadLabel = "choose a file",
+            note = "three documents, and a person looks at them",
+            onUpload = {},
         )
     }
 }

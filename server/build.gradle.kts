@@ -46,6 +46,9 @@ dependencies {
 
     // Watching it. Agents, not servers: metrik's UDP ingest and tracy's buffer-and-deliver loop
     // are what a service carries; where the data lands is a deployment (B-39).
+    // The object store, for the one scenario that gives an S3 *client* a reason to exist here: a
+    // driver uploading documents the browser cannot sign for itself (B-47, D12).
+    implementation(libs.s3.client)
     implementation(libs.metrik.agent)
     implementation(libs.tracy.agent)
 

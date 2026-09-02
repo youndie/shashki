@@ -36,6 +36,12 @@ public sealed interface DriverRoute : NavKey {
         override val path: String get() = "/"
     }
 
+    /** D1: the three documents a driver hands over before they drive (B-47). */
+    @Serializable
+    public data object Onboarding : DriverRoute {
+        override val path: String get() = "/documents"
+    }
+
     /** D6: what the shift has paid so far (B-46). */
     @Serializable
     public data object Earnings : DriverRoute {
@@ -68,6 +74,7 @@ public sealed interface DriverRoute : NavKey {
             when {
                 path == Callback.path -> Callback
                 path == Earnings.path -> Earnings
+                path == Onboarding.path -> Onboarding
                 path == "/" || path.isEmpty() -> Shift
                 path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 else -> null

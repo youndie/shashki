@@ -7,6 +7,7 @@ import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.DriverTickets
 import io.github.youndie.shashki.server.feature.auth.driverIdentity
+import io.github.youndie.shashki.server.feature.documents.documentRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.FindOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
@@ -100,6 +101,11 @@ private fun Route.driverEndpoints() {
             ),
         )
     }
+
+    // The kit's D1: three documents, uploaded through this server because a browser cannot sign for
+    // the store itself (B-47). Declared here so they share the driver's tier rather than repeating
+    // the switch that protects it.
+    documentRoutes()
 
     // The socket's half of the token. It is minted here because here is behind the same
     // `authenticate` block as everything else — the whole point of a ticket is that verification

@@ -98,7 +98,7 @@ the machine only guards the membership.
   in §1.8 rather than imagined), the twelve decisions taken, and six risks with the machinery that
   mitigates each
 
-### Features (7)
+### Features (8)
 
 The product, in the order a ride goes through it, then the two capabilities that are not a step in it.
 
@@ -117,10 +117,13 @@ The product, in the order a ride goes through it, then the two capabilities that
   by a library, because a map on somebody else's surface cannot appear in a golden
 - [x] [feature-crash-reports](features/feature-crash-reports.md) — what a browser loses, and the two
   hooks that catch it
+- [x] [feature-driver-onboarding](features/feature-driver-onboarding.md) — three documents into the
+  object store, written by the server because a browser cannot sign for itself. The one state a
+  person would set is set by nobody, and the screen says so
 
-### Screens / Flows (9)
+### Screens / Flows (10)
 
-Six in the rider bundle, three in the driver's. Every one of them is photographed: the `Content` half
+Six in the rider bundle, four in the driver's. Every one of them is photographed: the `Content` half
 takes a state and a callback, so a golden of it needs no graph and no server.
 
 - [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
@@ -141,6 +144,8 @@ takes a state and a callback, so a golden of it needs no graph and no server.
   summed from the payout rows
 - [x] [screen-driver-assigned-ride](screens/screen-driver-assigned-ride.md) — what was accepted, and
   the one button that moves it along
+- [x] [screen-driver-onboarding](screens/screen-driver-onboarding.md) — a licence, an insurance
+  certificate and a photo of the car; amber for ever, because nothing here reviews them
 
 ### API (4)
 

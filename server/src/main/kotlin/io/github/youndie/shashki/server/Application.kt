@@ -4,6 +4,8 @@ import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
 import io.github.youndie.shashki.server.feature.auth.AuthConfig
+import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
+import io.github.youndie.shashki.server.feature.documents.domain.NoStoreConfiguredException
 import io.github.youndie.shashki.server.feature.events.Events
 import io.github.youndie.shashki.server.feature.events.eventRoutes
 import io.github.youndie.shashki.server.feature.promo.degradationRoutes
@@ -46,6 +48,7 @@ import io.ktor.server.websocket.pingPeriod
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
+import org.koin.dsl.module
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -141,6 +144,11 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
         }
         // Rating or tipping a ride that has not finished (B-44). A 409 and not a 400: the request is
         // well formed and will be correct in a few minutes.
+        // No object store configured (B-47). 503 and not 500: it is a deployment that has not been
+        // given one, and the message says which variables would give it one.
+        exception<NoStoreConfiguredException> { call, e ->
+            call.respond(HttpStatusCode.ServiceUnavailable, ErrorBody(e.message ?: "no object store"))
+        }
         exception<NotFinishedException> { call, e ->
             call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "the ride is not over"))
         }
@@ -196,8 +204,21 @@ public fun Application.shashki(
     bundles: File? = null,
     /** What the served page tells the bundles about this deployment. */
     page: Map<String, String> = emptyMap(),
+    /**
+     * Where a driver's documents go (B-47), or `null` to read it from the environment like the rest.
+     *
+     * A parameter for the same reason the provider is one: the test that writes a real object needs
+     * to point the store at the stand it started, and a default that read `System.getenv` would make
+     * every other test's behaviour depend on the shell.
+     */
+    documents: DocumentStore? = null,
 ) {
-    baseModule(listOf(rideModule(database, scope = this, routeEstimator = routeEstimator)))
+    baseModule(
+        listOf(
+            rideModule(database, scope = this, routeEstimator = routeEstimator),
+            documents?.let { store -> module { single<DocumentStore> { store } } },
+        ).filterNotNull(),
+    )
 
     // **Here and not in `baseModule`, because the agent is a binding and `baseModule` runs with no
     // modules in half this suite.** The plugin belongs before `routing`: the trace context it puts in

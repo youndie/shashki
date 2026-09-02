@@ -9,6 +9,11 @@ import io.github.youndie.shashki.auth.redirectTo
 import io.github.youndie.shashki.auth.tokenStore
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
+import io.github.youndie.shashki.driver.feature.documents.data.HttpDocumentsRepository
+import io.github.youndie.shashki.driver.feature.documents.domain.DocumentsRepository
+import io.github.youndie.shashki.driver.feature.documents.domain.ReadDocumentsUseCase
+import io.github.youndie.shashki.driver.feature.documents.domain.UploadDocumentUseCase
+import io.github.youndie.shashki.driver.feature.documents.ui.OnboardingViewModel
 import io.github.youndie.shashki.driver.feature.earnings.data.HttpEarningsRepository
 import io.github.youndie.shashki.driver.feature.earnings.domain.EarningsRepository
 import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
@@ -161,6 +166,10 @@ public fun driverModule(config: DriverConfig): Module =
         factory { WatchOfferUseCase(get()) }
         factory { AnswerOfferUseCase(get()) }
 
+        single<DocumentsRepository> { HttpDocumentsRepository(get(), config.driverId) }
+        factory { ReadDocumentsUseCase(get()) }
+        factory { UploadDocumentUseCase(get()) }
+
         single<EarningsRepository> { HttpEarningsRepository(get(), config.driverId) }
         factory { ReadEarningsUseCase(get()) }
 
@@ -194,6 +203,9 @@ public fun driverModule(config: DriverConfig): Module =
         }
         viewModel { (rideId: String) -> DriverTripViewModel(rideId, config.driverId, get(), get()) }
         viewModel { EarningsViewModel(get()) }
+        // The picker is the platform's and is left at its default here: the graph has nothing to say
+        // about a file dialog, and a test hands in its own.
+        viewModel { OnboardingViewModel(readDocuments = get(), uploadDocument = get()) }
     }
 
 /** The provider's client, told apart from the application's by a name rather than by a type. */

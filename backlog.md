@@ -41,14 +41,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-47](docs/backlog/B-47-driver-onboarding-and-the-object-store.md) `[?]` | Driver onboarding, which is the one scenario the object store has left | P2 | L | B-52 |
 | [B-49](docs/backlog/B-49-the-drivers-real-position.md) `[?]` | The driver's real position, from the browser, or the reason it stays configured | P2 | S | B-52 |
 
-## Closed (50)
+## Closed (51)
 
 **Remove the unknowns**
 
@@ -115,6 +114,7 @@ re-prioritising one must never move its file.
 - [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[x]` - Finished: rate the driver and tip, and the tip is a second charge
 - [B-45](docs/backlog/B-45-history-from-the-broker.md) `[x]` - History: the rider's rides, drawn natively from the broker's projection
 - [B-46](docs/backlog/B-46-driver-earnings-from-payouts.md) `[x]` - Driver earnings: today, this week, and the payouts that already exist
+- [B-47](docs/backlog/B-47-driver-onboarding-and-the-object-store.md) `[x]` - Driver onboarding, which is the one scenario the object store has left
 - [B-48](docs/backlog/B-48-light-goldens-for-every-screen.md) `[x]` - Every screen fixture gains its light variant, which open question 1 promised
 - [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[x]` - The driver's four routes stop being public: the hole the endpoint table names
 

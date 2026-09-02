@@ -94,6 +94,22 @@ spec:
               value: {{ .Values.smtp.caBundlePath | quote }}
             {{- end }}
             {{- end }}
+            {{- if .Values.documents.endpoint }}
+            - name: SHASHKI_DOCUMENTS_ENDPOINT
+              value: {{ .Values.documents.endpoint | quote }}
+            - name: SHASHKI_DOCUMENTS_BUCKET
+              value: {{ .Values.documents.bucket | quote }}
+            - name: SHASHKI_DOCUMENTS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.documents.secret.name }}
+                  key: {{ .Values.documents.secret.accessKeyKey }}
+            - name: SHASHKI_DOCUMENTS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.documents.secret.name }}
+                  key: {{ .Values.documents.secret.secretKeyKey }}
+            {{- end }}
             {{- if .Values.observability.metrik.endpoint }}
             - name: SHASHKI_METRIK_ENDPOINT
               value: {{ .Values.observability.metrik.endpoint | quote }}

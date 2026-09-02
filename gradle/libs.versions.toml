@@ -22,6 +22,10 @@ coroutinesSwing = "1.11.0"
 # The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
 # choose — a different one here is a version conflict, not a preference.
 petich = "0.1.0.10"
+# **A snapshot, and the only one here.** s3kn publishes no release yet — its own README says Maven
+# Central is deliberately left until the API stops moving — so a demo that wants a real authenticated
+# write against the object store takes the snapshot and says so (B-47).
+s3kn = "0.1.0-SNAPSHOT"
 exposed = "1.4.0"
 hikari = "7.1.0"
 postgresql = "42.7.13"
@@ -162,6 +166,7 @@ cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-pr
 cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptography-provider-webcrypto", version.ref = "cryptography" }
 
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutinesSwing" }
+s3-client = { module = "io.github.youndie:s3-client", version.ref = "s3kn" }
 
 [plugins]
 sborkaJvm = { id = "ru.workinprogress.sborka.jvm", version.ref = "sborka" }
