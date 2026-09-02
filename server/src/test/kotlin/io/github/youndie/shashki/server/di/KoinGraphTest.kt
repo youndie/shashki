@@ -92,6 +92,10 @@ class KoinGraphTest {
                     // the lambda supplies, and `verify()` asks the container for it like any other
                     // constructor parameter. Named here for the same reason as the four above.
                     definition<HttpClient>(HttpClientEngine::class),
+                    // `RequestRideUseCase` takes the graph's served area as `() -> ServiceArea`,
+                    // built by the module's own lambda (B-57). `verify()` sees a `Function0` on the
+                    // constructor and asks the container for one, as it does for `OfferTimeouts`.
+                    definition<RequestRideUseCase>(kotlin.jvm.functions.Function0::class),
                 ),
         )
     }
@@ -148,32 +152,19 @@ class KoinGraphTest {
     @OptIn(KoinExperimentalAPI::class)
     @Test
     fun `verify() passes a factoryOf over a defaulted lambda parameter that resolution then fails`() {
-        val trap = module { factoryOf(::RequestRideUseCase) }
-        // The three real parameters. `PetichClock` joined them in B-45, when the ride's own row
-        // needed a timestamp — and the control is about the *fourth*, which has a default.
-        val provided = listOf(PetichEngine::class, RideRepository::class, PetichClock::class)
+        val trap = module { factoryOf(::DefaultedLambda) }
 
-        // Static: nothing reported.
-        trap.verify(extraTypes = provided)
+        // Static: nothing reported. `verify()` skips a parameter that has a default.
+        trap.verify(extraTypes = listOf(RideRepository::class))
 
-        // Dynamic: the container is asked for a Function0 and has none. The first two parameters
-        // are real objects, not `error()` stubs — Koin resolves constructor parameters in order,
-        // and a stub that throws would fail the resolution before it reached the one being
-        // measured (which is exactly what the first version of this test did).
-        val koin =
-            koinApplication {
-                modules(
-                    trap,
-                    module {
-                        single<PetichEngine> { PetichEngine(interceptors = emptyList(), repository = NoSagas) }
-                        single<RideRepository> { NoRides }
-                        single { PetichClock { 0 } }
-                    },
-                )
-            }.koin
+        // Dynamic: the container is asked for a Function0 and has none. The real parameter is a
+        // real object rather than an `error()` stub — Koin resolves in order, and a stub that threw
+        // would fail before reaching the one being measured, which is what the first version of this
+        // test did.
+        val koin = koinApplication { modules(trap, module { single<RideRepository> { NoRides } }) }.koin
         // Koin wraps the miss in InstanceCreationException; the NoDefinitionFoundException is its
         // cause, which is also how the production stack trace read.
-        val failure = assertFailsWith<org.koin.core.error.InstanceCreationException> { koin.get<RequestRideUseCase>() }
+        val failure = assertFailsWith<org.koin.core.error.InstanceCreationException> { koin.get<DefaultedLambda>() }
         val chain = generateSequence<Throwable>(failure) { it.cause }.joinToString(" <- ") { it.message.orEmpty() }
         assertTrue("Function0" in chain, chain)
     }
@@ -209,3 +200,16 @@ class KoinGraphTest {
         module { factoryOf(::NeedsDefaultedInt) }.verify()
     }
 }
+
+/**
+ * The trap, and it is a class of this test's own (B-57).
+ *
+ * **It used to borrow `RequestRideUseCase`**, whose constructor has changed twice under it — a clock
+ * in B-45, the served area in B-57 — and each time the control's premise ("three real parameters and
+ * one defaulted lambda") had to be repaired before the control could say anything. A control that
+ * depends on production code keeping a shape is a control that reports on that shape.
+ */
+private class DefaultedLambda(
+    @Suppress("unused") private val rides: RideRepository,
+    @Suppress("unused") private val ids: () -> String = { "id" },
+)

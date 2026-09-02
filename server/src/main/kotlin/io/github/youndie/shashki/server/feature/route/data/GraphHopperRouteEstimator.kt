@@ -7,6 +7,7 @@ import com.graphhopper.util.GHUtility
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.server.pricing.RouteEstimate
 import io.github.youndie.shashki.server.pricing.RouteEstimator
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.math.roundToInt
@@ -54,6 +55,19 @@ public class GraphHopperRouteEstimator(
                     graphDirectory,
                 )
             }
+
+    /**
+     * The extract's own bounds (B-57).
+     *
+     * **Read from the graph rather than typed out beside it**, which is what the saga's step used to
+     * do and what its note promised would be replaced. A point outside this is one GraphHopper
+     * cannot snap, and the message it throws for that names coordinates a rider never gave — so the
+     * refusal has to happen before the router is asked.
+     */
+    override val servedArea: ServiceArea =
+        hopper.baseGraph.bounds.let {
+            ServiceArea(south = it.minLat, north = it.maxLat, west = it.minLon, east = it.maxLon)
+        }
 
     override fun estimate(
         from: GeoPoint,

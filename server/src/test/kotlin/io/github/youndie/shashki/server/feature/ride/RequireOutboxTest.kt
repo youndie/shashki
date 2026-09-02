@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichEngineConfig
@@ -25,7 +26,7 @@ class RequireOutboxTest {
         val refusal =
             assertFailsWith<IllegalArgumentException> {
                 PetichEngine(
-                    interceptors = listOf(ServiceAreaStep()),
+                    interceptors = listOf(ServiceAreaStep { ServiceArea.LJUBLJANA }),
                     repository = PlainRepository,
                     config = PetichEngineConfig(requireOutbox = true),
                 )
@@ -35,6 +36,6 @@ class RequireOutboxTest {
 
     @Test
     fun `the same repository is accepted when the outbox is not required, which is the defect this guards`() {
-        PetichEngine(interceptors = listOf(ServiceAreaStep()), repository = PlainRepository)
+        PetichEngine(interceptors = listOf(ServiceAreaStep { ServiceArea.LJUBLJANA }), repository = PlainRepository)
     }
 }

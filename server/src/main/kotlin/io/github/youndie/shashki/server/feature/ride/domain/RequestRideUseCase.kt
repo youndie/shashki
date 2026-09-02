@@ -6,6 +6,7 @@ import io.github.youndie.shashki.server.common.UseCase
 import io.github.youndie.shashki.server.common.suspendRunCatching
 import io.github.youndie.shashki.server.feature.ride.saga.ORDER_SAGA_TYPE
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
@@ -24,12 +25,28 @@ public class RequestRideUseCase(
     private val engine: PetichEngine,
     private val rides: RideRepository,
     private val clock: PetichClock,
+    /**
+     * Where a ride can start and end (B-57).
+     *
+     * **Before the saga, because the saga cannot refuse this politely.** petich runs `ENRICHMENT`
+     * before `VALIDATION`, so `QuoteStep` asks the router first and the router throws for a point it
+     * cannot snap — which arrives as `PetichResult.SystemFailure` and leaves the route answering 500
+     * with GraphHopper's own text about coordinates and bounds. The same condition is a 422 on
+     * `/api/routes` and `/api/quotes`. One condition, one answer, and the polite one.
+     *
+     * `ServiceAreaStep` stays where it is: a saga resumed from a row has to validate again, and this
+     * check is about not starting one.
+     */
+    private val servedArea: () -> ServiceArea,
     private val ids: () -> String = { UUID.randomUUID().toString() },
 ) : UseCase<RequestRideUseCase.Params, RideView> {
     override suspend fun invoke(params: Params): Result<RideView> =
         suspendRunCatching {
             val rideId = ids()
             val request = params.request
+            val area = servedArea()
+            if (request.pickup !in area) throw OutsideServiceAreaException("pickup")
+            if (request.dropoff !in area) throw OutsideServiceAreaException("dropoff")
             val payload =
                 OrderPayload(
                     rideId = rideId,
@@ -67,3 +84,13 @@ public class RequestRideUseCase(
         public val riderEmail: String? = null,
     )
 }
+
+/**
+ * A journey with an end the roads do not reach (B-57).
+ *
+ * The word is the one a rider can act on — which end of the journey is the problem — rather than the
+ * router's, which names a coordinate they never typed and the bounding box of an extract.
+ */
+public class OutsideServiceAreaException(
+    public val end: String,
+) : IllegalArgumentException("the $end is outside the area this service covers")

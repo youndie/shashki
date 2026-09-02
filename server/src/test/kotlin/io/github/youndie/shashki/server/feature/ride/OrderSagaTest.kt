@@ -22,6 +22,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import io.github.youndie.shashki.server.testing.FixedCandidateSource
 import io.github.youndie.shashki.server.testing.PostgresHarness
@@ -63,7 +64,7 @@ class OrderSagaTest {
         val offers = offerStep(candidates)
         return listOf(
             QuoteStep(StraightLineRouteEstimator(), Pricing()),
-            ServiceAreaStep(),
+            ServiceAreaStep { ServiceArea.LJUBLJANA },
             HoldPaymentStep(payments),
             offers,
             DriverAnswerStep(candidates, reservations, offers),

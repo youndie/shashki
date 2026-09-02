@@ -1,7 +1,7 @@
 ---
 id: B-57
 title: "A pickup outside the graph is 422 on two routes and 500 on the one a rider uses"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -43,3 +43,31 @@ rollback") describes a position in the saga it does not occupy.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderSteps.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/RideRouting.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/route/`
+
+## What it turned out to be
+
+**The check moved in front of the saga, and the area moved into the graph.**
+
+`RequestRideUseCase` refuses before a `Petich` row exists, throwing `OutsideServiceAreaException`,
+which `StatusPages` maps to the same **422** the two other routes give — deliberately the same,
+because a pickup outside the city and a pickup the router cannot snap are one condition for a rider.
+`ServiceAreaStep` stays where it is: a saga resumed from a row has to validate again, and this check
+is about not starting one.
+
+**`RouteEstimator.servedArea` is now the single answer**, read from `hopper.baseGraph.bounds`. The
+constant beside the step said 45.95…46.30 / 14.35…14.70 and the extract spans 45.867…46.264 /
+14.221…14.827 — a point could be inside either and outside the other, and both mistakes were live:
+a journey priced and then cancelled with no reason, and a router that threw where the step said the
+area was fine. `ServiceArea` moved next to the port, because it is a property of the roads.
+`StraightLineRouteEstimator` keeps `LJUBLJANA` and says why: it can price a line between any two
+points on earth, so its served area is a decision rather than a fact.
+
+**And the graph guard's control stopped borrowing production code.** `KoinGraphTest`'s trap used
+`RequestRideUseCase` to demonstrate that `verify()` skips a defaulted lambda; its constructor has now
+changed twice underneath it — a clock in B-45, the served area here — and each time the control had
+to be repaired before it could report anything. It has a two-line class of its own now. A control
+that depends on production code keeping a shape is a control that reports on that shape.
+
+**Verified through the route**, with the control: two tests post a ride with each end in turn at
+null island, assert 422 and the word that says which end is the problem, and assert no ride reached
+the rider's own list. Removing the check makes both fail.

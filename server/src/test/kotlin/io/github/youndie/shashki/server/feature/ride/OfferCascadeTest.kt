@@ -22,6 +22,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import io.github.youndie.shashki.server.pricing.StraightLineRouteEstimator
 import io.github.youndie.shashki.server.testing.FixedCandidateSource
 import io.github.youndie.shashki.server.testing.PostgresHarness
@@ -68,7 +69,7 @@ class OfferCascadeTest {
     private val steps: List<PetichInterceptor<*>> =
         listOf(
             QuoteStep(StraightLineRouteEstimator(), Pricing()),
-            ServiceAreaStep(),
+            ServiceAreaStep { ServiceArea.LJUBLJANA },
             HoldPaymentStep(payments),
             offers,
             DriverAnswerStep(FixedCandidateSource(), reservations, offers),

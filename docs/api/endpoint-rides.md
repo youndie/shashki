@@ -17,6 +17,22 @@ parent_feature: feature-order-a-ride
 > classes named in `contract_source`; they are compiled into both sides, so there is nothing here to
 > copy and nothing to keep in step.
 
+## Outside the city (B-57)
+
+`POST /api/rides` answers **422** with `the pickup is outside the area this service covers` — the
+same status `/api/routes` and `/api/quotes` give for the same condition, and no ride row is written.
+
+**It used to answer 500** with GraphHopper's own sentence about a coordinate and a bounding box.
+petich runs `ENRICHMENT` before `VALIDATION`, so `QuoteStep` asked the router before `ServiceAreaStep`
+— the step whose whole purpose is to refuse this politely — ever ran, and the router's throw arrived
+as a systemic saga failure. The check now happens in `RequestRideUseCase`, before a saga exists; the
+step stays, because a saga resumed from a row has to validate again.
+
+**And the area is the graph's own bounds.** It used to be a constant beside the step (45.95…46.30 /
+14.35…14.70) while the extract spanned 45.867…46.264 / 14.221…14.827, so a point could be inside one
+and outside the other in both directions. `RouteEstimator.servedArea` is now the one answer, read
+from the loaded graph.
+
 ## Routes — all of them, no exceptions
 
 | Method and path | Auth tier | Purpose |

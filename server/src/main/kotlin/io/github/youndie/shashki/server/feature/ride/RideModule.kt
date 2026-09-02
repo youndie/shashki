@@ -194,7 +194,7 @@ public fun rideModule(
             val tracing = get<Observability>()
             listOf(
                 QuoteStep(get(), get()),
-                ServiceAreaStep(),
+                ServiceAreaStep { get<RouteEstimator>().servedArea },
                 HoldPaymentStep(get()),
                 get<OfferStep>(),
                 DriverAnswerStep(get(), get(), get()),
@@ -243,5 +243,14 @@ public fun rideModule(
         // constructor parameter through Koin, default values included, and the use case's `ids`
         // is a `() -> String` with a default that no binding provides. Compilation is silent about
         // it; the first request answers 500 with NoDefinitionFoundException for `Function0`.
-        factory { RequestRideUseCase(engine = get(), rides = get(), clock = get()) }
+        factory {
+            RequestRideUseCase(
+                engine = get(),
+                rides = get(),
+                clock = get(),
+                // The graph's own bounds, resolved at call time: the estimator opens the graph
+                // lazily and a use case built at startup must not force it (B-57).
+                servedArea = { get<RouteEstimator>().servedArea },
+            )
+        }
     }

@@ -19,6 +19,43 @@ public interface RouteEstimator {
         from: GeoPoint,
         to: GeoPoint,
     ): RouteEstimate
+
+    /**
+     * Where this estimator can answer at all (B-57).
+     *
+     * **One area, and it belongs to whatever holds the roads.** It used to be a constant beside the
+     * saga's validation step — 45.95…46.30 / 14.35…14.70, "the city and its airport, generously" —
+     * while the extract the router actually loaded spans 45.867…46.264 / 14.221…14.827. A point can
+     * be inside one and outside the other, and both mistakes are real: a journey priced and then
+     * cancelled with no reason, and a router that throws where the step said the area was fine. The
+     * step's own note said B-06 would replace the guess with the extract's bounds and nothing had.
+     */
+    public val servedArea: ServiceArea
+}
+
+/**
+ * A rectangle a rider can be picked up in.
+ *
+ * Here rather than beside the saga because it is a property of the roads, and the roads are what an
+ * estimator has.
+ */
+public data class ServiceArea(
+    val south: Double,
+    val north: Double,
+    val west: Double,
+    val east: Double,
+) {
+    public operator fun contains(p: GeoPoint): Boolean = p.lat in south..north && p.lon in west..east
+
+    public companion object {
+        /**
+         * The city and its airport, generously — for an estimator that has no graph to ask.
+         *
+         * `StraightLineRouteEstimator` can price a line between any two points on earth, so its
+         * *served* area is a decision rather than a fact, and this is that decision: the demo's city.
+         */
+        public val LJUBLJANA: ServiceArea = ServiceArea(south = 45.95, north = 46.30, west = 14.35, east = 14.70)
+    }
 }
 
 public data class RouteEstimate(
@@ -48,6 +85,8 @@ public class StraightLineRouteEstimator(
         val metres = haversineMetres(from, to)
         return RouteEstimate(metres.roundToInt(), (metres / speedMetresPerSecond).roundToInt())
     }
+
+    override val servedArea: ServiceArea = ServiceArea.LJUBLJANA
 
     private companion object {
         /** 30 km/h. A city average, and a hypothesis until B-23 routes on real roads. */

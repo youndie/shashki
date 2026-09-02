@@ -14,6 +14,7 @@ import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.rating.domain.NotFinishedException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
+import io.github.youndie.shashki.server.feature.ride.domain.OutsideServiceAreaException
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
 import io.github.youndie.shashki.server.feature.ride.driverRoutes
 import io.github.youndie.shashki.server.feature.ride.rideModule
@@ -171,6 +172,12 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
                 HttpStatusCode.UnprocessableEntity,
                 ErrorBody(e.message ?: "no route"),
             )
+        }
+        // The same 422 as `NoRouteException`, and deliberately so: a pickup outside the city and a
+        // pickup the router cannot snap are one condition for a rider, and answering them
+        // differently is how `POST /api/rides` came to give 500 where `/api/quotes` gave 422 (B-57).
+        exception<OutsideServiceAreaException> { call, e ->
+            call.respond(HttpStatusCode.UnprocessableEntity, ErrorBody(e.message ?: "outside the service area"))
         }
         exception<OptimisticLockException> { call, _ ->
             call.respond(HttpStatusCode.Conflict, ErrorBody("concurrent modification, retry"))

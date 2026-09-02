@@ -11,6 +11,7 @@ import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
+import io.github.youndie.shashki.server.pricing.ServiceArea
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ru.workinprogress.petich.InterceptorResult
@@ -124,7 +125,11 @@ public class QuoteStep(
  * extract it should be read from. It reaches the airport, because the kit's fixtures go there.
  */
 public class ServiceAreaStep(
-    private val area: ServiceArea = ServiceArea.LJUBLJANA,
+    /**
+     * Asked of the estimator each time rather than captured (B-57): the area is the graph's, and the
+     * graph is opened lazily so that a module can be built without one.
+     */
+    private val area: () -> ServiceArea,
 ) : OrderStep() {
     override val phase: PetichPhase = PetichPhase.VALIDATION
 
@@ -133,24 +138,10 @@ public class ServiceAreaStep(
         payload: OrderPayload,
     ): InterceptorResult =
         when {
-            payload.pickup !in area -> InterceptorResult.Reject("pickup is outside the service area")
-            payload.dropoff !in area -> InterceptorResult.Reject("dropoff is outside the service area")
+            payload.pickup !in area() -> InterceptorResult.Reject("pickup is outside the service area")
+            payload.dropoff !in area() -> InterceptorResult.Reject("dropoff is outside the service area")
             else -> InterceptorResult.Proceed()
         }
-}
-
-public data class ServiceArea(
-    val south: Double,
-    val north: Double,
-    val west: Double,
-    val east: Double,
-) {
-    public operator fun contains(p: GeoPoint): Boolean = p.lat in south..north && p.lon in west..east
-
-    public companion object {
-        /** The city and its airport, generously. B-06 replaces the guess with the extract's bounds. */
-        public val LJUBLJANA: ServiceArea = ServiceArea(south = 45.95, north = 46.30, west = 14.35, east = 14.70)
-    }
 }
 
 /**
