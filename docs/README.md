@@ -24,10 +24,19 @@ layered; links run top to bottom.
 | API | `api/` | URL, method, auth tier, where the contract lives | the shared modules |
 | Service | `services/` | who owns the data, dependencies, deploy, local setup | this repository |
 
-**Only `research/` exists today, and that is not an omission.** There is no shashki source tree yet.
-A feature, screen, endpoint or service document written now would describe intent, and the one rule
-this tree is built on is that `main` describes what exists. The four lower layers arrive with the
-code they describe, one feature at a time, starting with the order saga.
+**All five layers exist since 2026-09-02** ([B-40](../backlog/B-40-the-documentation-layers.md)).
+For the first thirty-four items only `research/` did, and the rule that kept the others empty was
+right: `main` describes what exists, and a document written before the code describes intent as fact.
+The condition it was waiting for has now been met several times over — the screens are photographed,
+the endpoints are tested, the service has two sagas in it — so what the rule protected had become the
+absence itself.
+
+**What the layers are for, and what they must not become.** The research records *why the shape is
+this shape*, dated, with wrong ideas kept beside their corrections; a feature document says what the
+system does today. Folding the second into the first is how a research document becomes a manual
+nobody trusts, because a reader cannot tell which sentences are history. So these documents **link**
+to a research section rather than restating it — a second copy of an argument is an argument that
+will drift.
 
 **Backlog** — [backlog.md](../backlog.md): the index and the decisions; the items themselves are one
 file each in [`backlog/`](backlog/), cited as `[B-01](backlog/B-01-decide-the-browser-route.md)`.
@@ -86,5 +95,59 @@ the machine only guards the membership.
 - [x] [research-architecture](research/research-architecture.md) — what was verified against the
   stack's own artefacts and against upstream metadata: the design system's real divergence from the
   kit, what the four routes to a browser actually cost (including drawing the map ourselves, priced
-  in §1.8 rather than imagined), the nine decisions taken, and six risks with the machinery that
+  in §1.8 rather than imagined), the twelve decisions taken, and six risks with the machinery that
   mitigates each
+
+### Features (7)
+
+The product, in the order a ride goes through it, then the two capabilities that are not a step in it.
+
+- [x] [feature-order-a-ride](features/feature-order-a-ride.md) — the order saga: one road priced three
+  ways, a hold, and drivers asked one at a time. The feature the product exists to demonstrate, and
+  what is being demonstrated is what happens when the process dies part-way
+- [x] [feature-the-trip](features/feature-the-trip.md) — the stretch between accepting and settling
+  that is deliberately *not* a saga: four states, the driver's own, nothing to compensate
+- [x] [feature-settlement](features/feature-settlement.md) — the second saga: capture, payout,
+  receipt, events — and the same five phases with one different number when a rider cancels late
+- [x] [feature-sign-in](features/feature-sign-in.md) — PKCE from the browser against shildik, and the
+  token this server accepts. Neither half proves it alone
+- [x] [feature-server-driven-promo](features/feature-server-driven-promo.md) — the one screen the
+  server owns, and the boundary that keeps it the least important one
+- [x] [feature-the-map](features/feature-the-map.md) — the basemap drawn by this product rather than
+  by a library, because a map on somebody else's surface cannot appear in a golden
+- [x] [feature-crash-reports](features/feature-crash-reports.md) — what a browser loses, and the two
+  hooks that catch it
+
+### Screens / Flows (5)
+
+Three in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
+takes a state and a callback, so a golden of it needs no graph and no server.
+
+- [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
+  going, what each class costs and how long the wait is
+- [x] [screen-rider-trip](screens/screen-rider-trip.md) — the road in two phases, the car on it, and
+  the driver row whose registration is deliberately blank
+- [x] [screen-rider-promo](screens/screen-rider-promo.md) — whatever the server sent; the client owns
+  the vocabulary and one action
+- [x] [screen-driver-shift](screens/screen-driver-shift.md) — offline, waiting, or fifteen seconds to
+  decide. One screen, because that is how a shift feels
+- [x] [screen-driver-assigned-ride](screens/screen-driver-assigned-ride.md) — what was accepted, and
+  the one button that moves it along
+
+### API (4)
+
+Grouped by feature rather than by path, so the auth tier of a route is read beside the reason for it.
+
+- [x] [endpoint-rides](api/endpoint-rides.md) — the rider's own surface, including the one word that
+  means two mechanisms: cancel
+- [x] [endpoint-quotes](api/endpoint-quotes.md) — what a journey costs before anybody orders it, and
+  why both routes are public
+- [x] [endpoint-driver](api/endpoint-driver.md) — the position socket, the offer board and the trip's
+  transitions, with the auth hole named rather than implied
+- [x] [endpoint-screens](api/endpoint-screens.md) — the component tree, and what a client does with a
+  name it does not know
+
+### Services (1)
+
+- [x] [shashki-server](services/shashki-server.md) — one process that owns everything about a ride,
+  and the list of what it deliberately does not do

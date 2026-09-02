@@ -1,7 +1,7 @@
 ---
 id: B-40
 title: "The layers below the research, which the rule about main has been holding empty"
-status: open
+status: done
 priority: P1
 size: L
 stage: stage-3-surface
@@ -47,3 +47,41 @@ with the templates for all four sitting in `docs/templates/` unused. Thirty-four
   rather than restating it — a second copy of an argument is an argument that will drift.
 - Anchors: `docs/README.md`, `docs/templates/feature.md`, `docs/templates/endpoint.md`,
   `docs/templates/screen.md`, `docs/templates/service.md`
+
+## What it turned out to be
+
+**Seventeen documents, twenty-seven scenarios, and one defect the writing found.**
+
+The tree now has all five layers: one service, seven features, five screens and four endpoint
+documents, grouped by feature rather than by path so a route's auth tier is read beside the reason for
+it. Every scenario carries a link to a test, and `bdd_report.py --repos ..` confirms all twenty-seven
+name something that exists — two of them had to be rewritten to name a fixture rather than a `.png`,
+because "the golden is the automation" is true and unverifiable as written.
+
+**The auth-tier column is what earned the exercise.** Its first draft had `GET /api/rides/{id}` and
+`GET /api/rides/{id}/driver` as public, which is what a reader would guess. They are not: all four
+rider routes are inside `riderRoutes()`, so all four are behind the token. Checking that against
+`RideRouting.kt` rather than against memory found the document wrong — and then found something worse.
+
+**`:rider` never signs in.** `SignInAttempt` is built, tested against a live shildik and proven in a
+browser; the application's HTTP client attaches no `Authorization` header and nothing calls it. So
+with a provider configured the rider bundle gets 401 on every ride route, and the demo works only
+because the stand leaves the provider off. That is the **third** mechanism in this repository built at
+both ends and joined at neither, after kompot and the settlement's three pieces —
+[B-41](B-41-the-rider-actually-signs-in.md), filed at P0 because it is the one gap that makes a
+documented guarantee a fiction.
+
+**What the documents deliberately do not do is explain.** The research says *why the shape is this
+shape*, dated, with wrong ideas kept beside their corrections; these say what the system does today
+and link to the section rather than restating it. A second copy of an argument is an argument that
+will drift, and this tree already has one document worth trusting.
+
+**Where the quirks came from.** Every "Quirks" section here is a sentence that already existed as a
+comment beside the code that surprised somebody — the blank registration, the two meanings of
+cancelled, the offer with no address, the count of positions sent. Moving them into a document a
+reader can find is most of what the layer is for; leaving them only in KDoc means they are found by
+whoever is already in the file.
+
+**Not covered, and stated:** there is no document per component. `ClassTile` and `OfferCard` are
+documented by their goldens, and a screen document that listed a component's states would be a second
+copy of a picture.

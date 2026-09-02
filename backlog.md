@@ -44,11 +44,11 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-40](docs/backlog/B-40-the-documentation-layers.md) `[ ]` | The layers below the research, which the rule about main has been holding empty | P1 | L | - |
+| [B-41](docs/backlog/B-41-the-rider-actually-signs-in.md) `[ ]` | The rider application actually signs in, and puts the token on its requests | P0 | M | - |
 | [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
 | [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[ ]` | The service can be watched: metrik, tracy, telek and kompot's degradation sink | P2 | M | B-35 |
 
-## Closed (37)
+## Closed (38)
 
 **Remove the unknowns**
 
@@ -97,6 +97,7 @@ re-prioritising one must never move its file.
 - [B-32](docs/backlog/B-32-which-screens-the-server-sends.md) `[x]` - Which screens the server sends, and which the client draws
 - [B-33](docs/backlog/B-33-take-the-upstream-fixes.md) `[x]` - The three upstream fixes landed; take them and delete what they replace
 - [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[x]` - A headless browser on the build box, so the wasm target is run and not only compiled
+- [B-40](docs/backlog/B-40-the-documentation-layers.md) `[x]` - The layers below the research, which the rule about main has been holding empty
 
 **It runs somewhere that is not this laptop**
 

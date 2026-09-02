@@ -593,6 +593,22 @@ the route but the start: 3.2 seconds of import that the prepared directory turns
 the difference between a container that answers immediately and one that does not, and it is why the
 graph directory is configuration rather than a temporary file.
 
+**Consequence 1.6c3 — writing the layers down found the third mechanism joined at neither end
+(2026-09-02, [B-40](../backlog/B-40-the-documentation-layers.md)).** §1.6c1 and §1.6c2 record the two
+halves of sign-in, each proven against the other: the client's attempt is one shildik completes, and
+the token it obtains is one this server accepts. **The application joins them nowhere.** `:rider`
+never calls `SignInAttempt`, its HTTP client attaches no `Authorization` header, and all four rider
+routes are inside `riderRoutes()` — so a server with a provider configured answers the rider bundle
+401 on every one of them.
+
+Nothing measured this; it came out of filling in an auth-tier column against the routing file rather
+than against memory. The column's first draft had two of those four as public, which is what a reader
+would guess. [B-41](../backlog/B-41-the-rider-actually-signs-in.md) is the work.
+
+**That is three for the same shape** — kompot (§1.7c, B-32), the settlement's `capture` and receipt
+(§1.4c1, B-37), and now the token. Each was built at both ends by an item that was about one end, and
+each was found by something that had to look at both: a client, a saga, a document.
+
 **Consequence 1.6a1 — the broker was joined at one end for a month (2026-09-02,
 [B-38](../backlog/B-38-ride-events-on-booblik.md)).** §1.6a settled what does *not* go through
 booblik and the boundary held; what nobody noticed is that nothing went through it at all. The
