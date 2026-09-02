@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.driver.DriverIdentity
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOutcome
+import io.github.youndie.shashki.driver.feature.offer.domain.Board
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.remainingAtReceipt
 import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
@@ -40,6 +41,13 @@ public data class ShiftUiState(
      */
     val positionSource: PositionSource = PositionSource.CONFIGURED,
     val offer: OfferView? = null,
+    /**
+     * Why the board is not being read, or `null` when it is (B-64).
+     *
+     * **An empty board and an unreadable one used to be the same screen.** They are one word apart
+     * for a driver and a shift apart in what they mean.
+     */
+    val boardUnreachable: String? = null,
     val secondsLeft: Int = 0,
     val secondsTotal: Int = 0,
     val answering: Boolean = false,
@@ -151,7 +159,7 @@ public class ShiftViewModel(
             }
         poll =
             scope.launch {
-                watchOffer(driverId).collect { offer -> onOffer(offer) }
+                watchOffer(driverId).collect { board -> onBoard(board) }
             }
     }
 
@@ -164,6 +172,26 @@ public class ShiftViewModel(
         countdown = null
         finished = null
         _uiState.value = ShiftUiState(driverLabel = identity.current())
+    }
+
+    private fun onBoard(board: Board) {
+        when (board) {
+            is Board.Unreachable -> {
+                // The card that is up stays up: the offer is the server's open question and a poll
+                // this client could not make is not the server withdrawing it.
+                _uiState.value = _uiState.value.copy(boardUnreachable = board.message)
+            }
+
+            Board.Empty -> {
+                _uiState.value = _uiState.value.copy(boardUnreachable = null)
+                onOffer(null)
+            }
+
+            is Board.Offered -> {
+                _uiState.value = _uiState.value.copy(boardUnreachable = null)
+                onOffer(board.offer)
+            }
+        }
     }
 
     private fun onOffer(offer: OfferView?) {
@@ -184,15 +212,24 @@ public class ShiftViewModel(
                 .coerceAtLeast(0)
         _uiState.value = _uiState.value.copy(offer = offer, secondsLeft = seconds, secondsTotal = seconds)
         countdown?.cancel()
+        // **An offer that arrives with nothing left is drawn and not counted down** (B-64). Starting
+        // a countdown at zero runs `clearOffer` in the same frame, which takes the card away *and*
+        // files the ride as finished — so every later poll carrying it is ignored and the driver
+        // never sees an offer the server is still waiting on. Whether an answer was in time is
+        // settled where the saga is; the board going empty is what takes this card down.
         countdown =
-            scope.launch {
-                var left = seconds
-                while (left > 0) {
-                    delay(1.seconds)
-                    left -= 1
-                    _uiState.value = _uiState.value.copy(secondsLeft = left)
+            if (seconds <= 0) {
+                null
+            } else {
+                scope.launch {
+                    var left = seconds
+                    while (left > 0) {
+                        delay(1.seconds)
+                        left -= 1
+                        _uiState.value = _uiState.value.copy(secondsLeft = left)
+                    }
+                    clearOffer()
                 }
-                clearOffer()
             }
     }
 

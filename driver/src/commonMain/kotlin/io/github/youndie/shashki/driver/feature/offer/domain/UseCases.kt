@@ -22,20 +22,54 @@ import kotlin.time.Duration.Companion.seconds
  * and a second thing to get wrong for a message that arrives once an hour. The server's own
  * `FindOfferUseCase` says "what the driver's app polls" in as many words.
  *
- * Errors are dropped rather than emitted: a poll that failed is one the next one repeats in two
- * seconds, and a driver does not need to be told about it.
+ * **A poll that failed and a board that is empty are different facts** (B-64). This used to emit
+ * `runCatching { … }.getOrNull()`, so a body that would not parse, a token that expired mid-shift and
+ * a transport error all arrived at the screen as *no offer* — silently, for as long as they lasted.
+ * The comment above them said a driver does not need to be told, and that is true of one failed poll
+ * and false of every poll failing: the screen then shows a shift in which nothing is happening while
+ * the server is waiting for an answer. So the outcome is named, and the screen decides what to say.
  */
 public class WatchOfferUseCase(
     private val offers: OfferRepository,
     private val interval: Duration = 2.seconds,
 ) {
-    public operator fun invoke(driverId: String): Flow<OfferView?> =
+    public operator fun invoke(driverId: String): Flow<Board> =
         flow {
             while (true) {
-                emit(runCatching { offers.forDriver(driverId) }.getOrNull())
+                // `suspendRunCatching` and not `runCatching`: the ordinary one swallows
+                // `CancellationException`, so going offline would look like a failed poll.
+                emit(
+                    suspendRunCatching { offers.forDriver(driverId) }
+                        .fold(
+                            onSuccess = { offer -> offer?.let(Board::Offered) ?: Board.Empty },
+                            onFailure = { Board.Unreachable(it.message ?: "the board could not be read") },
+                        ),
+                )
                 delay(interval)
             }
         }
+}
+
+/** What the last poll of the board found. */
+public sealed interface Board {
+    /** The server has no offer for this driver. */
+    public data object Empty : Board
+
+    public data class Offered(
+        val offer: OfferView,
+    ) : Board
+
+    /**
+     * The board could not be read at all.
+     *
+     * **Not the same as empty, which is the whole point of this type.** A driver whose client cannot
+     * reach the board sees the same screen as a driver nobody is offering anything to, and there is
+     * no way to tell them apart from the outside — which is how an offer that arrived at the client
+     * and never reached the screen went unnoticed on a running stand.
+     */
+    public data class Unreachable(
+        val message: String,
+    ) : Board
 }
 
 /**

@@ -210,6 +210,96 @@ class ShiftViewModelTest {
     private val device = MutableSharedFlow<GeoPoint>(extraBufferCapacity = 4)
 
     /**
+     * **A board that cannot be read is not an empty board** (B-64).
+     *
+     * The two were one screen: `runCatching { … }.getOrNull()` turned every failure into *no offer*,
+     * so a client that could not parse what the server sent showed a quiet shift while the server
+     * waited for an answer. Nobody could have told the difference from the outside, and on a running
+     * stand nobody did.
+     */
+    @Test
+    fun `a board that cannot be read says so and keeps the card that is up`() =
+        runTest(dispatcher) {
+            offers.offer = FakeOfferRepository.offer(seconds = 15)
+            val model = viewModel(backgroundScope)
+
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(start)
+            assertNotNull(model.uiState.value.offer)
+            assertNull(model.uiState.value.boardUnreachable, "a working board reported trouble")
+
+            offers.unreadable = IllegalStateException("Serializer for class 'OfferView' is not found")
+            advanceTimeBy(3.seconds)
+
+            assertEquals(
+                "Serializer for class 'OfferView' is not found",
+                model.uiState.value.boardUnreachable,
+                "a failed poll was drawn as an empty board",
+            )
+            assertNotNull(model.uiState.value.offer, "a poll this client could not make took the card down")
+        }
+
+    /**
+     * **A second offer, after a first one ran out** (B-64).
+     *
+     * This is the sequence the running stand was in when the card never appeared: an offer expired,
+     * the board went empty, and the next ride was offered to the same driver. `finished` remembers
+     * the ride whose card was taken down so that a poll already in flight cannot put it straight
+     * back up — and if it were not cleared when the board goes empty, it would suppress every
+     * offer after the first one for the rest of the shift.
+     */
+    @Test
+    fun `an offer after an expired one still draws`() =
+        runTest(dispatcher) {
+            offers.offer = FakeOfferRepository.offer(seconds = 3, rideId = "ride-first")
+            val model = viewModel(backgroundScope)
+
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(start)
+            assertNotNull(model.uiState.value.offer, "the first offer never drew")
+
+            advanceTimeBy(4.seconds)
+            assertNull(model.uiState.value.offer, "the first offer outlived its seconds")
+
+            // The board goes empty, which is the server agreeing that the offer is gone.
+            offers.offer = null
+            advanceTimeBy(4.seconds)
+
+            offers.offer = FakeOfferRepository.offer(seconds = 15, rideId = "ride-second")
+            advanceTimeBy(4.seconds)
+
+            val second = model.uiState.value.offer
+            assertNotNull(second, "the second offer was suppressed by the first one's memory")
+            assertEquals("ride-second", second.rideId)
+        }
+
+    /**
+     * **An offer with no time left must not vanish silently** (B-64).
+     *
+     * If the server's two clocks arrive equal — a slow response, a rounded value — the countdown has
+     * nothing to count and `clearOffer` runs at once. The card would appear for one frame and be
+     * remembered as finished, so the same offer is then ignored for as long as it is on the board:
+     * a driver sees a shift with nothing in it while the server waits for an answer.
+     */
+    @Test
+    fun `an offer that arrives with no seconds left is not remembered as answered`() =
+        runTest(dispatcher) {
+            offers.offer = FakeOfferRepository.offer(seconds = 0, rideId = "ride-late")
+            val model = viewModel(backgroundScope)
+
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(start)
+
+            // Whatever the screen does with it, the offer is still the server's open question: the
+            // next poll carries the same ride and the screen has to be able to show it.
+            advanceTimeBy(3.seconds)
+            assertNotNull(
+                model.uiState.value.offer,
+                "an offer with no seconds left was taken down and then suppressed for ever",
+            )
+        }
+
+    /**
      * **The count is what the socket took, and a server that takes nothing must move it** (B-54).
      *
      * This is the state the running stand was in for the whole of B-53: the socket was open, frames

@@ -45,7 +45,13 @@ class FakeOfferRepository : OfferRepository {
     var gone: Boolean = false
     var answered: OfferAnswer? = null
 
-    override suspend fun forDriver(driverId: String): OfferView? = offer
+    /** A board this client cannot read — a body that will not parse, a 401, a dead network (B-64). */
+    var unreadable: Throwable? = null
+
+    override suspend fun forDriver(driverId: String): OfferView? {
+        unreadable?.let { throw it }
+        return offer
+    }
 
     override suspend fun answer(
         rideId: String,

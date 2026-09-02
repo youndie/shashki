@@ -44,6 +44,13 @@ public data class DriverShiftState(
      * until the screen says which (B-49).
      */
     val positionLabel: String? = null,
+    /**
+     * What is wrong with the board, or `null` when nothing is (B-64).
+     *
+     * **A shift with nothing happening and a shift this client cannot read look identical**, and
+     * only one of them is a quiet evening.
+     */
+    val boardLabel: String? = null,
     val offer: DriverOfferState? = null,
 )
 
@@ -155,7 +162,9 @@ public fun DriverShift(
                         Spacer(Modifier.height(GAP))
                         // Beside the count rather than under it: the count says the socket is alive
                         // and the source says what is travelling over it, and they are one fact.
-                        val line = listOfNotNull("$taken positions taken", state.positionLabel).joinToString(" · ")
+                        val line =
+                            listOfNotNull("$taken positions taken", state.positionLabel, state.boardLabel)
+                                .joinToString(" · ")
                         KvadrantText(line, style = type.meta.copy(color = colors.subtle))
                     }
                 }

@@ -72,6 +72,9 @@ public fun ShiftContent(
                 // **The word for it, chosen here.** The view model holds an enum and the screen
                 // draws a string; "configured" is the one a driver has to be able to read as "this
                 // is where I said I am", not as an error (B-49).
+                // The board's own trouble, in a driver's words: what they can do about it is
+                // nothing, and what it explains is why the shift is quiet (B-64).
+                boardLabel = uiState.boardUnreachable?.let { "offers unavailable" },
                 positionLabel =
                     when {
                         !uiState.online -> null
