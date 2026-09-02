@@ -39,11 +39,12 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (1)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-09 |
+| [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-28 |
+| [B-28](docs/backlog/B-28-the-client-application-shell.md) `[ ]` | A client application exists to put the screens in | P1 | L | - |
 
 ## Closed (26)
 

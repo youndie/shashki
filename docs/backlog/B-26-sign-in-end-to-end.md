@@ -5,7 +5,7 @@ status: open
 priority: P1
 size: M
 stage: stage-1-skeleton
-blocked_by: [B-09]
+blocked_by: [B-28]
 ---
 
 # B-26 — Rider and driver actually sign in, against a running shildik
@@ -16,7 +16,9 @@ because two things it needs do not exist yet.
 
 - **It needs an application to sign in from.** [B-01](B-01-decide-the-browser-route.md) settled the
   target on the day B-09 was built, so the rider and driver clients are still ahead. Until one of
-  them exists there is no redirect to follow and no callback to receive.
+  them exists there is no redirect to follow and no callback to receive. That is
+  [B-28](B-28-the-client-application-shell.md) — which this item was recorded as blocked by B-09 on
+  until B-09 closed and the real blocker had to be named.
 - **It needs a shildik to sign in to.** There is no compose file in shildik's repository, so
   standing one up locally — provider, realm, a public client per role, redirect URIs — is part of
   this item rather than a precondition someone else meets.
