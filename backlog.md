@@ -41,16 +41,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-47](docs/backlog/B-47-driver-onboarding-and-the-object-store.md) `[?]` | Driver onboarding, which is the one scenario the object store has left | P2 | L | B-52 |
 | [B-49](docs/backlog/B-49-the-drivers-real-position.md) `[?]` | The driver's real position, from the browser, or the reason it stays configured | P2 | S | B-52 |
-| [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
 | [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
-## Closed (48)
+## Closed (49)
 
 **Remove the unknowns**
 
@@ -108,6 +107,7 @@ re-prioritising one must never move its file.
 - [B-35](docs/backlog/B-35-the-server-as-an-image.md) `[x]` - The server as an image, and the graph that has to be inside it
 - [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[x]` - A chart, and the honest replica count that goes in it
 - [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[x]` - The service can be watched: metrik, tracy, telek and kompot's degradation sink
+- [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[x]` - The page on kotlin.website, beside mani: what shashki shows, in the stack's own words
 
 **The rest of the kit, and the hole the endpoint table names**
 

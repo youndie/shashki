@@ -1951,6 +1951,26 @@ a fee instead of a fare if the rider cancels after a driver was assigned. Kill t
 phase boundary and find no held payment and no reserved driver. Read what happened to the ride off
 the broker rather than off the database. Run all of it with `docker compose up`.
 
+### 5.2a What changed after v1 closed (2026-09-02, later the same day)
+
+**This section is v1's boundary and v1 lasted an afternoon.** The table below is kept as written —
+the wrong idea stays beside its correction — and what follows is what the stage-5 items did to it:
+
+| Then | Now | Item |
+|---|---|---|
+| the rider is shown a trip screen with no car | R5, R5·a and R10 are one screen with a state each; a cascade that runs out of drivers lands on *no cars nearby* | B-43 |
+| no rating stored, no tip | R8 exists; a tip is a `charge` with its own saga, payout row and compensation, and the rating is the candidate sort's first non-constant key | B-44 |
+| nothing lists a rider's rides | `GET /api/rides?mine`, drawn with kompot's own `TripRow` renderer | B-45 |
+| nothing sums the payout rows | `GET /api/driver/earnings`, D6 | B-46 |
+| every light variant unrecorded | 21 light goldens, and the defect they found (2.11:1) | B-48 |
+| the driver's four routes are public | behind the driver's token, the socket on a one-shot ticket | B-52 |
+| a driver is reserved for ever | released where the ride ends, and "available" now means one thing | B-42 |
+
+What is still open is B-47 and B-49 (both questions), B-50 (the image's size) and this page's own
+item. **The pattern in §5.5 held through all of it**: B-42 came from the stand, B-45's ordering came
+from a table with no clock in it, and B-48's defect came from the first light picture of a card the
+kit had only ever drawn dark.
+
 ### 5.3 What it does not show, by kit artboard
 
 Of the kit's eighteen screens and seven state branches, v1 draws about seven: R1 sign-in, R4 class
