@@ -1,7 +1,7 @@
 ---
 id: B-65
 title: "A server cannot build a FareBreakdown: the components live where Compose does"
-status: open
+status: question
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
@@ -47,3 +47,29 @@ Reverted, in one commit, with this item in its place.
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/kompot/ServerDrivenComponents.kt`,
   `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/promo/PromoRouting.kt`
+
+## What the measurement said (2026-09-03)
+
+**The processor cannot be pointed at another module, and that is read out of its bytecode.**
+`KompotRegistrySymbolProcessor` calls `Resolver.getSymbolsWithAnnotation` for
+`@KompotComponentMarker`; KSP answers that with the current module's own sources. There is no option
+to widen it — `kompotModuleTag` names the generated file, nothing more — and the processor never
+calls `getDeclarationsFromPackage`, which is the KSP call that would read a dependency.
+
+So the three candidates in the item are the three there are, and none of them is a refactor this
+item can simply do:
+
+* **kompot scans a dependency.** The right fix, in the right place, and not this repository's to
+  make. It needs an issue there with the measurement above — and filing in somebody else's
+  repository is asked for first.
+* **The renderers move to `:protocol`.** That is Compose in the module every headless consumer
+  depends on, which is what that module exists not to have.
+* **Declare the component twice with a test holding the two together.** Available tonight, and the
+  reason not to take it silently is that a copy of the contract is the thing this repository refuses
+  everywhere else — the endpoint tables, the DTOs, the pricing rules all say so in their own words. A
+  guard makes it arguable, not free.
+
+**Filed as a question rather than answered**, because which of the three is right is a decision about
+the stack rather than about this screen, and the honest state of a reference product is that its
+toolkit makes one of its own properties unreachable. The finding is written where a reader meets it:
+`ServerDrivenComponents.kt`'s own header, and research open question 4.

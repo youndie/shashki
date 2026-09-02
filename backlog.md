@@ -46,7 +46,7 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[ ]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
+| [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[?]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
 | [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | B-65 |
 | [B-62](docs/backlog/B-62-a-price-for-a-class-you-cannot-order.md) `[ ]` | R4 prices a class it has just said has no cars | P2 | XS | - |
 | [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[ ]` | The product has no driver record, so a rider is asked to rate an e-mail address | P2 | M | - |

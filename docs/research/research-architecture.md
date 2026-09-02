@@ -1894,6 +1894,31 @@ What is *not* fixed and is recorded instead: a bar's label in accent on light ch
 It is a control with a shape and a position, it is the kit's palette used as the kit uses it, and
 changing the hue would be this product editing the design it is demonstrating.
 
+### Open question 4. Where a server-driven component is declared (2026-09-03)
+
+**kompot's registry makes the sender impossible, and nobody had noticed because nobody had sent
+one.** `TripRow`, `FareBreakdown` and `EarningsTile` are declared in `:shared-ui` beside their
+renderers, because kompot's processor pairs the two and reads `@KompotComponentMarker` through KSP's
+`getSymbolsWithAnnotation` — which returns the current module's own sources and nothing from a
+dependency. `:shared-ui` carries Compose. A Ktor server cannot depend on it. Therefore the server
+cannot construct any of the three, and `FareBreakdown` — a receipt, which is the most obviously
+server-owned screen in this product — has had a renderer, a golden and no caller for two stages.
+
+That is the fifth mechanism in this repository built at both ends and joined at neither, and the
+first whose join is prevented by a toolkit rather than forgotten by us. It was measured: the classes
+were moved to `:protocol`, the server compiled against them, and `:shared-ui` failed with every
+reference in the generated registry an `ERROR TYPE`.
+
+| | What it costs |
+|---|---|
+| kompot scans a dependency's declarations | the toolkit's own change — `getDeclarationsFromPackage` exists in KSP for exactly this — and every consumer gets it |
+| the renderers move to the shared module | Compose in the module every headless thing depends on, which is the thing that module is for not having |
+| the component is declared twice, with a test holding the two together | a copy of the contract, guarded — the shape this repository refuses everywhere else, and the guard is the reason it would be arguable |
+
+Not resolved here. [B-65](../backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) is the record
+that a choice is owed, and [B-61](../backlog/B-61-the-history-row-and-the-receipt.md) is blocked on
+it — R9's rows and its months shipped; its receipt did not.
+
 ### Open question 2. One wasm bundle or two
 
 The brief proposes two, for a cleaner demo, and that is very likely right. It is worth re-asking once
