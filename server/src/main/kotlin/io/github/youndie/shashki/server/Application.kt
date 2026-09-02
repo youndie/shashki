@@ -4,6 +4,8 @@ import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
 import io.github.youndie.shashki.server.feature.auth.AuthConfig
+import io.github.youndie.shashki.server.feature.events.Events
+import io.github.youndie.shashki.server.feature.events.eventRoutes
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
@@ -50,7 +52,6 @@ import ru.workinprogress.petich.OptimisticLockException
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.SuspendedPetichSweeper
-import ru.workinprogress.petich.outbox.OutboxRecord
 import ru.workinprogress.petich.outbox.OutboxRelayWorker
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
@@ -195,6 +196,7 @@ public fun Application.shashki(
         promoRoutes()
         driverRoutes()
         driverPositionRoutes()
+        eventRoutes()
 
         // **Last, and a test rather than a hope.** `default("index.html")` under `/` answers any
         // path it is given, so the question is whether a literal `/api/...` route still wins. Ktor
@@ -211,17 +213,14 @@ public fun Application.shashki(
     val engine = get<PetichEngine>()
     SuspendedPetichSweeper(repository = storage.petiches, engineFor = { engine }, clock = get<PetichClock>())
         .start(this)
-    // Logging is the publisher until the broker is wired; an event that reaches the log has left
-    // the outbox, and that is the property B-11 is about. booblik is a later item.
-    OutboxRelayWorker(repository = storage.outbox, publisher = LoggingPublisher).start(this)
-}
-
-private object LoggingPublisher : ru.workinprogress.petich.outbox.OutboxPublisher {
-    private val log = LoggerFactory.getLogger("shashki.outbox")
-
-    override suspend fun publish(event: OutboxRecord) {
-        log.info("outbox → {} {} {}", event.type, event.id, event.payload)
-    }
+    // **The relay runs only when there is somewhere to deliver to** (B-38). Until then this started
+    // it against a `LoggingPublisher`, which marked every event delivered because it had written a
+    // line — not a fallback but a broker outage nobody could notice. With no broker the events stay
+    // in the outbox: unpublished, undelivered, and true.
+    val events = get<Events>()
+    events.publisher?.let { OutboxRelayWorker(repository = storage.outbox, publisher = it).start(this) }
+    // And the consumer, which is what makes the publisher distinguishable from a log line at all.
+    events.consumer?.start(this)
 }
 
 @Serializable

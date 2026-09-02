@@ -593,6 +593,30 @@ the route but the start: 3.2 seconds of import that the prepared directory turns
 the difference between a container that answers immediately and one that does not, and it is why the
 graph directory is configuration rather than a temporary file.
 
+**Consequence 1.6a1 — the broker was joined at one end for a month (2026-09-02,
+[B-38](../backlog/B-38-ride-events-on-booblik.md)).** §1.6a settled what does *not* go through
+booblik and the boundary held; what nobody noticed is that nothing went through it at all. The
+outbox was written, tested and relayed — to a `LoggingPublisher` in `Application.kt` whose comment
+read "booblik is a later item", and there was no later item. Four lines were missing at the far end,
+and their absence made the stack's broker a word in a comment.
+
+| Fact | Where |
+|---|---|
+| `io.github.youndie.booblik:booblik-client` publishes at **0.3.1** on `/snapshots`, the same number as `ghcr.io/youndie/booblik:0.3.1` — a client and a broker that disagree fail at the first METADATA | the repository listing; `libs.versions.toml` |
+| Topics are fixed at startup by design, so `ride-events:3` is a deployment fact rather than something the application can arrange | booblik's README, `docker/compose.yaml` |
+| The key picks the partition **client-side**, so keying by ride id makes a ride's events a sequence rather than a set | `Publishing.partitionFor` |
+| Koin binds only non-nullable types (`get<T : Any>`), so "no broker" cannot be a `single<Publisher?>` — it is a wrapper with two nulls, the shape `CrashReporting` already had on the client | `Events`, `RideModule` |
+
+**What replaced the log publisher is nothing.** With no broker configured the relay is not started at
+all: the events stay in the outbox, unpublished and undelivered, which is true. A publisher that
+logged and marked them delivered is not a fallback — it is an outage that cannot be noticed.
+
+**And a consumer, because a publisher alone is indistinguishable from what it replaced.**
+`GET /api/rides/{id}/history` is served from a projection built only from records taken off the
+topic — no saga row, no database — so the seam is observable from outside. It is in memory and
+rebuilt from `Earliest` on start, which is what a log-backed projection *is*: the honest limit is
+that retention bounds what it can know, and no store of its own would change that.
+
 **Consequence 1.6e1 — the graph goes in the image, and a graph is only valid for the profile that
 built it (2026-09-02, [B-35](../backlog/B-35-the-server-as-an-image.md)).** §1.6e measured 3 168 ms
 to import and 22 ms to open a prepared directory and concluded the directory is configuration rather

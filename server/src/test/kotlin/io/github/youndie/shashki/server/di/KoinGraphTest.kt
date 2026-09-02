@@ -1,6 +1,10 @@
 package io.github.youndie.shashki.server.di
 
 import io.github.youndie.shashki.server.billing.PayoutRepository
+import io.github.youndie.shashki.server.feature.events.Events
+import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
+import io.github.youndie.shashki.server.feature.events.data.BooblikRideHistory
+import io.github.youndie.shashki.server.feature.events.domain.RideHistory
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
@@ -27,6 +31,7 @@ import ru.workinprogress.petich.PetichRepository
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -70,6 +75,11 @@ class KoinGraphTest {
                     // `OfferTimeouts` takes its `onExpired` as a suspend lambda written in the
                     // module — a `Function3` once the continuation is counted.
                     definition<OfferTimeouts>(kotlin.jvm.functions.Function3::class),
+                    // `Events` is built by a lambda that constructs both halves from one address —
+                    // or neither. `verify()` sees a constructor with two parameters and asks the
+                    // container for each; declared per definition rather than as a global
+                    // `extraTypes`, so a real disappearance of the same type elsewhere stays visible.
+                    definition<Events>(BooblikOutboxPublisher::class, BooblikRideHistory::class),
                 ),
         )
     }
@@ -92,6 +102,13 @@ class KoinGraphTest {
         assertNotNull(koin.get<AdvanceTripUseCase>(), "the driver cannot move a trip")
         assertNotNull(koin.get<SettleRideUseCase>(), "nothing can start a settlement")
         assertNotNull(koin.get<SendReceiptUseCase>(), "the receipt is written and unbound again")
+
+        // **The broker's absence is a value and it resolves** (B-38). This test runs with no
+        // `SHASHKI_BOOBLIK`, which is the ordinary case for a checkout, so what it holds is that a
+        // server with nowhere to publish still builds its graph — the failure it prevents is a
+        // binding that only exists when a broker does.
+        assertNotNull(koin.get<RideHistory>(), "the projection is not in the graph")
+        assertNull(koin.get<Events>().publisher, "a publisher appeared with no broker configured")
     }
 
     /**

@@ -133,6 +133,19 @@ public class Rides {
         public val id: String,
     )
 
+    /**
+     * `GET /api/rides/{id}/history` — what happened to this ride, from the events alone.
+     *
+     * **Read from a projection of the broker's topic and not from the saga's row**, which is the
+     * whole point of it existing: a consumer that can say what a ride went through, built only from
+     * what was published, is the difference between a broker and a log line (B-38).
+     */
+    @Resource("{id}/history")
+    public class History(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
+
     /** `GET /api/rides/{id}/driver` — where the car this ride is waiting for has got to. */
     @Resource("{id}/driver")
     public class Driver(
@@ -140,6 +153,27 @@ public class Rides {
         public val id: String,
     )
 }
+
+/**
+ * One thing that happened to a ride, as a consumer of the topic sees it.
+ *
+ * **Deliberately not the event's own payload.** `ride.assigned` and `ride.settled` carry different
+ * fields and there will be more of them; a history is a *sequence*, and a reader asking "what
+ * happened" wants the order and the names rather than every field of each. The payloads stay on the
+ * topic for anybody who wants them.
+ */
+@Serializable
+public data class RideEventView(
+    val type: String,
+    val offset: Long,
+)
+
+/** Everything the projection knows about a ride, in the order the broker gave it. */
+@Serializable
+public data class RideHistoryView(
+    val rideId: String,
+    val events: List<RideEventView>,
+)
 
 /** What a driver does with an offer. Not answering is not a decision — the server times it out. */
 @Serializable

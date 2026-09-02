@@ -54,6 +54,7 @@ navigation3 = "1.2.0-alpha02"
 # The wasmJs target arrived with youndie/shildik#20.
 shildik = "0.2.0.13"
 # katcher's own wire types. The browser target arrived with youndie/katcher#32.
+booblik = "0.3.1"
 katcher = "0.6.40"
 kompot = "0.34.1.101"
 kvadrant = "0.2.0"
@@ -107,6 +108,11 @@ koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js" }
 
 katcher-shared = { module = "ru.workinprogress.katcher:shared", version.ref = "katcher" }
+
+# The broker the ride's own events go through. A numbered publish rather than `-SNAPSHOT` (B-13),
+# and the same number as the image the stand runs — a client and a broker that disagree about the
+# protocol version fail at the first METADATA rather than at the first record.
+booblik-client = { module = "io.github.youndie.booblik:booblik-client", version.ref = "booblik" }
 
 shildik-oidcAuthServer = { module = "ru.workinprogress.shildik:oidc-auth-server", version.ref = "shildik" }
 shildik-oidcAuthCore = { module = "ru.workinprogress.shildik:oidc-auth-core", version.ref = "shildik" }

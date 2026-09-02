@@ -12,6 +12,12 @@ import io.github.youndie.shashki.server.dispatch.GridDriverIndex
 import io.github.youndie.shashki.server.dispatch.InMemoryDriverReservations
 import io.github.youndie.shashki.server.dispatch.InMemoryOfferBoard
 import io.github.youndie.shashki.server.dispatch.OfferBoard
+import io.github.youndie.shashki.server.feature.events.Events
+import io.github.youndie.shashki.server.feature.events.EventsConfig
+import io.github.youndie.shashki.server.feature.events.data.BooblikOutboxPublisher
+import io.github.youndie.shashki.server.feature.events.data.BooblikRideHistory
+import io.github.youndie.shashki.server.feature.events.domain.InMemoryRideHistory
+import io.github.youndie.shashki.server.feature.events.domain.RideHistory
 import io.github.youndie.shashki.server.feature.quote.PickupEta
 import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
@@ -56,6 +62,7 @@ import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichInterceptor
 import ru.workinprogress.petich.PetichRepository
+import java.net.InetSocketAddress
 
 /**
  * The ride feature's graph. The database is handed in because it is built before Koin is, and the
@@ -89,6 +96,19 @@ public fun rideModule(
         // saga tests kill the process at phase boundaries and have no use for a routing graph.
         single<RouteEstimator> { routeEstimator }
         single { Pricing() }
+
+        // **The broker, or the honest absence of one, as one value.** Koin resolves by type and
+        // binds only non-nullable ones — `single<BooblikOutboxPublisher?>` does not compile — so the
+        // absence is a wrapper with two nulls in it rather than two missing bindings. The client's
+        // `CrashReporting` has the same shape.
+        single<RideHistory> { InMemoryRideHistory() }
+        single {
+            val address = EventsConfig.address()
+            Events(
+                publisher = address?.let { BooblikOutboxPublisher(it, scope) },
+                consumer = address?.let { BooblikRideHistory(it, get()) },
+            )
+        }
         // The receipt, bound at last. It was written and tested against a real SMTP server in B-14
         // and constructed by nobody — the settlement saga is what calls it (B-37).
         single<ReceiptSender> { receiptSender }

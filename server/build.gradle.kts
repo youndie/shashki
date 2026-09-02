@@ -44,6 +44,10 @@ dependencies {
     implementation(libs.shildik.oidcAuthServer)
     implementation(libs.shildik.oidcAuthCore)
 
+    // The broker. What goes through it is what happened to a *ride* — positions go straight into
+    // the geo-index over a socket and never enter a topic (research §1.6a).
+    implementation(libs.booblik.client)
+
     // The one screen the server owns, as a tree. `kompot-core` is the component model and
     // `kompot-standard` its vocabulary — neither carries Compose, which is what lets a headless
     // server build a screen at all. See B-32 and research §2 D11.

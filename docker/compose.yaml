@@ -75,6 +75,17 @@ services:
     ports:
       - "127.0.0.1:19000:9000"
 
+  # The broker a ride's own events go through (B-38). **Topics are fixed at startup** — booblik has
+  # no topic creation on purpose — so `ride-events:3` is a deployment fact rather than a default the
+  # application can arrange for itself. Three partitions because the key is the ride's id: everything
+  # that happens to one ride lands on one partition, in order.
+  booblik:
+    image: ghcr.io/youndie/booblik:0.3.1
+    environment:
+      BOOBLIK_TOPICS: ride-events:3
+    ports:
+      - "127.0.0.1:19092:9092"
+
   # shashki's own database. A second Postgres rather than a second schema in shildik's: they are two
   # services, and a demo that shares one instance teaches the wrong shape for the sake of 30 MB.
   shashki-db:
@@ -103,6 +114,8 @@ services:
     depends_on:
       shashki-db:
         condition: service_healthy
+      booblik:
+        condition: service_started
     environment:
       DB_URL: jdbc:postgresql://shashki-db:5432/shashki
       DB_USER: shashki
@@ -115,5 +128,8 @@ services:
       # Where the browser fetches tiles from. Not this server: B-07 settled that the archive is a
       # static object somewhere else, and 127.0.0.1 is the address a *browser* reaches bochka at.
       SHASHKI_TILES_URL: http://127.0.0.1:19000/tiles/Ljubljana.pmtiles
+      # Without this the relay is not started at all and a ride's events stay in the outbox — which
+      # is true, and is what a server with no broker should say rather than logging them delivered.
+      SHASHKI_BOOBLIK: booblik:9092
     ports:
       - "127.0.0.1:18080:8080"

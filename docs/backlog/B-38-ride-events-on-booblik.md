@@ -1,7 +1,7 @@
 ---
 id: B-38
 title: "Ride events reach booblik, so the broker stops being a comment"
-status: open
+status: done
 priority: P1
 size: M
 stage: stage-2-saga
@@ -47,3 +47,48 @@ word in that comment.
   this is the item that adds the dependency.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/Application.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderSaga.kt`
+
+## What it turned out to be
+
+**Four lines at the far end, and the four lines were the whole point.** The outbox was already right
+— a ride's state change and the record of it in one transaction, retried with backoff, dead-lettered
+after five attempts — and it delivered to a `LoggingPublisher` whose own comment said booblik was a
+later item. There was no later item, so the stack's broker existed in this product as a word in a
+comment.
+
+**What replaced the log publisher is nothing.** With no `SHASHKI_BOOBLIK` the relay is *not started*:
+the events stay in the outbox, unpublished and undelivered, and the server says so at `warn`. That
+reads worse than a log line and is better — a publisher that writes a line and marks the event
+delivered is not a fallback, it is a broker outage nobody can notice. The AC asked for
+`LoggingPublisher` to be deleted rather than kept as a fallback; deleting it left the question of
+what a server with no broker does, and the answer is: less than it did, honestly.
+
+**The consumer is what makes the publisher distinguishable from what it replaced.**
+`GET /api/rides/{id}/history` is served from a projection built *only* from records taken off the
+topic — it never reads the saga's row, which every other route in this server does. A ride the topic
+has nothing about answers with an empty list rather than 404, because "the broker has nothing about
+it" and "there is no such ride" are different facts and the ride's own route already answers the
+second.
+
+**Keying by ride id is what makes a history a sequence.** booblik picks the partition from the key
+client-side, so everything that happens to one ride lands on one partition in the order it happened
+— and the test asserts the offsets increase rather than merely that both events arrived. The id is
+read off the outbox record (`<rideId>:assigned`) rather than carried as a second field: if a future
+event ever has a different shape of id the partition is wrong and nothing else is, which is the
+failure this can afford.
+
+**Koin decided the shape of the absence.** `single<BooblikOutboxPublisher?>` does not compile —
+`get<T>` is bound to `T : Any` — so "no broker" is an `Events` wrapper holding two nulls, which is
+the shape `CrashReporting` already has on the client. My first attempt argued against exactly that
+wrapper in a comment; the type system settled it.
+
+**And `verify()` had to be told.** `Events` is built by a lambda that constructs both halves from one
+address, so the static verifier saw a two-parameter constructor and asked the container for each —
+declared per definition rather than as a global `extraTypes`, so a genuine disappearance of the same
+type elsewhere stays visible.
+
+The end-to-end runs against a real broker and is gated on one: a ride is assigned and driven to
+completion, and both events cross the database, the relay, booblik and a consumer that shares nothing
+with the saga before coming back as a history somebody can read. Plus three ungated tests of the
+projection, including the one rule it has — a batch that arrives twice is one event, because a
+reconnecting consumer re-reads from where it was.

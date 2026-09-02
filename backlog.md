@@ -40,16 +40,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-38](docs/backlog/B-38-ride-events-on-booblik.md) `[ ]` | Ride events reach booblik, so the broker stops being a comment | P1 | M | - |
 | [B-40](docs/backlog/B-40-the-documentation-layers.md) `[ ]` | The layers below the research, which the rule about main has been holding empty | P1 | L | - |
 | [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
 | [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[ ]` | The service can be watched: metrik, tracy, telek and kompot's degradation sink | P2 | M | B-35 |
 
-## Closed (36)
+## Closed (37)
 
 **Remove the unknowns**
 
@@ -82,6 +81,7 @@ re-prioritising one must never move its file.
 - [B-20](docs/backlog/B-20-matching-geo-index-and-driver-simulator.md) `[x]` - Matching: the geo-index, the candidate query and the driver simulator
 - [B-23](docs/backlog/B-23-routes-and-eta-on-embedded-graphhopper.md) `[x]` - Routes and ETA through GraphHopper embedded in the server
 - [B-37](docs/backlog/B-37-the-settlement-saga.md) `[x]` - The settlement saga, whose parts are all written and none of them called
+- [B-38](docs/backlog/B-38-ride-events-on-booblik.md) `[x]` - Ride events reach booblik, so the broker stops being a comment
 
 **Everything past the core**
 
