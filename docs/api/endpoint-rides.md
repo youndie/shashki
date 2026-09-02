@@ -67,6 +67,12 @@ puts it in the token, so a token proves somebody signed in and not that the ride
 That divergence is [research §1.4c](../research/research-architecture.md) and is most of why this
 product exists; `SettlementTest` shows both numbers in one test.
 
+**`RideView.cancellationFeeCents` is that table as a number** (B-43): `0` while the saga is waiting,
+the fee once a driver is assigned, `null` when the ride can no longer be cancelled. It is on the wire
+because R10 shows the amount before the button, and a client that multiplied the fare by 0.25 itself
+would be a second copy of a pricing rule — the first coefficient change would have the screen
+promising one number and the settlement charging another.
+
 ## Errors
 
 | Condition | Status | Body |

@@ -71,46 +71,60 @@ public fun RiderTripInProgress(
     onCall: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * R10 over the top, or `null` (B-43).
+     *
+     * **The same confirmation as the wait's, and this is where it costs money.** Cancelling before a
+     * driver is assigned compensates the order saga and charges nothing; from here a driver has set
+     * off, and the fee in [prompt] is the number the settlement is about to take.
+     */
+    prompt: CancelPrompt? = null,
+    onConfirmPrompt: () -> Unit = {},
+    onDismissPrompt: () -> Unit = {},
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
     val type = ShashkiTheme.typography
 
-    Column(modifier.fillMaxSize().background(colors.background)) {
-        // More map than R4 gives it: this is the screen the rider watches rather than reads, and
-        // the panel below carries three rows where R4's carries three tiles and a payment line.
-        MapPane(scene, Modifier.fillMaxWidth().height(MAP_HEIGHT))
+    Box(modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().background(colors.background)) {
+            // More map than R4 gives it: this is the screen the rider watches rather than reads, and
+            // the panel below carries three rows where R4's carries three tiles and a payment line.
+            MapPane(scene, Modifier.fillMaxWidth().height(MAP_HEIGHT))
 
-        Column(
-            Modifier.weight(1f).padding(start = metrics.margin, top = 20.dp, end = metrics.margin),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
+            Column(
+                Modifier.weight(1f).padding(start = metrics.margin, top = 20.dp, end = metrics.margin),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                KvadrantText(headline, style = type.figure)
-                KvadrantText(meta, style = type.body.copy(color = colors.subtle))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    KvadrantText(headline, style = type.figure)
+                    KvadrantText(meta, style = type.body.copy(color = colors.subtle))
+                }
+
+                DriverRow(driver)
+
+                // **One accent surface, and on this screen it is the plate.** The kit's rule allows one;
+                // R4 spends it on the selected class tile. Here nothing is being chosen, and the thing a
+                // rider looks for on a street is the registration.
+                Box(
+                    Modifier
+                        .background(colors.accent)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    KvadrantText(driver.plate, style = type.rowEmphasis.copy(color = colors.onAccent))
+                }
+
+                Spacer(Modifier.height(0.dp))
             }
 
-            DriverRow(driver)
-
-            // **One accent surface, and on this screen it is the plate.** The kit's rule allows one;
-            // R4 spends it on the selected class tile. Here nothing is being chosen, and the thing a
-            // rider looks for on a street is the registration.
-            Box(
-                Modifier
-                    .background(colors.accent)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            ) {
-                KvadrantText(driver.plate, style = type.rowEmphasis.copy(color = colors.onAccent))
-            }
-
-            Spacer(Modifier.height(0.dp))
+            TripBar(stage, actionLabel, onCall, onCancel)
         }
 
-        TripBar(stage, actionLabel, onCall, onCancel)
+        CancelPromptBox(prompt, onConfirmPrompt, onDismissPrompt)
     }
 }
 

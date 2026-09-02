@@ -9,8 +9,11 @@ import io.github.youndie.shashki.ui.map.MapCamera
 import io.github.youndie.shashki.ui.map.MapPin
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
+import io.github.youndie.shashki.ui.screens.CancelPrompt
+import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
+import io.github.youndie.shashki.ui.screens.RiderMatching
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
 /**
@@ -59,6 +62,88 @@ internal fun RiderClassPickerFixture() {
                 onOrder = {},
             )
         }
+    }
+}
+
+/**
+ * R5: the wait, with no map on it.
+ *
+ * **The dots are animated and the golden is a still, which is the honest limit of this image.** What
+ * it holds is the layout — a 24/300 headline, the kit's five dots below it, the destination on the
+ * baseline and one action in the bar — and not the 4.4-second cycle, which `KvadrantProgressTest` in
+ * the kit owns. A golden that tried to pin the animation would be a golden that fails on timing.
+ */
+@ViddikScreenshot(name = "rider matching", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderMatchingFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderMatching(
+            stage = MatchingStage.LOOKING,
+            headline = "looking for a car",
+            supporting = "asking the drivers around you",
+            destination = "airport",
+            meta = "22.8 km · 35 min",
+            actionLabel = "cancel",
+            onAction = {},
+        )
+    }
+}
+
+/**
+ * R5·a: the cascade ran out of drivers.
+ *
+ * The headline is the kit's largest — 54/200, the same slot a fare uses — because this is an answer
+ * rather than a status. **There is no *notify me* beside *try again*** and there is deliberately no
+ * disabled one either: the subscription and the push it needs do not exist in this product, and a
+ * greyed button is a promise (B-43).
+ */
+@ViddikScreenshot(name = "rider no cars nearby", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderNoCarsNearbyFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderMatching(
+            stage = MatchingStage.NO_CARS,
+            headline = "no cars nearby",
+            supporting = "nobody is driving here right now",
+            destination = "airport",
+            meta = "22.8 km · 35 min",
+            actionLabel = "try again",
+            onAction = {},
+        )
+    }
+}
+
+/**
+ * R10: the confirmation, with the number on it.
+ *
+ * **The amount is in the message and that is the whole point of photographing this.** The fee is a
+ * quarter of the fare once a driver has set off, the server computes it, and the screen shows what
+ * it was given — a confirmation that said "a fee may apply" would pass every test and hide the one
+ * fact the rider needs.
+ */
+@ViddikScreenshot(name = "rider cancel confirm", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderCancelConfirmFixture() {
+    val latin = kvadrantLatin()
+    RiderTheme(latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderMatching(
+            stage = MatchingStage.LOOKING,
+            headline = "looking for a car",
+            supporting = "asking the drivers around you",
+            destination = "airport",
+            meta = "22.8 km · 35 min",
+            actionLabel = "cancel",
+            onAction = {},
+            prompt =
+                CancelPrompt(
+                    title = "cancel the ride?",
+                    message = "a driver is on the way, so cancelling now costs $ 7.24.",
+                    confirmLabel = "cancel the ride",
+                    dismissLabel = "keep waiting",
+                ),
+        )
     }
 }
 

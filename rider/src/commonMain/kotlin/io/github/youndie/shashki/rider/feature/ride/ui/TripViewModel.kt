@@ -26,6 +26,8 @@ public data class TripUiState(
     val stage: TripStage = TripStage.ARRIVING,
     val scene: MapScene = MapScene(camera = MapCamera(LJUBLJANA)),
     val cancelling: Boolean = false,
+    /** Whether R10 is up. The fee it shows is the ride's, never a rule repeated here (B-43). */
+    val confirming: Boolean = false,
 ) {
     public companion object {
         public val LJUBLJANA: io.github.youndie.shashki.protocol.GeoPoint =
@@ -35,7 +37,12 @@ public data class TripUiState(
 }
 
 public sealed interface TripUiAction {
+    /** Asks: R10 goes up with the fee on it. [ConfirmCancel] is the one that calls the server. */
     public data object Cancel : TripUiAction
+
+    public data object ConfirmCancel : TripUiAction
+
+    public data object DismissConfirm : TripUiAction
 
     public data object Call : TripUiAction
 }
@@ -117,8 +124,25 @@ public class TripViewModel(
 
     public fun onAction(action: TripUiAction) {
         when (action) {
-            TripUiAction.Call -> Unit
-            TripUiAction.Cancel -> cancel()
+            // Calling the driver is the kit's ring and nothing behind it: this product has no
+            // telephony, and a button that dialled nothing would be worse than one that waits.
+            TripUiAction.Call -> {}
+
+            // **Asked before done, and with the number** (B-43). From this screen a driver has set
+            // off, so cancelling settles a fee rather than rolling anything back — the one place in
+            // this product where a tap moves money without a second sentence.
+            TripUiAction.Cancel -> {
+                _uiState.value = _uiState.value.copy(confirming = true)
+            }
+
+            TripUiAction.DismissConfirm -> {
+                _uiState.value = _uiState.value.copy(confirming = false)
+            }
+
+            TripUiAction.ConfirmCancel -> {
+                _uiState.value = _uiState.value.copy(confirming = false)
+                cancel()
+            }
         }
     }
 

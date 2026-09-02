@@ -39,6 +39,17 @@ public sealed interface RiderRoute : NavKey {
         override val path: String get() = "/promo"
     }
 
+    /**
+     * The wait for a car (B-43). **An address of its own**, so a reload while the saga is still
+     * asking drivers comes back to the wait rather than to an empty picker.
+     */
+    @Serializable
+    public data class Matching(
+        val rideId: String,
+    ) : RiderRoute {
+        override val path: String get() = "/matching/$rideId"
+    }
+
     @Serializable
     public data class Trip(
         val rideId: String,
@@ -57,13 +68,32 @@ public sealed interface RiderRoute : NavKey {
          */
         public fun ofPath(path: String): RiderRoute? =
             when {
-                path == "/" || path.isEmpty() -> ClassPicker
-                path == Callback.path -> Callback
-                path == Promo.path -> Promo
-                path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
-                else -> null
+                path == "/" || path.isEmpty() -> {
+                    ClassPicker
+                }
+
+                path == Callback.path -> {
+                    Callback
+                }
+
+                path == Promo.path -> {
+                    Promo
+                }
+
+                path.startsWith(TRIP_PREFIX) -> {
+                    path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
+                }
+
+                path.startsWith(MATCHING_PREFIX) -> {
+                    path.removePrefix(MATCHING_PREFIX).takeIf { it.isNotBlank() }?.let(::Matching)
+                }
+
+                else -> {
+                    null
+                }
             }
 
         private const val TRIP_PREFIX = "/trip/"
+        private const val MATCHING_PREFIX = "/matching/"
     }
 }

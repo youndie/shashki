@@ -1,7 +1,7 @@
 ---
 id: B-43
 title: "The rider sees the wait and its end: matching, no cars nearby, and cancel"
-status: open
+status: done
 priority: P0
 size: M
 stage: stage-5-the-rest-of-the-kit
@@ -41,3 +41,40 @@ came" is invisible.
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/`,
   `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/`,
   `docs/screens/`
+
+## What it turned out to be
+
+**The server produced every state, and the one it does not produce is the one the screen needed.**
+`MATCHING` is a status, `ASSIGNED` is a status, and `CANCELLED` is *two events wearing one status*:
+the cascade ran out of drivers, and this rider pressed cancel a moment ago. Nothing on the wire tells
+them apart — the saga records no rejection reason for a compensated order — and only the client can,
+because it is the one that pressed. `MatchingUiState.cancelling` is set before the call and never
+lowered, which is what stops a rider who cancelled from being shown "no cars nearby": a screen
+blaming the city for their own decision.
+
+**R10 needed a number, and the number could not be the client's.** The fee is a quarter of the fare
+once a driver has set off — `Commission`'s rule, the one the settlement charges — and a screen that
+multiplied by 0.25 itself would be a second copy of a pricing rule, drifting the first time somebody
+moved the coefficient. So `RideView.cancellationFeeCents` is on the wire: `0` while the saga is still
+asking, the fee once a driver is assigned, `null` once the rider is in the car and there is nothing
+to confirm. Three answers, one test, and the confirmation shows the amount before the button.
+
+**Verified on the stand, not only in tests.** A driver online who never answers: the rider's screen
+went to *looking for a car* with the kit's dots, the driver's showed the offer card counting down
+from fifteen, nobody answered, the cascade ran to its ninety-second budget, and the rider landed on
+**no cars nearby**. *try again* came back to the picker with the address, the class and the payment
+still on it. The screenshots are in the session; the parts a still cannot hold — the 4.4-second dot
+cycle — belong to the kit's own test.
+
+- AC 1 (three goldens): `screens_rider_matching`, `screens_rider_no_cars_nearby`,
+  `screens_rider_cancel_confirm`. Light variants when [B-48](B-48-light-goldens-for-every-screen.md)
+  lands, as the item says.
+- AC 2 (a decline cascade ending on the screen): live, above. The decline half of it —
+  every candidate refusing rather than one candidate ignoring — stays `SimulatedCascadeTest`'s,
+  because a second driver is a second window.
+- AC 3 (cancel before and after): the fee's three values are a server test
+  (`the ride carries what cancelling it would cost right now`), the copy that shows them is a view
+  test, and the two settlement paths were already `SettlementTest`'s. What is new is that both are
+  now reachable from a screen — the trip screen asks before it cancels, which it did not do before.
+- What is deliberately not here: *notify me*, which needs a subscription and a push. The button is
+  absent rather than disabled, because a disabled button is a promise.

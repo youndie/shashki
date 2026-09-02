@@ -118,13 +118,15 @@ The product, in the order a ride goes through it, then the two capabilities that
 - [x] [feature-crash-reports](features/feature-crash-reports.md) — what a browser loses, and the two
   hooks that catch it
 
-### Screens / Flows (5)
+### Screens / Flows (6)
 
-Three in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
+Four in the rider bundle, two in the driver's. Every one of them is photographed: the `Content` half
 takes a state and a callback, so a golden of it needs no graph and no server.
 
 - [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
   going, what each class costs and how long the wait is
+- [x] [screen-rider-matching](screens/screen-rider-matching.md) — the wait, its unhappy end, and the
+  confirmation that says what cancelling costs
 - [x] [screen-rider-trip](screens/screen-rider-trip.md) — the road in two phases, the car on it, and
   the driver row whose registration is deliberately blank
 - [x] [screen-rider-promo](screens/screen-rider-promo.md) — whatever the server sent; the client owns

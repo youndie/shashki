@@ -6,6 +6,7 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
+import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichPhase
@@ -25,15 +26,42 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
 public class PetichRideRepository(
     private val petiches: PetichRepository,
     private val trips: TripRepository,
+    private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
     override suspend fun find(id: String): RideView? {
         val ride = petiches.findById(id)?.toRideView() ?: return null
         // Only forward. A cancelled order saga stays cancelled even if a stale trip row says the car
         // was arriving, because the saga is the record and the trip is the overlay.
-        val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED } ?: return ride
-        return ride.copy(status = trip.status)
+        val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED }
+        val current = trip?.let { ride.copy(status = it.status) } ?: ride
+        return current.copy(cancellationFeeCents = current.cancellationFee())
     }
+
+    /**
+     * What cancelling this ride would cost right now (B-43).
+     *
+     * **Computed here so the screen does not have to know the rule.** `Commission` says a quarter of
+     * the fare once a driver has set off and nothing before it; the screen shows the number it is
+     * given. `null` — not cancellable — is the rider already in the car, and the settlement's own
+     * refusal a layer down says the same thing.
+     */
+    private fun RideView.cancellationFee(): Long? =
+        when (status) {
+            RideStatus.REQUESTED, RideStatus.MATCHING -> {
+                0
+            }
+
+            RideStatus.ASSIGNED, RideStatus.ARRIVING, RideStatus.ARRIVED -> {
+                quote?.let { it.amountCents * commission.cancellationPercent / PERCENT }
+            }
+
+            RideStatus.IN_PROGRESS, RideStatus.COMPLETED, RideStatus.CANCELLED -> {
+                null
+            }
+        }
 }
+
+private const val PERCENT = 100L
 
 /**
  * Saga state → what the rider sees. The mapping is the whole of research §1.4c in one function:

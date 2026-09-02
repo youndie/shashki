@@ -41,11 +41,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (10)
+## Open (9)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[ ]` | The rider sees the wait and its end: matching, no cars nearby, and cancel | P0 | M | - |
 | [B-52](docs/backlog/B-52-driver-routes-behind-the-token.md) `[ ]` | The driver's four routes stop being public: the hole the endpoint table names | P0 | M | - |
 | [B-44](docs/backlog/B-44-finished-rate-and-tip.md) `[ ]` | Finished: rate the driver and tip, and the tip is a second charge | P1 | M | - |
 | [B-45](docs/backlog/B-45-history-from-the-broker.md) `[ ]` | History: the rider's rides, drawn natively from the broker's projection | P1 | M | - |
@@ -56,7 +55,7 @@ re-prioritising one must never move its file.
 | [B-51](docs/backlog/B-51-the-page-on-kotlin-website.md) `[ ]` | The page on kotlin.website, beside mani: what shashki shows, in the stack's own words | P2 | S | - |
 | [B-50](docs/backlog/B-50-a-smaller-image.md) `[ ]` | A smaller image: the 569 MB that B-35 measured and did not touch | P3 | S | - |
 
-## Closed (42)
+## Closed (43)
 
 **Remove the unknowns**
 
@@ -114,6 +113,10 @@ re-prioritising one must never move its file.
 - [B-35](docs/backlog/B-35-the-server-as-an-image.md) `[x]` - The server as an image, and the graph that has to be inside it
 - [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[x]` - A chart, and the honest replica count that goes in it
 - [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[x]` - The service can be watched: metrik, tracy, telek and kompot's degradation sink
+
+**The rest of the kit, and the hole the endpoint table names**
+
+- [B-43](docs/backlog/B-43-the-rider-sees-the-wait-and-its-end.md) `[x]` - The rider sees the wait and its end: matching, no cars nearby, and cancel
 
 <!-- END INDEX -->
 

@@ -17,13 +17,24 @@ import io.github.youndie.shashki.protocol.Quote
  *
  * The currency is written as the server sent it — the money is the server's and so is its name.
  */
-public fun Quote.asMoney(): String = "${currencySymbol()} ${amountCents.centsAsMajor()}"
+public fun Quote.asMoney(): String = money(amountCents, currency)
 
-private fun Quote.currencySymbol(): String =
-    when (currency) {
+/**
+ * The same money, for an amount that is not a whole quote — a cancellation fee, a day's takings.
+ *
+ * Added rather than formatting a fee at its call site (B-43): a second way of writing money is a
+ * second way of getting it wrong, and the fee sits next to the fare on the same screen.
+ */
+public fun money(
+    amountCents: Long,
+    currency: String,
+): String = "${currency.symbol()} ${amountCents.centsAsMajor()}"
+
+private fun String.symbol(): String =
+    when (this) {
         "USD" -> "$"
         "EUR" -> "€"
-        else -> currency
+        else -> this
     }
 
 private fun Long.centsAsMajor(): String {

@@ -110,6 +110,19 @@ public data class RideView(
     val quote: Quote? = null,
     val driverId: String? = null,
     val cancellationReason: String? = null,
+    /**
+     * What cancelling **now** would cost, in cents, or `null` when the ride cannot be cancelled at
+     * all.
+     *
+     * **The number rather than the rule** (B-43). R10 shows the amount before the button, and the
+     * amount is a quarter of the fare once a driver has set off and nothing before — a rule that
+     * lives in `Commission` on the server. A client that multiplied by 0.25 itself would be a second
+     * copy of a pricing rule, and the first coefficient change would have the screen promising one
+     * number and the settlement charging another.
+     *
+     * `0` and `null` are different answers: free to cancel, and too late to cancel.
+     */
+    val cancellationFeeCents: Long? = null,
 )
 
 /**

@@ -19,6 +19,7 @@ import io.github.youndie.shashki.crash.installCrashReporting
 import io.github.youndie.shashki.rider.feature.auth.domain.Session
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
+import io.github.youndie.shashki.rider.feature.ride.ui.MatchingScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.TripScreen
 import io.github.youndie.shashki.ui.RiderTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
@@ -122,7 +123,23 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                 entry<RiderRoute.ClassPicker> {
                     ClassPickerScreen(
                         scene = MapScene(camera = MapCamera(RiderConfig.LJUBLJANA_CENTRE)),
-                        onOrdered = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
+                        // **To the wait, not to the trip** (B-43). Between the order and a driver
+                        // there is a stretch with no car, and the trip screen drawn over it is a
+                        // screen with a hole where the driver goes.
+                        onOrdered = { rideId -> backStack.add(RiderRoute.Matching(rideId)) },
+                        onFailed = { },
+                    )
+                }
+                entry<RiderRoute.Matching> { route ->
+                    MatchingScreen(
+                        rideId = route.rideId,
+                        // **Replacing rather than pushing**: a driver has been found, and the back
+                        // button from a trip should not offer to watch the search for it again.
+                        onAssigned = { rideId ->
+                            if (backStack.isNotEmpty()) backStack.removeAt(backStack.size - 1)
+                            backStack.add(RiderRoute.Trip(rideId))
+                        },
+                        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
                         onFailed = { },
                     )
                 }
@@ -197,6 +214,7 @@ private val SAVED_STATE =
                 polymorphic(NavKey::class) {
                     subclass(RiderRoute.ClassPicker::class)
                     subclass(RiderRoute.Callback::class)
+                    subclass(RiderRoute.Matching::class)
                     subclass(RiderRoute.Trip::class)
                     subclass(RiderRoute.Promo::class)
                 }

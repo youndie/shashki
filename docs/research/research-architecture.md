@@ -742,6 +742,20 @@ that list, and the saga still reserves atomically because a filter is a read and
 The assertion that would have caught this without a stand is now in `SettlementTest`: *a wait is only
 shown for a class the dispatch can actually serve*, with a positive control ahead of it.
 
+**Consequence 1.4c3 — one status, two events, and the client is the only witness
+(2026-09-02, [B-43](../backlog/B-43-the-rider-sees-the-wait-and-its-end.md)).** §1.4c settled that
+cancelling is two mechanisms: compensation while the saga waits, a settlement with a fee once a
+driver has set off. Drawing the wait found the other half of that fact — **`CANCELLED` is also two
+events**, an empty city and a rider changing their mind, and the order saga records no reason to tell
+them apart. The screen can, because it is the thing that pressed cancel; the flag that remembers it
+is one line and the failure without it is a product blaming the city for the rider's own decision.
+
+The fee went the other way. R10 shows the amount before the button, `Commission` owns the rule, and a
+client multiplying the fare by 0.25 would be a second copy of a pricing rule — so `RideView` carries
+`cancellationFeeCents`, with `0`, the fee and `null` as three different answers. **The rule stays
+where it is charged and the number travels**, which is the same argument as `@Resource` for paths and
+D6 for crash reports.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

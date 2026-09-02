@@ -24,6 +24,7 @@ import io.github.youndie.shashki.rider.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.WatchDriverUseCase
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerViewModel
+import io.github.youndie.shashki.rider.feature.ride.ui.MatchingViewModel
 import io.github.youndie.shashki.rider.feature.ride.ui.TripViewModel
 import io.github.youndie.shashki.ui.map.CanvasMapSurface
 import io.github.youndie.shashki.ui.map.MapSurface
@@ -199,6 +200,7 @@ public fun riderModule(
                 paymentMethodId = config.paymentMethodId,
             )
         }
+        viewModel { (rideId: String) -> MatchingViewModel(rideId, get(), get()) }
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
     }

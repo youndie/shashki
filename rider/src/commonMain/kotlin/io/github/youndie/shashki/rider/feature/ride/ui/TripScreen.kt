@@ -74,6 +74,9 @@ public fun TripContent(
             ),
         actionLabel = "call the driver",
         onCall = { onAction(TripUiAction.Call) },
+        prompt = uiState.takeIf { it.confirming }?.let { cancelPrompt(it.ride) },
+        onConfirmPrompt = { onAction(TripUiAction.ConfirmCancel) },
+        onDismissPrompt = { onAction(TripUiAction.DismissConfirm) },
         onCancel = { onAction(TripUiAction.Cancel) },
         modifier = modifier,
     )

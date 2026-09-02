@@ -285,6 +285,56 @@ class SettlementTest {
             assertNotNull(client.economyWait(), "the driver finished and is still nobody's candidate")
         }
 
+    /**
+     * **What cancelling costs, on the wire** (B-43). R10 shows the amount before the button, and the
+     * rule that produces it — a quarter of the fare once a driver has set off — is `Commission`'s. A
+     * client that multiplied the fare itself would be a second copy of a pricing rule, so the server
+     * answers with the number and this is the test that it is the same number the settlement takes.
+     *
+     * `0` and `null` are different answers: free to cancel, and too late to cancel.
+     */
+    @Test
+    fun `the ride carries what cancelling it would cost right now`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+
+            // Still asking: a driver is parked, so the saga is waiting for an answer rather than
+            // running out of candidates. Nothing has been captured, so calling it off is free.
+            parkDriver(client, app)
+            val waiting = request(client, "rider-1")
+            assertEquals(RideStatus.MATCHING, waiting.status)
+            assertEquals(0, waiting.cancellationFeeCents, "waiting for a car is free to call off")
+
+            val assigned =
+                client
+                    .post(DriverOffers.Answer(rideId = waiting.id)) {
+                        contentType(ContentType.Application.Json)
+                        setBody(OfferAnswer(DRIVER, DriverDecision.ACCEPT))
+                    }.body<RideView>()
+            val fare = assertNotNull(assigned.quote).amountCents
+            assertEquals(fare * CANCELLATION_PERCENT / HUNDRED, assigned.cancellationFeeCents)
+
+            client.advance(assigned.id, DRIVER, RideStatus.ARRIVING)
+            assertEquals(
+                fare * CANCELLATION_PERCENT / HUNDRED,
+                client.read(assigned.id).cancellationFeeCents,
+                "a car on its way is still cancellable, for the same fee",
+            )
+
+            client.advance(assigned.id, DRIVER, RideStatus.ARRIVED)
+            client.advance(assigned.id, DRIVER, RideStatus.IN_PROGRESS)
+            assertNull(
+                client.read(assigned.id).cancellationFeeCents,
+                "the rider is in the car; the fare is the fare and there is nothing to confirm",
+            )
+        }
+
     /** The order is the point of the route: a driver cannot arrive at a ride they have not started. */
     @Test
     fun `a transition that is not the next one is refused`() =

@@ -26,6 +26,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -122,15 +123,38 @@ class TripViewModelTest {
         }
 
     @Test
-    fun `cancelling reaches the server for this ride and no other`() =
+    fun `cancelling asks first and then reaches the server for this ride and no other`() =
+        runTest(dispatcher) {
+            val model = viewModel(rides)
+            settle()
+
+            // **Asking is the first half** (B-43). From this screen a driver has set off, so
+            // cancelling settles a fee — the one place in this product where a tap moves money, and
+            // the amount is on the confirmation before the button.
+            model.onAction(TripUiAction.Cancel)
+            settle()
+            assertTrue(model.uiState.value.confirming, "the trip was cancelled without asking")
+            assertNull(rides.cancelled, "the question reached the server on its own")
+
+            model.onAction(TripUiAction.ConfirmCancel)
+            settle()
+
+            assertEquals("ride-1", rides.cancelled)
+        }
+
+    /** And the way out of the question is not the way through it. */
+    @Test
+    fun `dismissing the confirmation leaves the ride alone`() =
         runTest(dispatcher) {
             val model = viewModel(rides)
             settle()
 
             model.onAction(TripUiAction.Cancel)
+            model.onAction(TripUiAction.DismissConfirm)
             settle()
 
-            assertEquals("ride-1", rides.cancelled)
+            assertNull(rides.cancelled)
+            assertTrue(!model.uiState.value.confirming)
         }
 
     /**
