@@ -1,7 +1,7 @@
 ---
 id: B-54
 title: "The shift's count rises for frames the server threw away"
-status: open
+status: done
 priority: P0
 size: S
 stage: stage-6-what-running-it-said
@@ -38,3 +38,29 @@ visible, hidden by the number.
 - Anchors: `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/shift/data/WebSocketShiftRepository.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/DriverPositionRouting.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/DriverShift.kt`
+
+## What it turned out to be
+
+**The server had nothing to say, and that was the whole gap.** `driverPositionRoutes` read frames
+and answered none, so the only thing the client could possibly count was its own `send` returning —
+which means the bytes left this process and nothing more. The fix is one line on each side: the
+server echoes a report it has put in the index and stays silent about one it drops, and
+`WebSocketShiftRepository` splits into a sender and a reader, emitting what came **back**.
+
+**The report itself is the acknowledgement, rather than a new type.** `ShiftRepository.stream` is
+already `Flow<DriverReport>` on both sides, so nothing on the wire had to be invented, and a shift
+sends one frame every four seconds — the doubled bytes are not a question anybody will ask.
+
+**The screen's word changed with its meaning.** `42 positions sent` is now `42 positions taken`:
+*sent* was true of the old number and would have been a lie about the new one, and the difference
+between them is exactly what a driver needs when the server is refusing everything.
+
+**Two guards, and each fails without its half.** On the client, `FakeShiftRepository.accepting =
+false` is a server that takes nothing — the count stays at zero while three frames go out, and the
+control is that same test against the old code. On the server, `ProtectedDriverRoutesTest` now sends
+two frames, one for somebody else, and asserts **one** acknowledgement comes back; removing the
+mismatch check makes a second arrive and the test fails.
+
+**What it does not fix is [B-64](B-64-the-offer-reaches-the-client-and-not-the-screen.md).** The
+frozen count observed there was read as "the socket stalled"; with an honest count that reading can
+be made again and will mean something. The offer card is still not drawn.

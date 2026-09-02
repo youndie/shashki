@@ -70,7 +70,7 @@ private fun ShiftWaitingBody(dark: Boolean) {
  * The same shift on a phone that granted the permission (B-49).
  *
  * **This is the only place the difference is visible**, which is why it is photographed: the reports
- * on the wire are identical either way, and a driver looking at "waiting · 42 positions sent" cannot
+ * on the wire are identical either way, and a driver looking at "waiting · 42 positions taken" cannot
  * otherwise tell a moving car from a parked one. The line is the whole feature.
  */
 @ViddikScreenshot(name = "shift on a device", group = "driver", width = 390, height = 844)

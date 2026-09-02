@@ -33,6 +33,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
+import io.ktor.websocket.readText
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.get
 import ru.workinprogress.oidc.OidcConfig
@@ -163,6 +166,17 @@ class ProtectedDriverRoutesTest {
                 "a frame for another driver was indexed",
             )
             assertEquals(1, app.get<DroppedFrames>().total())
+
+            // **And exactly one acknowledgement comes back, for the frame that was kept** (B-54).
+            // The driver's screen counts these, so a frame the server threw away must produce
+            // nothing: a count that rises for a refused frame is the failure the count exists to
+            // show, hidden by the count. Two frames went out; one is the whole answer.
+            val acknowledged = Json.decodeFromString(DriverReport.serializer(), session.incoming.receiveText())
+            assertEquals(DRIVER, acknowledged.driverId, "the socket acknowledged a frame it dropped")
+            assertNull(
+                withTimeoutOrNull(ACK_QUIET_MS) { session.incoming.receive() },
+                "a second acknowledgement arrived for a frame the index refused",
+            )
         }
 
     /** A ticket is spent when it is used, which is what stops a logged URL being a second socket. */
@@ -184,6 +198,8 @@ class ProtectedDriverRoutesTest {
             assertNull(tickets.redeem("not-a-ticket"))
         }
 
+    private suspend fun ReceiveChannel<Frame>.receiveText(): String = (receive() as Frame.Text).readText()
+
     private fun report(driverId: String) = DriverReport(driverId, RideClass.ECONOMY, RATING, PICKUP)
 
     private fun unreachableProvider() = OidcConfig(url = "http://127.0.0.1:1", realm = "shashki", clientId = "rider")
@@ -200,6 +216,9 @@ class ProtectedDriverRoutesTest {
 
     private companion object {
         const val DRIVER = "driver-1"
+
+        /** Long enough for a second frame to arrive if the server were going to send one. */
+        const val ACK_QUIET_MS = 500L
         const val RATING = 4.9
         val PICKUP = GeoPoint(46.0511, 14.5051)
     }

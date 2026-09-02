@@ -12,16 +12,30 @@ import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
 /** A socket that takes everything, or one that will not open. */
 class FakeShiftRepository : ShiftRepository {
     var failWith: Throwable? = null
+
+    /**
+     * Whether the server accepts what is sent (B-54).
+     *
+     * **A repository that echoes everything it is handed is a server that accepts everything**, and
+     * that is the assumption under which the shift's count was written and the assumption the
+     * running stand broke: a bundle claiming an id the token contradicted had every frame refused
+     * and its screen counted all of them. `false` is that server, and it is a state a test can be in.
+     */
+    var accepting: Boolean = true
+
     val sent = mutableListOf<DriverReport>()
 
     override fun stream(reports: Flow<DriverReport>): Flow<DriverReport> {
         failWith?.let { throw it }
-        return reports.map { it.also(sent::add) }
+        // Sent is what left; what this flow emits is what came back, which is the distinction the
+        // whole item is about.
+        return reports.map { it.also(sent::add) }.filter { accepting }
     }
 }
 

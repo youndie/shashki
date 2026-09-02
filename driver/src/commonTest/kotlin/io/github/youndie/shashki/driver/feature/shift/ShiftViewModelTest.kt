@@ -210,6 +210,28 @@ class ShiftViewModelTest {
     private val device = MutableSharedFlow<GeoPoint>(extraBufferCapacity = 4)
 
     /**
+     * **The count is what the socket took, and a server that takes nothing must move it** (B-54).
+     *
+     * This is the state the running stand was in for the whole of B-53: the socket was open, frames
+     * were going out every four seconds, the server discarded every one of them, and the screen read
+     * `19 positions sent · waiting`. A count of what the client *wrote* cannot say anything about
+     * that, which makes it a count of the application's own intentions — and the screen already has
+     * one of those, the word *waiting*.
+     */
+    @Test
+    fun `frames the server refuses do not move the count`() =
+        runTest(dispatcher) {
+            shift.accepting = false
+            val model = viewModel(backgroundScope)
+
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(9.seconds)
+
+            assertEquals(3, shift.sent.size, "the client stopped sending")
+            assertEquals(0, model.uiState.value.reported, "the screen counted frames nobody took")
+        }
+
+    /**
      * **A parked driver is a fact and not a bug**, and the screen has to be able to say so.
      *
      * With nothing granting a position the shift keeps sending — a fallback that stopped reporting

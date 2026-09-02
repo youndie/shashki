@@ -60,8 +60,13 @@ offer poll, and — when an offer arrives — the countdown.
 ### 4.2. The waiting state
 
 - **Fields:** `uiState.reported`, `uiState.positionSource`
-- **Display:** `42 positions sent · position: configured`. **The count is the point**: "waiting" is a
-  word an application can print over a dead socket, and a number that has stopped rising is not.
+- **Display:** `42 positions taken · position: configured`. **The count is the point**: "waiting" is
+  a word an application can print over a dead socket, and a number that has stopped rising is not.
+- **"Taken" is the server's word, not this application's** (B-54). It used to say *sent* and to count
+  the frames the client had written, which is a fact about this bundle rather than about the shift:
+  on the running stand a driver whose id the token contradicted had every frame refused and the
+  screen read `19 positions sent`. The server now acknowledges a frame it puts in the index and says
+  nothing about one it drops, and this counts the acknowledgements.
 - **The source is beside it because the two are one fact** (B-49). The count says the socket is alive
   and the source says what is travelling over it: a bundle sending its configured point and one
   sending a phone's look identical on the wire and identical on this screen without that line. A

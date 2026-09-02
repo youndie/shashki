@@ -7,8 +7,10 @@ import io.github.youndie.shashki.protocol.DriverReport
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.Frame
+import io.ktor.websocket.readText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 /**
@@ -41,11 +43,27 @@ public class WebSocketShiftRepository(
     override fun stream(reports: Flow<DriverReport>): Flow<DriverReport> =
         channelFlow {
             client.webSocket(socketUrl(ticket())) {
-                reports.collect { report ->
-                    send(Frame.Text(json.encodeToString(DriverReport.serializer(), report)))
-                    // Emitted *after* the frame went out, so a screen that says "online" is saying
-                    // something the socket did rather than something the application intended.
-                    this@channelFlow.send(report)
+                // **Sending and receiving are two jobs because they are two facts** (B-54). What is
+                // emitted here is what came *back* — the server acknowledges a frame it put in the
+                // index and says nothing about one it dropped. This used to emit right after `send`
+                // returned, which only means the bytes left this process: a client whose id the
+                // token contradicted had every frame refused and its screen counted all of them.
+                val sending =
+                    launch {
+                        reports.collect { report ->
+                            send(Frame.Text(json.encodeToString(DriverReport.serializer(), report)))
+                        }
+                    }
+                try {
+                    for (frame in incoming) {
+                        val text = (frame as? Frame.Text)?.readText() ?: continue
+                        // An unreadable acknowledgement is not a position: it is dropped rather than
+                        // counted, for the same reason the server drops an unreadable report.
+                        runCatching { json.decodeFromString(DriverReport.serializer(), text) }
+                            .onSuccess { this@channelFlow.send(it) }
+                    }
+                } finally {
+                    sending.cancel()
                 }
             }
         }

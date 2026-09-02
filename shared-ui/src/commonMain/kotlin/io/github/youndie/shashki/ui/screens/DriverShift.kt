@@ -28,7 +28,13 @@ public data class DriverShiftState(
     val online: Boolean,
     val driverLabel: String,
     val classLabel: String,
-    /** Reports the socket has taken. `null` while offline — a zero would read as a broken socket. */
+    /**
+     * Reports the **server** acknowledged. `null` while offline — a zero would read as a broken
+     * socket.
+     *
+     * Not what the client wrote: those were the same number until a bundle whose id the token
+     * contradicted had every frame refused and this went on rising (B-54).
+     */
     val reported: Int?,
     /**
      * Where the position being sent comes from, already worded — `null` while offline.
@@ -66,8 +72,10 @@ public data class DriverOfferState(
  * animated thing in this application is the offer's own bar, which is [OfferCard]'s and drains left
  * to right.
  *
- * The count is the honest part: `reported` rises each time the socket actually took a position, so a
- * driver who is "online" over a socket that quietly died sees a number that has stopped. Amber for
+ * The count is the honest part: `reported` rises when the **server** acknowledges a position, so a
+ * driver who is "online" over a socket that quietly died — or one whose every frame is being refused
+ * — sees a number that has stopped. It said this before B-54 and counted the frames the client had
+ * written, which is a fact about this application rather than about the shift. Amber for
  * online is `DriverTheme`'s accent — the kit reserves red for cancellation in both applications.
  */
 @Composable
@@ -147,7 +155,7 @@ public fun DriverShift(
                         Spacer(Modifier.height(GAP))
                         // Beside the count rather than under it: the count says the socket is alive
                         // and the source says what is travelling over it, and they are one fact.
-                        val line = listOfNotNull("$taken positions sent", state.positionLabel).joinToString(" · ")
+                        val line = listOfNotNull("$taken positions taken", state.positionLabel).joinToString(" · ")
                         KvadrantText(line, style = type.meta.copy(color = colors.subtle))
                     }
                 }

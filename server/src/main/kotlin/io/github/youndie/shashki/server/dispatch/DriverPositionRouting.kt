@@ -80,6 +80,17 @@ public fun Route.driverPositionRoutes(protected: Boolean = false) {
                 }
                 driverId = report.driverId
                 index.report(report, clock.nowEpochMs())
+                // **The acknowledgement, and it is the whole of B-54.** The driver's screen counts
+                // positions "the socket actually took"; before this it counted the frames the client
+                // had *written*, so a shift whose every frame was refused read `19 positions sent`
+                // while the server discarded all nineteen — the exact failure the count exists to
+                // make visible, hidden by the count. Nothing is sent for a frame that was dropped
+                // above, which is what makes the number mean something.
+                //
+                // The report itself rather than a bare token: the contract is already
+                // `Flow<DriverReport>` on both sides, and one frame every four seconds is not a
+                // bandwidth question.
+                send(Frame.Text(json.encodeToString(DriverReport.serializer(), report)))
             }
         } finally {
             driverId?.let(index::goOffline)
