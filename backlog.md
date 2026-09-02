@@ -40,14 +40,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
 | [B-39](docs/backlog/B-39-the-service-can-be-watched.md) `[ ]` | The service can be watched: metrik, tracy, telek and kompot's degradation sink | P2 | M | B-35 |
 
-## Closed (39)
+## Closed (40)
 
 **Remove the unknowns**
 
@@ -102,6 +101,7 @@ re-prioritising one must never move its file.
 **It runs somewhere that is not this laptop**
 
 - [B-35](docs/backlog/B-35-the-server-as-an-image.md) `[x]` - The server as an image, and the graph that has to be inside it
+- [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[x]` - A chart, and the honest replica count that goes in it
 
 <!-- END INDEX -->
 

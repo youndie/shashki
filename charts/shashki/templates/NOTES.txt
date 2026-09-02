@@ -1,0 +1,19 @@
+shashki is installed as {{ include "shashki.fullname" . }}.
+
+{{ if .Values.ingress.enabled -}}
+The rider:  http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}/
+The driver: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}/driver
+{{- else -}}
+No ingress. Reach it with:
+  kubectl port-forward svc/{{ include "shashki.fullname" . }} 8080:{{ .Values.port }}
+{{- end }}
+
+What this installation does NOT have, each of which the server logs at start:
+{{ if not .Values.oidc.issuer }}  * no provider — the rider's routes are open to anybody who can reach them
+{{ end }}{{ if not .Values.booblik.address }}  * no broker — a ride's events are written to the outbox and never delivered
+{{ end }}{{ if not .Values.smtp.host }}  * no mail relay — receipts are recorded as unsent
+{{ end }}{{ if not .Values.tiles.url }}  * no tile archive — the map draws the route and the car on an empty background
+{{ end }}{{ if not .Values.release }}  * no release identifier — a crash report will not name the build it came from
+{{ end }}
+The road graph is in the image, not in a volume. An image built without one falls back to straight
+lines, which is wrong for anything shown beside a price — `./gradlew :server:image -PosmFile=...`.

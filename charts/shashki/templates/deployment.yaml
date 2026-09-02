@@ -1,0 +1,134 @@
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "replicaCount must be 1: the driver index and the offer board are in-process caches, so two replicas are two different sets of online drivers and a position socket that lands on the wrong pod. See values.yaml." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "shashki.fullname" . }}
+  labels: {{- include "shashki.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # **Recreate, and it follows from the same fact as the replica count.** A rolling update runs two
+  # pods at once, which is the state this service cannot be in; the price is a few seconds of
+  # downtime on every deploy, and the alternative is a few seconds of a fleet that is half invisible.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {{- include "shashki.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "shashki.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+        - name: shashki
+          image: {{ include "shashki.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+          env:
+            - name: DB_URL
+              value: {{ required "database.jdbcUrl is required: the sagas, the outbox and the ledger are the only state this service has" .Values.database.jdbcUrl | quote }}
+            - name: DB_POOL_SIZE
+              value: {{ .Values.database.poolSize | quote }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secret.name }}
+                  key: {{ .Values.database.secret.userKey }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secret.name }}
+                  key: {{ .Values.database.secret.passwordKey }}
+            {{- if .Values.oidc.issuer }}
+            - name: SHASHKI_OIDC_ISSUER
+              value: {{ .Values.oidc.issuer | quote }}
+            - name: SHASHKI_OIDC_REALM
+              value: {{ .Values.oidc.realm | quote }}
+            - name: SHASHKI_OIDC_CLIENT
+              value: {{ .Values.oidc.clientId | quote }}
+            {{- if .Values.oidc.publicIssuer }}
+            - name: SHASHKI_OIDC_PUBLIC_ISSUER
+              value: {{ .Values.oidc.publicIssuer | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.booblik.address }}
+            - name: SHASHKI_BOOBLIK
+              value: {{ .Values.booblik.address | quote }}
+            {{- end }}
+            {{- if .Values.tiles.url }}
+            - name: SHASHKI_TILES_URL
+              value: {{ .Values.tiles.url | quote }}
+            {{- end }}
+            {{- if .Values.katcher.url }}
+            - name: SHASHKI_KATCHER_URL
+              value: {{ .Values.katcher.url | quote }}
+            - name: SHASHKI_KATCHER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.katcher.secret.name }}
+                  key: {{ .Values.katcher.secret.appKeyKey }}
+            {{- end }}
+            {{- if .Values.smtp.host }}
+            - name: SHASHKI_SMTP_HOST
+              value: {{ .Values.smtp.host | quote }}
+            - name: SHASHKI_SMTP_PORT
+              value: {{ .Values.smtp.port | quote }}
+            - name: SHASHKI_SMTP_FROM
+              value: {{ .Values.smtp.from | quote }}
+            {{- if .Values.smtp.user }}
+            - name: SHASHKI_SMTP_USER
+              value: {{ .Values.smtp.user | quote }}
+            - name: SHASHKI_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.smtp.secret.name }}
+                  key: {{ .Values.smtp.secret.passwordKey }}
+            {{- end }}
+            {{- if .Values.smtp.caBundlePath }}
+            - name: SHASHKI_SMTP_CA
+              value: {{ .Values.smtp.caBundlePath | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.release }}
+            - name: SHASHKI_RELEASE
+              value: {{ .Values.release | quote }}
+            {{- end }}
+          # **Both probes ask the same endpoint and that is deliberate.** `/health` answers only once
+          # Ktor has started, which is after Flyway and after the road graph is opened — 1.5 to 3.7
+          # seconds measured on the image (B-35). A TCP probe would pass while none of that had
+          # happened, because the kernel accepts a connection into the backlog with no help from the
+          # process.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            # The image runs as 1000 and writes only to the graph directory it owns. Nothing here
+            # needs to escalate, and the graph is not on a volume — it is a layer.
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ALL]
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}

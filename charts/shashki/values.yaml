@@ -1,0 +1,101 @@
+image:
+  repository: shashki/server
+  # Empty means the chart's appVersion. **Pin a commit.** The image task tags one; `latest` and
+  # "whatever the chart shipped with" are both ways of not knowing what is running (B-35).
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# **One, and it is not a default that nobody argued for.**
+#
+# `GridDriverIndex` and `InMemoryOfferBoard` are in-process maps on purpose: the saga's row is the
+# record and these are caches rebuilt from the position socket (B-12, B-20). Two replicas are two
+# different sets of online drivers — a driver's socket lands on one pod and the rider's candidate
+# query on the other, so half the fleet is invisible to half the riders. The socket makes it worse
+# than a cache miss: `driverPositionRoutes` holds a connection open for the length of a shift.
+#
+# The chart **refuses** a larger number rather than letting one through with a warning. What it would
+# take to lift the limit — a shared index, or partitioning by geography — is an argument, not a value.
+replicaCount: 1
+
+port: 8080
+
+ingress:
+  enabled: true
+  className: ""
+  host: ""
+  annotations: {}
+  tls:
+    enabled: false
+    # Empty means the ingress controller's default certificate.
+    secretName: ""
+
+# Where the state is. The service owns no other.
+database:
+  jdbcUrl: ""
+  poolSize: 10
+  secret:
+    name: shashki-db
+    userKey: username
+    passwordKey: password
+
+# The identity provider. **Empty leaves the rider's routes open** and the server says so at `warn` —
+# which is right for a demo and is a decision somebody should make deliberately for anything else.
+#
+# `issuer` must be an address both this service and a *browser* can reach: the validator reads
+# `jwks_uri` out of the discovery document, which carries the issuer's own address, so an internal
+# name here sends the pod somewhere only a person's machine can go (B-41).
+oidc:
+  issuer: ""
+  realm: shashki
+  clientId: rider
+  # When the browser reaches the provider at a different address than this service does — a proxy in
+  # front of one and not the other. Empty means "the same", which is the ordinary case.
+  publicIssuer: ""
+
+# The broker a ride's own events go through. **Empty means the outbox relay is not started**: the
+# events are written and never delivered, which is true and is what a server with no broker should
+# say rather than logging them delivered (B-38).
+booblik:
+  address: ""
+
+# Where the browser fetches the basemap. Not this service: the archive is a static object somewhere
+# else and the browser reads ranges of it over ordinary HTTP (B-07, D12).
+tiles:
+  url: ""
+
+# Crash reports from the browser. The bundle sends them; this service only tells the page where.
+katcher:
+  url: ""
+  secret:
+    name: shashki-katcher
+    appKeyKey: appKey
+
+# Receipts. Empty means the settlement records that it sent none rather than inventing a recipient.
+smtp:
+  host: ""
+  port: 587
+  from: receipts@shashki.example
+  user: ""
+  # The CA that signed the relay's certificate, when it is not one the JVM already trusts.
+  caBundlePath: ""
+  secret:
+    name: shashki-smtp
+    passwordKey: password
+
+# What the served page calls this build. It reaches every crash report; without it a stack trace
+# names lines in a bundle nobody can identify.
+release: ""
+
+resources:
+  requests:
+    cpu: 250m
+    # The road graph is memory-mapped and the JVM is told to take 75 % of the limit, so this is not a
+    # number to shave: 14 MB of graph plus a heap plus Compose's own bundles being served.
+    memory: 768Mi
+  limits:
+    memory: 1Gi
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

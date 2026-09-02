@@ -609,6 +609,26 @@ would guess. [B-41](../backlog/B-41-the-rider-actually-signs-in.md) is the work.
 (§1.4c1, B-37), and now the token. Each was built at both ends by an item that was about one end, and
 each was found by something that had to look at both: a client, a saga, a document.
 
+**Consequence 1.6a2 — one replica, and it is the two caches that say so
+(2026-09-02, [B-36](../backlog/B-36-a-chart-for-somewhere-else.md)).** §1.6a settled that positions
+go into a geo-index over a socket and never into a topic, which is right and has a consequence nobody
+had drawn: **the index is in one process, so there can only be one.** `GridDriverIndex` and
+`InMemoryOfferBoard` are caches whose record is elsewhere, which is why they may be in memory — but
+two pods are two different sets of online drivers, a driver's socket lands on one and the rider's
+candidate query on the other, and half the fleet is invisible to half the riders. The socket makes it
+worse than a cache miss: it is held open for the length of a shift.
+
+So the chart **refuses** `replicaCount > 1` rather than defaulting to 1 with a comment, and the update
+strategy is `Recreate` — a rolling update is two pods at once, which is the state this service cannot
+be in. What it would take to lift the limit is a shared index or partitioning by geography, and that
+is an argument rather than a value.
+
+**And the chart's environment is held to the code by a script.** "Every variable the server reads has
+a value in the chart" is a claim somebody checks once; `scripts/chart_config.py` checks it on every
+`make check`, in all three directions — a variable the code reads and the chart does not set, a value
+the chart sets that nothing reads, and an **exemption that has gone stale**. The last is the one that
+rots: four variables are provided by the image rather than by a deployment, and each names why.
+
 **Consequence 1.6c4 — joining the two halves cost three findings, none of them about PKCE
 (2026-09-02, [B-41](../backlog/B-41-the-rider-actually-signs-in.md)).** §1.6c3 recorded that the
 application called neither half. Writing the join found:

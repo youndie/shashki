@@ -65,6 +65,17 @@ jobs:
 
       - run: make check
 
+      # **The chart, with the values a real installation sets.** `make check` holds the chart's
+      # environment to the server's (`chart_config.py`) and cannot render it: that needs Helm, and a
+      # documentation gate that needed Helm would be a gate somebody skips. The runner has it.
+      - run: |
+          helm lint charts/shashki \
+            --set database.jdbcUrl=jdbc:postgresql://pg:5432/shashki \
+            --set ingress.host=shashki.example
+          helm template shashki charts/shashki \
+            --set database.jdbcUrl=jdbc:postgresql://pg:5432/shashki \
+            --set ingress.host=shashki.example > /dev/null
+
       # Default branch only. `status: draft` is legal in a pull request, where it means "this
       # branch will make it true", and a defect the moment it merges.
       - if: github.ref == 'refs/heads/main' && github.event_name == 'push'

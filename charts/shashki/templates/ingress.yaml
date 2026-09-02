@@ -1,0 +1,39 @@
+{{- if .Values.ingress.enabled }}
+{{- if not .Values.ingress.host }}
+{{- fail "ingress.host is required when the ingress is enabled: it is also the origin the browser bundles are served from, and the redirect URI registered with the provider has to match it" }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "shashki.fullname" . }}
+  labels: {{- include "shashki.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts: [{{ .Values.ingress.host | quote }}]
+      {{- with .Values.ingress.tls.secretName }}
+      secretName: {{ . }}
+      {{- end }}
+  {{- end }}
+  rules:
+    # **One rule for everything, because this host serves the API and both browser bundles.** The
+    # rider is at `/` and the driver at `/driver`; splitting them across paths here would put the
+    # routing table in two places, and the server already answers `/api` more specifically than the
+    # static fallback (B-35, `BundleRoutingTest`).
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "shashki.fullname" . }}
+                port:
+                  name: http
+{{- end }}

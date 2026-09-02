@@ -1,0 +1,14 @@
+apiVersion: v2
+name: shashki
+description: A reference ride-hailing service — one Ktor process, one PostgreSQL, one broker
+type: application
+version: 0.1.0
+# The image tag this chart defaults to. Kept in step with `appVersion` rather than with the chart's
+# own version: a chart change and a service change are different events.
+#
+# There is no published image. `./gradlew :server:image -PcommitSha=<sha>` builds one and tags it
+# with a commit, which is what a deployment should point at — see B-35.
+appVersion: "dev"
+home: https://github.com/youndie/shashki
+sources:
+  - https://github.com/youndie/shashki

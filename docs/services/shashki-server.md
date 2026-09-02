@@ -92,9 +92,17 @@ both are the reason this service runs as **one replica** — see [B-36](../backl
 
 * **Image:** `shashki/server:<commit>`, built by `./gradlew :server:image -PosmFile=<city.osm.pbf>`.
   It carries the application, the prepared road graph and both browser bundles.
-* **Chart:** none yet — [B-36](../backlog/B-36-a-chart-for-somewhere-else.md).
+* **Chart:** `charts/shashki`. **One replica, and the chart refuses a larger number** rather than
+  letting one through: the driver index and the offer board are in-process caches, so two pods are
+  two different sets of online drivers and a position socket that lands on the wrong one. The update
+  strategy is `Recreate` for the same reason — a rolling update runs two pods at once, which is the
+  state this service cannot be in.
 * **Health:** `GET /health`
 * **Metrics:** none yet — [B-39](../backlog/B-39-the-service-can-be-watched.md).
+* **What the chart sets is held to what the code reads** by `scripts/chart_config.py`, in `make check`
+  — a variable added to a config object and forgotten in the chart is a deployment where something is
+  silently off, and one removed from the code leaves a line that documents nothing and reads as
+  current.
 * **The bundles are served from here**, the rider at `/` and the driver at `/driver`, so the demo is
   one artefact. The cost is stated rather than hidden: the two prefixes each fetch the 8.6 MB Compose
   runtime they share byte for byte, so D10's saving needs a deployment that puts the content-hashed

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "shashki.fullname" . }}
+  labels: {{- include "shashki.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.port }}
+      targetPort: http
+  selector: {{- include "shashki.selectorLabels" . | nindent 4 }}

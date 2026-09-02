@@ -1,7 +1,7 @@
 ---
 id: B-36
 title: "A chart, and the honest replica count that goes in it"
-status: open
+status: done
 priority: P2
 size: M
 stage: stage-4-elsewhere
@@ -46,3 +46,46 @@ shashki *talks to* and says in its own first line that it is not a deployment.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/db/DatabaseConfig.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/auth/AuthConfig.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/DriverIndex.kt`
+
+## What it turned out to be
+
+**The chart is ordinary and two things in it are not.**
+
+**It refuses more than one replica rather than defaulting to one.** `{{ fail }}` with the reason in
+it, because a chart that quietly says `replicas: 1` teaches nobody anything and the next person to
+want throughput will simply change the number. The reason is not caution: `GridDriverIndex` and
+`InMemoryOfferBoard` are in-process caches, so two pods are two different sets of online drivers, and
+a driver's position socket — held open for the length of a shift — lands on one pod while the rider's
+candidate query lands on the other. The same fact makes the update strategy `Recreate`: a rolling
+update *is* two pods at once.
+
+**And the configuration surface is held to the code by a script rather than by my word.**
+`scripts/chart_config.py` reads the variable names out of `server/src/main` and out of the deployment
+template and compares them in all three directions. Checked by mutation, one per direction:
+
+| Mutation | What it said |
+|---|---|
+| drop `SHASHKI_TILES_URL` from the chart | read by `BundleRouting.kt` and not set by the chart |
+| add a variable nothing reads | set by the chart and read by nothing |
+| rename `SHASHKI_BUNDLES` in the code | exempted and no longer read at all |
+
+The third is the one that matters. Four variables are deliberately absent — the image provides the
+graph directory and the bundles, the extract is a build-time input, and the driver's id is the
+browser's — and a blanket "ignore what is not in the chart" would have hidden exactly the gap the
+script exists for. So each exemption is named with its reason, and an exemption whose variable has
+stopped existing is itself a failure.
+
+**Twenty-three variables in the code, nineteen in the chart, four provided by the image.** That the
+three numbers add up is the whole of the second criterion, and it is now a line of output rather than
+a paragraph somebody wrote once.
+
+**Read once by a person**, as the first criterion asks: the rendered deployment is above in this
+session's transcript, and the three refusals were exercised — two replicas, an ingress with no host,
+and a deployment with no database each fail with a sentence rather than with a schema error.
+
+**Secrets are secrets.** The database password, katcher's app key and the SMTP password come from
+`secretKeyRef`; nothing that is one is a value in `values.yaml`.
+
+**Not covered, and deliberately:** no ingress for the tile archive or for katcher — those are other
+services' deployments and this chart names their addresses rather than owning them. No `PodDisruptionBudget`
+either: with one replica a budget is a sentence about a situation that cannot arise.
