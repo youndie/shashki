@@ -39,16 +39,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-26](docs/backlog/B-26-sign-in-end-to-end.md) `[ ]` | Rider and driver actually sign in, against a running shildik | P1 | M | B-09 |
-| [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[?]` | One wasm bundle or two | P2 | XS | B-01 |
 | [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[ ]` | The kit's composition rules live in the kompot renderer, not in the protocol | P2 | M | B-03 |
 | [B-27](docs/backlog/B-27-deprecations-only-a-clean-build-shows.md) `[ ]` | The deprecations only a clean configuration shows | P2 | XS | - |
 
-## Closed (23)
+## Closed (24)
 
 **Remove the unknowns**
 
@@ -69,6 +68,7 @@ re-prioritising one must never move its file.
 - [B-07](docs/backlog/B-07-serve-pmtiles-from-bochka.md) `[x]` - Serve the pmtiles archive out of bochka and measure ranged reads
 - [B-08](docs/backlog/B-08-repository-skeleton.md) `[x]` - The repository skeleton: modules, targets, versions and the check target
 - [B-09](docs/backlog/B-09-browser-side-pkce.md) `[x]` - Authorization code with PKCE from the browser is shashki's code
+- [B-16](docs/backlog/B-16-one-bundle-or-two.md) `[x]` - One wasm bundle or two
 - [B-24](docs/backlog/B-24-motorways-carry-ref-not-name.md) `[x]` - Motorways carry ref and not name, so the styles label none of them
 
 **The order survives the process dying**

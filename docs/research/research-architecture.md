@@ -1057,6 +1057,38 @@ that fixtures constructing their own styles went on failing after the ramp was p
 Every fixture string goes through `ViddikGlyphCoverage.missingGlyphs`, and the check fails the
 fixture rather than warning. `₽` is the reason (§1.2c), and it is in most of them.
 
+### D10. Two bundles, and the number is that the roles are 5 % of one
+
+Brief: two bundles, rider and driver, for a cleaner demo.
+[B-16](../backlog/B-16-one-bundle-or-two.md) held the question open until
+[D1](#d1-the-browser-is-a-decision-with-a-date-not-a-precondition), because two of the four routes
+carried a per-bundle cost that would have decided it — a pinned Compose dev build paid once per
+build, a DOM-overlay map paid once per page.
+
+**Decision: two, as the brief said. The reason the question dissolved is that route 4 has neither of
+those costs**, and the reason two is right anyway is a measurement, taken 2026-09-02 by building
+`:shared-ui`'s own `wasmJsBrowserProductionWebpack`:
+
+| | raw | gzipped |
+|---|---|---|
+| skiko's wasm — the Compose runtime | 8 640 316 | **3 328 940** |
+| the webpack JavaScript glue | 377 025 | 75 589 |
+| **everything shashki has written**, before dead-code elimination — both themes, every component, both screens, the map, the tile decoder, the projection | 698 377 | **173 808** |
+
+The fixed cost of *being a Compose/Wasm bundle at all* is 3.4 MB gzipped and is identical for both
+roles. Everything this project has authored is **5 % of it**. So:
+
+- **One bundle saves a person nothing.** They fetch the same 3.4 MB either way, and get the other
+  role's screens as a slice of 174 kB on top.
+- **Two bundles cost the server a second copy** and cost nobody who uses one role. A person who uses
+  both pays the runtime twice **unless** the content-hashed skiko file is byte-identical and served
+  at the same path from both — which it should be, since the hash is of Compose's own artefact and
+  both bundles would build against the same version. That is a property to verify when the second
+  bundle exists rather than a measurement taken here; B-16 records it as such.
+
+The third row is also the answer to a question nobody asked: at 174 kB before DCE, the cost of route
+4's whole tile pipeline is invisible next to the runtime it rides in.
+
 ### D9. Documentation is in English
 
 Code, comments, test names, exception messages and commit subjects in English, as everywhere in this
