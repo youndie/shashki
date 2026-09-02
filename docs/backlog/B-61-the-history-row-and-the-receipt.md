@@ -2,6 +2,7 @@
 id: B-61
 title: "R9's rows carry one address and no date, and R9·b does not exist"
 status: open
+blocked_by: [B-65]
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
@@ -36,3 +37,22 @@ economy`, with the fare and the payment method on the right, month headers in th
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/kompot/`,
   `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/Ride.kt`,
   `docs/screens/screen-rider-history.md`
+
+## What is done, and what is blocked (2026-09-03)
+
+**The row and the months are drawn.** A row carries both ends of the journey, when it happened, the
+class, the payment method and what it cost; the list is grouped by month with the header in the
+accent, and a month with nothing in it is not drawn. `RideView` carries `requestedAtEpochMs` and the
+client formats it, because a month name and a clock are a locale and a timezone and the browser has
+both.
+
+**Two things worth keeping from doing it.** The rows all said `airport` — the destination this demo
+always orders — so the list was three identical lines; and the first attempt joined the two ends with
+`→`, which `GlyphCoverageTest` refused because the bundled face does not have it. An em dash does the
+same job and is in the face.
+
+**The receipt is blocked, and the reason is measured**: `FareBreakdown` is declared in `:shared-ui`,
+which carries Compose, so no server can build one. Moving the three components to `:protocol` was
+tried and reverted — kompot's registry processor needs `@KompotComponentMarker` on the component in
+the module the processor runs in. [B-65](B-65-a-server-cannot-build-a-fare-breakdown.md) carries it,
+and this item is blocked on that rather than closed around it.

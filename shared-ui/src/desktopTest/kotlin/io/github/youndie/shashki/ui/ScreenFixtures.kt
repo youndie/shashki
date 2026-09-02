@@ -22,6 +22,7 @@ import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderFinished
 import io.github.youndie.shashki.ui.screens.RiderHistory
 import io.github.youndie.shashki.ui.screens.RiderMatching
+import io.github.youndie.shashki.ui.screens.TripMonth
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
 /**
@@ -61,7 +62,7 @@ private fun RiderClassPicker(dark: Boolean) {
                             ),
                     ),
                 destination = "airport",
-                // The router's answer for Slovenska cesta 15 → Brnik terminal B, not the kit's
+                // The router's answer for Slovenska cesta 15 — Brnik terminal B, not the kit's
                 // guess — B-06 measured it on the graph it imports.
                 destinationMeta = "26.3 km · 20 min",
                 offers =
@@ -257,11 +258,40 @@ private fun RiderHistory(dark: Boolean) {
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderHistory(
             titles = listOf("trips", "profile", "promo"),
-            trips =
+            // **Two months, and rows that say where and when** (B-61). This fixture had three rows
+            // all titled "airport" — the destination this demo always orders — which is a list where
+            // every line is identical, and a golden of a screen nobody can read.
+            months =
                 listOf(
-                    TripRow("ride-3", "airport", "today · 22.8 km", "$ 28.96", accent = true),
-                    TripRow("ride-2", "airport", "yesterday · cancelled", "$ 7.24"),
-                    TripRow("ride-1", "airport", "monday · no cars nearby", "—"),
+                    TripMonth(
+                        "september 2026",
+                        listOf(
+                            TripRow(
+                                "ride-3",
+                                "46.0511, 14.5051 — 46.2237, 14.4576",
+                                "2 september · 19:40 · economy · card-4417",
+                                "$ 28.96",
+                                accent = true,
+                            ),
+                            TripRow(
+                                "ride-2",
+                                "46.0511, 14.5051 — 46.0620, 14.5350",
+                                "1 september · 08:12 · economy · cancelled",
+                                "$ 7.24",
+                            ),
+                        ),
+                    ),
+                    TripMonth(
+                        "august 2026",
+                        listOf(
+                            TripRow(
+                                "ride-1",
+                                "46.0620, 14.5350 — 46.0511, 14.5051",
+                                "28 august · 12:05 · comfort · cancelled",
+                                "—",
+                            ),
+                        ),
+                    ),
                 ),
             emptyLine = "no trips yet",
             profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
@@ -290,7 +320,7 @@ private fun RiderHistoryEmpty(dark: Boolean) {
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         RiderHistory(
             titles = listOf("trips", "profile", "promo"),
-            trips = emptyList(),
+            months = emptyList(),
             emptyLine = "no trips yet",
             profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
             onTrip = {},

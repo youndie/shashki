@@ -59,10 +59,14 @@ class HistoryViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            val rows = model.uiState.value.trips
+            // Flattened, because the order across months is the server's too (B-61).
+            val rows =
+                model.uiState.value.months
+                    .flatMap { it.trips }
             assertEquals(listOf("ride-3", "ride-2", "ride-1"), rows.map { it.id }, "the server's order was not kept")
             assertEquals(listOf("$ 28.96", "$ 7.24", "—"), rows.map { it.amount })
-            assertTrue(rows[1].meta.startsWith("cancelled"), rows[1].meta)
+            assertTrue(rows[1].meta.contains("cancelled"), rows[1].meta)
+            assertTrue(rows[0].title.contains(" — "), "the row shows one end of the journey: ${rows[0].title}")
         }
 
     /** An empty list is a state, not a failure — and the screen has a line for it. */
@@ -73,7 +77,7 @@ class HistoryViewModelTest {
 
             advanceUntilIdle()
 
-            assertEquals(emptyList(), model.uiState.value.trips)
+            assertEquals(emptyList(), model.uiState.value.months)
             assertEquals(false, model.uiState.value.loading, "the screen would say nothing for ever")
         }
 }

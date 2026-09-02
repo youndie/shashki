@@ -27,6 +27,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // R9's rows carry a date and its months group the list (B-61). The server sends the
+            // instant; a locale and a timezone belong to the browser, so the formatting is here.
+            implementation(wip.kotlinx.datetime)
             implementation(projects.sharedUi)
             implementation(projects.authClient)
             implementation(projects.crashClient)

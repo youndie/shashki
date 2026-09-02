@@ -146,6 +146,14 @@ public data class RideView(
      * one would be the fabrication its object-store item refused in another place.
      */
     val paymentMethodId: String? = null,
+    /**
+     * When the rider asked for this ride (B-61).
+     *
+     * **The number, and the client formats it.** R9's rows carry a date and its months group the
+     * list, and both are presentation: a server that sent "28 aug · 19:40" would be deciding a
+     * locale and a timezone on behalf of a browser that knows both.
+     */
+    val requestedAtEpochMs: Long? = null,
 )
 
 /**

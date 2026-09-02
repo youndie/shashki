@@ -23,6 +23,12 @@ import io.github.youndie.shashki.ui.kompot.LocalAccentBudget
 import io.github.youndie.shashki.ui.kompot.TripRow
 import io.github.youndie.shashki.ui.kompot.TripRowRenderer
 
+/** A month of the rider's rides, as R9 groups them (B-61). */
+public data class TripMonth(
+    val title: String,
+    val trips: List<TripRow>,
+)
+
 /**
  * R9: the rider's own pages — *trips*, *profile*, and the one screen the server owns.
  *
@@ -38,7 +44,15 @@ import io.github.youndie.shashki.ui.kompot.TripRowRenderer
 @Composable
 public fun RiderHistory(
     titles: List<String>,
-    trips: List<TripRow>,
+    /**
+     * The rider's rides, grouped (B-61).
+     *
+     * **A month is a header and not a row**, which is the kit's own R9: the list is read by when
+     * things happened, and a flat list of destinations is read by nothing. The headers here are
+     * static — the kit's travel at their own rate and wrap round, which is a parallax this product
+     * does not draw and says so rather than approximating it.
+     */
+    months: List<TripMonth>,
     emptyLine: String,
     profile: List<Pair<String, String>>,
     onTrip: (String) -> Unit,
@@ -54,7 +68,7 @@ public fun RiderHistory(
         title = "shashki",
     ) { page ->
         when (page) {
-            0 -> Trips(trips, emptyLine, onTrip, metrics.margin)
+            0 -> Trips(months, emptyLine, onTrip, metrics.margin)
             1 -> Profile(profile, metrics.margin)
             else -> promo()
         }
@@ -63,7 +77,7 @@ public fun RiderHistory(
 
 @Composable
 private fun Trips(
-    trips: List<TripRow>,
+    months: List<TripMonth>,
     emptyLine: String,
     onTrip: (String) -> Unit,
     margin: androidx.compose.ui.unit.Dp,
@@ -71,7 +85,7 @@ private fun Trips(
     val colors = KvadrantTheme.colors
     val type = ShashkiTheme.typography
 
-    if (trips.isEmpty()) {
+    if (months.all { it.trips.isEmpty() }) {
         // **The kit's empty list, section 08: one line in the disabled brush and no action.** A
         // button here would be an invitation to fix something the rider has not done wrong — they
         // have simply not taken a ride yet.
@@ -97,12 +111,21 @@ private fun Trips(
         Modifier.fillMaxWidth().padding(horizontal = margin),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        trips.forEach { row ->
-            Column(Modifier.fillMaxWidth().clickable { onTrip(row.id) }) {
-                CompositionLocalProvider(LocalAccentBudget provides budget) {
-                    // A row has no fields; the controller is the empty one every non-form
-                    // renderer here is given.
-                    renderer.Render(row, KompotActionHandler { }, NO_FORMS)
+        // **A month with nothing in it is not drawn** — a header over no rows is a heading for
+        // something that did not happen.
+        months.filter { it.trips.isNotEmpty() }.forEach { month ->
+            KvadrantText(
+                month.title,
+                Modifier.padding(top = 8.dp),
+                style = type.tileLabel.copy(color = colors.accent),
+            )
+            month.trips.forEach { row ->
+                Column(Modifier.fillMaxWidth().clickable { onTrip(row.id) }) {
+                    CompositionLocalProvider(LocalAccentBudget provides budget) {
+                        // A row has no fields; the controller is the empty one every non-form
+                        // renderer here is given.
+                        renderer.Render(row, KompotActionHandler { }, NO_FORMS)
+                    }
                 }
             }
         }

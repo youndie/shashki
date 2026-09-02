@@ -39,7 +39,7 @@ public fun HistoryContent(
 ) {
     RiderHistory(
         titles = listOf("trips", "profile", "promo"),
-        trips = uiState.trips,
+        months = uiState.months,
         // The kit's section 08: one line, the disabled brush, no action. **"Loading" is not an empty
         // list**, and the two look identical while meaning opposite things — so nothing is said until
         // the answer is in.

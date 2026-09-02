@@ -155,6 +155,7 @@ internal fun Petich.toRideView(): RideView {
         driverId = data[Enriched.DRIVER_ID].takeIf { status == PetichStatus.COMPLETED },
         cancellationReason = data[Enriched.REJECTION],
         paymentMethodId = order.paymentMethodId,
+        requestedAtEpochMs = order.requestedAtEpochMs,
     )
 }
 

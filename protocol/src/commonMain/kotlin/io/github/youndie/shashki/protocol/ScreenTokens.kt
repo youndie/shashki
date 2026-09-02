@@ -89,5 +89,6 @@ public data class DegradationReport(
 )
 
 /** `POST /api/screens/degradations` — what a client could not draw. */
+
 @Resource("/api/screens/degradations")
 public class Degradations
