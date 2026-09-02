@@ -42,17 +42,16 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (5)
+## Open (4)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-59](docs/backlog/B-59-the-finished-screen-writes-and-never-reads.md) `[ ]` | R8 asks for a rating it already has, and puts its one accent on skip | P2 | S | - |
 | [B-60](docs/backlog/B-60-d1-says-in-words-what-the-kit-says-in-glyphs.md) `[ ]` | D1 states a document's status in words where the kit states it in a glyph | P2 | S | - |
 | [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | - |
 | [B-62](docs/backlog/B-62-a-price-for-a-class-you-cannot-order.md) `[ ]` | R4 prices a class it has just said has no cars | P2 | XS | - |
 | [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[ ]` | The product has no driver record, so a rider is asked to rate an e-mail address | P2 | M | - |
 
-## Closed (59)
+## Closed (60)
 
 **Remove the unknowns**
 
@@ -132,6 +131,7 @@ re-prioritising one must never move its file.
 - [B-56](docs/backlog/B-56-an-uncaught-failure-is-a-blank-page.md) `[x]` - An uncaught failure leaves a blank page and no words at all
 - [B-57](docs/backlog/B-57-one-condition-two-statuses.md) `[x]` - A pickup outside the graph is 422 on two routes and 500 on the one a rider uses
 - [B-58](docs/backlog/B-58-the-rejection-nobody-writes.md) `[x]` - cancellationReason is on the wire, read by the repository, and written by nobody
+- [B-59](docs/backlog/B-59-the-finished-screen-writes-and-never-reads.md) `[x]` - R8 asks for a rating it already has, and puts its one accent on skip
 - [B-64](docs/backlog/B-64-the-offer-reaches-the-client-and-not-the-screen.md) `[x]` - The offer reaches the driver's client and never reaches the driver's screen
 
 <!-- END INDEX -->

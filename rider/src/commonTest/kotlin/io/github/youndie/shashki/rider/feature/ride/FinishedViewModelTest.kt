@@ -85,6 +85,27 @@ class FinishedViewModelTest {
             assertEquals(FinishedUiEvent.Done, model.events.first())
         }
 
+    /**
+     * **A ride that carries a rating opens with it, and does not send it again** (B-59).
+     *
+     * The screen was write-only: five empty stars over a rated journey, so a refresh — or a pasted
+     * link — offered a second rating of the same ride and the server accepted it.
+     */
+    @Test
+    fun `a rated ride opens with its stars and does not rate itself again`() =
+        runTest(dispatcher) {
+            rides.ride = rides.ride.copy(stars = 4)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            assertEquals(4, model.uiState.value.stars, "the rating this ride carries is not on the screen")
+
+            model.onAction(FinishedUiAction.Done)
+            advanceUntilIdle()
+
+            assertNull(rides.rated, "the screen rated a ride that was already rated")
+        }
+
     /** **Rating without a tip is the common case**, and *skip* costs nothing at all. */
     @Test
     fun `skip rates and charges nothing`() =

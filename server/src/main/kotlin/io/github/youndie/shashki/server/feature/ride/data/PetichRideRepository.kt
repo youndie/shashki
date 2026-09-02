@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server.feature.ride.data
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
@@ -28,6 +29,11 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
 public class PetichRideRepository(
     private val petiches: PetichRepository,
     private val trips: TripRepository,
+    /**
+     * What the rider already said about this ride (B-59). Read here rather than on a route of its
+     * own: R8 asks for one ride and needs to know whether it has been rated before it draws a form.
+     */
+    private val ratings: RatingRepository,
     private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
@@ -65,6 +71,7 @@ public class PetichRideRepository(
         val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED }
         val current = trip?.let { ride.copy(status = it.status) } ?: ride
         return current.copy(
+            stars = ratings.find(id)?.stars,
             cancellationFeeCents = current.cancellationFee(),
             // **What the settlement took, read off the settlement's own row** (B-44). It lives in a
             // different saga — `<ride>:settlement` — because the ride's row is the order's; reading
@@ -147,6 +154,7 @@ internal fun Petich.toRideView(): RideView {
         quote = quote,
         driverId = data[Enriched.DRIVER_ID].takeIf { status == PetichStatus.COMPLETED },
         cancellationReason = data[Enriched.REJECTION],
+        paymentMethodId = order.paymentMethodId,
     )
 }
 

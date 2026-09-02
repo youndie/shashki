@@ -51,6 +51,19 @@ public fun RiderFinished(
     onTip: (Int?) -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Whether *skip* is the answer this rider gave (B-59).
+     *
+     * **Separate from [selectedTip] because "nothing chosen" and "chose to give nothing" are two
+     * states and the screen used to have one.** `selectedTip == null` meant skip, so the chip was
+     * filled the moment the screen opened and the kit's one accent surface was spent recommending
+     * that nothing be paid.
+     */
+    skipped: Boolean = false,
+    /** The card and the journey, in the kit's meta line: `paid with card ·· 4417 · 26 min · 18.4 km`. */
+    meta: String? = null,
+    /** The sum with the chosen tip, or `null` when none is chosen. */
+    totalWithTip: String? = null,
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
@@ -64,6 +77,9 @@ public fun RiderFinished(
             Column {
                 KvadrantText(total, style = type.pageTitle)
                 KvadrantText(destination, style = type.body.copy(color = colors.subtle))
+                // What paid for it and how long it took — the kit's own second line, and a fact
+                // about the ride rather than a decoration (B-59).
+                meta?.let { KvadrantText(it, style = type.meta.copy(color = colors.subtle)) }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -78,9 +94,14 @@ public fun RiderFinished(
                         TipButton(label, selected = index == selectedTip) { onTip(index) }
                     }
                     // **Not a link under the row.** Skipping is the ordinary answer and it is the
-                    // same size as the others; `null` is the selection rather than the absence of
-                    // one, so the screen can show which was chosen.
-                    TipButton("skip", selected = selectedTip == null) { onTip(null) }
+                    // same size as the others — and it is filled only once somebody has chosen it,
+                    // which is what [skipped] is for.
+                    TipButton("skip", selected = skipped) { onTip(null) }
+                }
+                // **The sum with the tip, which the kit ends this screen on.** A rider who taps a
+                // chip and sees no number change has been shown a button rather than a price.
+                totalWithTip?.let {
+                    KvadrantText("total with tip · $it", style = type.rowEmphasis)
                 }
             }
         }

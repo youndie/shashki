@@ -18,8 +18,16 @@ import kotlinx.coroutines.launch
 public data class FinishedUiState(
     val ride: RideView? = null,
     val stars: Int = 0,
-    /** The index into the offered tips, or `null` for *skip* — which is a choice, not an absence. */
+    /** The index into the offered tips, or `null` when nothing has been chosen yet. */
     val selectedTip: Int? = null,
+    /**
+     * Whether *skip* is what this rider chose (B-59).
+     *
+     * **`selectedTip == null` used to mean skip**, so the screen opened with the refusal filled in
+     * the accent — the one accent surface the kit allows a screen, spent recommending that nothing
+     * be paid. Nothing is chosen when the screen opens, and skipping is a thing somebody does.
+     */
+    val skipped: Boolean = false,
     val sending: Boolean = false,
 ) {
     /** The tips this screen offers, in cents. Fixed amounts, because a percentage of what is a rule. */
@@ -74,16 +82,27 @@ public class FinishedViewModel(
     init {
         viewModelScope.launch {
             readRide(rideId)
-                .onSuccess { _uiState.value = _uiState.value.copy(ride = it) }
+                // **The stars this ride already carries** (B-59). A screen that drew five empty
+                // ones over a rated ride invited a second rating of the same journey, and the server
+                // took it.
+                .onSuccess { _uiState.value = _uiState.value.copy(ride = it, stars = it.stars ?: 0) }
                 .onFailure { _events.send(FinishedUiEvent.Failed(it.message ?: "the ride could not be read")) }
         }
     }
 
     public fun onAction(action: FinishedUiAction) {
         when (action) {
-            is FinishedUiAction.Stars -> _uiState.value = _uiState.value.copy(stars = action.stars)
-            is FinishedUiAction.Tip -> _uiState.value = _uiState.value.copy(selectedTip = action.index)
-            FinishedUiAction.Done -> send()
+            is FinishedUiAction.Stars -> {
+                _uiState.value = _uiState.value.copy(stars = action.stars)
+            }
+
+            is FinishedUiAction.Tip -> {
+                _uiState.value = _uiState.value.copy(selectedTip = action.index, skipped = action.index == null)
+            }
+
+            FinishedUiAction.Done -> {
+                send()
+            }
         }
     }
 
@@ -96,7 +115,9 @@ public class FinishedViewModel(
                 // **The rating first and the money second.** If the charge fails the rating still
                 // stands, which is the order a rider would want; the other way round, a refused
                 // rating would swallow a tip they had already agreed to.
-                if (state.stars > 0) {
+                // Only a rating this screen collected: re-sending the one that was read back would
+                // be a second rating of the same ride, written by nobody's tap.
+                if (state.stars > 0 && state.stars != state.ride?.stars) {
                     rateRide(RateRideUseCase.Params(rideId, state.stars)).getOrThrow()
                 }
                 state.selectedTip?.let { index ->
@@ -109,4 +130,18 @@ public class FinishedViewModel(
             }
         }
     }
+}
+
+/**
+ * The fare plus the chosen tip, or `null` while nothing is chosen (B-59).
+ *
+ * **Adding two numbers this screen already holds is not pricing.** `FareBreakdown`'s rule — the
+ * server sends lines and the client never computes a total — is about a receipt, whose lines are the
+ * settlement's. Here the fare is what was charged and the tip is the chip a rider just pressed, and
+ * a screen that showed neither sum would be asking somebody to do the arithmetic themselves.
+ */
+internal fun FinishedUiState.totalWithTipCents(): Long? {
+    val charged = ride?.chargedCents ?: return null
+    val tip = selectedTip?.let { FinishedUiState.TIPS.getOrNull(it) } ?: return null
+    return charged + tip
 }

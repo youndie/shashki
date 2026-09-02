@@ -1,7 +1,7 @@
 ---
 id: B-59
 title: "R8 asks for a rating it already has, and puts its one accent on skip"
-status: open
+status: done
 priority: P2
 size: S
 stage: stage-6-what-running-it-said
@@ -39,3 +39,29 @@ stars, no tip selected, and *skip* filled in the accent. Four things separate it
 - Anchors: `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/finished/`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/RiderFinished.kt`,
   `docs/screens/screen-rider-finished.md`
+
+## What it turned out to be
+
+**Four small things, and three of them were the screen asserting something it did not know.**
+
+**The rating is read back.** `RideView` carries `stars`, filled from the ratings table — the row was
+there since B-44 and nothing asked it — so a rated ride opens with its own stars and `Done` does not
+send them again. The guard is one assertion: a ride carrying four opens on four and rates nothing,
+and it fails against the old code.
+
+**Nothing is chosen when the screen opens.** `selectedTip == null` used to *mean* skip, so the
+refusal was filled in the accent the moment the screen appeared — the one accent surface the kit
+allows a screen, spent recommending that nothing be paid. `skipped` is its own state now, and
+skipping is a thing somebody does.
+
+**The total appears with the tip.** Adding the charge to the chip a rider just pressed is not
+pricing: `FareBreakdown`'s rule — the server sends lines, the client computes no total — is about a
+receipt, whose lines are the settlement's. A screen that changed nothing when a tip was chosen was
+showing a button, not a price.
+
+**And the meta is the kit's.** `paid with card-4417 · 35 min` beside the destination. The payment
+method is the id the request carried and not a card number, because this product has no card and
+printing digits it does not have is the fabrication B-47 refused in another place.
+
+The golden was re-recorded and looked at: three filled stars, `$ 5` accented, `skip` not, and
+`total with tip · $ 33.96` under the row.

@@ -222,6 +222,11 @@ private fun RiderFinished(dark: Boolean) {
             onStars = {},
             onTip = {},
             onDone = {},
+            // The three facts B-59 added, in the state a rider is in a moment after choosing a tip:
+            // the card and the duration, and the sum with the tip on it. `skipped` stays false —
+            // somebody has chosen, and it was not the refusal.
+            meta = "paid with card-4417 · 35 min",
+            totalWithTip = "$ 33.96",
         )
     }
 }

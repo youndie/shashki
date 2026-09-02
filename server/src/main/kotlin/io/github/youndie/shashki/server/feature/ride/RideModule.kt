@@ -222,7 +222,7 @@ public fun rideModule(
         single<PayoutRepository> { ExposedPayoutRepository(get()) { get<PetichClock>().nowEpochMs() } }
 
         single<RideRepository> {
-            PetichRideRepository(get<SagaStorage>().petiches, get(), sagaIndex = SagaIndex(database, get()))
+            PetichRideRepository(get<SagaStorage>().petiches, get(), get(), sagaIndex = SagaIndex(database, get()))
         }
         factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }

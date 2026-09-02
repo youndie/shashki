@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.youndie.shashki.ui.format.asDistance
+import io.github.youndie.shashki.ui.format.asDuration
 import io.github.youndie.shashki.ui.format.money
 import io.github.youndie.shashki.ui.screens.RiderFinished
 import org.koin.compose.viewmodel.koinViewModel
@@ -59,5 +60,15 @@ public fun FinishedContent(
         onTip = { onAction(FinishedUiAction.Tip(it)) },
         onDone = { onAction(FinishedUiAction.Done) },
         modifier = modifier,
+        skipped = uiState.skipped,
+        // **The card and the journey, the kit's own second line** (B-59). The payment method is the
+        // id the request carried — this product has no card, and printing digits it does not have
+        // would be a fabrication.
+        meta =
+            listOfNotNull(
+                ride?.paymentMethodId?.let { "paid with $it" },
+                ride?.quote?.durationSeconds?.asDuration(),
+            ).joinToString(" · ").takeIf { it.isNotBlank() },
+        totalWithTip = uiState.totalWithTipCents()?.let { money(it, currency) },
     )
 }

@@ -131,6 +131,21 @@ public data class RideView(
      * quarter of the fare, charged and displayed as the whole of it.
      */
     val chargedCents: Long? = null,
+    /**
+     * What this rider already said about the driver, or `null` for a ride nobody has rated (B-59).
+     *
+     * **R8 was write-only.** It drew five empty stars over a ride that carried a five, so a refresh
+     * — or a pasted link — invited a second rating of the same journey, and the server took it. A
+     * screen that does not read back what it wrote is a screen that does not know the ride happened.
+     */
+    val stars: Int? = null,
+    /**
+     * What paid for it. The kit's R8 meta names the card, and this is where that comes from (B-59).
+     *
+     * It is the id the request carried, not a card number: this product has no card, and printing
+     * one would be the fabrication its object-store item refused in another place.
+     */
+    val paymentMethodId: String? = null,
 )
 
 /**

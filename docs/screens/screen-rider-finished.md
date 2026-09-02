@@ -14,6 +14,18 @@ source: rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/ride
 
 # Screen: finished
 
+## What the screen knows before it asks (B-59)
+
+R8 opens carrying the ride's own rating — `RideView.stars` — so a refresh or a pasted link does not
+offer to rate the same journey twice. Nothing in the tip row is selected until somebody selects it:
+`selectedTip == null` used to mean *skip*, which spent the screen's one accent surface, on opening,
+recommending that nothing be paid.
+
+The meta line is the kit's: `paid with <method> · <duration>`, the method being the id the request
+carried rather than a card number this product does not have. And `total with tip` appears once a
+chip is chosen — the fare plus the chip, which is arithmetic the screen already holds, not the
+receipt's lines.
+
 ## 0a. Code anchors
 
 | What | File |
