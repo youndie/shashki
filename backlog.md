@@ -32,6 +32,7 @@ re-prioritising one must never move its file.
 | `stage-1-skeleton` | Something builds and can be looked at | Modules, targets, versions, sign-in, tiles served. The point at which a screen can be put on top of something. |
 | `stage-2-saga` | The order survives the process dying | The core of the demo: phases, compensations, the outbox, and an offer that waits for a human without holding anything. |
 | `stage-3-surface` | Everything past the core | Receipts, crash reports, rebuildability — the parts that are ordinary work once the three above are settled. |
+| `stage-4-elsewhere` | It runs somewhere that is not this laptop | Packaging and deployment. A separate stage because the question changes: the four above ask whether it works, this one asks whether somebody else can run it — and the answers are artefacts rather than code. |
 
 ## Marks
 
@@ -39,9 +40,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (0)
+## Open (3)
 
-No open tasks.
+| Task | | Priority | Size | Blocked by |
+|---|---|---|---|---|
+| [B-35](docs/backlog/B-35-the-server-as-an-image.md) `[ ]` | The server as an image, and the graph that has to be inside it | P1 | M | - |
+| [B-37](docs/backlog/B-37-the-settlement-saga.md) `[ ]` | The settlement saga, whose parts are all written and none of them called | P1 | L | - |
+| [B-36](docs/backlog/B-36-a-chart-for-somewhere-else.md) `[ ]` | A chart, and the honest replica count that goes in it | P2 | M | B-35 |
 
 ## Closed (34)
 
