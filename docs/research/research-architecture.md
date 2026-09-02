@@ -663,12 +663,19 @@ provider is configured — a demo has nobody to sign in against — which is why
 unattended and the acceptance carries a forged-signature control: a validator that accepted anything
 would satisfy every other assertion.
 
-What it does **not** change is §1.6c's claim about WebCrypto, and that is the point worth carrying
-forward: it is still unverified. The whole flow ran on the JVM against the JDK provider. The browser
-build compiles and nothing executes it, because `wasmJsBrowserTest` is disabled in three build
-scripts for want of a browser on the build box — the third item to end that way, and now an item of
-its own ([B-34](../backlog/B-34-a-browser-on-the-build-box.md)) rather than a footnote repeated three
-times.
+What it did **not** change on the day was §1.6c's claim about WebCrypto: the whole flow ran on the
+JVM against the JDK provider, and the browser build compiled without ever being executed. That was
+the third item to end that way, so it became one of its own
+([B-34](../backlog/B-34-a-browser-on-the-build-box.md)) — **and the obstacle turned out not to
+exist.** Ubuntu 24.04 has no apt candidate for `chromium`, which is what had been written down; Chrome
+for Testing is a plain zip that needs no root, and on this machine not one shared library was
+missing. The eight PKCE tests now run in Chrome as well as on the JDK, so `S256` from WebCrypto is
+the challenge shildik verifies rather than an assumption about it.
+
+**The general lesson is the uncomfortable one.** "No browser on the build box" was measured once,
+cited twice more, and was never re-tested — each citation reading as evidence because the previous
+one had been written down. A constraint recorded in prose does not expire, and this one was wrong
+for at least three items' worth of decisions.
 
 **Consequence 1.6d1 — it was, and it found a defect on the first try (2026-09-02,
 [B-14](../backlog/B-14-receipt-over-smtpkn-jvm.md)).**

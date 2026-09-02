@@ -11,16 +11,12 @@ plugins {
 
 kotlin {
     // The same two targets as `:rider`, for the same two reasons: `wasmJs` is what ships (D1), and
-    // `jvm("desktop")` is the only target viddik can photograph on a box with no browser.
+    // `jvm("desktop")` is the only target viddik can photograph.
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         browser {
-            // **No browser on the build box, so this would run nothing and fail loudly about it.**
-            // The tests live in `commonTest` and run on the desktop target, which is the same code;
-            // what wasm owes the project is that it compiles, and `check` is made to depend on both
-            // its compilations below rather than on a suite that cannot start. Running them in a
-            // browser needs a browser — the same limit B-09 and B-10 recorded.
-            testTask { enabled = false }
+            // **The browser suite is enabled and guarded in the root build**, because the decision
+            // is not this module's: it is whether the machine has a Chrome at all. See B-34.
         }
         binaries.executable()
     }

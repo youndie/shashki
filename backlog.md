@@ -39,13 +39,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (1)
+## Open (0)
 
-| Task | | Priority | Size | Blocked by |
-|---|---|---|---|---|
-| [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[ ]` | A headless browser on the build box, so the wasm target is run and not only compiled | P2 | M | - |
+No open tasks.
 
-## Closed (33)
+## Closed (34)
 
 **Remove the unknowns**
 
@@ -91,6 +89,7 @@ re-prioritising one must never move its file.
 - [B-31](docs/backlog/B-31-the-wait-for-a-car.md) `[x]` - The wait for a car, which the kit puts on every class tile
 - [B-32](docs/backlog/B-32-which-screens-the-server-sends.md) `[x]` - Which screens the server sends, and which the client draws
 - [B-33](docs/backlog/B-33-take-the-upstream-fixes.md) `[x]` - The three upstream fixes landed; take them and delete what they replace
+- [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md) `[x]` - A headless browser on the build box, so the wasm target is run and not only compiled
 
 <!-- END INDEX -->
 

@@ -31,9 +31,10 @@ because two things it needs do not exist yet.
 
 - AC: a rider signs in with a magic link against a locally running shildik and the client holds a
   token the server accepts.
-- AC: **not met.** The same flow runs in the browser build, not only on the JVM — this is the
-  criterion that covers WebCrypto. It has moved to [B-34](B-34-a-browser-on-the-build-box.md), with
-  the thing that blocks it; see below.
+- AC: **met, by [B-34](B-34-a-browser-on-the-build-box.md) on 2026-09-02.** The same flow runs in
+  the browser build, not only on the JVM — this is the criterion that covers WebCrypto. It was
+  unmet when this item closed and moved to B-34 with the thing that blocked it; B-34 put a browser
+  on the machine and the eight PKCE tests now run in Chrome as well as on the JDK.
 - AC: a tampered `state` on the callback is refused, and the refusal is shown to have been reached
   rather than assumed.
 - AC: how shildik is run locally is written down in the repository, so the next person does not
@@ -81,8 +82,11 @@ What is **still** authenticated rather than authorised: `RideRequest` carries a 
 so a token proves somebody signed in and not that the ride is theirs. That half is B-09's remainder
 and is named where the routes are declared.
 
-**AC2 is not met and is not ticked.** The flow runs on the JVM against the JDK provider; the browser
-build compiles and nothing executes it, because `wasmJsBrowserTest` is disabled in three build
-scripts — there is no browser on the build box. That is the same wall [B-10](B-10-crash-reports-from-the-browser.md)
-closed against, and after the third time it is a piece of work rather than a footnote:
-[B-34](B-34-a-browser-on-the-build-box.md).
+**AC2 was not met when this closed, and is met now.** The flow ran on the JVM against the JDK
+provider; the browser build compiled and nothing executed it, because `wasmJsBrowserTest` was
+disabled in three build scripts for want of a browser. That was the same wall
+[B-10](B-10-crash-reports-from-the-browser.md) closed against, and after the third time it became a
+piece of work rather than a footnote: [B-34](B-34-a-browser-on-the-build-box.md), which found that
+the box could host a browser all along — a pinned Chrome for Testing is an unzip, and not one shared
+library was missing. **The eight PKCE tests now run in Chrome**, so `S256` computed by WebCrypto is
+the challenge shildik verifies rather than an assumption about it.

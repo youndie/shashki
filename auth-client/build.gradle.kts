@@ -6,19 +6,18 @@ plugins {
 }
 
 kotlin {
-    // **The browser is the target this module exists for; the JVM is here so it can be tested.**
-    // There is no browser on the build box, so `wasmJsBrowserTest` cannot run (see the note on the
-    // test task below) — the behaviour is pinned on the JVM, where the same `commonMain` code runs
-    // against the JDK provider instead of WebCrypto. What that does *not* cover is named in B-09.
+    // **The browser is the target this module exists for, and since B-34 it is the target the suite
+    // runs on.** The same `commonTest` executes twice: on the JVM against the JDK provider, and in a
+    // real Chrome against WebCrypto. Until there was a browser only the first happened, so "the
+    // challenge the provider verifies is the challenge we compute" was true of a provider the
+    // product does not use.
     jvm()
 
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         browser {
-            // No test source set for this target and no browser to run one in. `check` compiles it
-            // instead, which is the guarantee that matters here: the day this module reaches for a
-            // JVM type, the build says so.
-            testTask { enabled = false }
+            // **The browser suite is enabled and guarded in the root build**, because the decision
+            // is not this module's: it is whether the machine has a Chrome at all. See B-34.
         }
     }
 

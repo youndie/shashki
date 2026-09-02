@@ -94,6 +94,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # **The browser the wasm suite runs in, pinned and fetched the same way the build box fetches
+      # it.** The runner image ships a Chrome of its own; using it would mean the product's one
+      # executed target ran in a different browser on every machine, and "it passes locally" would
+      # stop meaning anything. The script is the same one a person runs — a browser that exists
+      # because somebody typed a command once is a build that breaks on the next machine (B-34).
+      - run: |
+          bash scripts/install-chrome.sh
+          eval "$(bash scripts/install-chrome.sh --export)"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+
       # Not `build`: `check` is the target a contributor runs, and the distribution is not something
       # a pull request needs built.
       #

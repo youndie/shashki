@@ -25,8 +25,9 @@ import kotlin.test.assertTrue
  * challenge it computes has to be the one the provider verifies, and the form it sends has to be the
  * one the token endpoint accepts. Every one of those is an agreement with somebody else's code.
  *
- * The browser's part — that WebCrypto computes the same `S256` — is not here and cannot be: there is
- * no browser on the build box. What runs here is the JDK provider.
+ * The browser's part — that WebCrypto computes the same `S256` — is not here, and since B-34 it is
+ * not missing either: the same `commonTest` runs in a real Chrome (`:auth-client:wasmJsBrowserTest`).
+ * What runs *here* is the JDK provider, against a live provider.
  *
  * **The two steps in the middle are a person, and this test plays them.** Fetching the sign-in page
  * and posting credentials is what a human does in shildik's own UI; the client under test never sees

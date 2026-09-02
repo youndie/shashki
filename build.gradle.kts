@@ -19,3 +19,45 @@ plugins {
     alias(libs.plugins.sborkaLint) apply false
     alias(libs.plugins.viddik) apply false
 }
+
+// **One piece of shared configuration, and the paragraph above is why it needs a reason.**
+//
+// What that paragraph forbids is a module's own decisions being made here: a target list inherited
+// from the root is a target nobody argued for. This is not that. Whether the wasm suite can run is a
+// fact about the *machine* — is there a Chrome — and it is the same fact for every module. Five
+// copies of it would be five places to forget, which is exactly the shape B-34 was filed to end:
+// three items closed against "no browser on the build box" while the switch sat in three build
+// scripts.
+//
+// `scripts/install-chrome.sh` puts a pinned Chrome for Testing on the machine and prints the
+// variable to export.
+val chrome: Provider<String> = providers.environmentVariable("CHROME_BIN")
+
+subprojects {
+    tasks.matching { it.name == "wasmJsBrowserTest" }.configureEach {
+        // A checkout on a machine with no browser must still build, and must say what it skipped.
+        // Silence here is the failure this whole item exists to end.
+        if (!chrome.isPresent) {
+            enabled = false
+            logger.lifecycle("$path: no CHROME_BIN, so the browser suite is skipped — scripts/install-chrome.sh")
+        }
+
+        // **And a suite that ran nothing must not pass.** A browser test task with no tests in it is
+        // greener than one with a failure — it is the exact shape of the thing being fixed, which is
+        // a wasm target that looked checked and was not. The count comes from the task's own report
+        // rather than from a file left over from an earlier run.
+        val reports = (this as AbstractTestTask).reports.junitXml.outputLocation
+        doLast {
+            val xml = reports.get().asFile
+            val ran =
+                xml
+                    .walkTopDown()
+                    .filter { it.extension == "xml" }
+                    .sumOf { file ->
+                        Regex("""tests="(\d+)"""").find(file.readText())?.groupValues?.get(1)?.toInt() ?: 0
+                    }
+            check(ran > 0) { "$path produced no tests: a browser suite that runs nothing is not a check" }
+            logger.lifecycle("$path: $ran tests in a browser")
+        }
+    }
+}

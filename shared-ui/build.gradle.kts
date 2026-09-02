@@ -32,11 +32,11 @@ kotlin {
         // would fail for a reason that has nothing to do with the test (CMP-4906). maplibre-compose
         // declares it in its own build for the same sentence.
         binaries.executable()
-        // No test source set here, and the empty Karma run would still want a browser on a build
-        // box that has none. The goldens are taken on desktop by design (B-02); what this target
-        // owes the project is that it compiles, and `check` is made to depend on that below rather
-        // than on a suite with nothing in it.
-        browser { testTask { enabled = false } }
+        // The goldens are taken on desktop by design (B-02) — viddik photographs JVM targets only
+        // — so what runs here is the part of this module that is arithmetic rather than pixels:
+        // the camera. Whether the suite runs at all is the root build's decision (B-34), because it
+        // depends on the machine having a Chrome.
+        browser { }
     }
 
     sourceSets {
@@ -68,6 +68,14 @@ kotlin {
         }
         // `getByName` rather than `by getting`: the delegate is deprecated in Gradle 9.6, and its
         // warning is a script-compilation warning like the ones above.
+        // **The camera runs where the product runs.** `MapViewportTest` is arithmetic with no
+        // resources and no Compose in it, so it belongs in `commonTest` and executes on wasm as
+        // well as on the JVM — which is the target that decides what gets fetched, and the one
+        // nothing had ever run (B-34). Everything else in this module's suite reads a test resource
+        // or takes a screenshot, and neither exists on wasm.
+        commonTest {
+            dependencies { implementation(kotlin("test")) }
+        }
         getByName("desktopTest") {
             dependencies {
                 implementation(kotlin("test"))

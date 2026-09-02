@@ -16,9 +16,10 @@ import kotlinx.coroutines.launch
  * The handler returns `false` so the browser still logs the error to the console. A reporter that
  * swallowed it would take away the thing a developer looks at first.
  *
- * **Compiled but not run.** There is no browser on the build box, so nothing here executes in
- * `check`; what the build guarantees is that it compiles for `wasmJs`, and B-26's end-to-end sign-in
- * is the first thing that will actually load a page. That limit is stated rather than left implied.
+ * **Run, since B-34.** This was compiled and never executed — a `@JsFun` is a string the compiler
+ * cannot check, so a typo in `event.reason` would have shipped as a crash reporter that reports
+ * nothing. `BrowserCrashHookTest` now fires both events in a real Chrome and requires the ingest
+ * request to come out the other side.
  */
 public actual fun installCrashReporting(
     reporter: CrashReporter,

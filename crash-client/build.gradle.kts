@@ -14,9 +14,8 @@ kotlin {
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         browser {
-            // No browser on the build box, so nothing would run here; `check` compiles the target
-            // instead, which is the claim that matters — see the task wiring below.
-            testTask { enabled = false }
+            // **The browser suite is enabled and guarded in the root build**, because the decision
+            // is not this module's: it is whether the machine has a Chrome at all. See B-34.
         }
     }
 

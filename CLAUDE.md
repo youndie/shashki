@@ -56,6 +56,12 @@ the global agent instructions name — it finds the sync session for the current
 What genuinely cannot be built there stays local: Apple targets, `xcodebuild`, the simulator, and
 anything prefixed `LOCAL=1`. **Formatters run locally.**
 
+**The wasm suite needs a browser and the box has one.** `scripts/install-chrome.sh` puts a pinned
+Chrome for Testing on the machine and prints the `CHROME_BIN` to export; with it set, `check` runs
+every module's `wasmJsBrowserTest` and each says how many tests it ran. Without it they are skipped
+with a line naming the script — see [B-34](docs/backlog/B-34-a-browser-on-the-build-box.md), which
+also records that "there is no browser on the build box" had been true of nobody having tried.
+
 **Goldens are recorded on this machine and verified everywhere.** `LOCAL=1 ./gradlew
 :shared-ui:viddikRecord` writes them; `./gradlew check` compares them, and it does so identically on
 the mac, on the Linux box and on CI — measured, not assumed:

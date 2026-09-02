@@ -69,3 +69,9 @@ breaks the process it was added to protect. The browser gets `window.onerror` *a
 `unhandledrejection` — either alone leaves half the failures unreported, and in a Compose/Wasm
 application most failures are rejected promises. That half compiles for `wasmJs` and runs nowhere:
 there is no browser on the build box, and saying so is better than a green tick over an untested path.
+
+**Since 2026-09-02 there is one, and the path is tested** ([B-34](B-34-a-browser-on-the-build-box.md)).
+`BrowserCrashHookTest` dispatches an `ErrorEvent` and an `unhandledrejection` at the window in a real
+Chrome and requires the ingest request to come out the other end. That is the half a `@JsFun` most
+needs: it is a string the compiler cannot check, so a typo in `event.reason` would have shipped as a
+crash reporter that reports nothing.
