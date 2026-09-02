@@ -1,8 +1,4 @@
-package io.github.youndie.shashki.rider.feature.auth.domain
-
-import io.github.youndie.shashki.auth.SignInAttempt
-import io.github.youndie.shashki.auth.SignInConfig
-import io.github.youndie.shashki.auth.TokenStore
+package io.github.youndie.shashki.auth
 
 /**
  * Who this browser is signed in as, and how it becomes signed in.

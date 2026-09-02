@@ -20,6 +20,16 @@ public sealed interface DriverRoute : NavKey {
     /** The address this route occupies. **The browser's address bar is part of the interface.** */
     public val path: String
 
+    /**
+     * Where the provider sends the browser back to (B-52), and it draws nothing — the rider's
+     * `Callback` for the same reason: the application arrives with a code in the query, exchanges it
+     * and goes to the start.
+     */
+    @Serializable
+    public data object Callback : DriverRoute {
+        override val path: String get() = "/callback"
+    }
+
     /** Online or off, and the offer when there is one. */
     @Serializable
     public data object Shift : DriverRoute {
@@ -36,11 +46,21 @@ public sealed interface DriverRoute : NavKey {
 
     public companion object {
         /**
+         * Where this bundle is served: `BUNDLES` in the server's `BundleRouting` puts the driver
+         * under a prefix and the rider at the root, because a demo is opened by a rider.
+         *
+         * **The routes above do not carry it** — a route is a fact about the application — and the
+         * address bar is wrapped in it instead.
+         */
+        public const val BASE: String = "/driver"
+
+        /**
          * The address the browser was opened at, as a route — or `null` for one this application has
          * no screen for, which the caller answers with its own start rather than with a crash.
          */
         public fun ofPath(path: String): DriverRoute? =
             when {
+                path == Callback.path -> Callback
                 path == "/" || path.isEmpty() -> Shift
                 path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 else -> null

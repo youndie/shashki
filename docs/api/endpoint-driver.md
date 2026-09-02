@@ -17,16 +17,32 @@ parent_feature: feature-the-trip
 
 | Method and path | Auth tier | Purpose |
 |---|---|---|
-| `WS /api/driver/positions` | **public, temporarily, and the hole is named** | the driver's position, a few times a minute, straight into the geo-index |
-| `GET /api/driver/offers/{driverId}` | public, temporarily | the offer waiting for this driver, or 404 |
-| `POST /api/driver/offers/{rideId}/answer` | public, temporarily | accept or decline |
-| `POST /api/driver/rides/{rideId}/advance` | public, temporarily | move the trip to the next state |
+| `WS /api/driver/positions` | **driver ticket** | the driver's position, a few times a minute, straight into the geo-index |
+| `POST /api/driver/ticket` | driver token | one short-lived ticket, for the socket above |
+| `GET /api/driver/offers/{driverId}` | driver token | the offer waiting for this driver, or 404 |
+| `POST /api/driver/offers/{rideId}/answer` | driver token | accept or decline |
+| `POST /api/driver/rides/{rideId}/advance` | driver token | move the trip to the next state |
 
-**The hole, stated once and meant.** Until B-09 puts the driver in a token, the socket believes the
-`driverId`, the class and the rating it is told: anyone who can reach the port can park a five-star
-driver next to a pickup. What limits the damage on the last route is not the tier — it is that
-`AdvanceTripUseCase` compares the id in the body with the driver the *order saga* assigned, which is
-a value no client supplies.
+**The hole is shut** (B-52). It said "public, temporarily" here for two stages, and what it meant was
+that anybody who knew a driver's id could read the offer waiting for them, accept it, and advance the
+trip to `COMPLETED` — which captures the rider's hold.
+
+**The identity is the token's subject, and it replaces rather than compares.** The `{driverId}` in
+the offers path and the `driverId` in the two bodies are ignored the moment there is a principal;
+they survive because a server with no provider configured is a running configuration — the demo — and
+there they are the only source there is. A route that took an id the caller chose *and* a token would
+have to compare them, and a route that has to compare them will one day not.
+
+**The socket is the exception, in both directions.** A browser cannot put a header on a WebSocket, so
+the upgrade carries a one-shot ticket minted at `POST /api/driver/ticket` behind the ordinary token
+check — thirty seconds, single use, and worth nothing in an access log. And a frame is *compared*
+rather than replaced: a position for anybody but the connected driver is dropped and counted, because
+relabelling it would file somebody else's car under this driver.
+
+What has not moved: the class and the rating are still self-reported, because there is no driver
+record to read them from. The second lock on the last route is still there and is still worth having
+— `AdvanceTripUseCase` compares the identity with the driver the *order saga* assigned, so a
+signed-in driver cannot drive somebody else's trip.
 
 ## Handlers (code anchors)
 

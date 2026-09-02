@@ -7,6 +7,8 @@ import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.CandidateSource
 import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.dispatch.DriverReservations
+import io.github.youndie.shashki.server.dispatch.DriverTickets
+import io.github.youndie.shashki.server.dispatch.DroppedFrames
 import io.github.youndie.shashki.server.dispatch.FreeCandidates
 import io.github.youndie.shashki.server.dispatch.GeoCandidateSource
 import io.github.youndie.shashki.server.dispatch.GridDriverIndex
@@ -148,6 +150,11 @@ public fun rideModule(
         single<CandidateSource> { FreeCandidates(GeoCandidateSource(get(), get()), get()) }
         single<DriverReservations> { InMemoryDriverReservations() }
         single<OfferBoard> { InMemoryOfferBoard() }
+        // The socket's half of the driver's token, and the count of frames that did not match it
+        // (B-52). Both in memory and per process: a ticket outlives its socket by thirty seconds and
+        // a count is for a graph.
+        single { DriverTickets(get()) }
+        single { DroppedFrames() }
 
         // The timer resumes the saga through the engine, and the engine's steps schedule the timer:
         // a cycle, broken by resolving the engine lazily at fire time rather than at construction.

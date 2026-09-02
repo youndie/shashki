@@ -1,9 +1,5 @@
-package io.github.youndie.shashki.rider.feature.auth
+package io.github.youndie.shashki.auth
 
-import io.github.youndie.shashki.auth.InMemoryTokenStore
-import io.github.youndie.shashki.auth.SignInConfig
-import io.github.youndie.shashki.rider.feature.auth.domain.Session
-import io.github.youndie.shashki.rider.feature.auth.domain.TokenExchange
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,8 +1,5 @@
-package io.github.youndie.shashki.rider.feature.auth.data
+package io.github.youndie.shashki.auth
 
-import io.github.youndie.shashki.auth.SignInConfig
-import io.github.youndie.shashki.auth.tokenUrl
-import io.github.youndie.shashki.rider.feature.auth.domain.TokenExchange
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.statement.bodyAsText

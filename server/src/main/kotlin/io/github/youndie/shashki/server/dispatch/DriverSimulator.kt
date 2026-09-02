@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.dispatch
 
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
+import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.DriverReport
@@ -16,9 +17,12 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.header
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.websocket.Frame
@@ -55,6 +59,21 @@ public data class SimulatorConfig(
      */
     val rideClass: (driverId: String) -> RideClass? = { null },
     val seed: Int = 20_260_902,
+    /**
+     * How a simulated driver signs in (B-52).
+     *
+     * **A simulator with a back door is the back door**, which is the item's own line: these are
+     * clients of the same routes, and those routes now want a token. The lambda is given the
+     * driver's id and answers with a bearer token for it, or `null` on a server with no provider —
+     * the configuration every test here uses. What it must never be is a way into the index that a
+     * real client does not have.
+     */
+    val token: suspend (driverId: String) -> String? = { null },
+    /**
+     * A one-shot ticket for the position socket, for the same reason the driver's application has
+     * one: a WebSocket upgrade cannot carry a header.
+     */
+    val ticket: suspend (driverId: String) -> String? = { null },
 ) {
     public companion object {
         public val LJUBLJANA: GeoPoint = GeoPoint(46.0511, 14.5051)
@@ -108,7 +127,12 @@ public class DriverSimulator(
         // for the way there" — see [roadTo].
         var ahead = ArrayDeque<GeoPoint>()
 
-        val session = client.webSocketSession(DRIVER_POSITIONS_PATH)
+        val ticket = config.ticket(driverId)
+        val path = if (ticket == null) DRIVER_POSITIONS_PATH else "$DRIVER_POSITIONS_PATH?$DRIVER_TICKET_QUERY=$ticket"
+        // Hoisted: a request builder is not a suspend lambda, and the token is fetched rather than
+        // held — this is where a simulated driver "signs in".
+        val token = config.token(driverId)
+        val session = client.webSocketSession(path) { token?.let(::bearer) }
         try {
             while (currentCoroutineContext().isActive) {
                 session.send(
@@ -190,7 +214,8 @@ public class DriverSimulator(
 
     /** The driver's app polling its offer, exactly as the kit's D3 screen does. */
     private suspend fun answerAnyOffer(driverId: String) {
-        val response: HttpResponse = client.get(DriverOffers.ForDriver(driverId = driverId))
+        val token = config.token(driverId)
+        val response: HttpResponse = client.get(DriverOffers.ForDriver(driverId = driverId)) { token?.let(::bearer) }
         if (response.status != HttpStatusCode.OK) return
         val offer = response.body<OfferView>()
         when (config.behaviour(driverId)) {
@@ -205,8 +230,10 @@ public class DriverSimulator(
         driverId: String,
         decision: DriverDecision,
     ) {
+        val token = config.token(driverId)
         runCatching {
             client.post(DriverOffers.Answer(rideId = offer.rideId)) {
+                token?.let(::bearer)
                 contentType(ContentType.Application.Json)
                 setBody(OfferAnswer(driverId, decision))
             }
@@ -252,4 +279,9 @@ public class DriverSimulator(
         const val MIN_RATING = 4.5
         const val MAX_RATING = 5.0
     }
+}
+
+/** One place that writes the header, so a route added to the simulator is authenticated with it. */
+private fun HttpRequestBuilder.bearer(token: String) {
+    header(HttpHeaders.Authorization, "Bearer $token")
 }

@@ -55,3 +55,30 @@ public object NoAddressBar : AddressBar {
 
 /** The browser's, or [NoAddressBar] where there is no browser. */
 public expect fun addressBar(): AddressBar
+
+/**
+ * The same bar, for an application served under a prefix (B-52).
+ *
+ * **The driver bundle lives at `/driver` and its routes do not know that.** `DriverRoute.Shift` is
+ * `/`, because a route is a fact about the application and not about where somebody deployed it — so
+ * without this the driver pushed `/` into the address bar and a refresh landed on the *rider*. The
+ * prefix is a deployment's business, and this is where the two meet.
+ *
+ * It matters more than tidiness now that the driver signs in: the redirect URI a provider is given
+ * has to be an address this bundle answers, and `origin() + "/callback"` is the rider's.
+ */
+public fun AddressBar.under(prefix: String): AddressBar =
+    if (prefix.isEmpty()) {
+        this
+    } else {
+        object : AddressBar {
+            override fun openedAt(): String = this@under.openedAt().removePrefix(prefix).ifEmpty { "/" }
+
+            override fun queryAt(): Map<String, String> = this@under.queryAt()
+
+            override fun push(path: String): Unit = this@under.push(prefix + path.removeSuffix("/"))
+
+            override fun onNavigate(listener: (path: String) -> Unit): Unit =
+                this@under.onNavigate { path -> listener(path.removePrefix(prefix).ifEmpty { "/" }) }
+        }
+    }

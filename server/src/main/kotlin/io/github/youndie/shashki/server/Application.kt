@@ -213,13 +213,16 @@ public fun Application.shashki(
 
     routing {
         rideRoutes(protected = oidc != null)
-        tripRoutes()
+        // **The driver's four, behind the same switch** (B-52). Until this they were public and the
+        // endpoint table said so: anybody who knew a driver's id could read the offer waiting for
+        // them, accept it and drive the trip to `COMPLETED`, which captures the rider's hold.
+        tripRoutes(protected = oidc != null)
         routeRoutes()
         quoteRoutes()
         promoRoutes()
         degradationRoutes()
-        driverRoutes()
-        driverPositionRoutes()
+        driverRoutes(protected = oidc != null)
+        driverPositionRoutes(protected = oidc != null)
         eventRoutes()
 
         // **Last, and a test rather than a hope.** `default("index.html")` under `/` answers any

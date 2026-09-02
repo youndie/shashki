@@ -26,6 +26,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.sharedUi)
+            implementation(projects.authClient)
             implementation(projects.crashClient)
             api(projects.protocol)
 

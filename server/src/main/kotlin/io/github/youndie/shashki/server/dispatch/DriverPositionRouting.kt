@@ -1,15 +1,19 @@
 package io.github.youndie.shashki.server.dispatch
 
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
+import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverReport
 import io.ktor.server.routing.Route
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
+import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 import ru.workinprogress.petich.PetichClock
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * The position stream: one socket per driver, a [DriverReport] every few seconds, straight into the
@@ -19,22 +23,43 @@ import ru.workinprogress.petich.PetichClock
  * position is worth a minute; a topic partitioned by ride would carry thousands of them a second to
  * be read once and thrown away. What goes through booblik is what happened to a *ride*.
  *
- * **Auth tier: public, temporarily, and the hole is named.** The socket believes the `driverId`,
- * the class and the rating it is told. Until B-09 puts the driver in a token, anyone who can reach
- * the port can park a five-star driver next to a pickup. The seam is the report itself — see
- * `DriverReport`'s own note — and the tier moves to "driver token, id taken from it, class and
- * rating read from the driver's row" in the same change.
+ * **Auth tier: a driver ticket, when a provider is configured** (B-52). A browser cannot put a
+ * header on a WebSocket, so the upgrade carries a one-shot ticket minted behind the ordinary token
+ * check — `DriverTickets` says why that beat sending the token as the first frame. Without a ticket
+ * the upgrade is refused before a frame is read.
+ *
+ * **A frame is compared, not relabelled.** This is the one place the token does not simply replace
+ * the claimed id: rewriting it would file another driver's position under the connected one, which
+ * is worse than losing it. A frame for anybody else is dropped and counted, and the count is what
+ * makes a client's bug visible rather than mysterious.
+ *
+ * The class and the rating are still self-reported — the seam `DriverReport` names, and a different
+ * item: they belong to a driver record this product does not have.
  *
  * A closed socket is a driver going offline. A crashed one is covered by staleness instead, which
  * is why the index does not need to hear about it.
  */
-public fun Route.driverPositionRoutes() {
+public fun Route.driverPositionRoutes(protected: Boolean = false) {
     val index by inject<DriverIndex>()
     val clock by inject<PetichClock>()
     val json by inject<Json>()
+    val tickets by inject<DriverTickets>()
+    val dropped by inject<DroppedFrames>()
     val log = LoggerFactory.getLogger("shashki.positions")
 
     webSocket(DRIVER_POSITIONS_PATH) {
+        // Refused before a frame is read, and closed rather than answered: there is no status code
+        // to send once an upgrade has completed, so the policy-violation close is the 401.
+        val subject =
+            if (protected) {
+                call.request.queryParameters[DRIVER_TICKET_QUERY]?.let(tickets::redeem)
+                    ?: return@webSocket close(
+                        CloseReason(CloseReason.Codes.VIOLATED_POLICY, "a driver ticket is required"),
+                    )
+            } else {
+                null
+            }
+
         var driverId: String? = null
         try {
             for (frame in incoming) {
@@ -48,6 +73,11 @@ public fun Route.driverPositionRoutes() {
                             log.warn("dropping unreadable position frame: {}", it.message)
                             continue
                         }
+                if (subject != null && report.driverId != subject) {
+                    dropped.record()
+                    log.warn("a socket reported a position for a driver it is not signed in as")
+                    continue
+                }
                 driverId = report.driverId
                 index.report(report, clock.nowEpochMs())
             }
@@ -55,4 +85,20 @@ public fun Route.driverPositionRoutes() {
             driverId?.let(index::goOffline)
         }
     }
+}
+
+/**
+ * How many position frames were for somebody other than the driver who opened the socket (B-52).
+ *
+ * In memory and per process, like the degradation counter: what it is for is a graph and an alert.
+ * **It exists because "dropped" and "never sent" are indistinguishable from the outside** — a client
+ * whose id and token disagree would otherwise simply not appear on the map, and nobody could tell
+ * that from a phone with no signal.
+ */
+public class DroppedFrames {
+    private val count = AtomicLong()
+
+    public fun record(): Unit = count.incrementAndGet().let { }
+
+    public fun total(): Long = count.get()
 }

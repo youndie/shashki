@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.protocol
 
+import io.ktor.resources.Resource
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,3 +23,24 @@ public data class DriverReport(
 
 /** Where the driver's app sends [DriverReport]s. A path, so the client does not spell it either. */
 public const val DRIVER_POSITIONS_PATH: String = "/api/driver/positions"
+
+/**
+ * The query parameter the socket carries its ticket in (B-52).
+ *
+ * **A browser cannot put a header on a WebSocket**, so the upgrade cannot present a bearer token the
+ * way every other protected call does. The ticket is minted at [DriverTickets] behind the ordinary
+ * token check, lives thirty seconds and dies on redemption — a value in a URL reaches access logs
+ * and history, and that is the whole reason it is worth so little.
+ */
+public const val DRIVER_TICKET_QUERY: String = "ticket"
+
+/** What `POST /api/driver/ticket` answers: one use, and not for long. */
+@Serializable
+public data class DriverTicket(
+    val value: String,
+    val expiresInSeconds: Int,
+)
+
+/** `POST /api/driver/ticket` — the driver's token, exchanged for something a socket can carry. */
+@Resource("/api/driver/ticket")
+public class DriverTickets

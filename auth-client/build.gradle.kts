@@ -37,6 +37,10 @@ kotlin {
             implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
             implementation(libs.ktor.resources)
             implementation(libs.shildik.sharedOidc)
+            // **The exchange moved here from `:rider` when the driver needed the same session**
+            // (B-52). Two bundles signing in two ways is two answers to "am I signed in", and the
+            // second one is always the one nobody tests.
+            implementation(libs.ktor.client.core)
         }
         jvmTest.dependencies {
             // A real engine for the one test that talks to a real shildik.

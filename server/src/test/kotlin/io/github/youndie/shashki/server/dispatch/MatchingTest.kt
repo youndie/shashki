@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.dispatch
 
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
+import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverReport
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
@@ -20,6 +21,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.get
+import ru.workinprogress.oidc.OidcConfig
 import ru.workinprogress.petich.PetichClock
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -45,20 +47,31 @@ class MatchingTest {
             lateinit var app: Application
             application {
                 app = this
-                shashki(PostgresHarness.database)
+                // **A provider, so the socket wants a ticket** (B-52): the point of this test is
+                // the index, and an index that could be written by anybody is a different index.
+                shashki(PostgresHarness.database, oidc = unreachableProvider())
             }
             val client = simulatorClient()
             startApplication()
 
             val index = app.get<DriverIndex>()
             val clock = app.get<PetichClock>()
-            // The Application is the simulator's scope, so its drivers stop when the test's server does.
-            val jobs = DriverSimulator(client, SimulatorConfig(drivers = 20, centre = pickup)).start(app)
+            // The Application is the simulator's scope, so its drivers stop when the test's server
+            // does — and each of them signs in the way the driver's application does, because a
+            // simulator with a back door is the back door.
+            val jobs =
+                DriverSimulator(
+                    client,
+                    SimulatorConfig(drivers = 20, centre = pickup, ticket = { app.get<DriverTickets>().mint(it) }),
+                ).start(app)
             try {
                 awaitTrue("twenty simulated drivers report in") { index.onlineCount(clock.nowEpochMs()) == 20 }
 
-                // One known driver, fifty metres away, over the same socket the simulator uses.
-                val session = client.webSocketSession(DRIVER_POSITIONS_PATH)
+                // One known driver, fifty metres away, over the same socket the simulator uses —
+                // and planted through a ticket the server minted for that subject rather than
+                // through an id the test chose. What a real token buys is who may hold the ticket,
+                // which is `ProtectedDriverRoutesTest`'s subject.
+                val session = client.ticketed("next-door", app)
                 session.send(Frame.Text(report(DriverReport("next-door", RideClass.COMFORT, 4.6, north(50.0)))))
                 awaitTrue("the known driver is indexed") {
                     index.near(pickup, RideClass.COMFORT, clock.nowEpochMs()).any { it.driverId == "next-door" }
@@ -87,7 +100,7 @@ class MatchingTest {
             lateinit var app: Application
             application {
                 app = this
-                shashki(PostgresHarness.database)
+                shashki(PostgresHarness.database, oidc = unreachableProvider())
             }
             val client = simulatorClient()
             startApplication()
@@ -99,7 +112,7 @@ class MatchingTest {
             // because there is nowhere it could have been written down — no table, no repository.
             assertEquals(emptyList(), index.near(pickup, RideClass.ECONOMY, clock.nowEpochMs()))
 
-            val session = client.webSocketSession(DRIVER_POSITIONS_PATH)
+            val session = client.ticketed("returning", app)
             session.send(Frame.Text(report(DriverReport("returning", RideClass.ECONOMY, 4.9, north(100.0)))))
 
             awaitTrue("one reporting interval refills the index") {
@@ -107,6 +120,15 @@ class MatchingTest {
             }
             session.close()
         }
+
+    /** The socket a driver signed in as [driverId] would open: one ticket, spent on the upgrade. */
+    private suspend fun HttpClient.ticketed(
+        driverId: String,
+        app: Application,
+    ) = webSocketSession("$DRIVER_POSITIONS_PATH?$DRIVER_TICKET_QUERY=${app.get<DriverTickets>().mint(driverId)}")
+
+    /** Unreachable on purpose: nothing here verifies a token, and the socket's credential is a ticket. */
+    private fun unreachableProvider() = OidcConfig(url = "http://127.0.0.1:1", realm = "shashki", clientId = "rider")
 
     private fun report(report: DriverReport): String = Json.encodeToString(DriverReport.serializer(), report)
 

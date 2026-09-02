@@ -1,16 +1,16 @@
 package io.github.youndie.shashki.rider
 
 import io.github.youndie.kompot.KompotDegradationSink
+import io.github.youndie.shashki.auth.HttpTokenExchange
+import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.auth.SignInConfig
+import io.github.youndie.shashki.auth.TokenExchange
 import io.github.youndie.shashki.auth.TokenStore
 import io.github.youndie.shashki.auth.redirectTo
 import io.github.youndie.shashki.auth.tokenStore
 import io.github.youndie.shashki.crash.CrashReporter
 import io.github.youndie.shashki.crash.CrashReporterConfig
 import io.github.youndie.shashki.protocol.GeoPoint
-import io.github.youndie.shashki.rider.feature.auth.data.HttpTokenExchange
-import io.github.youndie.shashki.rider.feature.auth.domain.Session
-import io.github.youndie.shashki.rider.feature.auth.domain.TokenExchange
 import io.github.youndie.shashki.rider.feature.promo.data.HttpPromoRepository
 import io.github.youndie.shashki.rider.feature.promo.data.ReportingDegradationSink
 import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase

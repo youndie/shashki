@@ -15,8 +15,8 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.youndie.kompot.KompotActionHandler
 import io.github.youndie.kompot.standard.NavigateAction
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
+import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
-import io.github.youndie.shashki.rider.feature.auth.domain.Session
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.MatchingScreen

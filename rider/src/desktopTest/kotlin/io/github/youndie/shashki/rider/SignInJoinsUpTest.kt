@@ -1,14 +1,14 @@
 package io.github.youndie.shashki.rider
 
+import io.github.youndie.shashki.auth.HttpTokenExchange
 import io.github.youndie.shashki.auth.InMemoryTokenStore
+import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.auth.SignInConfig
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
-import io.github.youndie.shashki.rider.feature.auth.data.HttpTokenExchange
-import io.github.youndie.shashki.rider.feature.auth.domain.Session
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

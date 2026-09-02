@@ -756,6 +756,26 @@ client multiplying the fare by 0.25 would be a second copy of a pricing rule —
 where it is charged and the number travels**, which is the same argument as `@Resource` for paths and
 D6 for crash reports.
 
+**Consequence 1.6c5 — a WebSocket cannot carry a bearer token, and the way round it was chosen for
+a reason that is measurable (2026-09-02, [B-52](../backlog/B-52-driver-routes-behind-the-token.md)).**
+§1.6c settled how the browser signs in; the driver's shift is a socket, and `new WebSocket(url)`
+takes no headers — which is where every product meets this. Two options:
+
+| Option | What it costs |
+|---|---|
+| the token as the **first frame** | nothing on the wire and nothing in a URL — but the server must verify a raw JWT itself, and shildik's `TokenVerifier` is `internal`. Taking it means shashki implements "is this signature ours" a second time, which is the one thing the service document forbids |
+| a **one-shot ticket** in the query | one more route and one more in-memory map. Verification stays in the single place that does it: the ticket is minted behind the same `authenticate` block as everything else |
+
+The ticket won, and its properties are the argument: thirty seconds, single use, no claims. A value
+in a query string reaches access logs and browser history — which is exactly why the *token* must
+never go there, and why something worth almost nothing may.
+
+**The frame is compared rather than replaced, and that is the one exception in the item.** Everywhere
+else the token's subject simply overwrites whatever id the caller sent; on the socket a frame for
+another driver is dropped and counted. Rewriting it would file somebody else's position under the
+connected driver, and a count is what makes a client whose id and token disagree visible instead of
+merely absent.
+
 **Consequence 1.6a — booblik being JVM-only costs nothing.** The brief already keeps the broker on
 the server; driver coordinates go straight into the geo-index over WebSocket and never enter a topic.
 The fact is worth recording because the opposite arrangement is the one people reach for.

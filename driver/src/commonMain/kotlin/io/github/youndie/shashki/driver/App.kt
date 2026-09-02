@@ -12,12 +12,14 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
+import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftScreen
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripScreen
 import io.github.youndie.shashki.ui.DriverTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
 import io.github.youndie.shashki.ui.nav.addressBar
+import io.github.youndie.shashki.ui.nav.under
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -66,7 +68,9 @@ private fun CrashReporting(scope: CoroutineScope) {
 /** The back stack, and the address bar kept in step with it — both directions, as in `:rider`. */
 @Composable
 private fun DriverNavigation(modifier: Modifier = Modifier) {
-    val bar = remember { addressBar() }
+    // **Under the prefix this bundle is served at** (B-52): `DriverRoute.Shift` is `/` because a
+    // route is a fact about the application, and `/driver` is where a deployment put it.
+    val bar = remember { addressBar().under(DriverRoute.BASE) }
     val start = remember { DriverRoute.ofPath(bar.openedAt()) ?: DriverRoute.Shift }
     val backStack = rememberNavBackStack(SAVED_STATE, start)
 
@@ -104,6 +108,17 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
                         onFailed = { },
                     )
                 }
+                entry<DriverRoute.Callback> {
+                    // Nothing is drawn: the provider has just sent the browser back with a code in
+                    // the query, and what happens is an exchange and a navigation (B-52). The
+                    // rider's callback is the same screen and the same three lines.
+                    SignInCallback(
+                        onDone = {
+                            while (backStack.size > 1) backStack.removeAt(backStack.size - 1)
+                            backStack[0] = DriverRoute.Shift
+                        },
+                    )
+                }
                 entry<DriverRoute.Trip> { route ->
                     DriverTripScreen(
                         rideId = route.rideId,
@@ -115,12 +130,33 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The other half of the redirect: the code out of the query, exchanged, and then away from here.
+ *
+ * **The query is read from the address bar rather than from a route parameter** — the callback's
+ * payload is whatever the provider put in the URL, including a `state` this application must compare
+ * and an `error` it may send instead.
+ */
+@Composable
+private fun SignInCallback(onDone: () -> Unit) {
+    val session = koinInject<Session>()
+    val bar = remember { addressBar().under(DriverRoute.BASE) }
+    LaunchedEffect(Unit) {
+        val query = bar.queryAt()
+        val code = query["code"]
+        val state = query["state"]
+        if (code != null && state != null) session.complete(code, state)
+        onDone()
+    }
+}
+
 /** Navigation 3's polymorphic registration, which outside Android has no reflection to fall back on. */
 private val SAVED_STATE =
     SavedStateConfiguration {
         serializersModule =
             SerializersModule {
                 polymorphic(NavKey::class) {
+                    subclass(DriverRoute.Callback::class)
                     subclass(DriverRoute.Shift::class)
                     subclass(DriverRoute.Trip::class)
                 }
