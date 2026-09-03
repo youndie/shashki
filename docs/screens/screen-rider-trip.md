@@ -65,11 +65,23 @@ One loop asking for both would make a silent phone look like a lost ride.
 - **A driver with no position leaves the previous car where it was.** The phone is quiet, the car has
   not vanished.
 
-### 4.2. Destination, distance and time
+### 4.2. The figure and its meta
 
-### 4.3. The driver row
+- **While the car is on its way:** the minutes to it at 32 **in the accent** — `3 min` — with
+  `2.1 km to you` beside it, from `RideView.leg`, the server's road from the driver's last position
+  (B-75, B-76). When the server has no road yet the words stand in: *on its way*.
+- **Once it has arrived:** *waiting for you*, in the foreground; the accent goes back to being
+  nobody's.
+- **During the trip:** the destination and the journey's length, from the quote.
 
-- **Display:** name, car, rating — and the registration as a **blank plate**. See the quirk below.
+### 4.3. The driver row and the plate
+
+- **Display:** name, car, rating — from the driver record (B-63); dashes for a driver the server has
+  no record of.
+- **The plate is set as a plate: inverted, SemiBold, 0.06 em tracking** — the kit's "only inverted
+  element on a rider screen" (B-76). It used to be the accent surface, which spent the screen's one
+  accent on the wrong thing; the kit gives the accent to the minutes above and inverts the plate so
+  it is found first anyway.
 
 ### 4.4. The action bar
 
@@ -86,7 +98,9 @@ One loop asking for both would make a silent phone look like a lost ride.
 
 ## 6. Quirks
 
-* **The driver's name, car and plate are drawn from nothing.** `RideView` carries a `driverId` and no
-  person; the screen draws em dashes because a number in the wrong place reads as an answer.
-* **Cancelling costs a quarter of the fare once a driver is assigned**, and the screen does not say
-  so. That is a real gap: the rider is not told the price of the button they are pressing.
+* ~~The driver's name, car and plate are drawn from nothing.~~ **Answered by B-63**: the server has a
+  driver record and the screen draws it; the dashes remain only for a driver it has no record of.
+* ~~Cancelling costs a quarter of the fare and the screen does not say so.~~ **Answered by B-43**:
+  R10's message box carries the amount before the button.
+* **No photo and no trips count.** The kit's DriverCard has both; the wire has neither, and a photo
+  invented for a screen is the fabrication B-47 refused elsewhere (B-76).

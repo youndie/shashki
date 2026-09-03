@@ -1,7 +1,7 @@
 ---
 id: B-76
 title: "R6's plate is an accent chip; the kit inverts it — and the card says the trip's length, not the driver's"
-status: open
+status: done
 priority: P3
 size: S
 stage: stage-6-what-running-it-said
@@ -27,3 +27,21 @@ rider screen"** — and `3 min / to pickup · Lenina st, 14` in the accent.
   the rider, in the accent; the driver's rating is on the card.
 - Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/RiderTrip.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/components/DriverCard.kt`
+
+## What it turned out to be
+
+**The accent was on the wrong element and the figure was the wrong number, and both are one
+screen's worth of change.** The plate is inverted now — the foreground as its ground, the
+background as its ink, SemiBold, 0.06 em — the kit's "only inverted element on a rider screen".
+The figure while the car is on its way is the minutes to it, in the accent, with the kilometres
+beside it: `RideView.leg`, which B-75 put on the ride for exactly this reader. When the server has
+no road for the driver yet the words stand in, as they did before.
+
+**The rating was already there.** The row draws the driver record's average since B-63; on a stand
+with nobody rated it reads `—`, which the sweep saw and this item mistook for an absence.
+
+**Not built, and named in the screen document:** the photo and the trips count. The wire carries
+neither, and a photo invented for a card is the fabrication B-47 refused for a licence.
+
+Two goldens added — R6 on both themes, `rider car on its way` — and the four R7 goldens re-recorded
+for the plate; all six looked at.

@@ -18,7 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
@@ -101,21 +103,47 @@ public fun RiderTripInProgress(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    KvadrantText(headline, style = type.figure)
+                    // **The figure is the minutes to the car, in the accent, while the car is on its
+                    // way** (B-76) — the kit's DriverCard puts `3 min` there in cyan. Once the car
+                    // has arrived and once the trip is running the figure is a state or a duration,
+                    // and the accent goes back to being nobody's.
+                    KvadrantText(
+                        headline,
+                        style =
+                            type.figure.copy(
+                                color =
+                                    if (stage ==
+                                        TripStage.ARRIVING
+                                    ) {
+                                        colors.accent
+                                    } else {
+                                        colors.foreground
+                                    },
+                            ),
+                    )
                     KvadrantText(meta, style = type.body.copy(color = colors.subtle))
                 }
 
                 DriverRow(driver)
 
-                // **One accent surface, and on this screen it is the plate.** The kit's rule allows one;
-                // R4 spends it on the selected class tile. Here nothing is being chosen, and the thing a
-                // rider looks for on a street is the registration.
+                // **The plate is set as a plate — contrast background, SemiBold, wide tracking — and it
+                // is the only inverted element on a rider screen** (B-76). It used to be the accent
+                // surface, which spent the screen's one accent on the wrong thing: the kit gives the
+                // accent to the minutes above and inverts the plate so it is found first anyway.
                 Box(
                     Modifier
-                        .background(colors.accent)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .background(colors.foreground)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
-                    KvadrantText(driver.plate, style = type.rowEmphasis.copy(color = colors.onAccent))
+                    KvadrantText(
+                        driver.plate,
+                        style =
+                            type.rowEmphasis.copy(
+                                color = colors.background,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = PLATE_TRACKING,
+                            ),
+                    )
                 }
 
                 Spacer(Modifier.height(0.dp))
@@ -198,6 +226,9 @@ private fun TripBar(
 
 /** More than R4's 360: the trip screen is watched rather than read. */
 private val MAP_HEIGHT = 440.dp
+
+/** The kit's plate: 0.06 em, "wide tracking". */
+private val PLATE_TRACKING = 0.06.em
 private val ROW_GLYPH = 20.dp
 private val HAIRLINE = 1.dp
 private const val HAIRLINE_ALPHA = 0.12f

@@ -48,18 +48,32 @@ public fun TripContent(
     modifier: Modifier = Modifier,
 ) {
     val quote = uiState.ride?.quote
+    val leg = uiState.ride?.leg
 
     RiderTripInProgress(
         scene = uiState.scene,
         stage = uiState.stage,
+        // **While the car is on its way the figure is the minutes to it, not the journey's length**
+        // (B-76). `leg` is the server's road from the driver's last position to the pickup; when the
+        // server has none — no position yet — the words stand in, as they did before.
         headline =
             when (uiState.stage) {
-                TripStage.ARRIVING -> "on its way"
+                TripStage.ARRIVING -> leg?.durationSeconds?.asDuration() ?: "on its way"
                 TripStage.ARRIVED -> "waiting for you"
                 TripStage.IN_PROGRESS -> "airport"
             },
         meta =
-            quote?.let { "${it.durationSeconds.asDuration()} · ${it.distanceMetres.asDistance()}" }.orEmpty(),
+            when {
+                uiState.stage == TripStage.ARRIVING && leg != null -> {
+                    "${leg.distanceMetres.asDistance()} to you"
+                }
+
+                else -> {
+                    quote
+                        ?.let { "${it.durationSeconds.asDuration()} · ${it.distanceMetres.asDistance()}" }
+                        .orEmpty()
+                }
+            },
         // **The record, since B-63 gave the server one.** This was four dashes and an identifier —
         // the honest shape while `RideView` carried nothing about the person, and the note said so.
         // The dashes are still what a driver with no record gets: the plate is the field a rider

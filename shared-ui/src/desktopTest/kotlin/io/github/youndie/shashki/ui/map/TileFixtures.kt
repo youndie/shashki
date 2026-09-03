@@ -285,20 +285,54 @@ internal fun RiderTripOnEmptySceneLight() {
     TripFixture(dark = false, palette = TilePalette.Light, scene = emptyScene(MapCamera(TILE_CENTRE)))
 }
 
+/**
+ * R6: the car on its way (B-76).
+ *
+ * **The figure is the minutes to the car, in the accent, and the plate is inverted** — the kit's
+ * DriverCard, which had been drawn the other way round: the accent on the plate, the journey's
+ * length where the wait goes. The rating beside the name is the driver record's (B-63).
+ */
+@ViddikScreenshot(name = "rider car on its way", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderCarOnItsWayDark() {
+    TripFixture(
+        dark = true,
+        palette = TilePalette.Dark,
+        stage = TripStage.ARRIVING,
+        headline = "3 min",
+        meta = "2.1 km to you",
+    )
+}
+
+@ViddikScreenshot(name = "rider car on its way light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderCarOnItsWayLight() {
+    TripFixture(
+        dark = false,
+        palette = TilePalette.Light,
+        stage = TripStage.ARRIVING,
+        headline = "3 min",
+        meta = "2.1 km to you",
+    )
+}
+
 @Composable
 private fun TripFixture(
     dark: Boolean,
     palette: TilePalette,
     scene: MapScene = tripScene,
+    stage: TripStage = TripStage.IN_PROGRESS,
+    headline: String = "airport",
+    meta: String = "18 min · 22.8 km",
 ) {
     val latin = kvadrantLatin()
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
         CompositionLocalProvider(LocalMapSurface provides CanvasMapSurface(cityTiles, palette)) {
             RiderTripInProgress(
                 scene = scene,
-                stage = TripStage.IN_PROGRESS,
-                headline = "airport",
-                meta = "18 min · 22.8 km",
+                stage = stage,
+                headline = headline,
+                meta = meta,
                 driver = TRIP_DRIVER,
                 actionLabel = "call the driver",
                 onCall = {},
