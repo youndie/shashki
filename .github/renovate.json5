@@ -34,11 +34,6 @@
 
   packageRules: [
     {
-      description: "Kotlin: the compiler and its plugins move as one version, and that is never a routine bump",
-      matchPackageNames: ["/^org\\.jetbrains\\.kotlin[:.]/"],
-      groupName: "kotlin",
-    },
-    {
       description: "kotlinx ships as one release train — one PR",
       matchPackageNames: ["/^org\\.jetbrains\\.kotlinx[:.]/"],
       groupName: "kotlinx",
@@ -63,29 +58,45 @@
       ],
       groupName: "compose multiplatform",
     },
+    // NO KOTLIN, KTOR, KOIN OR KTLINT RULE HERE, AND THAT IS NOT AN OVERSIGHT. This repository
+    // declares none of those numbers. The Kotlin plugins are applied by `ru.workinprogress.sborka`
+    // and versioned by its shared `wip` catalog; ktor and koin are named in the catalog as
+    // artefacts without a version, for the same reason; ktlint arrives with `sborka.lint`, and
+    // what the build files spell is its configuration block, not a dependency. Renovate sees them
+    // and marks them skipped. A grouping rule over any of them would match nothing while reading
+    // like protection — checked by extracting this repository and testing every rule against what
+    // came out. They all move when sborka moves, in one pull request, above.
     {
-      description: "Ktor: client and server modules share one version",
-      matchPackageNames: ["/^io\\.ktor[:.]/"],
-      groupName: "ktor",
+      // kompot publishes a dozen coordinates under one version, and a half-moved set is the
+      // failure mode. It also decides which Compose line this client can be on.
+      description: "kompot is one release across every module it publishes",
+      matchPackageNames: ["/^io\\.github\\.youndie:kompot-/"],
+      groupName: "kompot",
     },
     {
-      description: "Koin — one BOM, one version",
-      matchPackageNames: ["/^io\\.insert-koin[:.]/"],
-      groupName: "koin",
+      description: "shildik ships the shared model and both server halves under one version",
+      matchPackageNames: ["/^ru\\.workinprogress\\.shildik[:.]/"],
+      groupName: "shildik",
+    },
+    {
+      description: "Exposed: core, jdbc, json and the migration module are one version",
+      matchPackageNames: ["/^org\\.jetbrains\\.exposed[:.]/"],
+      groupName: "exposed",
+    },
+    {
+      description: "Flyway: the engine and its Postgres module move together",
+      matchPackageNames: ["/^org\\.flywaydb[:.]/"],
+      groupName: "flyway",
+    },
+    {
+      description: "cryptography-kotlin: core, random and the providers ship as one version",
+      matchPackageNames: ["/^dev\\.whyoleg\\.cryptography[:.]/"],
+      groupName: "cryptography-kotlin",
     },
     {
       description: "The build harness arrives as one PR, not one per action",
       matchManagers: ["github-actions"],
       groupName: "ci actions",
-    },
-    {
-      description: "ktlint is build tooling, not a runtime dependency",
-      matchPackageNames: [
-        "/^org\\.jlleitschuh\\.gradle\\.ktlint[:.]/",
-        "/^com\\.pinterest\\.ktlint[:.]/",
-      ],
-      matchUpdateTypes: ["minor", "patch"],
-      automerge: true,
     },
     {
       description: "Base images: changing the JDK or the distro is a decision, not a bump",
