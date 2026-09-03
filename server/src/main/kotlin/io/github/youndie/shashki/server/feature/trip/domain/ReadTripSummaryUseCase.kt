@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.trip.domain
 
+import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.TripSummaryView
 import io.github.youndie.shashki.server.billing.Payout
 import io.github.youndie.shashki.server.billing.PayoutRepository
@@ -50,6 +51,9 @@ public class ReadTripSummaryUseCase(
                 durationSeconds = quote.durationSeconds,
                 paymentMethodId = ride.paymentMethodId.orEmpty(),
                 todayCents = payouts.sumFor(params.driverId, startOfToday()),
+                // A cancelled ride with a payout row is a rider who walked away after the car had set
+                // off — the fee's share, which D4·a shows as compensation (B-80).
+                cancelled = ride.status == RideStatus.CANCELLED,
             )
         }
 

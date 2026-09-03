@@ -76,6 +76,11 @@ public fun RiderTripInProgress(
     /** The fare, shown once under the figure during the trip — the kit's `420 ₽` line (B-77). */
     fare: String? = null,
     /**
+     * R7·a: the car has gone quiet (B-80). The kit's rule: **a full-width band, never a floating
+     * card, and the map dims to 40 %**. `null` while positions arrive.
+     */
+    gpsLost: String? = null,
+    /**
      * R10 over the top, or `null` (B-43).
      *
      * **The same confirmation as the wait's, and this is where it costs money.** Cancelling before a
@@ -94,7 +99,26 @@ public fun RiderTripInProgress(
         Column(Modifier.fillMaxSize().background(colors.background)) {
             // More map than R4 gives it: this is the screen the rider watches rather than reads, and
             // the panel below carries three rows where R4's carries three tiles and a payment line.
-            MapPane(scene, Modifier.fillMaxWidth().height(MAP_HEIGHT))
+            Box(Modifier.fillMaxWidth().height(MAP_HEIGHT)) {
+                MapPane(scene, Modifier.fillMaxSize())
+                // "map desaturates to 40 %": a wash of the page's ground at 60 % over it, which is what
+                // a canvas that draws its own tiles can do without a colour matrix behind every one.
+                if (gpsLost != null) Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = DIM_ALPHA)))
+            }
+
+            // The band. Full width, at the join between the map and the panel, in chrome — never a
+            // floating card, and never red: red is reserved for cancel and decline.
+            gpsLost?.let {
+                KvadrantText(
+                    it,
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            colors.chrome,
+                        ).padding(horizontal = metrics.margin, vertical = 10.dp),
+                    style = type.body,
+                )
+            }
 
             Column(
                 Modifier.weight(1f).padding(start = metrics.margin, top = 20.dp, end = metrics.margin),
@@ -230,6 +254,9 @@ private fun TripBar(
 
 /** More than R4's 360: the trip screen is watched rather than read. */
 private val MAP_HEIGHT = 440.dp
+
+/** R7·a dims the map "to 40 %": the ground over it at this alpha. */
+private const val DIM_ALPHA = 0.6f
 
 /** The kit's plate: 0.06 em, "wide tracking". */
 private val PLATE_TRACKING = 0.06.em

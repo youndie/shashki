@@ -63,6 +63,13 @@ never hidden** — the design's own sentence, and the screen's whole argument.
 or a changed commission, and then the recomputed figure is the driver's word against the bank's —
 the same rule D6 states for its sums.
 
+## 3a. D4·a — passenger cancelled (B-80)
+
+The same screen with another first line. A rider who cancels after the car has set off is charged
+the fee, the settlement pays the driver the fee's share, and the trip screen — which leaves on any
+terminal status — lands here with `passenger cancelled` above the figure and `cancellation fee`
+where `fare` would be. `TripSummaryView.cancelled` says which; the money is the same payout row.
+
 ## 4. What is deliberately not here
 
 - **Rating the passenger.** The kit has *rate anna*; the protocol has no rider rating, and inventing

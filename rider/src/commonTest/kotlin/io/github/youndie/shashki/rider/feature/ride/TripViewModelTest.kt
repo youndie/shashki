@@ -41,7 +41,10 @@ class TripViewModelTest {
     private val rides = FakeRideRepository()
 
     @BeforeTest
-    fun main() = Dispatchers.setMain(dispatcher)
+    fun main() {
+        Dispatchers.setMain(dispatcher)
+        clock = NOW
+    }
 
     @AfterTest
     fun reset() = Dispatchers.resetMain()
@@ -86,6 +89,30 @@ class TripViewModelTest {
             assertEquals(FakeRideRepository.REQUESTED.pickup, scene.pins.first { it.kind == MapPin.Kind.PICKUP }.at)
             assertTrue(scene.route!!.ahead.isNotEmpty(), "no road for the rider to watch the car along")
             assertEquals(GeoPoint(46.05, 14.51), scene.cars.single().at)
+        }
+
+    /**
+     * **A quiet phone becomes a band after half a minute, and not before** (B-80). Ten seconds in a
+     * tunnel is not a lost car; forty is the kit's R7·a, and the number on it is how long.
+     */
+    @Test
+    fun `a car quiet for long enough says so, with the seconds`() =
+        runTest(dispatcher) {
+            val repository = FakeRideRepository()
+            val model = viewModel(repository)
+            settle()
+
+            repository.driver = AssignedDriverView(driverId = "driver-1", at = null)
+            settle()
+            assertNull(model.uiState.value.quietForSeconds, "a few seconds of silence is not a lost car")
+
+            clock += 40_000
+            settle()
+            assertEquals(40, model.uiState.value.quietForSeconds)
+
+            repository.driver = AssignedDriverView(driverId = "driver-1", at = GeoPoint(46.05, 14.51))
+            settle()
+            assertNull(model.uiState.value.quietForSeconds, "a position takes the band down")
         }
 
     /**
@@ -233,8 +260,9 @@ class TripViewModelTest {
             observeRide = ObserveRideUseCase(repository),
             watchDriver = WatchDriverUseCase(repository),
             cancelRide = CancelRideUseCase(repository),
-            // Held still, so "arriving at" is a number a test can name (B-77).
-            now = { NOW },
+            // Held still, so "arriving at" is a number a test can name (B-77) — and moved by hand
+            // for the silence R7·a counts (B-80).
+            now = { clock },
             // The screen's lifetime, in a test that has no screen.
             loopScope = backgroundScope,
         )
@@ -247,3 +275,6 @@ class TripViewModelTest {
 
 /** A Tuesday in September, held still. */
 private const val NOW = 1_788_390_000_000L
+
+/** The tests' own clock: starts at [NOW] and moves only when a test says so. */
+private var clock: Long = NOW

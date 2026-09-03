@@ -244,6 +244,10 @@ private fun bearing(
 
 private const val TRAVELLED_FRACTION = 0.4
 
+/** The kit's R7·a band, with a number of seconds on it. */
+private const val GPS_LOST =
+    "gps lost · last position 40 seconds ago. The trip is running and the fare is held at the last confirmed point."
+
 private val TRIP_DRIVER =
     TripDriver(name = "Matej", car = "Skoda Octavia · grey", plate = "LJ 84-2KM", rating = "4.9", carRects = 2)
 
@@ -318,6 +322,30 @@ internal fun RiderCarOnItsWayLight() {
     )
 }
 
+/**
+ * R7·a: the car has gone quiet (B-80). The kit's band at the join of the map and the panel, the map
+ * dimmed under it, and the number of seconds on it.
+ */
+@ViddikScreenshot(name = "rider trip gps lost", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderTripGpsLostDark() {
+    TripFixture(
+        dark = true,
+        palette = TilePalette.Dark,
+        gpsLost = GPS_LOST,
+    )
+}
+
+@ViddikScreenshot(name = "rider trip gps lost light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderTripGpsLostLight() {
+    TripFixture(
+        dark = false,
+        palette = TilePalette.Light,
+        gpsLost = GPS_LOST,
+    )
+}
+
 @Composable
 private fun TripFixture(
     dark: Boolean,
@@ -328,6 +356,7 @@ private fun TripFixture(
     headline: String = "18 min",
     meta: String = "arriving 20:06 · 11.2 km left",
     fare: String? = "$ 28.96",
+    gpsLost: String? = null,
 ) {
     val latin = kvadrantLatin()
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
@@ -338,6 +367,7 @@ private fun TripFixture(
                 headline = headline,
                 meta = meta,
                 fare = fare,
+                gpsLost = gpsLost,
                 driver = TRIP_DRIVER,
                 actionLabel = "call the driver",
                 onCall = {},

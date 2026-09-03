@@ -42,14 +42,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[ ]` | Four state branches the kit draws and the product cannot reach | P3 | M | - |
 | [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[ ]` | D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not | P3 | M | - |
 
-## Closed (79)
+## Closed (80)
 
 **Remove the unknowns**
 
@@ -150,6 +149,7 @@ re-prioritising one must never move its file.
 - [B-77](docs/backlog/B-77-in-progress-does-not-say-when-or-how-far.md) `[x]` - R7 does not say when you arrive or how far is left, and the travelled road stays lit
 - [B-78](docs/backlog/B-78-history-rows-wrap-and-the-pivot-clips.md) `[x]` - R9's rows wrap unevenly, a cancelled ride says — for 0, and the pivot header is clipped
 - [B-79](docs/backlog/B-79-the-receipt-names-a-uuid-and-not-a-journey.md) `[x]` - R9·b names a UUID and not a journey: no date, no addresses, no driver
+- [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[x]` - Four state branches the kit draws and the product cannot reach
 
 <!-- END INDEX -->
 

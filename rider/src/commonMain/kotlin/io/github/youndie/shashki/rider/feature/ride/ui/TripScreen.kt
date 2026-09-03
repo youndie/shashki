@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.youndie.shashki.protocol.format.asDistance
 import io.github.youndie.shashki.protocol.format.asDuration
+import io.github.youndie.shashki.protocol.format.asMoney
 import io.github.youndie.shashki.ui.screens.RiderTripInProgress
 import io.github.youndie.shashki.ui.screens.TripDriver
 import io.github.youndie.shashki.ui.screens.TripStage
@@ -56,11 +57,15 @@ public fun TripContent(
         // **While the car is on its way the figure is the minutes to it, not the journey's length**
         // (B-76). `leg` is the server's road from the driver's last position to the pickup; when the
         // server has none — no position yet — the words stand in, as they did before.
+        // **During the trip the figure is the minutes left, the meta the arrival and the distance
+        // left, and the fare is shown once** (B-77) — the kit's `18 min / arriving 20:06 · 11.2 km
+        // left / 420 ₽`. Both numbers are the server's leg to the drop-off; the clock is the view
+        // model's, from the rider's own watch. Without a leg the screen falls back to the quote.
         headline =
             when (uiState.stage) {
                 TripStage.ARRIVING -> leg?.durationSeconds?.asDuration() ?: "on its way"
                 TripStage.ARRIVED -> "waiting for you"
-                TripStage.IN_PROGRESS -> "airport"
+                TripStage.IN_PROGRESS -> leg?.durationSeconds?.asDuration() ?: "airport"
             },
         meta =
             when {
@@ -68,11 +73,24 @@ public fun TripContent(
                     "${leg.distanceMetres.asDistance()} to you"
                 }
 
+                uiState.stage == TripStage.IN_PROGRESS && leg != null -> {
+                    listOfNotNull(uiState.arrivingAt?.let { "arriving $it" }, "${leg.distanceMetres.asDistance()} left")
+                        .joinToString(" · ")
+                }
+
                 else -> {
                     quote
                         ?.let { "${it.durationSeconds.asDuration()} · ${it.distanceMetres.asDistance()}" }
                         .orEmpty()
                 }
+            },
+        fare = quote?.asMoney()?.takeIf { uiState.stage == TripStage.IN_PROGRESS },
+        // R7·a, the kit's words with this ride's number in them (B-80). The fare is held at the last
+        // confirmed point: that is what the settlement does, and the band says so.
+        gpsLost =
+            uiState.quietForSeconds?.let {
+                "gps lost · last position $it seconds ago. " +
+                    "The trip is running and the fare is held at the last confirmed point."
             },
         // **The record, since B-63 gave the server one.** This was four dashes and an identifier —
         // the honest shape while `RideView` carried nothing about the person, and the note said so.

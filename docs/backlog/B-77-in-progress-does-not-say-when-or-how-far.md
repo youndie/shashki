@@ -43,3 +43,11 @@ a few metres coarse and the car marker is the joint either way.
 `TripViewModelTest` holds the split with a three-point road and the car at its middle vertex, and
 the clock with a `now` the test holds still. Four goldens re-recorded — R7 on both themes, with and
 without a scene — and looked at.
+
+**Corrected 2026-09-03, in B-80's commit.** The `Content` mapping — the minutes as the figure, the
+arrival and distance as the meta, the fare once — had not landed: a scripted edit failed on its
+anchor before that file and the golden still showed the kit's lines, because the *fixture* passes
+strings and the screen composable had the parameter. The view model, the split and the tests were
+in; the app drew the old header. Found by the next item's edit reading the file, which is late, and
+worth the sentence: a golden of a `Content` composable photographs the fixture's words, and only the
+mapping that produces them is the product.

@@ -43,6 +43,7 @@ class TripSummaryViewModelTest {
             advanceTimeBy(RETRY * 2 + TICK)
             val state = assertNotNull(model.uiState.value.summary)
             assertFalse(model.uiState.value.loading)
+            assertEquals("trip complete", state.status)
             assertEquals("+$ 26.17", state.earned, "the share plus the tip, and nothing multiplied here")
             assertEquals("card-4417 · today $ 46.32", state.meta)
             assertEquals(
@@ -50,6 +51,24 @@ class TripSummaryViewModelTest {
                 state.lines,
             )
             assertEquals(3, trips.asked, "asked exactly until it was answered")
+        }
+
+    /** D4·a is this screen with another first line: the fee's share as compensation (B-80). */
+    @Test
+    fun `a cancelled ride reads as compensation`() =
+        runTest(dispatcher) {
+            trips.answers =
+                mutableListOf(
+                    SUMMARY.copy(cancelled = true, payoutCents = 582, fareCents = 728, feeCents = 146, tipCents = 0),
+                )
+            val model = TripSummaryViewModel("ride-1", useCase(), backgroundScope, retryAfter = RETRY)
+
+            advanceTimeBy(TICK)
+            val state = assertNotNull(model.uiState.value.summary)
+
+            assertEquals("passenger cancelled", state.status)
+            assertEquals("+$ 5.82", state.earned)
+            assertEquals("cancellation fee" to "$ 7.28", state.lines.first())
         }
 
     @Test

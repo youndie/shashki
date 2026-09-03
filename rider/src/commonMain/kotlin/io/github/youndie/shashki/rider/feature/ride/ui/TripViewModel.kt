@@ -42,6 +42,12 @@ public data class TripUiState(
      * it with. `null` while the trip has no leg to the drop-off yet.
      */
     val arrivingAt: String? = null,
+    /**
+     * How long the car has been silent, in seconds, once that is long enough to say — the kit's
+     * R7·a, *gps lost* (B-80). `null` while positions arrive, and for the first half minute they do
+     * not: a phone in a tunnel for ten seconds is not a lost car.
+     */
+    val quietForSeconds: Int? = null,
 ) {
     public companion object {
         public val LJUBLJANA: io.github.youndie.shashki.protocol.GeoPoint =
@@ -124,7 +130,14 @@ public class TripViewModel(
             watchDriver(rideId).collect { driver ->
                 // A driver with no position leaves the previous car where it was: the phone is quiet,
                 // the car has not vanished. Removing the marker would be the screen lying about it.
-                val at = driver.at ?: return@collect
+                // What the screen does say, after half a minute of it, is how long (B-80).
+                val at = driver.at
+                if (at == null) {
+                    val quiet = ((now() - (lastFixAt ?: now().also { lastFixAt = it })) / MILLIS).toInt()
+                    _uiState.value = _uiState.value.copy(quietForSeconds = quiet.takeIf { it >= GPS_LOST_SECONDS })
+                    return@collect
+                }
+                lastFixAt = now()
                 val scene = _uiState.value.scene
                 _uiState.value =
                     _uiState.value.copy(
@@ -149,6 +162,7 @@ public class TripViewModel(
                                         scene.route
                                     },
                             ),
+                        quietForSeconds = null,
                     )
             }
         }
@@ -190,6 +204,9 @@ public class TripViewModel(
     /** The whole road, pickup to drop-off, kept so the car can split it as it moves (B-77). */
     private var road: List<GeoPoint>? = null
 
+    /** When the car last said where it was, on this clock — or when it first went quiet (B-80). */
+    private var lastFixAt: Long? = null
+
     /** The pins and the road; the car arrives on the other loop. */
     private suspend fun sceneFor(ride: RideView): MapScene {
         val existing = _uiState.value.scene
@@ -216,6 +233,9 @@ public class TripViewModel(
 
     private companion object {
         const val MILLIS = 1_000L
+
+        /** The kit's band says "last position 40 seconds ago"; this is when the band goes up. */
+        const val GPS_LOST_SECONDS = 30
     }
 }
 

@@ -98,6 +98,15 @@ One loop asking for both would make a silent phone look like a lost ride.
 | `200` | the ride becomes `CANCELLED` and the screen finishes | — |
 | `400` | report once | unchanged |
 
+### 4.5. R7·a — gps lost (B-80)
+
+When the driver's socket has been silent for half a minute, a **full-width band at the join of the
+map and the panel, in chrome, never a floating card**: `gps lost · last position 40 seconds ago. The
+trip is running and the fare is held at the last confirmed point.` The map dims — the page's ground
+at 60 % over it, which is what a canvas drawing its own tiles can do for "desaturates to 40 %". The
+car stays where it was; the band says how long; a position takes it down. Ten seconds in a tunnel
+is not a lost car, which is why the band waits.
+
 ## 5. Navigation (summary)
 
 - the ride ends (completed or cancelled) ──▶ back to [screen-rider-class-picker](screen-rider-class-picker.md)

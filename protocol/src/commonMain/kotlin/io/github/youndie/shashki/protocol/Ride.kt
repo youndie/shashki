@@ -425,6 +425,11 @@ public data class TripSummaryView(
     val paymentMethodId: String,
     /** Everything this driver has been owed today, this ride included. */
     val todayCents: Long,
+    /**
+     * The kit's D4·a: the passenger cancelled after this driver had set off, and what the
+     * settlement paid is the compensation rather than a fare's share (B-80).
+     */
+    val cancelled: Boolean = false,
 )
 
 /** What the rider thought of it: one to five, and nothing else — R8 has no comment box. */

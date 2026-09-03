@@ -72,6 +72,9 @@ public class TripSummaryViewModel(
  */
 internal fun TripSummaryView.asState(): DriverTripSummaryState =
     DriverTripSummaryState(
+        // D4·a is this screen with a different first line (B-80): the passenger walked away after
+        // the car had set off, and what the settlement paid is compensation, not a fare's share.
+        status = if (cancelled) "passenger cancelled" else "trip complete",
         earned = "+${money(payoutCents + tipCents, currency)}",
         meta =
             listOfNotNull(
@@ -82,7 +85,7 @@ internal fun TripSummaryView.asState(): DriverTripSummaryState =
             ).joinToString(" · "),
         lines =
             buildList {
-                add("fare" to money(fareCents, currency))
+                add((if (cancelled) "cancellation fee" else "fare") to money(fareCents, currency))
                 // A hyphen-minus and not U+2212: the bundled face has no minus sign, and
                 // `GlyphCoverageTest` is what says so rather than the host's fallback font.
                 add("service fee $feePercent %" to "-${money(feeCents, currency)}")

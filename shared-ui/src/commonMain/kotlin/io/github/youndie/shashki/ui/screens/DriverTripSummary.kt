@@ -20,6 +20,8 @@ import io.github.youndie.shashki.ui.ShashkiTheme
 
 /** D5 as plain values: what the driver earned, and the lines it came from. */
 public data class DriverTripSummaryState(
+    /** `trip complete`, or the kit's D4·a `passenger cancelled` (B-80). */
+    val status: String,
     /** `+$ 23.17` — the figure, already signed. */
     val earned: String,
     /** `card · today $ 46.32`. */
@@ -60,7 +62,7 @@ public fun DriverTripSummary(
         verticalArrangement = Arrangement.spacedBy(GAP),
     ) {
         Spacer(Modifier.height(TOP))
-        KvadrantText("trip complete", style = type.meta.copy(color = colors.subtle))
+        KvadrantText(state.status, style = type.meta.copy(color = colors.subtle))
         KvadrantText(state.earned, style = type.pageTitle.copy(color = colors.accent))
         KvadrantText(state.meta, style = type.body.copy(color = colors.subtle))
 

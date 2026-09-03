@@ -625,6 +625,7 @@ private fun DriverTripSummary(dark: Boolean) {
         DriverTripSummary(
             state =
                 DriverTripSummaryState(
+                    status = "trip complete",
                     earned = "+$ 26.17",
                     meta = "card-4417 · today $ 46.32",
                     lines =

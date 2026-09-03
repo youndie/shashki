@@ -294,6 +294,18 @@ class SettlementTest {
             )
             assertTrue(taken.amountCents < fare, "a cancellation cost the whole fare")
             assertEquals(emptyList(), app.get<PaymentGateway>().activeHolds().toList())
+
+            // **D4·a: the driver is shown the compensation** (B-80) — the fee's share, from the same
+            // payout row, on the same summary, with the first line saying why.
+            awaitTrue("the fee is paid out") { app.get<PayoutRepository>().find(assigned.id) != null }
+            val summary =
+                client
+                    .get(
+                        DriverRides.Summary(rideId = assigned.id, driverId = DRIVER),
+                    ).body<TripSummaryView>()
+            assertTrue(summary.cancelled)
+            assertEquals(taken.amountCents, summary.fareCents, "the fee is what the rider was charged")
+            assertEquals(assertNotNull(app.get<PayoutRepository>().find(assigned.id)).amountCents, summary.payoutCents)
         }
 
     /**

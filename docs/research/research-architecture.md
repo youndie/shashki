@@ -2157,6 +2157,17 @@ each is now an item rather than an impression:
 | D2 offline branch, D5 trip complete | drawn partially — the shift screen has offline; the driver sees the settlement only as the ride's status | B-46 |
 | every light variant | promised by open question 1 and not recorded; the light theme is verified for a list row | B-48 |
 
+**The seven state branches, settled 2026-09-03 (B-80).** Three were reached by the desktop sweep
+(R5·a *no cars*, R9·c *empty*, R10 *cancel*); two are built by B-80 — R7·a *gps lost* is a band on
+the trip screen after half a minute of a silent socket, and D4·a *passenger cancelled* is the
+driver's summary with the fee's share as compensation — and **two this reference does not build,
+with the reason written here rather than left as an impression**:
+
+| Branch | Why not |
+|---|---|
+| R6·a driver cancelled | there is no transition for a driver to walk away from an accepted ride, and adding one is a *policy* before it is a screen: who is compensated, whether the driver is penalised, whether the cascade resumes from the same offer. The kit's copy — "nothing was charged, we can search again at the same price" — assumes answers this product has not decided. The mechanism it would need (compensate the settlement, re-run the cascade) exists; the decision does not |
+| R8·a payment failed | the gateway is in memory and never declines. A screen for a decline that cannot happen would be a golden of a fiction — the same objection B-47 made to a review nobody performs. The day a real gateway is behind `PaymentGateway`, the settlement's `AUTHORIZATION` phase is where the refusal arrives, and R8·a is the screen for what it returns |
+
 ### 5.4 What it does not show, by property
 
 - **The driver's routes are public.** `endpoint-driver.md` says so, with "temporarily" — B-52 is the
