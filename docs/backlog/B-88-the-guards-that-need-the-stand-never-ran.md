@@ -72,6 +72,15 @@ plainly when an older one is on disk.
 With both fixed, the stand's guards run and pass — eleven of twelve, with katcher named as the one
 this stand cannot answer for.
 
+**The script has its own negative control, because a guard that cannot fail is not a guard.** Both
+branches measured rather than assumed — the same command, once against the stand and once with the
+broker's address pointed at a port nothing listens on:
+
+| | exit | what it said |
+|---|---|---|
+| the stand as it stands | 0 | every guard this stand can answer for ran and passed; 1 named above did not |
+| `SHASHKI_BOOBLIK=127.0.0.1:1` | 1 | this run did NOT check everything — read the lists above |
+
 **What this does not become is a CI job.** The services are the point of the gate: CI has no shildik
 and buying one would trade a skip nobody sees for a queue everybody waits on. What was missing was
 never the automation, it was the *one line* that a person with a stand up could run — and the count
