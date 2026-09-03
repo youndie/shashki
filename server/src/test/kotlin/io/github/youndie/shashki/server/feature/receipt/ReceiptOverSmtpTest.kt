@@ -23,18 +23,30 @@ import kotlin.test.assertTrue
  * "a mail arrived" but "a mail arrived **after a verified TLS handshake**" — which is why
  * `dangerouslyDisableCertificateVerification` is not used and the CA is handed over instead.
  *
- * **Skipped unless a Mailpit is named**, because CI has none. The run behind B-14's numbers:
+ * **Skipped unless a Mailpit is named**, because CI has none. The run behind B-14's numbers —
+ * **four variables and two certificates**, because the second test is the control and it has its own
+ * assumption: with only the first three set, the control skips, the positive test passes, and the
+ * build is green while the half that makes the result mean anything did not run (B-87 measured that:
+ * `tests=2 skipped=1`).
  *
  * ```bash
+ * cd /tmp/mailpit-tls
  * openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 30 \
  *   -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
+ * # the unrelated CA the control needs: it signed nothing here, and that is the point
+ * openssl req -x509 -newkey rsa:2048 -nodes -keyout wrong-key.pem -out wrong-ca.pem -days 30 \
+ *   -subj '/CN=nobody'
  * docker run -d --name mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 \
  *   -v /tmp/mailpit-tls:/tls -e MP_SMTP_TLS_CERT=/tls/cert.pem -e MP_SMTP_TLS_KEY=/tls/key.pem \
  *   axllent/mailpit:latest
  * SHASHKI_MAILPIT=127.0.0.1:1025 SHASHKI_MAILPIT_API=http://127.0.0.1:8025 \
  *   SHASHKI_MAILPIT_CA=/tmp/mailpit-tls/cert.pem \
+ *   SHASHKI_MAILPIT_WRONG_CA=/tmp/mailpit-tls/wrong-ca.pem \
  *   ./gradlew :server:test --tests '*ReceiptOverSmtpTest*'
  * ```
+ *
+ * Read the report rather than the build's exit code: `assumeTrue` skips are green.
+ * `server/build/test-results/test/TEST-*ReceiptOverSmtpTest.xml` has to say `skipped="0"`.
  */
 class ReceiptOverSmtpTest {
     @Test
