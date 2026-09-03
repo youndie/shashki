@@ -2,7 +2,6 @@
 id: B-61
 title: "R9's rows carry one address and no date, and R9·b does not exist"
 status: open
-blocked_by: [B-65]
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
@@ -51,8 +50,9 @@ always orders — so the list was three identical lines; and the first attempt j
 `→`, which `GlyphCoverageTest` refused because the bundled face does not have it. An em dash does the
 same job and is in the face.
 
-**The receipt is blocked, and the reason is measured**: `FareBreakdown` is declared in `:shared-ui`,
-which carries Compose, so no server can build one. Moving the three components to `:protocol` was
-tried and reverted — kompot's registry processor needs `@KompotComponentMarker` on the component in
-the module the processor runs in. [B-65](B-65-a-server-cannot-build-a-fare-breakdown.md) carries it,
-and this item is blocked on that rather than closed around it.
+**The receipt was blocked and is not any more.** `FareBreakdown` was declared in `:shared-ui`, which
+carries Compose, so no server could build one; two attempts to move the components to `:protocol`
+failed and were reverted. The third succeeded and the second failure turned out to be stale imports
+rather than a limit of the toolkit — [B-65](B-65-a-server-cannot-build-a-fare-breakdown.md) carries
+the correction. The components now live in `:protocol`, the server can compose one, and what is left
+here is the screen: a route that answers a ride's fare as a kompot tree and a receipt that draws it.

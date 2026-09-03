@@ -17,11 +17,11 @@ import io.github.youndie.kompot.form.FormSchema
 import io.github.youndie.kvadrant.components.KvadrantPivot
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
+import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.ui.ShashkiTheme
 import io.github.youndie.shashki.ui.components.BackBar
 import io.github.youndie.shashki.ui.kompot.AccentBudget
 import io.github.youndie.shashki.ui.kompot.LocalAccentBudget
-import io.github.youndie.shashki.ui.kompot.TripRow
 import io.github.youndie.shashki.ui.kompot.TripRowRenderer
 
 /** A month of the rider's rides, as R9 groups them (B-61). */

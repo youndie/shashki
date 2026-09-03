@@ -1915,9 +1915,36 @@ reference in the generated registry an `ERROR TYPE`.
 | the renderers move to the shared module | Compose in the module every headless thing depends on, which is the thing that module is for not having |
 | the component is declared twice, with a test holding the two together | a copy of the contract, guarded — the shape this repository refuses everywhere else, and the guard is the reason it would be arguable |
 
-Not resolved here. [B-65](../backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) is the record
-that a choice is owed, and [B-61](../backlog/B-61-the-history-row-and-the-receipt.md) is blocked on
-it — R9's rows and its months shipped; its receipt did not.
+**Answered 2026-09-03, and the answer is that there was never a question: a component is declared
+where its sender can build it, and kompot has always allowed that.** The paragraphs above are kept
+because the reasoning in them is the part that failed, not the toolkit. Three corrections, in the
+order they matter:
+
+* **The split works.** The components are in `:protocol` now, the renderers in `:shared-ui`, `check`
+  is green and the generated registry names `io.github.youndie.shashki.protocol.TripRow`. Each module
+  runs the processor for its own half: `:protocol` for the polymorphic serializers module,
+  `:shared-ui` for `generatedShashkiUiRenderers`. They meet at the type argument of
+  `KompotComponentRenderer<T>`, which KSP resolves across a module boundary.
+* **Both failed attempts failed for the same mundane reason — stale imports.** Eleven files in four
+  modules name these three types; moving the declarations leaves every one of them importing a
+  package that no longer has them, the renderer included. The processor was asked to resolve
+  `KompotComponentRenderer<TripRow>` where `TripRow` really did not resolve, and both versions of
+  kompot said exactly that: 0.34 by writing `ERROR TYPE` into generated code, 0.36 in a sentence.
+  **The message was right and the reading was wrong.**
+* **The claim that proved it was a toolkit limit could not have been measured.** "The compiler
+  resolves these types and only KSP does not" reads like an observation and is not one: KSP runs
+  before the compiler, so a build that fails in KSP never reaches the compile error that would have
+  named the stale import in a line. What was mistaken for evidence was the *absence* of an error from
+  a step that never ran.
+
+The general lesson is not about kompot. **A minimal reproduction is a way of testing one's own
+report, not only of helping the person who receives it** — the four-file version of this passed on
+the first run, which is what turned a two-attempt certainty into a ten-minute fix. It was built
+because filing a second report required one.
+
+[B-65](../backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) carries the whole sequence, its two
+upstream reports and their retraction; [B-61](../backlog/B-61-the-history-row-and-the-receipt.md) is
+unblocked and owes the receipt.
 
 ### Open question 2. One wasm bundle or two
 

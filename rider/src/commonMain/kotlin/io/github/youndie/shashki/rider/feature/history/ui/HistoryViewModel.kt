@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.rider.feature.ride.domain.MyRidesUseCase
 import io.github.youndie.shashki.ui.format.asCoordinates
 import io.github.youndie.shashki.ui.format.asDistance
 import io.github.youndie.shashki.ui.format.money
-import io.github.youndie.shashki.ui.kompot.TripRow
 import io.github.youndie.shashki.ui.screens.TripMonth
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

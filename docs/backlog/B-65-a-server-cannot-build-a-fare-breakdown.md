@@ -1,7 +1,7 @@
 ---
 id: B-65
 title: "A server cannot build a FareBreakdown: the components live where Compose does"
-status: question
+status: open
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
@@ -44,7 +44,7 @@ Reverted, in one commit, with this item in its place.
 - AC: whichever way out is taken, the reason is written down where the next reader meets it — in
   `ServerDrivenComponents.kt` if the classes stay, in the research if kompot changes.
 - AC: if the answer is a change in kompot, it is filed there with the measurement above.
-- Anchors: `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/kompot/ServerDrivenComponents.kt`,
+- Anchors: `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/ScreenComponents.kt`,
   `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/feature/promo/PromoRouting.kt`
 
@@ -112,3 +112,52 @@ having on its own. The move is reverted rather than left half-done.
 **What is owed next is a report, not another attempt.** Two modules in one Gradle build, same KSP
 2.3.11, the same shape as the toolkit's own pair, and the resolver does not see across the boundary —
 that is a fact for the people who wrote the resolver, and filing it is asked for first.
+
+## What it turned out to be: the split works, and both failures were mine (2026-09-03)
+
+**The report above is wrong, and the minimal reproduction it promised is what proved it wrong.** Four
+files — a `:component` module with one `@KompotComponentMarker` data class and no Compose, a
+`:client` module with the renderer and the processor, kompot `0.36.2.116`, KSP 2.3.11 — and
+`:client:kspCommonMainKotlinMetadata` **succeeds**, generating
+
+```kotlin
+public val generatedReproClientRenderers: Map<…> = mapOf(
+  LocalBadge::class to LocalBadgeRenderer(),   // same module, the control
+  Badge::class to BadgeRenderer(),             // the other module
+)
+```
+
+So the move was retried here with that as the standard to match, and it works: the three components
+are in `:protocol`, the renderers are in `:shared-ui`, `check` is green, and the generated registry
+names `io.github.youndie.shashki.protocol.TripRow` with no `ERROR TYPE` in it.
+
+**What actually failed, both times, was stale imports.** Eleven files across four modules name these
+types, and moving the declarations leaves every one of them importing
+`io.github.youndie.shashki.ui.kompot.TripRow` — a package that no longer has a `TripRow` in it. The
+renderer is one of those files, so the processor was asked to resolve the type argument of
+`KompotComponentRenderer<TripRow>` where `TripRow` genuinely did not resolve, and it said so. On
+0.34 it said so by writing `ERROR TYPE` into generated code; on 0.36 it said so in a sentence naming
+a requirement. **Both messages were accurate.** The second one even points at the right thing —
+"could not resolve the component type" is exactly what was true — and it was read as a claim about
+module layout because that was the hypothesis in hand.
+
+The tell was there and went unread: KSP runs before the compiler, so the build never reached the
+compile error that would have named the stale import in one line. "The compiler resolves it and only
+KSP does not" — the load-bearing sentence of the report — was never measured. It could not have
+been: the compiler never ran.
+
+**The rework that made it work is ordinary and belongs in the record because it is the whole story:**
+`:protocol` gets `kompot-core`, `kompot-registry-annotations` and the processor with
+`kompotModuleTag = "ShashkiProtocol"` (it generates the polymorphic serializers module, since the
+components are its own); `:shared-ui` keeps the renderers and generates `generatedShashkiUiRenderers`
+from them; `shashkiKompotJson()` and `GeneratedRegistryTest` name the protocol half of the pair; and
+every one of those eleven files imports from `io.github.youndie.shashki.protocol`.
+
+**The issue is corrected upstream**, since two wrong reports against a merged fix are worse than
+none: [#113](https://github.com/youndie/kompot/issues/113) now carries the reproduction that passes
+and the retraction. The improvement in the message stands on its own and the bump is kept.
+
+**One AC is still open and it is the receipt itself** — a server route that builds a `FareBreakdown`
+from a ride's numbers and a rider that draws it. That is
+[B-61](B-61-the-history-row-and-the-receipt.md)'s R9·b, now unblocked, and this item closes when that
+lands rather than by restating it here.

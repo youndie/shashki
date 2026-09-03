@@ -46,8 +46,8 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[?]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
-| [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | B-65 |
+| [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[ ]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
+| [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | - |
 
 ## Closed (66)
 

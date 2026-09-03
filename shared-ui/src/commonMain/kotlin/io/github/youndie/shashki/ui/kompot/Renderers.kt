@@ -20,6 +20,9 @@ import io.github.youndie.kompot.form.FormController
 import io.github.youndie.kompot.registry.KompotComponentMarker
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
+import io.github.youndie.shashki.protocol.EarningsTile
+import io.github.youndie.shashki.protocol.FareBreakdown
+import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.ui.ShashkiTheme
 
 /**

@@ -2,6 +2,7 @@ package io.github.youndie.shashki.rider.feature.ride.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.youndie.shashki.protocol.FareBreakdown
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.rider.feature.ride.domain.RateRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ReadRideUseCase

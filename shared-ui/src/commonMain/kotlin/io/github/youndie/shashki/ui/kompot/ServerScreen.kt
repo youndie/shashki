@@ -15,8 +15,8 @@ import io.github.youndie.kompot.KompotScreen
 import io.github.youndie.kompot.LocalKompotDesignSystem
 import io.github.youndie.kompot.form.FormController
 import io.github.youndie.kompot.form.FormSchema
+import io.github.youndie.kompot.generated.generatedShashkiProtocolSerializersModule
 import io.github.youndie.kompot.generated.generatedShashkiUiRenderers
-import io.github.youndie.kompot.generated.generatedShashkiUiSerializersModule
 import io.github.youndie.kompot.kompotCoreRenderers
 import io.github.youndie.kompot.kompotJson
 import io.github.youndie.kompot.kompotStandardRenderers
@@ -67,4 +67,4 @@ public fun ServerScreen(
  * `classDiscriminator = "type"` and an unknown type becomes `UnknownComponent` rather than an
  * exception, which is the degradation the screen above then draws around.
  */
-public fun shashkiKompotJson(): Json = kompotJson(generatedShashkiUiSerializersModule)
+public fun shashkiKompotJson(): Json = kompotJson(generatedShashkiProtocolSerializersModule)

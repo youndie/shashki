@@ -3,9 +3,9 @@ package io.github.youndie.shashki.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
+import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.GeoPoint
-import io.github.youndie.shashki.ui.kompot.EarningsTile
-import io.github.youndie.shashki.ui.kompot.TripRow
+import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
 import io.github.youndie.shashki.ui.map.MapPin

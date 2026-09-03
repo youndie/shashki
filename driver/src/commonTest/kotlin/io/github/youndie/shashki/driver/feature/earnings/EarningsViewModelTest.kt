@@ -3,8 +3,8 @@ package io.github.youndie.shashki.driver.feature.earnings
 import io.github.youndie.shashki.driver.feature.earnings.domain.EarningsRepository
 import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
 import io.github.youndie.shashki.driver.feature.earnings.ui.EarningsViewModel
+import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.EarningsView
-import io.github.youndie.shashki.ui.kompot.EarningsTile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher

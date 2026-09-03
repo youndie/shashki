@@ -1,4 +1,4 @@
-package io.github.youndie.shashki.ui.kompot
+package io.github.youndie.shashki.protocol
 
 import io.github.youndie.kompot.KompotComponent
 import io.github.youndie.kompot.KompotModifierNode
@@ -9,21 +9,16 @@ import kotlinx.serialization.Serializable
 /**
  * The three components the server sends as a tree, rather than the client drawing from a model.
  *
- * **Except that no server can send one, and this is where that is written down** (B-65). These
- * classes are in `:shared-ui`, which carries Compose; a Ktor server cannot depend on it, so it cannot
- * build a `TripRow`, a `FareBreakdown` or an `EarningsTile` — and `FareBreakdown` has therefore had a
- * renderer, a golden and no caller since kompot was wired up. R9·b, the receipt, is the screen that
- * would have one.
+ * **They are here, and not beside their renderers, so that a server can build one.** `kompot-core`
+ * carries `KompotComponent` and no Compose; `:shared-ui` carries Compose and `:server` can never
+ * depend on it. With the declarations in this module the server composes a screen and the client
+ * draws it, which is the whole point of a server-driven component — see B-65.
  *
- * **Moving them to `:protocol` does not work, and that was measured rather than assumed.** The move
- * compiles on the server's side — `:protocol` takes `kompot-core`, which has no Compose — and breaks
- * on this one: kompot's registry processor calls KSP's `getSymbolsWithAnnotation` for
- * `@KompotComponentMarker`, which returns symbols from the *current module's sources* only, so with
- * the classes elsewhere `GeneratedShashkiUiKompotRegistration` still names this package and every
- * reference in it is an `ERROR TYPE`. Read out of the processor's own bytecode, not guessed.
- *
- * So a component's declaration has to sit beside its renderer, and a renderer needs Compose. The way
- * out is a decision rather than a refactor, and B-65 holds it open with the three candidates priced.
+ * **The registry is generated in two halves and they meet at a type argument.** This module runs
+ * kompot's processor for the polymorphic serializers module; `:shared-ui` runs it for the renderers,
+ * and KSP resolves `KompotComponentRenderer<TripRow>` across the module boundary. B-65 spent a while
+ * believing that split was unsupported, on the strength of a build that failed for a different
+ * reason — stale imports of the old package — so the belief is recorded there beside its correction.
  *
  * **Everything the kit's composition rules constrain is expressible here, on purpose.** A protocol
  * that could not say "two accent surfaces" would enforce the rule by construction and would also be

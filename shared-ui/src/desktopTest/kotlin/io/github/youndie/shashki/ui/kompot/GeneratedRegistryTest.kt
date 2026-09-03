@@ -1,9 +1,12 @@
 package io.github.youndie.shashki.ui.kompot
 
 import io.github.youndie.kompot.KompotComponent
+import io.github.youndie.kompot.generated.generatedShashkiProtocolSerializersModule
 import io.github.youndie.kompot.generated.generatedShashkiUiRenderers
-import io.github.youndie.kompot.generated.generatedShashkiUiSerializersModule
 import io.github.youndie.kompot.kompotJson
+import io.github.youndie.shashki.protocol.EarningsTile
+import io.github.youndie.shashki.protocol.FareBreakdown
+import io.github.youndie.shashki.protocol.TripRow
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -36,7 +39,7 @@ class GeneratedRegistryTest {
      */
     @Test
     fun `a tree the server sent decodes into this module's components`() {
-        val json = kompotJson(generatedShashkiUiSerializersModule)
+        val json = kompotJson(generatedShashkiProtocolSerializersModule)
 
         val tile =
             json.decodeFromString<KompotComponent>(
