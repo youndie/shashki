@@ -178,7 +178,7 @@ public fun DriverShift(
                         // Beside the count rather than under it: the count says the socket is alive
                         // and the source says what is travelling over it, and they are one fact.
                         val line =
-                            listOfNotNull("$taken positions taken", state.positionLabel, state.boardLabel)
+                            listOfNotNull("$taken pings", state.positionLabel, state.boardLabel)
                                 .joinToString(" · ")
                         KvadrantText(line, style = type.meta.copy(color = colors.subtle))
                     }

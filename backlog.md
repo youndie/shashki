@@ -48,7 +48,7 @@ re-prioritising one must never move its file.
 |---|---|---|---|---|
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
-## Closed (84)
+## Closed (85)
 
 **Remove the unknowns**
 
@@ -154,6 +154,7 @@ re-prioritising one must never move its file.
 - [B-82](docs/backlog/B-82-pressing-a-tile-moves-nothing.md) `[x]` - Pressing a tile moves nothing: the kit's tilt was drawing inside the surface
 - [B-83](docs/backlog/B-83-the-accept-bar-overran-the-decline-ring.md) `[x]` - The offer's accept bar is 293 dp where the kit caps it at 200, and overruns the decline ring
 - [B-84](docs/backlog/B-84-the-first-ci-run-had-no-browser-and-said-no-tests.md) `[x]` - Every wasm suite on the first public CI run reported no tests, and neither half of the reason was the tests
+- [B-86](docs/backlog/B-86-the-waiting-counters-label-reads-as-a-taxi-rank-not-a-heartbeat.md) `[x]` - The waiting screen's own count reads as a taxi-rank position, not the socket heartbeat it is
 
 <!-- END INDEX -->
 

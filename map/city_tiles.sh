@@ -77,9 +77,18 @@ tiles() {
   log "planetiler, layers from the styles: $layers"
   # nodemap-type: sparsearray, not array. `array` indexes by OSM node id, so on a city extract whose
   # ids reach into the billions it asks for tens of GB and dies with 8 GB of heap.
+  # download_dir: under $OUT, not planetiler's own default of `./data/sources`. That default is
+  # relative to wherever this script is invoked from — the repository root on the build box — and
+  # nothing here ignores it from sync. A one-way-replica mutagen session mirrors alpha exactly and
+  # deletes what beta has that alpha does not; `build/` is in that session's ignore list, a bare
+  # `data/` at the root is not, and the two downloads landed in the gap between "finished
+  # downloading" and planetiler's own existence check, ten seconds later, on the machine this was
+  # first run on. `--download_dir` is planetiler's own flag for exactly this.
   java -Xmx8g -jar "$OUT/planetiler.jar" \
     --osm-path="$OUT/Ljubljana.osm.pbf" \
     --output="$OUT/city.pmtiles" \
+    --download_dir="$OUT/sources" \
+    --tmpdir="$OUT/tmp" \
     --only-layers="$layers" \
     --nodemap-type=sparsearray \
     --download --force
