@@ -331,7 +331,48 @@ public class DriverRides {
         public val parent: DriverRides = DriverRides(),
         public val rideId: String,
     )
+
+    /**
+     * `GET /api/driver/rides/{rideId}/summary` — the kit's D5, what the trip that just ended paid
+     * (B-70). 404 until the settlement has written the payout down, and 404 for a ride that is not
+     * this driver's: confirming somebody else's trip exists is itself an answer.
+     */
+    @Resource("{rideId}/summary")
+    public class Summary(
+        public val parent: DriverRides = DriverRides(),
+        public val rideId: String,
+        /** The same seam every driver route carries (B-52): ignored the moment there is a token. */
+        public val driverId: String? = null,
+    )
 }
+
+/**
+ * What a finished trip paid the driver — the kit's D5 (B-70).
+ *
+ * **The figure is the payout row, not the fare minus a percentage.** The share is what the
+ * settlement wrote down as owed; a client that took `fare × 80 %` itself would agree with it until
+ * the first rolled-back tip. `feePercent` travels so the screen can *name* the cut the way the kit
+ * does ("service fee 12 %") without owning the rule that produced it.
+ */
+@Serializable
+public data class TripSummaryView(
+    val rideId: String,
+    /** The driver's share of the fare, in cents — the payout row. */
+    val payoutCents: Long,
+    /** What the rider was charged for the ride itself. */
+    val fareCents: Long,
+    /** `fareCents - payoutCents`: the platform's cut, as money. */
+    val feeCents: Long,
+    val feePercent: Int,
+    /** The tip's payout, when the rider left one; the driver keeps all of it. */
+    val tipCents: Long,
+    val currency: String,
+    val distanceMetres: Int,
+    val durationSeconds: Int,
+    val paymentMethodId: String,
+    /** Everything this driver has been owed today, this ride included. */
+    val todayCents: Long,
+)
 
 /** What the rider thought of it: one to five, and nothing else — R8 has no comment box. */
 @Serializable

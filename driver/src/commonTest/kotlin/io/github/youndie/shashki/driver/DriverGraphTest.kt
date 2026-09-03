@@ -9,6 +9,7 @@ import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripViewModel
+import io.github.youndie.shashki.driver.feature.trip.ui.TripSummaryViewModel
 import io.github.youndie.shashki.protocol.RideClass
 import io.ktor.client.HttpClient
 import org.koin.core.context.startKoin
@@ -62,6 +63,10 @@ class DriverGraphTest {
         assertNotNull(
             koin.get<DriverTripViewModel> { parametersOf("ride-1") },
             "the trip screen is resolved with the ride's id, as the route passes it",
+        )
+        assertNotNull(
+            koin.get<TripSummaryViewModel> { parametersOf("ride-1") },
+            "D5 is resolved with the ride's id, as the route passes it (B-70)",
         )
     }
 

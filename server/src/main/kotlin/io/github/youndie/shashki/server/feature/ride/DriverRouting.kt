@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.shashki.protocol.DriverOffers
+import io.github.youndie.shashki.protocol.DriverRides
 import io.github.youndie.shashki.protocol.DriverTicket
 import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.OfferAnswer
@@ -11,6 +12,7 @@ import io.github.youndie.shashki.server.feature.documents.documentRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.FindOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
+import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.resources.get
@@ -51,6 +53,15 @@ private fun Route.driverEndpoints() {
     val tickets by inject<DriverTickets>()
     val payouts by inject<PayoutRepository>()
     val clock by inject<PetichClock>()
+    val readSummary by inject<ReadTripSummaryUseCase>()
+
+    // **D5, the trip that just ended, from the payout row it wrote** (B-70). Behind the same tier as
+    // the transitions that produced it; which driver is asking comes from the token where there is
+    // one, and a ride that is not theirs is a 404 rather than a 403.
+    get<DriverRides.Summary> { route ->
+        val driverId = call.driverIdentity(route.driverId)
+        call.respond(readSummary(ReadTripSummaryUseCase.Params(route.rideId, driverId)).getOrThrow())
+    }
 
     get<DriverOffers.ForDriver> { route ->
         val driverId = call.driverIdentity(route.driverId)

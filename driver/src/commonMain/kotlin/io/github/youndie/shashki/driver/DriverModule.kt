@@ -31,8 +31,10 @@ import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.driver.feature.trip.data.HttpTripRepository
 import io.github.youndie.shashki.driver.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
+import io.github.youndie.shashki.driver.feature.trip.domain.ReadTripSummaryUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripViewModel
+import io.github.youndie.shashki.driver.feature.trip.ui.TripSummaryViewModel
 import io.github.youndie.shashki.protocol.DriverTicket
 import io.github.youndie.shashki.protocol.DriverTickets
 import io.github.youndie.shashki.protocol.GeoPoint
@@ -187,6 +189,7 @@ public fun driverModule(config: DriverConfig): Module =
         single<TripRepository> { HttpTripRepository(get()) }
         factory { ObserveTripUseCase(get()) }
         factory { AdvanceTripUseCase(get()) }
+        factory { ReadTripSummaryUseCase(get(), get()) }
 
         single {
             CrashReporting(
@@ -213,6 +216,7 @@ public fun driverModule(config: DriverConfig): Module =
             )
         }
         viewModel { (rideId: String) -> DriverTripViewModel(rideId, get(), get(), get()) }
+        viewModel { (rideId: String) -> TripSummaryViewModel(rideId, get()) }
         viewModel { EarningsViewModel(get()) }
         // The picker is the platform's and is left at its default here: the graph has nothing to say
         // about a file dialog, and a test hands in its own.

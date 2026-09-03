@@ -6,6 +6,7 @@ import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.protocol.TripAdvance
+import io.github.youndie.shashki.protocol.TripSummaryView
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.resources.get
@@ -26,4 +27,9 @@ public class HttpTripRepository(
         client
             .post(DriverRides.Advance(rideId = rideId)) { setBody(TripAdvance(driverId, to)) }
             .body()
+
+    override suspend fun summary(
+        rideId: String,
+        driverId: String,
+    ): TripSummaryView = client.get(DriverRides.Summary(rideId = rideId, driverId = driverId)).body()
 }

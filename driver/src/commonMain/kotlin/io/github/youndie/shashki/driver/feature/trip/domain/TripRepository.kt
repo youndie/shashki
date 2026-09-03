@@ -2,6 +2,7 @@ package io.github.youndie.shashki.driver.feature.trip.domain
 
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.TripSummaryView
 
 /** The ride this driver accepted, read back from the server and moved along by them. */
 public interface TripRepository {
@@ -19,4 +20,10 @@ public interface TripRepository {
         driverId: String,
         to: RideStatus,
     ): RideView
+
+    /** What the trip that just ended paid — the kit's D5 (B-70). 404 until the settlement has paid it out. */
+    public suspend fun summary(
+        rideId: String,
+        driverId: String,
+    ): TripSummaryView
 }

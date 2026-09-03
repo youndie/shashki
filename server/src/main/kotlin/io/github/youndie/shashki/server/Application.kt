@@ -25,6 +25,7 @@ import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.route.routeRoutes
 import io.github.youndie.shashki.server.feature.settlement.domain.NothingToSettleException
+import io.github.youndie.shashki.server.feature.trip.domain.NoSummaryYetException
 import io.github.youndie.shashki.server.feature.trip.domain.NotThisDriversRideException
 import io.github.youndie.shashki.server.feature.trip.domain.OutOfOrderTransitionException
 import io.github.youndie.shashki.server.feature.trip.tripRoutes
@@ -145,6 +146,10 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
         // may well have one later, but there is nothing at this address now.
         exception<NoReceiptException> { call, e ->
             call.respond(HttpStatusCode.NotFound, ErrorBody(e.message ?: "no receipt"))
+        }
+        // The driver's mirror of it (B-70): a trip whose payout the settlement has not written yet.
+        exception<NoSummaryYetException> { call, e ->
+            call.respond(HttpStatusCode.NotFound, ErrorBody(e.message ?: "no summary yet"))
         }
         exception<NothingToSettleException> { call, e ->
             call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "nothing to settle"))

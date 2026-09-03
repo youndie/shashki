@@ -121,9 +121,9 @@ The product, in the order a ride goes through it, then the two capabilities that
   object store, written by the server because a browser cannot sign for itself. The one state a
   person would set is set by nobody, and the screen says so
 
-### Screens / Flows (11)
+### Screens / Flows (12)
 
-Seven in the rider bundle, four in the driver's. Every one of them is photographed: the `Content` half
+Seven in the rider bundle, five in the driver's. Every one of them is photographed: the `Content` half
 takes a state and a callback, so a golden of it needs no graph and no server.
 
 - [x] [screen-rider-class-picker](screens/screen-rider-class-picker.md) — the map, where you are
@@ -144,6 +144,8 @@ takes a state and a callback, so a golden of it needs no graph and no server.
   decide. One screen, because that is how a shift feels
 - [x] [screen-driver-earnings](screens/screen-driver-earnings.md) — today, this week and all time,
   summed from the payout rows
+- [x] [screen-driver-trip-summary](screens/screen-driver-trip-summary.md) — D5: what the trip that
+  just ended paid, from the payout row, with the fee shown
 - [x] [screen-driver-assigned-ride](screens/screen-driver-assigned-ride.md) — what was accepted, and
   the one button that moves it along
 - [x] [screen-driver-onboarding](screens/screen-driver-onboarding.md) — a licence, an insurance

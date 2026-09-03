@@ -20,6 +20,7 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.protocol.RouteRequest
 import io.github.youndie.shashki.protocol.TripAdvance
+import io.github.youndie.shashki.protocol.TripSummaryView
 import io.github.youndie.shashki.protocol.format.money
 import io.github.youndie.shashki.server.billing.PaymentGateway
 import io.github.youndie.shashki.server.billing.Payout
@@ -180,6 +181,48 @@ class SettlementTest {
                 listOf("fare", "tip", "paid with"),
                 card["lines"]!!.jsonArray.map { it.jsonObject["label"]?.jsonPrimitive?.content },
             )
+        }
+
+    /**
+     * **D5, from the payout row** (B-70): the figure the driver is shown is the share the settlement
+     * wrote down, the fee is the fare minus it, and the tip that follows is its own line. Before the
+     * trip ends there is nothing to show and the address says so; another driver asking gets the
+     * same 404 as for any ride that is not theirs.
+     */
+    @Test
+    fun `a finished trip answers the driver a summary built from the payout`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+
+            assertEquals(
+                HttpStatusCode.NotFound,
+                client.get(DriverRides.Summary(rideId = ride.id, driverId = DRIVER)).status,
+            )
+
+            drive(client, ride.id)
+            client.tip(ride.id, TIP_CENTS)
+            awaitTrue("the tip is paid out") { app.get<PayoutRepository>().forRide(ride.id).size == 2 }
+
+            val response = client.get(DriverRides.Summary(rideId = ride.id, driverId = DRIVER))
+            assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+            val summary = response.body<TripSummaryView>()
+            val fare = assertNotNull(ride.quote).amountCents
+            val payout = assertNotNull(app.get<PayoutRepository>().find(ride.id)).amountCents
+
+            assertEquals(payout, summary.payoutCents, "the figure is the payout row, not arithmetic on the fare")
+            assertEquals(fare, summary.fareCents)
+            assertEquals(fare - payout, summary.feeCents)
+            assertEquals(HUNDRED - PLATFORM_REMAINDER, summary.feePercent.toLong())
+            assertEquals(TIP_CENTS, summary.tipCents, "the driver keeps all of the tip")
+            assertEquals("card-4417", summary.paymentMethodId)
+            assertEquals(payout + TIP_CENTS, summary.todayCents, "the only rides today are this one and its tip")
         }
 
     /**

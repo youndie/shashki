@@ -11,6 +11,7 @@ import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.TripSummaryView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -116,6 +117,11 @@ class DriverTripViewModelTest {
         var failAdvanceWith: Throwable? = null
 
         override suspend fun read(rideId: String): RideView = ride
+
+        override suspend fun summary(
+            rideId: String,
+            driverId: String,
+        ): TripSummaryView = error("the summary is D5's, not this screen's")
 
         override suspend fun advance(
             rideId: String,

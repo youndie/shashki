@@ -13,6 +13,7 @@ import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
+import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.observability.Observability
 import io.ktor.client.HttpClient
@@ -79,6 +80,9 @@ class KoinGraphTest {
                     ),
                     // `OfferTimeouts` takes its `onExpired` as a suspend lambda written in the
                     // module — a `Function3` once the continuation is counted.
+                    // The summary's "start of today" is a lambda the module builds from the clock
+                    // (B-70) — a value the lambda passes by hand, declared by type and by definition.
+                    definition<ReadTripSummaryUseCase>(kotlin.jvm.functions.Function0::class),
                     definition<OfferTimeouts>(kotlin.jvm.functions.Function3::class),
                     // `Events` is built by a lambda that constructs both halves from one address —
                     // or neither. `verify()` sees a constructor with two parameters and asks the

@@ -11,7 +11,7 @@ import kotlin.test.assertNull
 class DriverRouteTest {
     @Test
     fun `every route survives a round trip through its own address`() {
-        val routes = listOf(DriverRoute.Shift, DriverRoute.Trip("ride-7"))
+        val routes = listOf(DriverRoute.Shift, DriverRoute.Trip("ride-7"), DriverRoute.Summary("ride-7"))
 
         for (route in routes) {
             assertEquals(route, DriverRoute.ofPath(route.path), "${route.path} did not come back as itself")

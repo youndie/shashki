@@ -21,6 +21,8 @@ import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
 import io.github.youndie.shashki.ui.screens.CancelPrompt
 import io.github.youndie.shashki.ui.screens.DriverEarnings
 import io.github.youndie.shashki.ui.screens.DriverOnboarding
+import io.github.youndie.shashki.ui.screens.DriverTripSummary
+import io.github.youndie.shashki.ui.screens.DriverTripSummaryState
 import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.OnboardingDocument
 import io.github.youndie.shashki.ui.screens.OnboardingState
@@ -567,3 +569,42 @@ private fun DriverOnboardingBody(dark: Boolean) {
 
 private val LJUBLJANA = GeoPoint(46.0511, 14.5051)
 private val BRNIK = GeoPoint(46.2237, 14.4576)
+
+/**
+ * D5: the trip that just ended, from the driver's side (B-70).
+ *
+ * **The figure is what he earned and the fee is a line** — the kit's sentence under this screen,
+ * and the reason the fixture's numbers are the settlement's shape: a fare, twenty per cent off it,
+ * the tip on top. The accent is on the figure; the bar below is chrome, which is the kit's rule 1
+ * the other way round from D3.
+ */
+@ViddikScreenshot(name = "driver trip summary", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverTripSummaryFixture(): Unit = DriverTripSummary(dark = true)
+
+/** The same on the stock light theme (B-48). */
+@ViddikScreenshot(name = "driver trip summary light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverTripSummaryFixtureLight(): Unit = DriverTripSummary(dark = false)
+
+@Composable
+private fun DriverTripSummary(dark: Boolean) {
+    val latin = kvadrantLatin()
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        DriverTripSummary(
+            state =
+                DriverTripSummaryState(
+                    earned = "+$ 26.17",
+                    meta = "card-4417 · today $ 46.32",
+                    lines =
+                        listOf(
+                            "fare" to "$ 28.96",
+                            "service fee 20 %" to "-$ 5.79",
+                            "tip" to "$ 3",
+                            "35 min · 22.8 km" to "—",
+                        ),
+                ),
+            onBackToShift = {},
+        )
+    }
+}

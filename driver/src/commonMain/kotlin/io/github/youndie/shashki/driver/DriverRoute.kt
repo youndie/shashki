@@ -48,6 +48,17 @@ public sealed interface DriverRoute : NavKey {
         override val path: String get() = "/earnings"
     }
 
+    /**
+     * D5: what the trip that just ended paid (B-70). **Replaces the trip on the stack** rather than
+     * being pushed over it: the back button from a summary should not offer to drive a finished ride.
+     */
+    @Serializable
+    public data class Summary(
+        val rideId: String,
+    ) : DriverRoute {
+        override val path: String get() = "/summary/$rideId"
+    }
+
     /** What the driver accepted. */
     @Serializable
     public data class Trip(
@@ -73,13 +84,23 @@ public sealed interface DriverRoute : NavKey {
         public fun ofPath(path: String): DriverRoute? =
             when {
                 path == Callback.path -> Callback
+
                 path == Earnings.path -> Earnings
+
                 path == Onboarding.path -> Onboarding
+
                 path == "/" || path.isEmpty() -> Shift
+
                 path.startsWith(TRIP_PREFIX) -> path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
+
+                path.startsWith(
+                    SUMMARY_PREFIX,
+                ) -> path.removePrefix(SUMMARY_PREFIX).takeIf { it.isNotBlank() }?.let(::Summary)
+
                 else -> null
             }
 
         private const val TRIP_PREFIX = "/trip/"
+        private const val SUMMARY_PREFIX = "/summary/"
     }
 }

@@ -23,6 +23,7 @@ parent_feature: feature-the-trip
 | `GET /api/driver/offers/{driverId}` | driver token | the offer waiting for this driver, or 404 |
 | `POST /api/driver/offers/{rideId}/answer` | driver token | accept or decline |
 | `POST /api/driver/rides/{rideId}/advance` | driver token | move the trip to the next state |
+| `GET /api/driver/rides/{rideId}/summary` | driver token | D5: what the trip paid, from the payout row; 404 until paid out, 404 for another driver's ride (B-70) |
 | `GET /api/driver/earnings` | driver token | today, this week and all time, from payout rows (B-46) |
 | `GET /api/driver/documents` | driver token | the three documents and their states (B-47) |
 | `POST /api/driver/documents/{kind}` | driver token | one file, at most 2 MiB, straight into the object store |

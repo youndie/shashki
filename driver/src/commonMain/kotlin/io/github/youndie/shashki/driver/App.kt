@@ -20,6 +20,7 @@ import io.github.youndie.shashki.driver.feature.documents.ui.OnboardingScreen
 import io.github.youndie.shashki.driver.feature.earnings.ui.EarningsScreen
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftScreen
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripScreen
+import io.github.youndie.shashki.driver.feature.trip.ui.TripSummaryScreen
 import io.github.youndie.shashki.ui.DriverTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
 import io.github.youndie.shashki.ui.nav.addressBar
@@ -153,8 +154,21 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
                 entry<DriverRoute.Trip> { route ->
                     DriverTripScreen(
                         rideId = route.rideId,
-                        onFinished = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
+                        // **A finished trip is D5 and not the shift** (B-70). `COMPLETED` used to pop
+                        // the trip and leave the driver at *waiting* with no figure — the mirror of
+                        // what B-44 fixed for the rider. Replaced rather than pushed, so back from
+                        // the summary does not offer to drive a finished ride.
+                        onFinished = {
+                            if (backStack.isNotEmpty()) backStack.removeAt(backStack.size - 1)
+                            backStack.add(DriverRoute.Summary(route.rideId))
+                        },
                         onFailed = { },
+                    )
+                }
+                entry<DriverRoute.Summary> { route ->
+                    TripSummaryScreen(
+                        rideId = route.rideId,
+                        onBackToShift = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
                     )
                 }
             },
@@ -191,6 +205,7 @@ private val SAVED_STATE =
                     subclass(DriverRoute.Earnings::class)
                     subclass(DriverRoute.Onboarding::class)
                     subclass(DriverRoute.Shift::class)
+                    subclass(DriverRoute.Summary::class)
                     subclass(DriverRoute.Trip::class)
                 }
             }

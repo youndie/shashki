@@ -12,8 +12,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.context.stopKoin
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinConfiguration
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
@@ -35,6 +37,13 @@ import kotlin.test.assertNotSame
  */
 @OptIn(ExperimentalTestApi::class)
 class NavEntryViewModelTest {
+    /**
+     * `KoinApplication` registers the global context, and `RiderGraphTest` starts its own: without
+     * this the two collide in whichever order the runner picks, and the failure names the other test.
+     */
+    @AfterTest
+    fun stop(): Unit = stopKoin()
+
     @Test
     fun `a second entry of the same route gets a view model of its own`() {
         val seen = mutableMapOf<String, MatchingViewModel>()

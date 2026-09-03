@@ -60,12 +60,14 @@ import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.CaptureStep
 import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayoutStep
+import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
 import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
 import io.github.youndie.shashki.server.feature.settlement.saga.SettleableStep
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
 import io.github.youndie.shashki.server.feature.trip.data.ExposedTripRepository
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
+import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.observability.ObservabilityConfig
@@ -242,6 +244,27 @@ public fun rideModule(
             )
         }
         factory { AdvanceTripUseCase(trips = get(), rides = get(), settle = get(), reservations = get()) }
+        // **The split, bound once** (B-70). `Commission.DEFAULT` used to be a constructor default in
+        // two places; the summary is a third reader, and three copies of "where the commission comes
+        // from" is how a screen names one percentage while the settlement charges another.
+        single { Commission.DEFAULT }
+        factory {
+            ReadTripSummaryUseCase(
+                rides = get(),
+                payouts = get(),
+                commission = get(),
+                // "Today" as D6 counts it — UTC, with the same caveat the earnings route records.
+                startOfToday = {
+                    java.time.Instant
+                        .ofEpochMilli(get<PetichClock>().nowEpochMs())
+                        .atZone(java.time.ZoneOffset.UTC)
+                        .toLocalDate()
+                        .atStartOfDay(java.time.ZoneOffset.UTC)
+                        .toInstant()
+                        .toEpochMilli()
+                },
+            )
+        }
         factory { SettleRideUseCase(engine = get(), sagas = get()) }
         factory { AnswerOfferUseCase(engine = get(), sagas = get(), rides = get()) }
         factory { ExpireOfferUseCase(engine = get(), sagas = get(), rides = get()) }
