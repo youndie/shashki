@@ -1,7 +1,7 @@
 ---
 id: B-79
 title: "R9·b names a UUID and not a journey: no date, no addresses, no driver"
-status: open
+status: done
 priority: P3
 size: S
 stage: stage-6-what-running-it-said
@@ -26,3 +26,22 @@ B · 20:06 drop-off / base fare … total / Ivan Sokolov · Skoda Octavia · А 
 - AC: the receipt shows when, from where to where, with whom and how it was rated, and no identifier.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/receipt/domain/ReceiptScreenUseCase.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/screens/RiderReceipt.kt`
+
+## What it turned out to be
+
+**Four lines the settlement already knew, and one the client had to say.** `SettledRide` carries
+both ends as the settlement recorded them, the driver — name, car, plate, from the record B-63 gave
+the server — and the stars this rider left; the tree names them in the kit's order: where, the
+card, with whom, how rated. The identifier is gone from the screen; it had been there because the
+tree needed a second line.
+
+**The date is drawn by the client, over the tree.** B-61's rule stands — a date is a calendar and a
+timezone and the browser has both — so it could not be a text in the tree. `ReceiptViewModel` reads
+the ride beside the receipt and `RiderReceipt` draws `2 september · 19:40` as the one native line
+above the server's card, in the same words R9's rows use.
+
+**`rated 4 of 5` rather than a star.** The kit writes `★ 5`; the bundled face has no star, and the
+glyph guard is the reason this product knows that before a golden on another machine does.
+
+`ReceiptTreeTest` asserts the journey, the driver and the rating off the wire, and that no text on
+it is the ride's id. Two goldens re-recorded and looked at.

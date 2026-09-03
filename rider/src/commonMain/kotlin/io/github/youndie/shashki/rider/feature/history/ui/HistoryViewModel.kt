@@ -149,7 +149,8 @@ internal fun RideView.month(): String =
         "${MONTHS[date.month.number - 1]} ${date.year}"
     } ?: "earlier"
 
-private fun Long.asDayAndTime(): String {
+/** `3 september · 09:44`, on the rider's own calendar and clock — R9's rows and R9·b's header (B-79). */
+internal fun Long.asDayAndTime(): String {
     val at = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.currentSystemDefault())
     return "${at.day} ${MONTHS[at.month.number - 1]} · ${at.hour.pad()}:${at.minute.pad()}"
 }

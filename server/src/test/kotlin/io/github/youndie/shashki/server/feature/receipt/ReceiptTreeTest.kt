@@ -62,6 +62,20 @@ class ReceiptTreeTest {
         )
     }
 
+    /**
+     * **The receipt names the journey and the driver, not the ride** (B-79). The second line used to
+     * be the UUID, because the tree needed a line; a rider reads where they went and with whom.
+     */
+    @Test
+    fun `the receipt says where, with whom and how it was rated, and never the identifier`() {
+        val texts = Json.parseToJsonElement(encodedReceipt(receiptTree(COMPLETED))).collect("text")
+
+        assertTrue("46.0511, 14.5051" in texts && "46.2237, 14.4576" in texts, "both ends: $texts")
+        assertTrue("Ivan Sokolov · Skoda Octavia · white · A 123 BC" in texts, "the driver: $texts")
+        assertTrue("rated 5 of 5" in texts, "the stars: $texts")
+        assertTrue(texts.none { it == COMPLETED.rideId }, "an identifier is for a log, not a rider: $texts")
+    }
+
     /** The three types on this wire, and every one of them is registered on the other side. */
     @Test
     fun `every node on the wire is a type the client registers`() {
@@ -148,6 +162,10 @@ class ReceiptTreeTest {
                 cancelled = false,
                 tipCents = 300,
                 paymentMethodId = "card-1",
+                pickup = "46.0511, 14.5051",
+                dropoff = "46.2237, 14.4576",
+                driver = "Ivan Sokolov · Skoda Octavia · white · A 123 BC",
+                stars = 5,
             )
 
         val CANCELLED = COMPLETED.copy(chargedCents = 728, cancelled = true, tipCents = 0)

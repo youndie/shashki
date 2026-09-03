@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.server.feature.receipt.data
 
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
+import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.SettledRide
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
@@ -17,6 +19,9 @@ import ru.workinprogress.petich.SimpleEnrichedPayload
  */
 public class PetichReceiptRepository(
     private val petiches: PetichRepository,
+    /** Who drove, and what the rider thought of it — the two lines the kit's receipt ends with (B-79). */
+    private val drivers: DriverRepository,
+    private val ratings: RatingRepository,
 ) : ReceiptRepository {
     override suspend fun settled(rideId: String): SettledRide? {
         val fare = petiches.findById(SettleRideUseCase.settlementId(rideId)) ?: return null
@@ -38,6 +43,10 @@ public class PetichReceiptRepository(
                     .findById(SettleRideUseCase.settlementId(rideId, SettlementPayload.Kind.TIP))
                     ?.charge() ?: 0,
             paymentMethodId = payload.paymentMethodId,
+            pickup = payload.pickup,
+            dropoff = payload.dropoff,
+            driver = drivers.find(payload.driverId)?.let { "${it.name} · ${it.car} · ${it.plate}" },
+            stars = ratings.find(rideId)?.stars,
         )
     }
 }

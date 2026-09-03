@@ -409,10 +409,17 @@ private fun RiderReceipt(dark: Boolean) {
                                 text = "receipt",
                                 style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
                             ),
+                            // The journey, not the identifier (B-79): both ends as the settlement
+                            // recorded them, then the card, then who drove and how it was rated.
                             TextComponent(
-                                id = "receipt-ride",
-                                text = "ride-3",
-                                style = TypographyToken(ShashkiTokens.TYPE_META),
+                                id = "receipt-pickup",
+                                text = "46.0511, 14.5051",
+                                style = TypographyToken(ShashkiTokens.TYPE_BODY),
+                            ),
+                            TextComponent(
+                                id = "receipt-dropoff",
+                                text = "46.2237, 14.4576",
+                                style = TypographyToken(ShashkiTokens.TYPE_BODY),
                                 color = ColorToken(ShashkiTokens.COLOR_SUBTLE),
                             ),
                             FareBreakdown(
@@ -427,10 +434,22 @@ private fun RiderReceipt(dark: Boolean) {
                                         FareLine("paid with", "card-4417"),
                                     ),
                             ),
+                            TextComponent(
+                                id = "receipt-driver",
+                                text = "Ivan Sokolov · Skoda Octavia · white · A 123 BC",
+                                style = TypographyToken(ShashkiTokens.TYPE_BODY),
+                            ),
+                            TextComponent(
+                                id = "receipt-stars",
+                                text = "rated 4 of 5",
+                                style = TypographyToken(ShashkiTokens.TYPE_META),
+                                color = ColorToken(ShashkiTokens.COLOR_SUBTLE),
+                            ),
                         ),
                 ),
             loading = false,
             onBack = {},
+            when_ = "2 september · 19:40",
         )
     }
 }

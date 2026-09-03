@@ -42,15 +42,14 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-79](docs/backlog/B-79-the-receipt-names-a-uuid-and-not-a-journey.md) `[ ]` | R9·b names a UUID and not a journey: no date, no addresses, no driver | P3 | S | - |
 | [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[ ]` | Four state branches the kit draws and the product cannot reach | P3 | M | - |
 | [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[ ]` | D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not | P3 | M | - |
 
-## Closed (78)
+## Closed (79)
 
 **Remove the unknowns**
 
@@ -150,6 +149,7 @@ re-prioritising one must never move its file.
 - [B-76](docs/backlog/B-76-the-plate-is-accent-where-the-kit-inverts-it.md) `[x]` - R6's plate is an accent chip; the kit inverts it — and the card says the trip's length, not the driver's
 - [B-77](docs/backlog/B-77-in-progress-does-not-say-when-or-how-far.md) `[x]` - R7 does not say when you arrive or how far is left, and the travelled road stays lit
 - [B-78](docs/backlog/B-78-history-rows-wrap-and-the-pivot-clips.md) `[x]` - R9's rows wrap unevenly, a cancelled ride says — for 0, and the pivot header is clipped
+- [B-79](docs/backlog/B-79-the-receipt-names-a-uuid-and-not-a-journey.md) `[x]` - R9·b names a UUID and not a journey: no date, no addresses, no driver
 
 <!-- END INDEX -->
 

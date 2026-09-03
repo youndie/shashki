@@ -231,7 +231,7 @@ public fun riderModule(
         }
         viewModel { (rideId: String) -> FinishedViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
-        viewModel { (rideId: String) -> ReceiptViewModel(rideId, get()) }
+        viewModel { (rideId: String) -> ReceiptViewModel(rideId, get(), get()) }
         // **Who the rider is, as far as this bundle knows.** The name is the configured id and the
         // address is the token's `email` claim, read without verification because verifying is the
         // server's job and this is a label on a screen (B-45).

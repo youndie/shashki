@@ -63,6 +63,12 @@ The fetch starts in `init`. There is nothing else to load: this screen has no st
 
 ## 4. What is on it, and who decided
 
+### 4.0. When, above the card (B-79)
+
+`2 september · 19:40` at the page margin, in the meta brush — **the one line on this screen the
+client writes**, because a date is a calendar and a timezone and the browser has both (B-61). It is
+read off the ride's `requestedAtEpochMs`, not off the tree, and the server's card begins under it.
+
 ### 4.1. The card
 
 - **Where it comes from:** the server, entirely. `FareBreakdown.amount` is the fare charge plus the
@@ -73,6 +79,14 @@ The fetch starts in `init`. There is nothing else to load: this screen has no st
 - **What this client does not do:** arithmetic. There is no fare in the rider's receipt package, no
   currency and no total — [B-61](../backlog/B-61-the-history-row-and-the-receipt.md) asks for that by
   name, and the way it is enforced is that the state holds a `KompotComponent` and nothing else.
+
+### 4.1a. The journey and the driver (B-79)
+
+Both ends above the card and the driver under it — `Ivan Sokolov · Skoda Octavia · white · A 123
+BC`, then `rated 4 of 5` when this rider rated the ride — all of them the server's texts, from the
+settlement's own record of the journey, the driver record and the rating. **The ride's identifier
+is no longer on the screen**: it had been the second line because the tree needed one and the server
+had nothing else to hand, and an id is for a log.
 
 ### 4.2. A cancelled ride
 

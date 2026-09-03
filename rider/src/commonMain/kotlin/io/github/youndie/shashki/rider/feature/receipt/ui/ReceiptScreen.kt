@@ -46,5 +46,11 @@ public fun ReceiptContent(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
 ) {
-    RiderReceipt(tree = uiState.tree, loading = uiState.loading, modifier = modifier, onBack = onBack)
+    RiderReceipt(
+        tree = uiState.tree,
+        loading = uiState.loading,
+        modifier = modifier,
+        onBack = onBack,
+        when_ = uiState.when_,
+    )
 }

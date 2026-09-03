@@ -157,7 +157,7 @@ public fun rideModule(
         factory { SendReceiptUseCase(get()) }
         // R9·b, the receipt as a screen (B-61). It reads the settlements rather than the ride: what
         // a receipt may say is what the saga actually charged.
-        single<ReceiptRepository> { PetichReceiptRepository(get()) }
+        single<ReceiptRepository> { PetichReceiptRepository(get(), get(), get()) }
         factory { ReceiptScreenUseCase(get()) }
         // The wait a rider is shown: the candidate query and the router, joined (B-31). Named
         // explicitly rather than `singleOf`, like everything else in this module.

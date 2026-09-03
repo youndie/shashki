@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.youndie.kompot.KompotComponent
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
@@ -40,8 +42,23 @@ public fun RiderReceipt(
     modifier: Modifier = Modifier,
     /** How to leave, or `null` where the platform already offers it (B-67). */
     onBack: (() -> Unit)? = null,
+    /**
+     * When — `3 september · 09:44` — as the one native line above the server's card (B-79).
+     *
+     * A date is the client's to format (B-61), so it cannot be a text in the tree; it is drawn
+     * here, at the page margin, in the meta brush, and the tree begins under it.
+     */
+    when_: String? = null,
 ) {
-    Column(modifier.fillMaxSize().background(KvadrantTheme.colors.background)) {
+    val colors = KvadrantTheme.colors
+    Column(modifier.fillMaxSize().background(colors.background)) {
+        when_?.let {
+            KvadrantText(
+                it,
+                Modifier.padding(start = KvadrantTheme.metrics.margin, top = 16.dp, end = KvadrantTheme.metrics.margin),
+                style = ShashkiTheme.typography.meta.copy(color = colors.subtle),
+            )
+        }
         if (tree != null) {
             ServerScreen(tree, Modifier.weight(1f))
         } else {

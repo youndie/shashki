@@ -28,6 +28,13 @@ public data class SettledRide(
     /** What the rider gave on top afterwards, or nought. Its own settlement, so its own line. */
     val tipCents: Long,
     val paymentMethodId: String,
+    /** Both ends, as the settlement recorded them — coordinates, since nothing here geocodes (B-79). */
+    val pickup: String,
+    val dropoff: String,
+    /** `Ivan Sokolov · Skoda Octavia · white · A 123 BC`, or `null` for a driver the server has no record of. */
+    val driver: String?,
+    /** What this rider gave the driver, one to five, or `null` for a ride they did not rate. */
+    val stars: Int?,
 )
 
 /**
