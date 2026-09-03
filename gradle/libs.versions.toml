@@ -22,10 +22,16 @@ coroutinesSwing = "1.11.0"
 # The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
 # choose — a different one here is a version conflict, not a preference.
 petich = "0.1.0.10"
-# **A snapshot, and the only one here.** s3kn publishes no release yet — its own README says Maven
-# Central is deliberately left until the API stops moving — so a demo that wants a real authenticated
-# write against the object store takes the snapshot and says so (B-47).
-s3kn = "0.1.0-SNAPSHOT"
+# **A snapshot, pinned by build metadata like smtpkn below.** s3kn publishes no release — its own
+# README leaves Maven Central until the API stops moving — so a demo that wants a real authenticated
+# write against the object store takes the snapshot (B-47) and applies B-13's documented fallback to
+# it: pin the resolved build rather than the moving coordinate. This read `0.1.0-SNAPSHOT` until the
+# repository was made public, which is the line B-13 draws — "a release or a pinned snapshot *before
+# the demo is published*" — and a moving coordinate in a public build means two people who clone it
+# a week apart do not compile the same thing (B-90). One module and one consumer, so unlike smtpkn
+# this is one number; `curl .../s3-client/0.1.0-SNAPSHOT/maven-metadata.xml` is where the next one
+# comes from.
+s3kn = "0.1.0-20260817.123924-1"
 exposed = "1.4.0"
 hikari = "7.1.0"
 postgresql = "42.7.13"
@@ -172,6 +178,9 @@ cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptogra
 
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutinesSwing" }
 s3-client = { module = "io.github.youndie:s3-client", version.ref = "s3kn" }
+# The platform variant, pinned to the same build: the root's POM asks for it at the moving
+# coordinate, so naming only the root pins the metadata and not the jar (B-90).
+s3-client-jvm = { module = "io.github.youndie:s3-client-jvm", version.ref = "s3kn" }
 
 [plugins]
 sborkaJvm = { id = "ru.workinprogress.sborka.jvm", version.ref = "sborka" }

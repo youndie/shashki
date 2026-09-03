@@ -48,7 +48,7 @@ re-prioritising one must never move its file.
 |---|---|---|---|---|
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
-## Closed (88)
+## Closed (89)
 
 **Remove the unknowns**
 
@@ -158,6 +158,7 @@ re-prioritising one must never move its file.
 - [B-87](docs/backlog/B-87-the-recorded-reproduction-leaves-its-own-control-skipped.md) `[x]` - B-14's recorded reproduction sets three variables and its control needs four, so following it runs the half that proves nothing
 - [B-88](docs/backlog/B-88-the-guards-that-need-the-stand-never-ran.md) `[x]` - Twelve guards need a stand, the stand runs for hours, and nothing ever pointed one at the other
 - [B-89](docs/backlog/B-89-the-forgery-that-forged-nothing-one-run-in-four.md) `[x]` - The signature the acceptance test forges is unchanged one run in four, and the test then accuses the server
+- [B-90](docs/backlog/B-90-a-moving-coordinate-in-a-published-build.md) `[x]` - Publishing the repository made a moving snapshot coordinate a defect, and pinning its root pinned half of it
 
 <!-- END INDEX -->
 

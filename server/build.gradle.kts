@@ -48,7 +48,14 @@ dependencies {
     // are what a service carries; where the data lands is a deployment (B-39).
     // The object store, for the one scenario that gives an S3 *client* a reason to exist here: a
     // driver uploading documents the browser cannot sign for itself (B-47, D12).
+    //
+    // **The platform variant is named too, and that is not redundancy** (B-90). s3kn publishes no
+    // release, so the catalog pins the resolved build rather than `0.1.0-SNAPSHOT` — but the pinned
+    // root's own POM asks for `s3-client-jvm:0.1.0-SNAPSHOT`, so pinning only the root leaves the
+    // artefact that actually reaches the classpath on a moving coordinate. The resolved graph is
+    // what said so; the catalog entry alone reads as pinned and is not.
     implementation(libs.s3.client)
+    implementation(libs.s3.client.jvm)
     implementation(libs.metrik.agent)
     implementation(libs.tracy.agent)
 
