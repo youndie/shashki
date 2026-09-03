@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.koin.composeViewmodel)
             implementation(libs.koin.composeNavigation3)
             implementation(libs.navigation3.ui)
+            implementation(libs.lifecycle.viewmodelNavigation3)
 
             implementation(wip.kotlinx.coroutines.core)
             implementation(wip.kotlinx.serialization.json)
@@ -73,6 +74,10 @@ kotlin {
         }
         getByName("desktopTest").dependencies {
             implementation(compose.desktop.currentOs)
+            // `runComposeUiTest`, for the one test that composes a `NavDisplay`: whether two entries
+            // of one route get two view models is a property of the composition, not of the graph
+            // (B-69).
+            implementation(libs.compose.uiTest)
             // A real engine for the one test that signs in against a real provider and then calls a
             // real server with what it got.
             implementation(libs.ktor.client.cio)

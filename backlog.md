@@ -42,11 +42,24 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (0)
+## Open (12)
 
-No open tasks.
+| Task | | Priority | Size | Blocked by |
+|---|---|---|---|---|
+| [B-70](docs/backlog/B-70-the-driver-has-no-trip-summary.md) `[ ]` | The driver finishes a trip and is shown nothing: D5 does not exist | P2 | M | - |
+| [B-71](docs/backlog/B-71-the-order-bar-answers-only-its-glyph.md) `[ ]` | The order bar's label does nothing: only the 48 dp circle takes the tap | P2 | S | - |
+| [B-72](docs/backlog/B-72-a-class-tile-says-zero-minutes-and-no-car.md) `[ ]` | A class tile says 0 min and names no car | P3 | S | - |
+| [B-73](docs/backlog/B-73-matching-says-less-than-the-kit-does.md) `[ ]` | R5 says less than the kit's matching screen: no count, no clock, no class and price | P3 | S | - |
+| [B-74](docs/backlog/B-74-the-offer-card-is-white-where-the-kit-is-amber.md) `[ ]` | D3's fare is white where the kit's is amber, and two of its lines are empty | P3 | S | - |
+| [B-75](docs/backlog/B-75-the-drivers-trip-screen-has-no-map-and-no-eta.md) `[ ]` | D4 has no map and no time to the pickup | P3 | M | - |
+| [B-76](docs/backlog/B-76-the-plate-is-accent-where-the-kit-inverts-it.md) `[ ]` | R6's plate is an accent chip; the kit inverts it — and the card says the trip's length, not the driver's | P3 | S | - |
+| [B-77](docs/backlog/B-77-in-progress-does-not-say-when-or-how-far.md) `[ ]` | R7 does not say when you arrive or how far is left, and the travelled road stays lit | P3 | S | - |
+| [B-78](docs/backlog/B-78-history-rows-wrap-and-the-pivot-clips.md) `[ ]` | R9's rows wrap unevenly, a cancelled ride says — for 0, and the pivot header is clipped | P3 | S | - |
+| [B-79](docs/backlog/B-79-the-receipt-names-a-uuid-and-not-a-journey.md) `[ ]` | R9·b names a UUID and not a journey: no date, no addresses, no driver | P3 | S | - |
+| [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[ ]` | Four state branches the kit draws and the product cannot reach | P3 | M | - |
+| [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[ ]` | D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not | P3 | M | - |
 
-## Closed (68)
+## Closed (69)
 
 **Remove the unknowns**
 
@@ -136,6 +149,7 @@ No open tasks.
 - [B-66](docs/backlog/B-66-the-class-picker-asks-once.md) `[x]` - R4 asks the server for a quote once and never again
 - [B-67](docs/backlog/B-67-no-way-back-in-the-window.md) `[x]` - The desktop build can enter a screen and not leave it
 - [B-68](docs/backlog/B-68-a-state-drawn-as-an-identifier.md) `[x]` - D4 draws in_progress where every other state is a word
+- [B-69](docs/backlog/B-69-every-screen-of-one-type-shares-one-view-model.md) `[x]` - Every screen of one type shares one view model, so the second ride is shown the first
 
 <!-- END INDEX -->
 

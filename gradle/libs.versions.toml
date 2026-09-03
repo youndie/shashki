@@ -113,6 +113,11 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 kvadrant-core = { module = "io.github.youndie:kvadrant-core", version.ref = "kvadrant" }
 
 navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+# **The one artefact that gives each navigation entry its own `ViewModelStore`** (B-69). Without it every
+# screen of one type shares one view model across rides, and the second ride is shown the first one's
+# state. 2.11.0-beta01 is the lifecycle this navigation3 already resolves to — pinned to the same line
+# rather than to the newest, so the bump is one artefact and not the whole lifecycle graph.
+lifecycle-viewmodelNavigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.11.0-beta01" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-composeViewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }

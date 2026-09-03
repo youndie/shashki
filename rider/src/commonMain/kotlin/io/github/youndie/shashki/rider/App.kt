@@ -7,9 +7,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.youndie.kompot.KompotActionHandler
@@ -126,6 +128,18 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
         backStack = backStack,
         modifier = modifier.fillMaxSize(),
         onBack = { if (backStack.size > 1) backStack.removeAt(backStack.size - 1) },
+        // **Each entry gets its own `ViewModelStore`, and without this line none did** (B-69). A
+        // `NavDisplay` left to its defaults keeps saveable state per entry and nothing else, so every
+        // `koinViewModel()` below resolved against the window's one store: the second ride's
+        // matching screen was handed the first ride's view model — already at "no cars", polling a
+        // ride that had ended — and the driver's second trip was shown the first trip's, whose
+        // `COMPLETED` popped the screen before it drew. Found by ordering twice in one window;
+        // every golden and every graph test passed, because none of them navigates.
+        entryDecorators =
+            listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
         entryProvider =
             entryProvider {
                 entry<RiderRoute.ClassPicker> {

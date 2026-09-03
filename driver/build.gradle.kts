@@ -48,6 +48,7 @@ kotlin {
             implementation(libs.koin.composeViewmodel)
             implementation(libs.koin.composeNavigation3)
             implementation(libs.navigation3.ui)
+            implementation(libs.lifecycle.viewmodelNavigation3)
 
             implementation(wip.kotlinx.coroutines.core)
             implementation(wip.kotlinx.serialization.json)
