@@ -99,13 +99,20 @@ graph() {
   extract
   fetch "https://github.com/graphhopper/graphhopper/releases/download/$GRAPHHOPPER_VERSION/graphhopper-web-$GRAPHHOPPER_VERSION.jar" "$OUT/graphhopper-web.jar"
   fetch "https://raw.githubusercontent.com/graphhopper/graphhopper/$GRAPHHOPPER_VERSION/config-example.yml" "$OUT/graphhopper.yml"
-  rm -rf "$OUT/graph-cache"
+  # **`graph-cache-import`, and the suffix is the whole point.** The server resolves its own graph
+  # directory as the *sibling* of the extract called `graph-cache` (`RoutingConfig.kt`), and the
+  # graph this step builds is imported by GraphHopper's own jar with its own `config-example.yml` —
+  # a different profile hash. Written under the name the server looks for, it makes anything later
+  # pointed at this extract die with `Profiles do not match`, which is the landmine B-35 recorded
+  # for images and is the same one on disk. `CityGraphMeasurement` already sidesteps it with a
+  # suffix of its own; this makes the sidestep unnecessary.
+  rm -rf "$OUT/graph-cache-import"
   log "graphhopper import (this is the number B-23 inherits as its startup cost)"
   /usr/bin/time -f 'import: %e s wall, %M kb max rss' java -Xmx4g \
     -Ddw.graphhopper.datareader.file="$OUT/Ljubljana.osm.pbf" \
-    -Ddw.graphhopper.graph.location="$OUT/graph-cache" \
+    -Ddw.graphhopper.graph.location="$OUT/graph-cache-import" \
     -jar "$OUT/graphhopper-web.jar" import "$OUT/graphhopper.yml"
-  echo "graph-cache: $(du -sb "$OUT/graph-cache" | cut -f1) bytes"
+  echo "graph-cache-import: $(du -sb "$OUT/graph-cache-import" | cut -f1) bytes"
 }
 
 # The styles ask for "Source Sans 3 Light" and "Source Sans 3 SemiLight". Source Sans 3 has no

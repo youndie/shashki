@@ -48,7 +48,7 @@ re-prioritising one must never move its file.
 |---|---|---|---|---|
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
-## Closed (86)
+## Closed (88)
 
 **Remove the unknowns**
 
@@ -156,6 +156,8 @@ re-prioritising one must never move its file.
 - [B-84](docs/backlog/B-84-the-first-ci-run-had-no-browser-and-said-no-tests.md) `[x]` - Every wasm suite on the first public CI run reported no tests, and neither half of the reason was the tests
 - [B-86](docs/backlog/B-86-the-waiting-counters-label-reads-as-a-taxi-rank-not-a-heartbeat.md) `[x]` - The waiting screen's own count reads as a taxi-rank position, not the socket heartbeat it is
 - [B-87](docs/backlog/B-87-the-recorded-reproduction-leaves-its-own-control-skipped.md) `[x]` - B-14's recorded reproduction sets three variables and its control needs four, so following it runs the half that proves nothing
+- [B-88](docs/backlog/B-88-the-guards-that-need-the-stand-never-ran.md) `[x]` - Twelve guards need a stand, the stand runs for hours, and nothing ever pointed one at the other
+- [B-89](docs/backlog/B-89-the-forgery-that-forged-nothing-one-run-in-four.md) `[x]` - The signature the acceptance test forges is unchanged one run in four, and the test then accuses the server
 
 <!-- END INDEX -->
 

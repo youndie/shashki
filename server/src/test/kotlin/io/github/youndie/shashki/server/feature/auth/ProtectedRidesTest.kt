@@ -107,9 +107,22 @@ class ProtectedRidesTest {
 
             // **The control the acceptance needs.** A validator that accepted anything would pass
             // every line above; what separates it from one that checks a signature is a token that
-            // is well-formed, unexpired and *not* signed by this provider. So the last character of
-            // the signature is changed and the same request must be refused.
-            val forged = token.dropLast(1) + if (token.last() == 'A') 'B' else 'A'
+            // is well-formed, unexpired and *not* signed by this provider. So a character of the
+            // signature is changed and the same request must be refused.
+            //
+            // **In the middle of the segment, not at its end** (B-89). A signature is 64 bytes for
+            // ES256 or 256 for RS256, and both leave a remainder of one modulo three — so base64url
+            // spends its *final* character on two significant bits and four of padding, which means
+            // that character can only ever be `A`, `Q`, `g` or `w`. The rule below used to be "if it
+            // is `A` make it `B`", and `A` and `B` decode to the same byte: one token in four was
+            // not forged at all, the signature stayed valid, the server rightly answered 201, and
+            // this line reported it as "a broken signature was accepted" — the test accusing the
+            // server. Measured over 3 000 signatures: 755 of them for ES256, 713 for RS256, against
+            // none for the character below, which carries all six of its bits.
+            val body = token.substringBeforeLast('.')
+            val signature = token.substringAfterLast('.')
+            val at = signature.length / 2
+            val forged = "$body.${signature.replaceRange(at, at + 1, if (signature[at] == 'A') "B" else "A")}"
             val refused =
                 client.post(Rides()) {
                     header(HttpHeaders.Authorization, "Bearer $forged")
