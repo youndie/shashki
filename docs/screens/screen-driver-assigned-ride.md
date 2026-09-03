@@ -15,6 +15,16 @@ source: driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/tr
 
 # Screen: assigned ride
 
+## The state is a word, not the enum (B-68)
+
+*assigned*, *on the way*, *at the pickup*, *on the trip*, *finished* — five words for five statuses,
+with a fallback that turns an unknown one into prose rather than an identifier.
+
+**Three of four used to read correctly by luck.** The header drew `RideStatus.name.lowercase()`, so
+`in_progress` arrived with an underscore on a screen whose headings are lower-case prose, and the
+golden of this screen showed `ASSIGNED` — the one state where the enum and the word are the same
+string. `assigned ride on the trip` photographs the other case.
+
 ## 0a. Code anchors
 
 | What | File |

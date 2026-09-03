@@ -49,7 +49,7 @@ public fun DriverTripContent(
     DriverAssignedRide(
         state =
             DriverAssignedRideState(
-                status = ride?.status?.name?.lowercase() ?: "…",
+                status = ride?.status?.asWord() ?: "…",
                 fare = ride?.quote?.asMoney() ?: "—",
                 pickup = ride?.pickup?.asCoordinates() ?: "—",
                 dropoff = ride?.dropoff?.asCoordinates() ?: "—",
@@ -64,6 +64,29 @@ public fun DriverTripContent(
         modifier = modifier,
     )
 }
+
+/**
+ * The state a driver is in, as a word (B-68).
+ *
+ * **Three of the four read as prose by luck and the fourth did not.** The header printed
+ * `RideStatus.name.lowercase()`, so `assigned`, `arriving` and `arrived` looked deliberate while
+ * `in_progress` arrived with its underscore on a screen whose headings are lower-case prose. A
+ * status is a wire value and a label is a sentence; they coincided until they did not.
+ *
+ * The `else` branch is the guard rather than laziness: the next state anybody adds gets spaces
+ * instead of underscores while somebody decides what it should say, and `EveryStateReadsAsAWordTest`
+ * fails if that is the branch it lands in.
+ */
+internal fun RideStatus.asWord(): String =
+    when (this) {
+        RideStatus.ASSIGNED -> "assigned"
+        RideStatus.ARRIVING -> "on the way"
+        RideStatus.ARRIVED -> "at the pickup"
+        RideStatus.IN_PROGRESS -> "on the trip"
+        RideStatus.COMPLETED -> "finished"
+        RideStatus.CANCELLED -> "cancelled"
+        else -> name.lowercase().replace('_', ' ')
+    }
 
 /**
  * The next state, as something a driver would tap.

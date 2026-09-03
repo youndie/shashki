@@ -1,7 +1,7 @@
 ---
 id: B-68
 title: "D4 draws in_progress where every other state is a word"
-status: open
+status: done
 priority: P3
 size: XS
 stage: stage-6-what-running-it-said
@@ -25,3 +25,22 @@ prose.
   whatever the kit's D4 calls them — and a golden shows the one that was wrong.
 - Anchors: `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/trip/ui/TripScreen.kt`,
   `docs/screens/screen-driver-assigned-ride.md`
+
+## What it turned out to be
+
+**A word per state, and the guard is the `else`.** `RideStatus.asWord()` names the five a driver
+meets — *assigned*, *on the way*, *at the pickup*, *on the trip*, *finished* — and its fallback
+replaces underscores with spaces rather than printing an identifier, so a state added to the wire
+tomorrow reaches a person as prose while somebody decides what it should say.
+
+**What the test holds is not the five strings.** Those are a design decision and may change; the
+assertion is that **no state reaches the screen with an underscore in it**, which is exactly what the
+next `RideStatus` would otherwise do. Dropping the word for `IN_PROGRESS` fails it.
+
+**And it now has a picture.** The only golden of this screen showed `ASSIGNED`, where the word and
+the identifier happen to be the same string — so the one state that was wrong had never been
+photographed. `assigned ride on the trip` is the fixture, in both themes, and reads *on the trip*
+over *finish*.
+
+The button's own words were already right: `asAction` has said "on my way", "I am here", "start the
+trip" and "finish" since the screen existed. It was the header that printed the enum.

@@ -148,15 +148,35 @@ internal fun AssignedRide(): Unit = AssignedRideBody(dark = true)
 @Composable
 internal fun AssignedRideLight(): Unit = AssignedRideBody(dark = false)
 
+/**
+ * The same screen mid-trip, and the state that was drawn as an identifier (B-68).
+ *
+ * **`in_progress` is the one of four that did not read as prose.** The header printed the enum's own
+ * name, so three states looked deliberate by luck; this is the picture of the fourth, and the reason
+ * it is a fixture is that nothing photographed it before — the golden showed `ASSIGNED`, where the
+ * word and the identifier happen to be the same string.
+ */
+@ViddikScreenshot(name = "assigned ride on the trip", group = "driver", width = 390, height = 844)
 @Composable
-private fun AssignedRideBody(dark: Boolean) {
+internal fun AssignedRideOnTheTrip(): Unit = AssignedRideBody(dark = true, status = RideStatus.IN_PROGRESS)
+
+/** The same, on the stock light theme (B-48). */
+@ViddikScreenshot(name = "assigned ride on the trip light", group = "driver", width = 390, height = 844)
+@Composable
+internal fun AssignedRideOnTheTripLight(): Unit = AssignedRideBody(dark = false, status = RideStatus.IN_PROGRESS)
+
+@Composable
+private fun AssignedRideBody(
+    dark: Boolean,
+    status: RideStatus = RideStatus.ASSIGNED,
+) {
     Fixture(dark) {
         DriverTripContent(
             uiState =
                 DriverTripUiState(
                     RideView(
                         id = "ride-1",
-                        status = RideStatus.ASSIGNED,
+                        status = status,
                         rideClass = RideClass.ECONOMY,
                         pickup = PICKUP,
                         dropoff = DROPOFF,
