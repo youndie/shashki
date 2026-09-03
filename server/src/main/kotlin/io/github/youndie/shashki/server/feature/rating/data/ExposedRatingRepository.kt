@@ -29,6 +29,10 @@ public object RatingsTable : Table("ratings") {
  */
 public class ExposedRatingRepository(
     private val database: Database,
+    @Suppress(
+        "ktlint:kapkan:wall-clock",
+        "the default of an injectable clock; the port is the parameter this initialises",
+    )
     private val now: () -> Long = { System.currentTimeMillis() },
 ) : RatingRepository {
     override fun record(rating: Rating) {

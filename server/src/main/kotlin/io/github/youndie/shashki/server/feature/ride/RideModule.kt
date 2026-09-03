@@ -97,6 +97,10 @@ import java.net.InetSocketAddress
  * three stand-ins — straight-line routes, an in-memory gateway, a fixed candidate list — are bound
  * to their ports here so B-23, the real billing and B-20 each replace one line.
  */
+@Suppress(
+    "ktlint:kapkan:wall-clock",
+    "the composition root binds the saga's clock and the tracing agent's, once each and nowhere else",
+)
 public fun rideModule(
     database: Database,
     scope: CoroutineScope,

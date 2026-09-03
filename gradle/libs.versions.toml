@@ -9,7 +9,7 @@
 # The convention plugins. The settings plugin is versioned in `settings.gradle.kts`; these are the
 # project half, and they need a version here because the root build has to put them on the plugin
 # classpath — see the note there.
-sborka = "0.1.0.23"
+sborka = "0.2.0.27"
 
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.

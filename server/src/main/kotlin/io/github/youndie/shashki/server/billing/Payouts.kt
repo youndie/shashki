@@ -103,6 +103,10 @@ public object PayoutsTable : Table("payouts") {
 
 public class ExposedPayoutRepository(
     private val database: Database,
+    @Suppress(
+        "ktlint:kapkan:wall-clock",
+        "the default of an injectable clock; the settlement test passes a fixed one",
+    )
     private val now: () -> Long = { System.currentTimeMillis() },
 ) : PayoutRepository {
     override fun record(payout: Payout) {

@@ -14,6 +14,10 @@ import kotlinx.coroutines.runBlocking
  * `launch` would be cancelled before it reached the socket. A short bound keeps a dead network from
  * turning a crash into a hang.
  */
+@Suppress(
+    "ktlint:kapkan:swallowed-failure",
+    "this is the handler of last resort, and a throw here loses the crash it was called about",
+)
 public actual fun installCrashReporting(
     reporter: CrashReporter,
     scope: CoroutineScope,

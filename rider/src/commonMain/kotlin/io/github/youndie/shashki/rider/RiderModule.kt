@@ -105,6 +105,10 @@ public data class RiderConfig(
  * first request with the compiler silent. The server hit that exact trap in B-11 and it is written
  * into the skill; the cost of avoiding it here is one lambda each.
  */
+@Suppress(
+    "ktlint:kapkan:wall-clock",
+    "the composition root is where the clock is bound; TripViewModel counts a duration it was handed (B-29)",
+)
 public fun riderModule(
     config: RiderConfig,
     /**

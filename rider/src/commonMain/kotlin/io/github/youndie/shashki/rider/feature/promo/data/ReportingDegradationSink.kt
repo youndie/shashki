@@ -29,6 +29,10 @@ public class ReportingDegradationSink(
     private val scope: CoroutineScope,
     private val screen: String,
 ) : KompotDegradationSink {
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "a report about a hole in the screen must not be able to break the screen",
+    )
     override fun onUnknown(
         kind: KompotDegradationKind,
         originalType: String,

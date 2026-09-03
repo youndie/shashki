@@ -118,6 +118,10 @@ public data class DriverConfig(
  * time with the compiler silent. The rider's module carries the same note and the server hit the
  * trap first.
  */
+@Suppress(
+    "ktlint:kapkan:wall-clock",
+    "the composition root is where the clock is bound; the shift screen counts a duration it was handed (B-29)",
+)
 public fun driverModule(config: DriverConfig): Module =
     module {
         single { config }

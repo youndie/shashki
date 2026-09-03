@@ -42,22 +42,13 @@ subprojects {
             logger.lifecycle("$path: no CHROME_BIN, so the browser suite is skipped — scripts/install-chrome.sh")
         }
 
-        // **And a suite that ran nothing must not pass.** A browser test task with no tests in it is
-        // greener than one with a failure — it is the exact shape of the thing being fixed, which is
-        // a wasm target that looked checked and was not. The count comes from the task's own report
-        // rather than from a file left over from an earlier run.
-        val reports = (this as AbstractTestTask).reports.junitXml.outputLocation
-        doLast {
-            val xml = reports.get().asFile
-            val ran =
-                xml
-                    .walkTopDown()
-                    .filter { it.extension == "xml" }
-                    .sumOf { file ->
-                        Regex("""tests="(\d+)"""").find(file.readText())?.groupValues?.get(1)?.toInt() ?: 0
-                    }
-            check(ran > 0) { "$path produced no tests: a browser suite that runs nothing is not a check" }
-            logger.lifecycle("$path: $ran tests in a browser")
-        }
+        // **A suite that ran nothing must not pass**, and that half now lives in `sborka.test`.
+        //
+        // It was written here, in this root build, because the conventions had nowhere to put it —
+        // three items had closed against "no browser on the build box" while the suite quietly ran
+        // zero tests. sborka 0.2.0 carries it for every non-JVM test task of every repository:
+        // `linuxX64Test`, `iosSimulatorArm64Test` and `jsNodeTest` as well as this one. What stays
+        // here is the half that is genuinely this repository's — whether the machine has a browser
+        // at all.
     }
 }

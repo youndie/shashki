@@ -50,6 +50,10 @@ public class SmtpReceiptSender(
     private val config: SmtpConfig,
     private val clock: Clock = Clock.System,
 ) : ReceiptSender {
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "quitting a session that is already gone is not a failure anybody can act on",
+    )
     override suspend fun send(receipt: Receipt): Boolean {
         val transport = connectSmtp(config.host, config.port)
         val session =

@@ -65,6 +65,10 @@ public class SagaStorage(
 public fun sagaEngine(
     steps: List<PetichInterceptor<*>>,
     storage: SagaStorage,
+    @Suppress(
+        "ktlint:kapkan:wall-clock",
+        "the default of the engine's injectable clock; every saga test passes its own",
+    )
     clock: PetichClock = PetichClock { System.currentTimeMillis() },
 ): PetichEngine =
     PetichEngine(

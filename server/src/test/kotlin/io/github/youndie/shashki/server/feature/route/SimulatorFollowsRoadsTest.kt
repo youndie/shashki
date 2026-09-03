@@ -57,6 +57,10 @@ class SimulatorFollowsRoadsTest {
     }
 
     /** Runs one driver for a while and reports how far from the L it ever got. */
+    @Suppress(
+        "ktlint:kapkan:wall-clock",
+        "the saga's clock in a test that asserts on distance from the road, never on time",
+    )
     private fun maximumDistanceFromTheRoad(estimator: RouteEstimator): Double {
         val seen = mutableListOf<GeoPoint>()
         testApplication {

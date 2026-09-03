@@ -54,6 +54,11 @@ class SettlementSagaTest {
     private val storage = SagaStorage(PostgresHarness.database, json)
     private val payments = InMemoryPaymentGateway()
     private val payouts = ExposedPayoutRepository(PostgresHarness.database) { 0L }
+
+    @Suppress(
+        "ktlint:kapkan:wall-clock",
+        "the engine needs a clock and this test asserts on money moved, not on time",
+    )
     private val clock = PetichClock { System.currentTimeMillis() }
     private val receipts = RecordingReceipts()
 

@@ -116,6 +116,10 @@ public class DriverSimulator(
             )
         }
 
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "closing a socket that is already gone is not a failure anybody can act on",
+    )
     private suspend fun report(
         driverId: String,
         random: Random,
