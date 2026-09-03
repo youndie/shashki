@@ -93,8 +93,12 @@ class PickupEtaTest {
                         setBody(RouteRequest(PICKUP, NORTH_END))
                     }.body()
 
-            val economy = assertNotNull(quotes.classes.first { it.rideClass == RideClass.ECONOMY }.pickupEtaSeconds)
+            val economyQuote = quotes.classes.first { it.rideClass == RideClass.ECONOMY }
+            val economy = assertNotNull(economyQuote.pickupEtaSeconds)
             val comfort = assertNotNull(quotes.classes.first { it.rideClass == RideClass.COMFORT }.pickupEtaSeconds)
+            // **The tile names the car the wait was routed for** (B-72): the record's own string, for
+            // the nearest candidate — which is the driver the cascade would offer first.
+            assertEquals("Skoda Octavia · white", economyQuote.car, "the harness's record for near-economy")
 
             assertTrue(economy > 0, "a car one kilometre away arrives in no time at all")
             assertTrue(comfort > economy, "the far car was not slower: economy $economy, comfort $comfort")
@@ -153,6 +157,7 @@ class PickupEtaTest {
                     }.body()
 
             assertTrue(quotes.classes.all { it.pickupEtaSeconds == null }, "${quotes.classes}")
+            assertTrue(quotes.classes.all { it.car == null }, "no wait, no car to name: ${quotes.classes}")
         }
 
     /** One driver, online, at [at] — over the socket, because that is how a driver goes online. */

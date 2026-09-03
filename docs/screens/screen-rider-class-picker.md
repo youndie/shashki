@@ -89,7 +89,10 @@ address search.
 ### 4.3. The three class tiles
 
 - **Field:** `uiState.quotes`
-- **Display:** name, the wait (`4 min`) or `no cars nearby`, and the fare (`$ 24.90`). The formatting
+- **Display:** name, the wait and the car (`4 min · Skoda Octavia · white`) or `no cars nearby`,
+  and the fare (`$ 24.90`). A wait under half a minute is *here*, not `0 min` — a car at the kerb is
+  not a number (B-72). The car is the nearest candidate's record and is left out, not invented,
+  when the server has none. The formatting
   is the application's and is what `:rider`'s own goldens exist to check.
 - **On tap:** selects — **unless the class has no cars**, in which case the tap is ignored. The kit's
   tile draws the unavailable state and still reports a click, so refusing is this screen's job.

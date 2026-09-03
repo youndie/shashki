@@ -1,7 +1,7 @@
 ---
 id: B-72
 title: "A class tile says 0 min and names no car"
-status: open
+status: done
 priority: P3
 size: S
 stage: stage-6-what-running-it-said
@@ -25,3 +25,21 @@ up only from one second.
   computed for when the candidate is known.
 - Anchors: `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/format/Formatting.kt`,
   `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/ride/ui/ClassPickerScreen.kt`
+
+## What it turned out to be
+
+**Two small things and one refusal.** `Int.asWait()` says *here* under thirty seconds and the
+rounded-up minutes past them, so the stand's driver parked at the pickup no longer produces `0 min`
+— a number nobody would say. `ClassQuote.car` carries the driver record's own string for the nearest
+candidate, and the tile joins the two: `here · Skoda Octavia · white`, the kit's `4 min · Kia Rio`
+with this product's names in it.
+
+**The wait names its driver now.** `PickupEta.waitFor` returns the seconds *and* the candidate they
+were routed for, and the quote route looks that driver up; it used to return the seconds alone, which
+was the whole reason the car could not be on the tile. A candidate with no record gets the wait
+alone — the refusal: a model guessed from the class would be fiction on the field a rider checks a
+real car against.
+
+`PickupEtaTest` asserts the car off the wire for the harness's seeded driver and its absence when
+nobody is online; `ClassOfferTest` holds the three forms of the meta line. The goldens did not move:
+the fixtures already said `4 min · Kia Rio`, which is what this makes true.

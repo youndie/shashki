@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.Quotes
 import io.github.youndie.shashki.protocol.QuotesView
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RouteRequest
+import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
@@ -33,6 +34,7 @@ public fun Route.quoteRoutes() {
     val estimator by inject<RouteEstimator>()
     val pricing by inject<Pricing>()
     val pickupEta by inject<PickupEta>()
+    val drivers by inject<DriverRepository>()
     val observability by inject<Observability>()
 
     // `withSpan` on an agent that is not there would be a null check at every call site; this is the
@@ -61,13 +63,15 @@ public fun Route.quoteRoutes() {
                 classes =
                     span("pricing.quote") {
                         RideClass.entries.map { rideClass ->
+                            val wait = span("dispatch.pickupEta") { pickupEta.waitFor(request.from, rideClass) }
                             ClassQuote(
                                 rideClass = rideClass,
                                 quote = pricing.quote(request.from, rideClass, estimate),
-                                pickupEtaSeconds =
-                                    span("dispatch.pickupEta") {
-                                        pickupEta.secondsTo(request.from, rideClass)
-                                    },
+                                pickupEtaSeconds = wait?.seconds,
+                                // The car of the driver the wait was routed for (B-72) — the record's
+                                // own string, and `null` for a driver this server has no record of,
+                                // which the tile draws as the wait alone rather than as a guess.
+                                car = wait?.let { drivers.find(it.driverId)?.car },
                             )
                         }
                     },

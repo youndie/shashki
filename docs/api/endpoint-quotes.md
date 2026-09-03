@@ -40,6 +40,13 @@ pickup: `null` when there is no candidate, and `null` when there is one the rout
 `null` is the kit's "no cars nearby" and it is an answer. What it must never be is a number: the wait
 is the most-looked-at figure on that screen and a constant there is a decoration.
 
+## The car beside the wait (B-72)
+
+`ClassQuote.car` is the driver record's own string — `Skoda Octavia · white` — for the **nearest**
+candidate of the class, the same driver the cascade would offer first. `null` when there is no wait,
+and `null` for a candidate this server has no record of: the tile then shows the wait alone rather
+than a model guessed from the class. The kit's tile reads `4 min · Kia Rio`; this is the second half.
+
 ## Request and response bodies
 
 `protocol/src/commonMain/kotlin/io/github/youndie/shashki/protocol/Route.kt`.

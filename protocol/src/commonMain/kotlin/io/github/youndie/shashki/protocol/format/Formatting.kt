@@ -58,6 +58,18 @@ public fun Int.asDistance(): String {
 public fun Int.asDuration(): String = "${(this + 59) / 60} min"
 
 /**
+ * A wait for a car, which is a duration with one more case (B-72).
+ *
+ * **A car at the kerb is not "0 min".** The stand's one driver parks at the pickup and the tile read
+ * `0 min`, which is a number nobody would say; the kit would say the car is *here*. Anything longer
+ * is the same rounded-up minutes a journey gets.
+ */
+public fun Int.asWait(): String = if (this < HERE_SECONDS) "here" else asDuration()
+
+/** Under this the car is at the kerb rather than on its way — about a light's worth of road. */
+private const val HERE_SECONDS = 30
+
+/**
  * A point, as four decimals — about eleven metres, which is a street rather than a building.
  *
  * **This is what a place looks like when nothing has geocoded it.** There is no address service in

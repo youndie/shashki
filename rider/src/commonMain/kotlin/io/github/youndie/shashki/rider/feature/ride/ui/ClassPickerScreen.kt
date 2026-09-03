@@ -9,6 +9,7 @@ import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.format.asDistance
 import io.github.youndie.shashki.protocol.format.asDuration
 import io.github.youndie.shashki.protocol.format.asMoney
+import io.github.youndie.shashki.protocol.format.asWait
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker
@@ -102,13 +103,16 @@ internal fun ClassPickerUiState.offerFor(rideClass: RideClass): RideClassOffer {
     val eta = quote?.pickupEtaSeconds
     return RideClassOffer(
         name = rideClass.name.lowercase(),
-        // **The kit puts the wait and the car here — "4 min · Kia Rio" — and the server can now
-        // answer the first** (B-31): the nearest candidate of this class, routed to the pickup.
-        //
-        // The car is still a dash and stays one. `RideView` carries a `driverId` and nothing about
-        // the vehicle, and the registration is the field a rider checks a real car against — fiction
-        // there is worse than a blank. Same rule as the trip screen's.
-        meta = if (eta == null) "no cars nearby" else eta.asDuration(),
+        // **The kit puts the wait and the car here — "4 min · Kia Rio" — and the server answers
+        // both now** (B-31, B-72): the nearest candidate of this class, routed to the pickup, and the
+        // car on that driver's record. A candidate with no record gets the wait alone rather than a
+        // model guessed from the class — fiction there is worse than a blank.
+        meta =
+            if (eta == null) {
+                "no cars nearby"
+            } else {
+                listOfNotNull(eta.asWait(), quote.car).joinToString(" · ")
+            },
         // **No car, no price** (B-62). The tile has always drawn `—` where a price is missing; this
         // was handing it one anyway, so every class read `no cars nearby · $ 28.96` — an offer the
         // product cannot honour, beside the sentence saying so. The quote is real arithmetic and

@@ -63,6 +63,16 @@ public data class ClassQuote(
      * price from one moment and a wait from another.
      */
     val pickupEtaSeconds: Int? = null,
+    /**
+     * The car the wait was computed for — `Skoda Octavia · white` — or `null` when the nearest
+     * candidate has no record (B-72).
+     *
+     * **The kit's tile says `4 min · Kia Rio`, and until this the second half was a dash.** It is the
+     * driver record's own string (B-63), not a model the client guesses from a class; and it is the
+     * *nearest* candidate's, the same driver the cascade would offer first, so the tile promises
+     * what dispatch would actually do.
+     */
+    val car: String? = null,
 )
 
 @Serializable

@@ -34,18 +34,45 @@ class ClassOfferTest {
         val offer = state(etaSeconds = 240).offerFor(RideClass.ECONOMY)
 
         assertEquals("$ 28.96", offer.price)
+        assertEquals("4 min", offer.meta)
         assertTrue(offer.available)
     }
 
-    private fun state(etaSeconds: Int?) =
-        ClassPickerUiState(
-            quotes =
-                listOf(
-                    ClassQuote(
-                        rideClass = RideClass.ECONOMY,
-                        quote = Quote(22_806, 2_079, 2_896, "USD"),
-                        pickupEtaSeconds = etaSeconds,
-                    ),
-                ),
+    /** The kit's `4 min · Kia Rio`, from the driver record the wait was routed for (B-72). */
+    @Test
+    fun `the tile names the car the wait was computed for`() {
+        val offer = state(etaSeconds = 240, car = "Skoda Octavia · white").offerFor(RideClass.ECONOMY)
+
+        assertEquals("4 min · Skoda Octavia · white", offer.meta)
+    }
+
+    /** A car at the kerb is *here*, not `0 min` — the stand's own driver parks at the pickup (B-72). */
+    @Test
+    fun `a car at the kerb is here rather than nought minutes`() {
+        assertEquals(
+            "here · Skoda Octavia · white",
+            state(etaSeconds = 0, car = "Skoda Octavia · white").offerFor(RideClass.ECONOMY).meta,
         )
+        assertEquals("here", state(etaSeconds = 20).offerFor(RideClass.ECONOMY).meta)
+        assertEquals(
+            "1 min",
+            state(etaSeconds = 40).offerFor(RideClass.ECONOMY).meta,
+            "past the kerb it is minutes, rounded up",
+        )
+    }
+
+    private fun state(
+        etaSeconds: Int?,
+        car: String? = null,
+    ) = ClassPickerUiState(
+        quotes =
+            listOf(
+                ClassQuote(
+                    rideClass = RideClass.ECONOMY,
+                    quote = Quote(22_806, 2_079, 2_896, "USD"),
+                    pickupEtaSeconds = etaSeconds,
+                    car = car,
+                ),
+            ),
+    )
 }

@@ -42,11 +42,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (10)
+## Open (9)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-72](docs/backlog/B-72-a-class-tile-says-zero-minutes-and-no-car.md) `[ ]` | A class tile says 0 min and names no car | P3 | S | - |
 | [B-73](docs/backlog/B-73-matching-says-less-than-the-kit-does.md) `[ ]` | R5 says less than the kit's matching screen: no count, no clock, no class and price | P3 | S | - |
 | [B-74](docs/backlog/B-74-the-offer-card-is-white-where-the-kit-is-amber.md) `[ ]` | D3's fare is white where the kit's is amber, and two of its lines are empty | P3 | S | - |
 | [B-75](docs/backlog/B-75-the-drivers-trip-screen-has-no-map-and-no-eta.md) `[ ]` | D4 has no map and no time to the pickup | P3 | M | - |
@@ -57,7 +56,7 @@ re-prioritising one must never move its file.
 | [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[ ]` | Four state branches the kit draws and the product cannot reach | P3 | M | - |
 | [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[ ]` | D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not | P3 | M | - |
 
-## Closed (71)
+## Closed (72)
 
 **Remove the unknowns**
 
@@ -150,6 +149,7 @@ re-prioritising one must never move its file.
 - [B-69](docs/backlog/B-69-every-screen-of-one-type-shares-one-view-model.md) `[x]` - Every screen of one type shares one view model, so the second ride is shown the first
 - [B-70](docs/backlog/B-70-the-driver-has-no-trip-summary.md) `[x]` - The driver finishes a trip and is shown nothing: D5 does not exist
 - [B-71](docs/backlog/B-71-the-order-bar-answers-only-its-glyph.md) `[x]` - The order bar's label does nothing: only the 48 dp circle takes the tap
+- [B-72](docs/backlog/B-72-a-class-tile-says-zero-minutes-and-no-car.md) `[x]` - A class tile says 0 min and names no car
 
 <!-- END INDEX -->
 
