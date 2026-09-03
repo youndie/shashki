@@ -56,19 +56,52 @@ class FatalBandTest {
     }
 }
 
+/*
+ * **Both dispatches below blank `window.onerror` and `window.onunhandledrejection` for the length of
+ * the event, and put back whatever was there.** Those two properties belong to the test harness, not
+ * to the product: karma installs handlers to catch an exception a page loses, and reports one as a
+ * failure of whichever test was running — so a test whose entire subject is a lost exception fails
+ * for doing its job. It does not stop there either: the Kotlin karma reporter then dies inside
+ * `specFailure`, the browser process exits mid-suite, and the modules that were still running report
+ * "the test task did not discover any tests", which names neither this file nor the reason. That is
+ * what this repository's first CI run said, and it took a local run with `CHROME_BIN` set to find
+ * out that only one test was actually failing.
+ *
+ * The band listens with `addEventListener`, which these lines do not touch, so what is under test
+ * still receives exactly the event a browser would deliver.
+ */
+
 @JsFun(
     """(message) => {
-        const error = new Error(message);
-        window.dispatchEvent(new ErrorEvent('error', { message: message, error: error }));
+        const onerror = window.onerror;
+        const onrejection = window.onunhandledrejection;
+        window.onerror = null;
+        window.onunhandledrejection = null;
+        try {
+            const error = new Error(message);
+            window.dispatchEvent(new ErrorEvent('error', { message: message, error: error }));
+        } finally {
+            window.onerror = onerror;
+            window.onunhandledrejection = onrejection;
+        }
     }""",
 )
 private external fun fireError(message: String)
 
 @JsFun(
     """(message) => {
-        const event = new Event('unhandledrejection');
-        event.reason = new Error(message);
-        window.dispatchEvent(event);
+        const onerror = window.onerror;
+        const onrejection = window.onunhandledrejection;
+        window.onerror = null;
+        window.onunhandledrejection = null;
+        try {
+            const event = new Event('unhandledrejection');
+            event.reason = new Error(message);
+            window.dispatchEvent(event);
+        } finally {
+            window.onerror = onerror;
+            window.onunhandledrejection = onrejection;
+        }
     }""",
 )
 private external fun fireRejection(message: String)
