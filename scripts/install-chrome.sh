@@ -17,10 +17,11 @@ set -euo pipefail
 VERSION=${CHROME_VERSION:-152.0.7977.75}
 ROOT=${CHROME_HOME:-$HOME/.cache/shashki/chrome}
 TARGET="$ROOT/$VERSION/chrome-linux64/chrome"
+LAUNCHER="$ROOT/$VERSION/chrome-for-karma"
 
 if [ "${1:-}" = "--export" ]; then
-  [ -x "$TARGET" ] || { echo "no chrome at $TARGET; run $0 first" >&2; exit 1; }
-  echo "export CHROME_BIN=$TARGET"
+  [ -x "$LAUNCHER" ] || { echo "no launcher at $LAUNCHER; run $0 first" >&2; exit 1; }
+  echo "export CHROME_BIN=$LAUNCHER"
   exit 0
 fi
 
@@ -48,7 +49,25 @@ if [ -n "$missing" ]; then
     libxfixes3 libxkbcommon0 libxrandr2 xdg-utils
 fi
 
+# **The build never launches the binary directly; it launches this.** Chrome's own sandbox needs
+# unprivileged user namespaces, and the GitHub runner image has them disabled — the browser dies
+# before it opens a page (`FATAL … No usable sandbox!`), karma gives up after two attempts, and the
+# wasm suites then fail as "the test task did not discover any tests", which names neither the
+# browser nor the reason.
+#
+# The flag lives here and not in the workflow so that every machine launches the browser the same
+# way. A launcher that differs between a laptop and CI is what makes "it passes locally" stop
+# meaning anything, and this is the one process whose entire job is to be identical everywhere.
+#
+# What is given up is real and narrow: the renderer sandbox of a browser that only ever loads this
+# build's own test bundle over localhost, on a machine that already runs the build.
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  '# Written by scripts/install-chrome.sh - edit that, not this.' \
+  "exec \"$TARGET\" --no-sandbox --disable-dev-shm-usage \"\$@\"" > "$LAUNCHER"
+chmod +x "$LAUNCHER"
+
 "$TARGET" --version
 echo
 echo "point the build at it:"
-echo "  export CHROME_BIN=$TARGET"
+echo "  export CHROME_BIN=$LAUNCHER"
