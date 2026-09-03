@@ -94,6 +94,11 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
     val start = remember { RiderRoute.ofPath(bar.openedAt()) ?: RiderRoute.ClassPicker }
     val backStack = rememberNavBackStack(SAVED_STATE, start)
 
+    // **Asked of the platform, once** (B-67). A browser's own back button is the one people use, so
+    // the kit's screens are drawn exactly as the kit drew them there; a window has none, and the
+    // stack it pushes onto is otherwise one-way.
+    val back: (() -> Unit)? = if (bar.providesBack) null else ({ backStack.removeLastOrNull().let { } })
+
     // Out: the address follows the top of the stack.
     LaunchedEffect(backStack.lastOrNull()) {
         (backStack.lastOrNull() as? RiderRoute)?.let { bar.push(it.path) }
@@ -177,6 +182,7 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                     HistoryScreen(
                         onTrip = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
                         onFailed = { },
+                        onBack = back,
                         // **The third pivot item is the screen the server owns** — the same
                         // `PromoScreen`, hosted rather than reimplemented (D11).
                         promo = { PromoScreen(onAction = KompotActionHandler { }) },

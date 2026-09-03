@@ -12,6 +12,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 public fun OnboardingScreen(
     onFailed: (String) -> Unit,
+    /** How to leave, or `null` where the platform offers it (B-67). */
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: OnboardingViewModel = koinViewModel(),
 ) {
@@ -25,7 +27,7 @@ public fun OnboardingScreen(
         }
     }
 
-    OnboardingContent(uiState, viewModel::onAction, modifier)
+    OnboardingContent(uiState, viewModel::onAction, modifier, onBack)
 }
 
 @Composable
@@ -33,6 +35,7 @@ public fun OnboardingContent(
     uiState: OnboardingUiState,
     onAction: (OnboardingUiAction) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     DriverOnboarding(
         documents = uiState.documents,
@@ -43,5 +46,6 @@ public fun OnboardingContent(
         note = "three documents, and nothing here reviews them yet",
         onUpload = { index -> onAction(OnboardingUiAction.Choose(index)) },
         modifier = modifier,
+        onBack = onBack,
     )
 }

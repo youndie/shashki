@@ -18,6 +18,7 @@ import io.github.youndie.kvadrant.components.KvadrantPivot
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.BackBar
 import io.github.youndie.shashki.ui.kompot.AccentBudget
 import io.github.youndie.shashki.ui.kompot.EarningsTile
 import io.github.youndie.shashki.ui.kompot.EarningsTileRenderer
@@ -44,38 +45,51 @@ public fun DriverEarnings(
     history: List<Pair<String, String>>,
     emptyLine: String,
     modifier: Modifier = Modifier,
+    /**
+     * How to leave, or `null` where the platform already offers it (B-67).
+     *
+     * A browser has a back button people already use; a window has nothing, and this screen is
+     * pushed rather than started at. `AddressBar.providesBack` is the question, asked once in the
+     * application rather than guessed at here.
+     */
+    onBack: (() -> Unit)? = null,
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
     val type = ShashkiTheme.typography
 
-    KvadrantPivot(
-        titles = titles,
-        modifier = modifier.fillMaxSize().background(colors.background),
-        title = "earnings",
-    ) { page ->
-        when (page) {
-            0 -> {
-                Column(
-                    Modifier.padding(horizontal = metrics.margin, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Column {
-                        KvadrantText(today, style = type.pageTitle)
-                        KvadrantText(todayLabel, style = type.body.copy(color = colors.subtle))
+    Column(modifier.fillMaxSize().background(colors.background)) {
+        KvadrantPivot(
+            titles = titles,
+            modifier = Modifier.weight(1f),
+            title = "earnings",
+        ) { page ->
+            when (page) {
+                0 -> {
+                    Column(
+                        Modifier.padding(horizontal = metrics.margin, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Column {
+                            KvadrantText(today, style = type.pageTitle)
+                            KvadrantText(todayLabel, style = type.body.copy(color = colors.subtle))
+                        }
+                        Tiles(tiles)
                     }
-                    Tiles(tiles)
+                }
+
+                1 -> {
+                    Column(Modifier.padding(horizontal = metrics.margin, vertical = 12.dp)) { Tiles(tiles.drop(1)) }
+                }
+
+                else -> {
+                    History(history, emptyLine, metrics.margin)
                 }
             }
-
-            1 -> {
-                Column(Modifier.padding(horizontal = metrics.margin, vertical = 12.dp)) { Tiles(tiles.drop(1)) }
-            }
-
-            else -> {
-                History(history, emptyLine, metrics.margin)
-            }
         }
+
+        // The kit's bar, and only where the platform has no back of its own (B-67).
+        onBack?.let { BackBar(it) }
     }
 }
 

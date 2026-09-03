@@ -18,6 +18,7 @@ import io.github.youndie.kvadrant.components.KvadrantPivot
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.BackBar
 import io.github.youndie.shashki.ui.kompot.AccentBudget
 import io.github.youndie.shashki.ui.kompot.LocalAccentBudget
 import io.github.youndie.shashki.ui.kompot.TripRow
@@ -58,20 +59,33 @@ public fun RiderHistory(
     onTrip: (String) -> Unit,
     modifier: Modifier = Modifier,
     promo: @Composable () -> Unit = {},
+    /**
+     * How to leave, or `null` where the platform already offers it (B-67).
+     *
+     * A browser has a back button people already use; a window has nothing, and this screen is
+     * pushed rather than started at. `AddressBar.providesBack` is the question, asked once in the
+     * application rather than guessed at here.
+     */
+    onBack: (() -> Unit)? = null,
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
 
-    KvadrantPivot(
-        titles = titles,
-        modifier = modifier.fillMaxSize().background(colors.background),
-        title = "shashki",
-    ) { page ->
-        when (page) {
-            0 -> Trips(months, emptyLine, onTrip, metrics.margin)
-            1 -> Profile(profile, metrics.margin)
-            else -> promo()
+    Column(modifier.fillMaxSize().background(colors.background)) {
+        KvadrantPivot(
+            titles = titles,
+            modifier = Modifier.weight(1f),
+            title = "shashki",
+        ) { page ->
+            when (page) {
+                0 -> Trips(months, emptyLine, onTrip, metrics.margin)
+                1 -> Profile(profile, metrics.margin)
+                else -> promo()
+            }
         }
+
+        // The kit's bar, and only where the platform has no back of its own (B-67).
+        onBack?.let { BackBar(it) }
     }
 }
 

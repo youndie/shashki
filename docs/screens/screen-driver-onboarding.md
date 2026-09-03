@@ -26,6 +26,10 @@ source: driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/feature/do
 
 ## 0. Entry point and visibility
 
+- **Leaving it:** in a browser, the back button; in a window, a ring button in the kit's bar at the
+  foot of the screen (B-67). The application asks `AddressBar.providesBack` once and draws the second
+  only where the first does not exist — a window's back stack is otherwise one-way, and this screen
+  is pushed rather than started at.
 - **Entry point:** a line under the shift screen's header. Not a button beside the shift switch —
   the kit allows one call to action on that screen and it is the switch.
 - The line reads *documents* and says nothing about what is missing: the states are the store's

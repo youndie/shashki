@@ -12,6 +12,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 public fun EarningsScreen(
     onFailed: (String) -> Unit,
+    /** How to leave, or `null` where the platform offers it (B-67). */
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: EarningsViewModel = koinViewModel(),
 ) {
@@ -25,13 +27,14 @@ public fun EarningsScreen(
         }
     }
 
-    EarningsContent(uiState, modifier)
+    EarningsContent(uiState, modifier, onBack)
 }
 
 @Composable
 public fun EarningsContent(
     uiState: EarningsUiState,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     DriverEarnings(
         titles = listOf("today", "week", "history"),
@@ -44,5 +47,6 @@ public fun EarningsContent(
         history = emptyList(),
         emptyLine = "one line per ride is not built yet",
         modifier = modifier,
+        onBack = onBack,
     )
 }

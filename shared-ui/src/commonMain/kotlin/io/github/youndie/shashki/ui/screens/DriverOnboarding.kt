@@ -26,6 +26,7 @@ import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiColors
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.BackBar
 
 /** One document, as the screen receives it: what it is, where it has got to, and what to say about it. */
 public data class OnboardingDocument(
@@ -61,24 +62,35 @@ public fun DriverOnboarding(
     note: String,
     onUpload: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * How to leave, or `null` where the platform already offers it (B-67).
+     *
+     * A browser has a back button people already use; a window has nothing, and this screen is
+     * pushed rather than started at. `AddressBar.providesBack` is the question, asked once in the
+     * application rather than guessed at here.
+     */
+    onBack: (() -> Unit)? = null,
 ) {
     val colors = KvadrantTheme.colors
     val metrics = KvadrantTheme.metrics
     val type = ShashkiTheme.typography
 
-    Column(
-        modifier.fillMaxSize().background(colors.background).padding(horizontal = metrics.margin),
-    ) {
-        Column(Modifier.padding(top = 24.dp, bottom = 16.dp)) {
-            KvadrantText("documents", style = type.pageTitle)
-            KvadrantText(note, style = type.body.copy(color = colors.subtle))
-        }
+    Column(modifier.fillMaxSize().background(colors.background)) {
+        Column(Modifier.weight(1f).padding(horizontal = metrics.margin)) {
+            Column(Modifier.padding(top = 24.dp, bottom = 16.dp)) {
+                KvadrantText("documents", style = type.pageTitle)
+                KvadrantText(note, style = type.body.copy(color = colors.subtle))
+            }
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            documents.forEachIndexed { index, document ->
-                DocumentRow(document, uploadLabel) { onUpload(index) }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                documents.forEachIndexed { index, document ->
+                    DocumentRow(document, uploadLabel) { onUpload(index) }
+                }
             }
         }
+
+        // The kit's bar, and only where the platform has no back of its own (B-67).
+        onBack?.let { BackBar(it) }
     }
 }
 

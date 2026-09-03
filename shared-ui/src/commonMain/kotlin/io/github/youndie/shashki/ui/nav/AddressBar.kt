@@ -34,6 +34,20 @@ public interface AddressBar {
 
     /** The person pressed back or forward. The listener is called with the address they arrived at. */
     public fun onNavigate(listener: (path: String) -> Unit)
+
+    /**
+     * Whether the platform already gives somebody a way back (B-67).
+     *
+     * **A browser does and a window does not**, and until this was asked the application assumed the
+     * first everywhere: the back stack is push-only in a window, so opening the driver's documents
+     * meant restarting the process to see the shift again. The desktop build exists to be looked at,
+     * which is exactly the use that breaks.
+     *
+     * It is a question about the platform rather than a flag on a screen, so that the browser keeps
+     * the kit's screens exactly as the kit drew them — a visible back control there would be a
+     * second back button beside the one people already use.
+     */
+    public val providesBack: Boolean get() = true
 }
 
 /**
@@ -51,6 +65,9 @@ public object NoAddressBar : AddressBar {
     override fun push(path: String): Unit = Unit
 
     override fun onNavigate(listener: (path: String) -> Unit): Unit = Unit
+
+    /** Nothing here goes back on its own, so the application has to offer it (B-67). */
+    override val providesBack: Boolean = false
 }
 
 /** The browser's, or [NoAddressBar] where there is no browser. */
@@ -80,5 +97,7 @@ public fun AddressBar.under(prefix: String): AddressBar =
 
             override fun onNavigate(listener: (path: String) -> Unit): Unit =
                 this@under.onNavigate { path -> listener(path.removePrefix(prefix).ifEmpty { "/" }) }
+
+            override val providesBack: Boolean = this@under.providesBack
         }
     }

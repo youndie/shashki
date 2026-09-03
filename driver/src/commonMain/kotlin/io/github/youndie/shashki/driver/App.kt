@@ -76,6 +76,11 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
     val start = remember { DriverRoute.ofPath(bar.openedAt()) ?: DriverRoute.Shift }
     val backStack = rememberNavBackStack(SAVED_STATE, start)
 
+    // **Asked of the platform, once** (B-67). A browser's own back button is the one people use, so
+    // the screens stay exactly as the kit drew them there; a window has none, and the stack it
+    // pushes onto is otherwise one-way.
+    val back: (() -> Unit)? = if (bar.providesBack) null else ({ backStack.removeLastOrNull().let { } })
+
     LaunchedEffect(backStack.lastOrNull()) {
         (backStack.lastOrNull() as? DriverRoute)?.let { bar.push(it.path) }
     }
@@ -102,10 +107,10 @@ private fun DriverNavigation(modifier: Modifier = Modifier) {
         entryProvider =
             entryProvider {
                 entry<DriverRoute.Onboarding> {
-                    OnboardingScreen(onFailed = { })
+                    OnboardingScreen(onFailed = { }, onBack = back)
                 }
                 entry<DriverRoute.Earnings> {
-                    EarningsScreen(onFailed = { })
+                    EarningsScreen(onFailed = { }, onBack = back)
                 }
                 entry<DriverRoute.Shift> {
                     ShiftScreen(

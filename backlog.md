@@ -42,16 +42,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-65](docs/backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) `[?]` | A server cannot build a FareBreakdown: the components live where Compose does | P1 | M | - |
 | [B-61](docs/backlog/B-61-the-history-row-and-the-receipt.md) `[ ]` | R9's rows carry one address and no date, and R9·b does not exist | P2 | M | B-65 |
-| [B-67](docs/backlog/B-67-no-way-back-in-the-window.md) `[ ]` | The desktop build can enter a screen and not leave it | P2 | S | - |
 | [B-68](docs/backlog/B-68-a-state-drawn-as-an-identifier.md) `[ ]` | D4 draws in_progress where every other state is a word | P3 | XS | - |
 
-## Closed (64)
+## Closed (65)
 
 **Remove the unknowns**
 
@@ -137,6 +136,7 @@ re-prioritising one must never move its file.
 - [B-63](docs/backlog/B-63-nobody-has-a-name.md) `[x]` - The product has no driver record, so a rider is asked to rate an e-mail address
 - [B-64](docs/backlog/B-64-the-offer-reaches-the-client-and-not-the-screen.md) `[x]` - The offer reaches the driver's client and never reaches the driver's screen
 - [B-66](docs/backlog/B-66-the-class-picker-asks-once.md) `[x]` - R4 asks the server for a quote once and never again
+- [B-67](docs/backlog/B-67-no-way-back-in-the-window.md) `[x]` - The desktop build can enter a screen and not leave it
 
 <!-- END INDEX -->
 

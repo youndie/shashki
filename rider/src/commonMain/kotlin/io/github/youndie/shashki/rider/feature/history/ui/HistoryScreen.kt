@@ -12,6 +12,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 public fun HistoryScreen(
     onTrip: (String) -> Unit,
+    /** How to leave, or `null` where the platform offers it (B-67). */
+    onBack: (() -> Unit)? = null,
     onFailed: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = koinViewModel(),
@@ -27,7 +29,7 @@ public fun HistoryScreen(
         }
     }
 
-    HistoryContent(uiState, onTrip, modifier, promo)
+    HistoryContent(uiState, onTrip, modifier = modifier, promo = promo, onBack = onBack)
 }
 
 @Composable
@@ -35,6 +37,7 @@ public fun HistoryContent(
     uiState: HistoryUiState,
     onTrip: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
     promo: @Composable () -> Unit = {},
 ) {
     RiderHistory(
@@ -48,5 +51,6 @@ public fun HistoryContent(
         onTrip = onTrip,
         modifier = modifier,
         promo = promo,
+        onBack = onBack,
     )
 }

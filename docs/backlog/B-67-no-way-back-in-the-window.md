@@ -1,7 +1,7 @@
 ---
 id: B-67
 title: "The desktop build can enter a screen and not leave it"
-status: open
+status: done
 priority: P2
 size: S
 stage: stage-6-what-running-it-said
@@ -38,3 +38,25 @@ so the back stack the navigation is built on is push-only in a window.
 - Anchors: `shared-ui/src/desktopMain/kotlin/io/github/youndie/shashki/ui/nav/AddressBar.desktop.kt`,
   `driver/src/commonMain/kotlin/io/github/youndie/shashki/driver/App.kt`,
   `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/App.kt`
+
+## What it turned out to be
+
+**The platform is asked once, and the browser's screens do not change.** `AddressBar.providesBack`
+is `true` in a browser — where the back button people already use is the answer — and `false` in
+`NoAddressBar`. Each application reads it where it builds its back stack and passes a `onBack` down
+only when the answer is no; the three pushed screens that end in nothing draw the kit's 54 dp bar
+with one ring button, and every existing golden is byte-identical, which is the check that the
+control did not leak onto the web.
+
+**A question about the platform rather than a flag on a screen**, and that is what keeps it honest: a
+visible back control in a browser would be a second back button beside the one a person is already
+pressing, and a screen that decided for itself would have to guess.
+
+**Verified by doing the thing that produced the item**: the driver window, *documents*, the ring
+button, the shift back — with no server running at all, because navigation is not a network question.
+The golden is `driver onboarding in a window`, photographed as its own fixture rather than by
+changing the existing one: a picture of a control the web build does not draw would be a golden of a
+screen nobody ships, which this repository has now made that mistake twice and caught it twice.
+
+**Not covered, deliberately**: the trip screens and R8 already end in a bar of their own — *call the
+driver*, *done* — and a second one under it would be two bars for one screen.

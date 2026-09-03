@@ -441,6 +441,37 @@ internal fun DriverOnboardingFixture(): Unit = DriverOnboardingBody(dark = true)
 @Composable
 internal fun DriverOnboardingFixtureLight(): Unit = DriverOnboardingBody(dark = false)
 
+/**
+ * The same screen in a window (B-67).
+ *
+ * **A browser has a back button and a window has nothing**, so the application asks the platform and
+ * draws the kit's bar only where the answer is no. This is the picture of that answer: one ring
+ * button in 54 dp of chrome, and the reason it is photographed rather than assumed is that a control
+ * added for one platform is exactly the kind that is drawn on both by accident.
+ */
+@ViddikScreenshot(name = "driver onboarding in a window", group = "screens", width = 390, height = 844)
+@Composable
+internal fun DriverOnboardingWindowedFixture(): Unit = DriverOnboardingWindowed(dark = true)
+
+@Composable
+private fun DriverOnboardingWindowed(dark: Boolean) {
+    val latin = kvadrantLatin()
+    DriverTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        DriverOnboarding(
+            documents =
+                listOf(
+                    OnboardingDocument("driving licence", "sent 2 minutes ago · 1.2 MB", OnboardingState.PENDING),
+                    OnboardingDocument("insurance", "checked yesterday", OnboardingState.ACCEPTED),
+                    OnboardingDocument("photo of the car", "not sent yet", OnboardingState.MISSING),
+                ),
+            uploadLabel = "choose a file",
+            note = "three documents, and nothing here reviews them yet",
+            onUpload = {},
+            onBack = {},
+        )
+    }
+}
+
 @Composable
 private fun DriverOnboardingBody(dark: Boolean) {
     val latin = kvadrantLatin()

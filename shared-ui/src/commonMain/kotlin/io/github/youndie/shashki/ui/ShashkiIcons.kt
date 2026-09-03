@@ -114,6 +114,12 @@ public object ShashkiIcons {
             stroked(circle(13f, 13f, 9f))
         }
 
+    /** Back, for a window that has no other way out of a screen (B-67). A chevron, not an arrow. */
+    public val back: ImageVector =
+        vector("back") {
+            stroked("M16 5L8 13l8 8")
+        }
+
     private fun vector(
         name: String,
         build: ImageVector.Builder.() -> Unit,
