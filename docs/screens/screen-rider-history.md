@@ -67,11 +67,24 @@ it. **The view model decides which**, and not the drawing: `RiderHistory` is han
 `HistoryUiState.settled` is the set of ids that are finished. A flag on the row itself would be a
 routing decision inside a `TripRow` — a wire component a server may also send.
 
+## 3b. The row is a route stack (B-78)
+
+Both ends of the journey as two lines, each led by its pin, with the amount on the right — the kit's
+rule 4, *a row leads with a route stack, one glyph, or nothing*. `TripRow.from` and `to` carry the
+two lines; `title` remains for a row with one end or none, and for a consumer that does not draw
+stacks. The stack is what keeps every row one height: the em dash it replaced wrapped beside a wide
+amount and not beside a narrow one.
+
+**The pivot's third header is cut at the window's edge, and that is the kit's own motion.** Metro's
+pivot shows the next item's header peeking past the edge and "wraps round" as the pages turn; the
+sweep read it as a clipping defect and it is the library's `KvadrantPivot` doing what the kit says.
+
 ## 4. What the rows say about money
 
 The amount on a row is `RideView.chargedCents` — **what was taken**. A finished ride shows the fare, a
 ride cancelled after a driver set off shows the quarter that was charged as a fee, and a ride nobody
-drove shows `—`. The two cancellations are told apart in the list exactly as they are in the
+drove shows `$ 0` — the kit's row says the zero (B-78). `—` is for a sum that does not exist *yet*:
+a ride still running. The two cancellations are told apart in the list exactly as they are in the
 settlement.
 
 ## 5. The empty state

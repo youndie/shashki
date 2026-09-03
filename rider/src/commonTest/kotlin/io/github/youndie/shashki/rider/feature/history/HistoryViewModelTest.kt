@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
  * R9's list, as the screen receives it (B-45).
  *
  * **What is asserted is the money.** A finished ride shows what the settlement took, a ride cancelled
- * after a driver set off shows the fee, and one nobody drove shows a dash — the two cancellations are
+ * after a driver set off shows the fee, and one nobody drove shows `$ 0` — the two cancellations are
  * told apart in the list exactly as they are in the settlement, which is the item's third criterion
  * on the client's side.
  */
@@ -64,7 +64,13 @@ class HistoryViewModelTest {
                 model.uiState.value.months
                     .flatMap { it.trips }
             assertEquals(listOf("ride-3", "ride-2", "ride-1"), rows.map { it.id }, "the server's order was not kept")
-            assertEquals(listOf("$ 28.96", "$ 7.24", "—"), rows.map { it.amount })
+            assertEquals(
+                listOf("$ 28.96", "$ 7.24", "$ 0"),
+                rows.map { it.amount },
+                "the kit's row says the zero (B-78)",
+            )
+            assertEquals(rows[0].from, rows[0].title.substringBefore(" — "), "the stack's first line is the pickup")
+            assertEquals(rows[0].to, rows[0].title.substringAfter(" — "), "and its second the drop-off")
             assertTrue(rows[1].meta.contains("cancelled"), rows[1].meta)
             assertTrue(rows[0].title.contains(" — "), "the row shows one end of the journey: ${rows[0].title}")
         }

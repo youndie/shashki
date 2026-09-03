@@ -1,15 +1,21 @@
 package io.github.youndie.shashki.ui.kompot
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -23,6 +29,7 @@ import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.FareBreakdown
 import io.github.youndie.shashki.protocol.TripRow
+import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
 
 /**
@@ -60,16 +67,57 @@ public class TripRowRenderer : KompotComponentRenderer<TripRow> {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                KvadrantText(component.title, style = type.rowEmphasis.cappedForCard().copy(color = ink))
+                val from = component.from
+                val to = component.to
+                if (from != null && to != null) {
+                    // **Rule 4.** The row leads with a route stack — two lines, each with its pin —
+                    // and the amount on the right never changes the stack's shape (B-78). This used
+                    // to be one line with an em dash that wrapped beside a wide amount and not beside
+                    // a narrow one, so rows of one list had two heights.
+                    RouteStackLine(ShashkiIcons.pinPickup, from, ink, type.rowEmphasis.cappedForCard())
+                    RouteStackLine(ShashkiIcons.pinDropoff, to, ink, type.rowEmphasis.cappedForCard())
+                } else {
+                    KvadrantText(component.title, style = type.rowEmphasis.cappedForCard().copy(color = ink))
+                }
                 KvadrantText(
                     component.meta,
                     style = type.meta.cappedForCard().copy(color = if (accented) ink else colors.subtle),
                 )
             }
-            KvadrantText(component.amount, style = type.rowEmphasis.cappedForCard().copy(color = ink))
+            // The amount, and under it what paid for it — the kit's right column, `470 ₽ / card`.
+            Column(Modifier.padding(start = 12.dp), horizontalAlignment = Alignment.End) {
+                KvadrantText(component.amount, style = type.rowEmphasis.cappedForCard().copy(color = ink))
+                component.note?.let {
+                    KvadrantText(
+                        it,
+                        style = type.meta.cappedForCard().copy(color = if (accented) ink else colors.subtle),
+                    )
+                }
+            }
         }
     }
 }
+
+/** One line of the route stack: the pin at 20 dp, then the address on a single line. */
+@Composable
+private fun RouteStackLine(
+    pin: ImageVector,
+    text: String,
+    ink: Color,
+    style: TextStyle,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = rememberVectorPainter(pin),
+            contentDescription = null,
+            modifier = Modifier.size(STACK_GLYPH),
+            colorFilter = ColorFilter.tint(ink),
+        )
+        KvadrantText(text, style = style.copy(color = ink))
+    }
+}
+
+private val STACK_GLYPH = 20.dp
 
 /**
  * **Rule 3.** A figure the server marks primary is drawn at 54 and everything else in the card is

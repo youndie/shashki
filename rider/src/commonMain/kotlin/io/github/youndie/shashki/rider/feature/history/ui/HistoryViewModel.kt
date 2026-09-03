@@ -112,6 +112,10 @@ internal fun RideView.asRow(): TripRow =
         // identical is a list nobody can read. The two ends are coordinates for the same reason R7's
         // are: nothing here geocodes, and a name borrowed from somewhere else would be invented.
         title = "${pickup.asCoordinates()} — ${dropoff.asCoordinates()}",
+        // **The kit's route stack** (B-78): both ends as two lines with their pins, which is what
+        // keeps every row one height whatever the amount beside it is.
+        from = pickup.asCoordinates(),
+        to = dropoff.asCoordinates(),
         meta =
             listOfNotNull(
                 requestedAtEpochMs?.asDayAndTime(),
@@ -121,9 +125,14 @@ internal fun RideView.asRow(): TripRow =
                     RideStatus.COMPLETED -> null
                     else -> "in progress"
                 },
-                paymentMethodId,
             ).joinToString(" · "),
-        amount = chargedCents?.let { money(it, quote?.currency ?: "USD") } ?: "—",
+        // What paid for it goes under the amount, as the kit's row has it, so the meta stays one line.
+        note = paymentMethodId,
+        // **A cancelled ride that cost nothing reads `$ 0`, and a ride still running reads `—`**
+        // (B-78). The kit's row says the zero; the dash is for a sum that does not exist *yet*.
+        amount =
+            chargedCents?.let { money(it, quote?.currency ?: "USD") }
+                ?: if (status == RideStatus.CANCELLED) money(0, quote?.currency ?: "USD") else "—",
     )
 
 /**

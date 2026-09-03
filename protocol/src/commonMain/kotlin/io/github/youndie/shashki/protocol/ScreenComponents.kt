@@ -32,9 +32,19 @@ import kotlinx.serialization.Serializable
 @KompotComponentMarker
 public data class TripRow(
     override val id: String,
+    /** One line, for a row with one end or none — a cancelled search, a ride nobody drove. */
     val title: String,
     val meta: String,
     val amount: String,
+    /**
+     * Both ends of the journey, for the kit's **route stack** (B-78): two lines, each led by its pin,
+     * and the amount on the right never changes the stack's shape. `null` draws [title] alone — the
+     * kit's rule 4, *a row leads with a route stack, one glyph, or nothing*.
+     */
+    val from: String? = null,
+    val to: String? = null,
+    /** Under the amount, small — the kit's `card` / `cash` — so the meta line stays one line (B-78). */
+    val note: String? = null,
     /** Whether this row asks for the screen's one accent surface. More than one may ask. */
     val accent: Boolean = false,
     override val modifiers: List<KompotModifierNode> = emptyList(),
