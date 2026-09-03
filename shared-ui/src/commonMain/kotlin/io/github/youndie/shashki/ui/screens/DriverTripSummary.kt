@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.pressableSurface
 
 /** D5 as plain values: what the driver earned, and the lines it came from. */
 public data class DriverTripSummaryState(
@@ -90,8 +91,7 @@ public fun DriverTripSummary(
             Modifier
                 .fillMaxWidth()
                 .height(BAR)
-                .background(colors.chrome)
-                .clickable(onClick = onBackToShift),
+                .pressableSurface(colors.chrome, onClick = onBackToShift),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {

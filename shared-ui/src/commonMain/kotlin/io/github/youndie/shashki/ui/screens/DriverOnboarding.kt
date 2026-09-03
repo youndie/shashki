@@ -135,9 +135,10 @@ private fun DocumentRow(
             Modifier
                 .fillMaxWidth()
                 .height(FIELD)
+                // The press first, so the whole field tilts rather than its label (B-82).
+                .clickable(onClick = onUpload)
                 .background(FIELD_SURFACE)
                 .border(HAIRLINE, if (document.state == OnboardingState.MISSING) colors.accent else FIELD_SURFACE)
-                .clickable(onClick = onUpload)
                 .padding(horizontal = 12.dp),
             contentAlignment = Alignment.CenterStart,
         ) {

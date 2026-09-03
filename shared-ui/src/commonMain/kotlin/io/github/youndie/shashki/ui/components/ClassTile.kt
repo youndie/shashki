@@ -74,8 +74,7 @@ public fun ClassTile(
     Row(
         modifier
             .fillMaxWidth()
-            .background(background)
-            .clickable(enabled = state != ClassTileState.Unavailable, onClick = onClick)
+            .pressableSurface(background, enabled = state != ClassTileState.Unavailable, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,

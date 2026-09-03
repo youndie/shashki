@@ -124,6 +124,7 @@ Verified against the working copy of `youndie/kvadrant-ui` at 0.1.0.
 | `Red = #E51400` and `Green = #60A917` are also stock accents — the same two hexes the handoff proposes to hard-code as `ShashkiColors.negative` / `.positive` | `KvadrantTokens.Accents` |
 | Tile grid: `TileSize.Small(1) / Medium(2) / Wide(4)` packed by `KvadrantTileGrid` against `COLUMNS = 4` | `.../components/KvadrantTile.kt` |
 | Press feedback is the theme's: `KvadrantTheme` provides `LocalIndication = TiltIndication(...)` and `LocalOverscrollFactory = KvadrantOverscrollFactory(...)`; `remastered` defaults to `false` | `.../theme/KvadrantTheme.kt` |
+| **And a call site can still lose it, silently** (B-82): an indication draws what comes *after* it in the modifier chain, so `.background(colour).clickable { }` leaves the colour outside the tilt and only the label moves. Measured on a class tile: 8 of its 36 corner pixels move that way round, 35 the other | `shared-ui/.../components/Pressable.kt`, `TilePressTest` |
 | The font stack is bundled, not loaded by the consumer: Selawik at W200/300/400/600/700 for Latin, a Source Sans 3 variable for Cyrillic at compensated weights (`CYRILLIC_LIGHT_WEIGHT = 330`, `SEMILIGHT = 370`, `NORMAL = 420`, `SEMIBOLD = 640`, `BOLD = 690`) | `.../foundation/KvadrantFonts.kt`, `.../foundation/KvadrantText.kt`, `kvadrant-core/src/commonMain/composeResources/font/` |
 | `KvadrantIcons` exposes 41 public entries, against the kit's "40 stock icons we do not touch" | `.../icons/KvadrantIcons.kt` |
 

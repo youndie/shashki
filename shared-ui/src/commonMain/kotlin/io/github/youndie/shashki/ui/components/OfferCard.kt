@@ -138,25 +138,34 @@ public fun OfferCard(
                     colorFilter = ColorFilter.tint(colors.foreground),
                 )
             }
-            Box(
-                Modifier
-                    .weight(1f)
-                    .widthIn(max = ACCEPT_MAX_WIDTH)
-                    .height(ACCEPT_HEIGHT)
-                    .background(colors.accent)
-                    .clickable(onClick = onAccept),
-                contentAlignment = Alignment.Center,
-            ) {
-                KvadrantText(
-                    "accept",
-                    style =
-                        type.rowEmphasis.copy(
-                            color = colors.onAccent,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 0.02.em,
-                        ),
-                )
+            // **The accept block is centred in the strip, and the cap has to be obeyed for that to
+            // happen** (B-83). `weight(1f)` hands a child a *fixed* width, and `widthIn(max = 200)`
+            // cannot narrow a fixed constraint — so the bar grew to 293 dp, overran the decline
+            // ring's own 48 dp box on the left and stopped 38 dp short on the right. It read as a
+            // button shoved left, which is what it was. The weight goes on a wrapper that centres
+            // the capped bar inside the space between the ring and the trailing spacer.
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .widthIn(max = ACCEPT_MAX_WIDTH)
+                        .fillMaxWidth()
+                        .height(ACCEPT_HEIGHT)
+                        .pressableSurface(colors.accent, onClick = onAccept),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    KvadrantText(
+                        "accept",
+                        style =
+                            type.rowEmphasis.copy(
+                                color = colors.onAccent,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.02.em,
+                            ),
+                    )
+                }
             }
+            // The ring's own width, so the centring above is symmetric about the card rather than
+            // about whatever is left over after the ring.
             Spacer(Modifier.width(KvadrantTheme.metrics.appBarButton))
         }
     }

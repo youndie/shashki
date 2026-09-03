@@ -46,7 +46,7 @@ re-prioritising one must never move its file.
 
 No open tasks.
 
-## Closed (81)
+## Closed (83)
 
 **Remove the unknowns**
 
@@ -149,6 +149,8 @@ No open tasks.
 - [B-79](docs/backlog/B-79-the-receipt-names-a-uuid-and-not-a-journey.md) `[x]` - R9·b names a UUID and not a journey: no date, no addresses, no driver
 - [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[x]` - Four state branches the kit draws and the product cannot reach
 - [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[x]` - D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not
+- [B-82](docs/backlog/B-82-pressing-a-tile-moves-nothing.md) `[x]` - Pressing a tile moves nothing: the kit's tilt was drawing inside the surface
+- [B-83](docs/backlog/B-83-the-accept-bar-overran-the-decline-ring.md) `[x]` - The offer's accept bar is 293 dp where the kit caps it at 200, and overruns the decline ring
 
 <!-- END INDEX -->
 

@@ -134,6 +134,7 @@ private fun Trips(
                 style = type.tileLabel.copy(color = colors.accent),
             )
             month.trips.forEach { row ->
+                // A row is the most tile-like thing on this screen, and it tilts like one (B-82).
                 Column(Modifier.fillMaxWidth().clickable { onTrip(row.id) }) {
                     CompositionLocalProvider(LocalAccentBudget provides budget) {
                         // A row has no fields; the controller is the empty one every non-form

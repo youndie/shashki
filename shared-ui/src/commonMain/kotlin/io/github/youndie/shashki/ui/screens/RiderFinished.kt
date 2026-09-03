@@ -23,6 +23,7 @@ import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.pressableSurface
 
 /**
  * R8: the ride is over — what it cost, how it was, and whether to add something.
@@ -123,6 +124,7 @@ private fun Stars(
             Image(
                 painter = rememberVectorPainter(ShashkiIcons.star(filled)),
                 contentDescription = null,
+                // A star is pressed, so it tilts (B-82) — the same feedback the tip chips take.
                 modifier = Modifier.size(STAR_SIZE).clickable { onStars(star) },
                 colorFilter = ColorFilter.tint(if (filled) colors.accent else colors.subtle),
             )
@@ -142,8 +144,7 @@ private fun TipButton(
         Modifier
             .width(TIP_WIDTH)
             .height(TIP_HEIGHT)
-            .background(if (selected) colors.accent else colors.chrome)
-            .clickable(onClick = onClick),
+            .pressableSurface(if (selected) colors.accent else colors.chrome, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         KvadrantText(

@@ -193,8 +193,10 @@ public fun DriverShift(
             Modifier
                 .fillMaxWidth()
                 .height(BAR)
-                .border(RING, if (state.online) colors.accent else colors.inactive)
-                .clickable(onClick = onToggleOnline),
+                // The press first, so the ring tilts with the switch rather than standing still
+                // around a tilting label (B-82).
+                .clickable(onClick = onToggleOnline)
+                .border(RING, if (state.online) colors.accent else colors.inactive),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {

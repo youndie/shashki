@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.pressableSurface
 import io.github.youndie.shashki.ui.map.MapPane
 import io.github.youndie.shashki.ui.map.MapScene
 
@@ -108,8 +109,11 @@ public fun DriverAssignedRide(
                     Modifier
                         .fillMaxWidth()
                         .height(BAR)
-                        .background(if (state.working) colors.inactive else colors.accent)
-                        .clickable(enabled = !state.working, onClick = onAdvance),
+                        .pressableSurface(
+                            if (state.working) colors.inactive else colors.accent,
+                            enabled = !state.working,
+                            onClick = onAdvance,
+                        ),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
