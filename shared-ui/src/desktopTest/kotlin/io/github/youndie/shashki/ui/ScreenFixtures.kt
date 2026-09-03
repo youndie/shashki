@@ -167,7 +167,10 @@ private fun RiderMatching(dark: Boolean) {
         RiderMatching(
             stage = MatchingStage.LOOKING,
             headline = "looking for a car",
-            supporting = "asking the drivers around you",
+            // The kit's R5, line by line: how many, which one and for how long, and what for (B-73).
+            supporting = "3 cars nearby",
+            progress = "asking the closest first · 0:12",
+            order = "economy · $ 28.96",
             destination = "airport",
             meta = "22.8 km · 35 min",
             actionLabel = "cancel",
@@ -233,7 +236,9 @@ private fun RiderCancelConfirm(dark: Boolean) {
         RiderMatching(
             stage = MatchingStage.LOOKING,
             headline = "looking for a car",
-            supporting = "asking the drivers around you",
+            supporting = "3 cars nearby",
+            progress = "asking the closest first · 0:12",
+            order = "economy · $ 28.96",
             destination = "airport",
             meta = "22.8 km · 35 min",
             actionLabel = "cancel",

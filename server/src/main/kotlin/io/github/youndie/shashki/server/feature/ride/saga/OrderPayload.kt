@@ -63,6 +63,9 @@ public object Enriched {
     public const val OFFER_DRIVER: String = "offer.driverId"
     public const val OFFER_ATTEMPT: String = "offer.attempt"
     public const val OFFER_EXPIRES_AT: String = "offer.expiresAtEpochMs"
+
+    /** How many candidates the index had when the cascade started — R5's "14 cars within 3 km" (B-73). */
+    public const val OFFER_CANDIDATES: String = "offer.candidates"
     public const val REJECTION: String = "rejection"
 }
 

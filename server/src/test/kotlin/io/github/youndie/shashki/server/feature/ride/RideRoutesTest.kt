@@ -43,6 +43,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** The routes, through the same `@Resource` classes a client would build its URLs from. */
@@ -84,6 +85,13 @@ class RideRoutesTest {
             assertEquals(null, ride.driverId)
             assertNotNull(ride.quote).let { assertEquals("USD", it.currency) }
 
+            // **R5's numbers while R5 is the screen** (B-73): one car was there, it is the one being
+            // asked, and the deadline travels with the clock it was read at rather than alone.
+            val searching = assertNotNull(client.get(Rides.ById(id = ride.id)).body<RideView>().search)
+            assertEquals(1, searching.carsNearby)
+            assertEquals(1, searching.asked)
+            assertTrue(searching.offerExpiresAtEpochMs > searching.nowEpochMs, "the offer out has time on it")
+
             // The driver's app sees the offer the kit draws, and answers it.
             val offer = client.get(DriverOffers.ForDriver(driverId = "driver-1"))
             assertEquals(HttpStatusCode.OK, offer.status)
@@ -100,6 +108,7 @@ class RideRoutesTest {
 
             val read = client.get(Rides.ById(id = ride.id))
             assertEquals(RideStatus.ASSIGNED, read.body<RideView>().status)
+            assertNull(read.body<RideView>().search, "a countdown over an assigned ride would be a lie")
             assertEquals(
                 HttpStatusCode.NotFound,
                 client.get(DriverOffers.ForDriver(driverId = "driver-1")).status,

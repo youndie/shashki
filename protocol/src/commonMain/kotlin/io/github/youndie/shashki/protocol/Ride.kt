@@ -162,6 +162,28 @@ public data class RideView(
      * locale and a timezone on behalf of a browser that knows both.
      */
     val requestedAtEpochMs: Long? = null,
+    /**
+     * How the search is going, while it is going (B-73). `null` before a driver has been asked and
+     * after one has answered — R5's own numbers, and only R5's.
+     */
+    val search: SearchView? = null,
+)
+
+/**
+ * The kit's R5: `14 cars within 3 km · asking the closest first · 0:24`.
+ *
+ * **Both ends of the deadline travel, for the reason `OfferView` gives**: a client that subtracted
+ * its own clock from [offerExpiresAtEpochMs] would draw a countdown as wrong as the machine's clock;
+ * with [nowEpochMs] beside it, it counts a duration it was handed.
+ */
+@Serializable
+public data class SearchView(
+    /** How many cars of the class the index had when the cascade started. */
+    val carsNearby: Int,
+    /** Which of them is being asked now, counting from one. */
+    val asked: Int,
+    val offerExpiresAtEpochMs: Long,
+    val nowEpochMs: Long,
 )
 
 /**

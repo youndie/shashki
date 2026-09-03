@@ -199,12 +199,11 @@ public class OfferStep(
         petich: Petich,
         payload: OrderPayload,
     ): InterceptorResult {
+        val nearby = candidates.candidates(payload.pickup, payload.rideClass)
         val first =
-            candidates.candidates(payload.pickup, payload.rideClass).firstOrNull {
-                reservations.reserve(it.driverId, payload.rideId)
-            }
+            nearby.firstOrNull { reservations.reserve(it.driverId, payload.rideId) }
                 ?: return InterceptorResult.Compensate(NO_CARS)
-        return offer(payload, first.driverId, attempt = 0, suspend = true)
+        return offer(payload, first.driverId, attempt = 0, suspend = true, nearby = nearby.size)
     }
 
     override suspend fun compensate(
@@ -219,6 +218,8 @@ public class OfferStep(
         driverId: String,
         attempt: Int,
         suspend: Boolean,
+        /** How many the index had when this cascade started — the number R5 shows (B-73). */
+        nearby: Int,
     ): InterceptorResult {
         val expiresAt = clock.nowEpochMs() + OFFER_SECONDS * MILLIS
         board.post(Offer(payload.rideId, driverId, expiresAt))
@@ -229,6 +230,7 @@ public class OfferStep(
                     Enriched.OFFER_DRIVER to driverId,
                     Enriched.OFFER_ATTEMPT to attempt.toString(),
                     Enriched.OFFER_EXPIRES_AT to expiresAt.toString(),
+                    Enriched.OFFER_CANDIDATES to nearby.toString(),
                 ),
             )
         return if (suspend) {
@@ -316,13 +318,17 @@ public class DriverAnswerStep(
                     DriverAnswer.Outcome.DECLINE, DriverAnswer.Outcome.IGNORED -> {
                         offers.withdraw(petich, payload)
                         val attempt = (petich.enriched(Enriched.OFFER_ATTEMPT)?.toIntOrNull() ?: 0) + 1
+                        val nearby = candidates.candidates(payload.pickup, payload.rideClass)
                         val next =
-                            candidates
-                                .candidates(payload.pickup, payload.rideClass)
+                            nearby
                                 .drop(attempt)
                                 .firstOrNull { reservations.reserve(it.driverId, payload.rideId) }
                                 ?: return InterceptorResult.Compensate(OfferStep.NO_CARS)
-                        offers.offer(payload, next.driverId, attempt, suspend = false)
+                        // The count the rider was first told, kept: the index answers the question
+                        // afresh each attempt, and a number that shrank while they watched would
+                        // read as cars leaving rather than as the cascade moving down its list.
+                        val told = petich.enriched(Enriched.OFFER_CANDIDATES)?.toIntOrNull() ?: nearby.size
+                        offers.offer(payload, next.driverId, attempt, suspend = false, nearby = told)
                     }
                 }
             }

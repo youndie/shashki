@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.rider.feature.ride
 
 import io.github.youndie.shashki.protocol.RideStatus
+import io.github.youndie.shashki.protocol.SearchView
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.ui.MatchingUiAction
@@ -26,6 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -69,6 +71,33 @@ class MatchingViewModelTest {
                 model.uiState.value.ride
                     ?.id,
             )
+        }
+
+    /**
+     * The kit's `0:24`, counted from a duration the server handed over (B-73): the poll answers with
+     * both ends of the deadline, the screen takes their difference once and then ticks.
+     */
+    @Test
+    fun `the countdown is the server's duration, ticking`() =
+        runTest(dispatcher) {
+            rides.ride =
+                rides.ride.copy(
+                    status = RideStatus.MATCHING,
+                    search =
+                        SearchView(
+                            carsNearby = 3,
+                            asked = 1,
+                            offerExpiresAtEpochMs = 1_015_000,
+                            nowEpochMs = 1_000_000,
+                        ),
+                )
+            val model = viewModel()
+
+            advanceUntilIdle()
+            assertEquals(15, model.uiState.value.secondsLeft, "fifteen seconds, from the two clocks the server sent")
+
+            advanceTimeBy(3.seconds + 10.milliseconds)
+            assertEquals(12, model.uiState.value.secondsLeft)
         }
 
     /** A driver said yes: the screen hands the ride to the trip rather than drawing a car itself. */

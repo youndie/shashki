@@ -42,6 +42,13 @@ step stays, because a saga resumed from a row has to validate again.
 and outside the other in both directions. `RouteEstimator.servedArea` is now the one answer, read
 from the loaded graph.
 
+## While the search runs (B-73)
+
+`RideView.search` is present only at `MATCHING`: how many cars the cascade started with, which
+attempt is out (from one), and the offer's deadline beside the server's clock at the moment of the
+read — both ends, for the reason `OfferView` gives. It is `null` before the first driver has been
+asked and the moment one has answered; a countdown over an assigned ride would be a lie.
+
 ## Routes — all of them, no exceptions
 
 | Method and path | Auth tier | Purpose |

@@ -65,14 +65,25 @@ itself at a terminal status.
 24/300 while the search runs, **54/200** once it has failed. That difference is the whole hierarchy
 of the pair: one is a status, the other is an answer.
 
+### 3.1a. The count, the position and the clock (B-73)
+
+`3 cars nearby` under the headline, then `asking the closest first · 0:12` — the kit's second and
+third lines. All three numbers are the server's: `RideView.search` carries how many cars the cascade
+started with, which attempt is out, and the offer's deadline **beside the clock it was read at**, so
+the screen counts down a duration it was handed rather than a difference against the machine's
+clock (`OfferView`'s rule). The countdown restarts only when the deadline changes — a new driver
+being asked — and not on every poll, or a late answer would make it jump.
+
 ### 3.2. The dots
 
 The kit's five, a 4.4-second cycle, and **only while the search is running**. Leaving them under "no
 cars nearby" would say the search continues, which is the one thing that screen exists to deny.
 
-### 3.3. The destination row
+### 3.3. What was ordered, and the destination row
 
-Where the ride is going and what the journey is, from the quote the order already produced.
+`economy · $ 28.96` above the journey — the kit's fourth line — because the class and the price are
+what the wait is *for* (B-73). Then where the ride is going and what the journey is, from the quote
+the order already produced.
 
 ### 3.4. One action, in the bar
 

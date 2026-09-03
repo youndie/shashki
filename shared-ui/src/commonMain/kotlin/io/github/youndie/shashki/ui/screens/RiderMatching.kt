@@ -60,6 +60,10 @@ public fun RiderMatching(
     actionLabel: String,
     onAction: () -> Unit,
     modifier: Modifier = Modifier,
+    /** `asking the closest first · 0:24` — the cascade's position and its clock, while looking (B-73). */
+    progress: String? = null,
+    /** `economy · $ 28.96` — what was ordered, which is what the wait is for (B-73). */
+    order: String? = null,
     /** R10 over the top of it, or `null`. See [CancelPrompt]. */
     prompt: CancelPrompt? = null,
     onConfirmPrompt: () -> Unit = {},
@@ -88,6 +92,12 @@ public fun RiderMatching(
                     style = type.body.copy(color = colors.subtle),
                 )
 
+                // The kit's second line: which driver is being asked and how long they have. It
+                // sits under the sentence because it changes every second and the sentence does not.
+                progress?.let {
+                    KvadrantText(it, Modifier.padding(top = 4.dp), style = type.meta.copy(color = colors.subtle))
+                }
+
                 // The dots belong to the state that is still happening. Leaving them running under
                 // "no cars nearby" would say the search continues, which is the one thing that
                 // screen exists to deny.
@@ -95,12 +105,18 @@ public fun RiderMatching(
                     Box(Modifier.padding(top = 28.dp)) { KvadrantProgressDots() }
                 }
 
+                // What was ordered, above the journey it was ordered for — the two lines the kit's
+                // R5 ends with, and the ones a rider checks while they wait.
+                order?.let {
+                    KvadrantText(it, Modifier.padding(top = 28.dp), style = type.rowEmphasis)
+                }
+
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 32.dp),
+                    Modifier.fillMaxWidth().padding(top = if (order == null) 32.dp else 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    KvadrantText(destination, style = type.rowEmphasis)
+                    KvadrantText(destination, style = if (order == null) type.rowEmphasis else type.body)
                     KvadrantText(meta, style = type.meta.copy(color = colors.subtle))
                 }
             }

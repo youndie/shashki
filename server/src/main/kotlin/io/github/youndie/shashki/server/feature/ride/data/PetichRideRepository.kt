@@ -4,6 +4,7 @@ import io.github.youndie.shashki.protocol.DriverView
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.SearchView
 import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
@@ -38,6 +39,8 @@ public class PetichRideRepository(
     private val ratings: RatingRepository,
     /** Who the driver is, once one is assigned (B-63). */
     private val drivers: DriverRepository,
+    /** The server's clock, so R5's countdown is a duration handed over rather than a difference (B-73). */
+    private val now: () -> Long,
     private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
@@ -69,7 +72,7 @@ public class PetichRideRepository(
     }
 
     override suspend fun find(id: String): RideView? {
-        val ride = petiches.findById(id)?.toRideView() ?: return null
+        val ride = petiches.findById(id)?.toRideView(now()) ?: return null
         // Only forward. A cancelled order saga stays cancelled even if a stale trip row says the car
         // was arriving, because the saga is the record and the trip is the overlay.
         val trip = trips.find(id)?.takeIf { ride.status == RideStatus.ASSIGNED }
@@ -145,7 +148,7 @@ private const val PERCENT = 100L
  * Saga state → what the rider sees. The mapping is the whole of research §1.4c in one function:
  * a completed *order saga* is an `ASSIGNED` ride, not a completed one — the trip has not started.
  */
-internal fun Petich.toRideView(): RideView {
+internal fun Petich.toRideView(now: Long): RideView {
     val order = payload as? OrderPayload ?: error("saga $id carries ${payload::class.simpleName}, not an order")
     val data = (enrichedPayload as? SimpleEnrichedPayload)?.data.orEmpty()
     val quote =
@@ -164,6 +167,27 @@ internal fun Petich.toRideView(): RideView {
         cancellationReason = data[Enriched.REJECTION],
         paymentMethodId = order.paymentMethodId,
         requestedAtEpochMs = order.requestedAtEpochMs,
+        // **R5's numbers, and only while R5 is the screen** (B-73): the count the cascade started
+        // with, which attempt is out, and its deadline beside the clock it was read at. Gone the
+        // moment a driver has answered, because a countdown over an assigned ride is a lie.
+        search =
+            if (rideStatus() == RideStatus.MATCHING) {
+                val nearby = data[Enriched.OFFER_CANDIDATES]?.toIntOrNull()
+                val attempt = data[Enriched.OFFER_ATTEMPT]?.toIntOrNull()
+                val expiresAt = data[Enriched.OFFER_EXPIRES_AT]?.toLongOrNull()
+                if (nearby != null && attempt != null && expiresAt != null) {
+                    SearchView(
+                        carsNearby = nearby,
+                        asked = attempt + 1,
+                        offerExpiresAtEpochMs = expiresAt,
+                        nowEpochMs = now,
+                    )
+                } else {
+                    null
+                }
+            } else {
+                null
+            },
     )
 }
 

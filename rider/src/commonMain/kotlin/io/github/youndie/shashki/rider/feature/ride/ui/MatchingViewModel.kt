@@ -4,22 +4,34 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
+import io.github.youndie.shashki.protocol.SearchView
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.ui.screens.MatchingStage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 /** R5 and R5·a, plus whether R10 is over them. */
 public data class MatchingUiState(
     val stage: MatchingStage = MatchingStage.LOOKING,
     val ride: RideView? = null,
+    /**
+     * Seconds left on the offer out now, or `null` before the first one (B-73).
+     *
+     * **A duration the server handed over, counted down here** — `OfferView`'s rule, borrowed:
+     * `offerExpiresAtEpochMs - nowEpochMs` at the moment the poll answered, then one less a second.
+     * The client's clock contributes the rate at which seconds pass and nothing else.
+     */
+    val secondsLeft: Int? = null,
     /** Whether the confirmation is up. The fee it shows comes from [ride], never from a rule here. */
     val confirming: Boolean = false,
     val cancelling: Boolean = false,
@@ -89,6 +101,7 @@ public class MatchingViewModel(
                 result
                     .onSuccess { ride ->
                         _uiState.value = _uiState.value.copy(ride = ride)
+                        ride.search?.let { restartCountdown(it) }
                         // No `else`: still `MATCHING` means the search is still running, which is
                         // the state already on the screen.
                         if (ride.status in ASSIGNED_ON) {
@@ -124,6 +137,35 @@ public class MatchingViewModel(
         }
     }
 
+    private var countdown: Job? = null
+    private var counting: Long? = null
+
+    /**
+     * The kit's `0:24`, ticking between polls.
+     *
+     * **Restarted when the offer changes and left alone while it does not.** The poll is the truth
+     * about *which* offer is out — a cascade that moved to its next driver brings a fresh fifteen
+     * seconds that a countdown left running would have gone on subtracting from — but a poll that
+     * carries the same deadline again is not news, and resetting on it would make the clock jump by
+     * however late that answer arrived.
+     */
+    private fun restartCountdown(search: SearchView) {
+        if (search.offerExpiresAtEpochMs == counting) return
+        counting = search.offerExpiresAtEpochMs
+        val seconds = ((search.offerExpiresAtEpochMs - search.nowEpochMs) / MILLIS).toInt().coerceAtLeast(0)
+        _uiState.value = _uiState.value.copy(secondsLeft = seconds)
+        countdown?.cancel()
+        countdown =
+            scope.launch {
+                var left = seconds
+                while (left > 0) {
+                    delay(1.seconds)
+                    left -= 1
+                    _uiState.value = _uiState.value.copy(secondsLeft = left)
+                }
+            }
+    }
+
     private fun cancel() {
         if (_uiState.value.cancelling) return
         // **Set before the call and never lowered.** It is what tells the poll below that the
@@ -140,6 +182,8 @@ public class MatchingViewModel(
     }
 
     private companion object {
+        const val MILLIS = 1_000L
+
         /** Everything past the search. The trip screen owns all of them. */
         val ASSIGNED_ON =
             setOf(
