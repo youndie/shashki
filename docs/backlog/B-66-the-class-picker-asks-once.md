@@ -1,7 +1,7 @@
 ---
 id: B-66
 title: "R4 asks the server for a quote once and never again"
-status: open
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -35,3 +35,24 @@ after which the same screen shows `economy · 0 min · $ 28.96` and an order bar
   not asking anybody anything.
 - Anchors: `rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/ride/ui/ClassPickerViewModel.kt`,
   `docs/screens/screen-rider-class-picker.md`
+
+## What it turned out to be
+
+**The loop belongs to the screen, and that is the whole design.** `ClassPickerViewModel.watch()` is a
+`suspend fun` the composable calls from a `LaunchedEffect`, so it lives in the composition's scope:
+the picker asks every five seconds while it is on top and stops the moment it is not. A poll started
+from `viewModelScope` would have satisfied the first acceptance criterion and quietly broken the
+second — the entry stays on the back stack under a trip, and the view model with it.
+
+**Five seconds, from a measurement rather than a feeling.** `POST /api/quotes` answers in about 10 ms
+on the stand — one graph search for the journey and one per class that has a candidate — and what is
+being watched is a car arriving within a few hundred metres. Slower than the driver's board at two,
+faster than a rider's patience.
+
+**A failed refresh keeps the screen it has.** The first load still reports, because a screen with no
+prices has to say why; a poll that fails five seconds later leaves the prices alone and says nothing.
+That is B-64's lesson applied rather than repeated: the two cases are different, and neither is
+"silent".
+
+Both halves are tested with a driver arriving mid-screen and with a server that stops answering, and
+removing the loop fails the first.

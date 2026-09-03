@@ -42,6 +42,10 @@ public fun ClassPickerScreen(
         }
     }
 
+    // **The poll lives here, not in the view model** (B-66): this effect is cancelled when the
+    // screen leaves the composition, so a class picker underneath a trip stops asking.
+    LaunchedEffect(viewModel) { viewModel.watch() }
+
     ClassPickerContent(scene, uiState, viewModel::onAction, modifier, onMore)
 }
 

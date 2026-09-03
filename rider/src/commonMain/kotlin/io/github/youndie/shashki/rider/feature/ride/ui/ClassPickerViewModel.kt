@@ -9,11 +9,13 @@ import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.RequestRideUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 /** Everything R4 shows, as one value. */
 public data class ClassPickerUiState(
@@ -100,6 +102,32 @@ public class ClassPickerViewModel(
         }
     }
 
+    /**
+     * Ask again, for as long as the screen is on top (B-66).
+     *
+     * **The price does not go stale and the wait does.** They arrive in one answer, which is what
+     * made it easy to cache both by accident: R4 asked once, at startup, so a rider who opened the
+     * application before anybody was driving read *no cars nearby* for ever — measured on the
+     * desktop client, zero `POST /api/quotes` in the minute after the first load, and a restart the
+     * only cure.
+     *
+     * **Called from the screen rather than started here**, which is what makes the second half of it
+     * true: the loop lives in the composition's scope, so a class picker underneath a trip is asking
+     * nobody anything. A view model that polled from `viewModelScope` would keep asking for as long
+     * as the entry was on the back stack.
+     *
+     * Five seconds: `POST /api/quotes` answers in about 10 ms on the stand — a graph search for the
+     * journey and one per class that has a candidate — and the thing being watched is a car arriving
+     * within a few hundred metres. Slower than the driver's board at two seconds, faster than a
+     * rider's patience.
+     */
+    public suspend fun watch() {
+        while (true) {
+            delay(QUOTE_INTERVAL)
+            refresh()
+        }
+    }
+
     private fun load() {
         // The previous load is cancelled rather than raced: a stale answer arriving second would
         // overwrite a fresh one, and the screen would show prices for a journey nobody asked about.
@@ -122,6 +150,28 @@ public class ClassPickerViewModel(
                         _uiState.value = _uiState.value.copy(loading = false)
                         _events.send(ClassPickerUiEvent.Failed(it.message ?: "the server did not answer"))
                     }
+            }
+    }
+
+    /**
+     * One more ask, on the way round the loop.
+     *
+     * **A failed refresh keeps what is on the screen and says nothing.** The first load is different
+     * — a screen with no prices has to report why — but a rider watching three tiles does not need a
+     * banner every five seconds about a poll that will be repeated in five more, and B-64's own
+     * lesson is that the two cases are different rather than that failures should be silent.
+     */
+    private suspend fun refresh() {
+        quoteJourney(QuoteJourneyUseCase.Params(pickup, dropoff))
+            .onSuccess { quotes ->
+                _uiState.value =
+                    _uiState.value.copy(
+                        loading = false,
+                        quotes = quotes.classes,
+                        distanceMetres = quotes.distanceMetres,
+                        durationSeconds = quotes.durationSeconds,
+                        selected = quotes.classes.selectable(_uiState.value.selected),
+                    )
             }
     }
 
@@ -158,3 +208,6 @@ public class ClassPickerViewModel(
         }
     }
 }
+
+/** How often R4 asks again while it is on top (B-66). */
+private val QUOTE_INTERVAL = 5.seconds

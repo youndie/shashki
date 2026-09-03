@@ -12,7 +12,9 @@ import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -23,7 +25,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ClassPickerViewModelTest {
@@ -138,6 +142,65 @@ class ClassPickerViewModelTest {
                     .isEmpty(),
             )
             assertIs<ClassPickerUiEvent.Failed>(event)
+        }
+
+    /**
+     * A driver who comes online while the screen is open (B-66).
+     *
+     * **The screen used to ask once, at startup**, so a rider who opened the application a minute
+     * early read *no cars nearby* until they restarted it — measured on the desktop client, with
+     * zero further requests reaching the server. The loop is the screen's rather than the view
+     * model's, which is the other half: this drives it the way a composition does.
+     */
+    @Test
+    fun `a class that gains a car while the screen is open stops saying no cars nearby`() =
+        runTest(dispatcher) {
+            rides.quotes =
+                FakeRideRepository.QUOTES.let {
+                    it.copy(
+                        classes =
+                            it.classes.map { c ->
+                                c.copy(pickupEtaSeconds = null)
+                            },
+                    )
+                }
+            val model = viewModel()
+            advanceUntilIdle()
+            assertNull(
+                model.uiState.value.quotes
+                    .first()
+                    .pickupEtaSeconds,
+                "the fixture already had a car",
+            )
+
+            val watching = backgroundScope.launch { model.watch() }
+            rides.quotes = FakeRideRepository.QUOTES
+            advanceTimeBy(6.seconds)
+
+            assertEquals(
+                240,
+                model.uiState.value.quotes
+                    .first()
+                    .pickupEtaSeconds,
+                "the screen never asked again",
+            )
+            watching.cancel()
+        }
+
+    /** And a poll that fails leaves the prices that are on the screen alone. */
+    @Test
+    fun `a failed refresh keeps what is already drawn`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            val before = model.uiState.value.quotes
+
+            val watching = backgroundScope.launch { model.watch() }
+            rides.failWith = IllegalStateException("the server did not answer")
+            advanceTimeBy(6.seconds)
+
+            assertEquals(before, model.uiState.value.quotes, "a failed poll emptied the screen")
+            watching.cancel()
         }
 
     private fun viewModel() =

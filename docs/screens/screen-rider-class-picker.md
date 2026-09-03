@@ -15,6 +15,15 @@ source: rider/src/commonMain/kotlin/io/github/youndie/shashki/rider/feature/ride
 
 # Screen: class picker
 
+## It asks again while it is open (B-66)
+
+Every five seconds, and only while the screen is on top: the loop is a `suspend fun` the composable
+runs in a `LaunchedEffect`, so a picker underneath a trip is asking nobody anything.
+
+**It used to ask once.** A rider who opened the application before anybody was driving read
+*no cars nearby* until they restarted it — the price does not go stale and the wait does, and the two
+arrive in one answer, which is what made caching both together easy to do by accident.
+
 ## 0a. Code anchors
 
 | What | File |
