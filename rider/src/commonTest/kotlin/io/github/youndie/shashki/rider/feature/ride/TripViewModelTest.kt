@@ -2,6 +2,8 @@ package io.github.youndie.shashki.rider.feature.ride
 
 import io.github.youndie.shashki.protocol.AssignedDriverView
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.LegTarget
+import io.github.youndie.shashki.protocol.LegView
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
@@ -21,13 +23,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TripViewModelTest {
@@ -80,6 +86,58 @@ class TripViewModelTest {
             assertEquals(FakeRideRepository.REQUESTED.pickup, scene.pins.first { it.kind == MapPin.Kind.PICKUP }.at)
             assertTrue(scene.route!!.ahead.isNotEmpty(), "no road for the rider to watch the car along")
             assertEquals(GeoPoint(46.05, 14.51), scene.cars.single().at)
+        }
+
+    /**
+     * **Progress is colour, not thickness** (B-77): once the trip is running, the road behind the car
+     * is the travelled phase and the road ahead the accent, split where the car is.
+     */
+    @Test
+    fun `on the trip the road splits at the car`() =
+        runTest(dispatcher) {
+            val repository =
+                FakeRideRepository(
+                    ride = FakeRideRepository.REQUESTED.copy(status = RideStatus.IN_PROGRESS),
+                    road = listOf(GeoPoint(46.00, 14.50), GeoPoint(46.05, 14.51), GeoPoint(46.10, 14.52)),
+                    driver = AssignedDriverView("driver-1", GeoPoint(46.0501, 14.5101)),
+                )
+            val model = viewModel(repository)
+
+            settle()
+
+            val route = assertNotNull(model.uiState.value.scene.route)
+            assertEquals(
+                listOf(GeoPoint(46.00, 14.50), GeoPoint(46.05, 14.51), GeoPoint(46.0501, 14.5101)),
+                route.travelled,
+            )
+            assertEquals(
+                listOf(GeoPoint(46.0501, 14.5101), GeoPoint(46.05, 14.51), GeoPoint(46.10, 14.52)),
+                route.ahead,
+            )
+        }
+
+    /** The kit's `arriving 20:06`: the leg's seconds from the rider's own clock, as a wall-clock time. */
+    @Test
+    fun `the arrival is a clock, from the leg to the drop-off`() =
+        runTest(dispatcher) {
+            val repository =
+                FakeRideRepository(
+                    ride =
+                        FakeRideRepository.REQUESTED.copy(
+                            status = RideStatus.IN_PROGRESS,
+                            leg = LegView(LegTarget.DROPOFF, 11_200, 1_080),
+                        ),
+                )
+            val model = viewModel(repository)
+
+            settle()
+
+            val expected =
+                Instant
+                    .fromEpochMilliseconds(NOW + 1_080_000)
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .let { "${it.hour.toString().padStart(2, '0')}:${it.minute.toString().padStart(2, '0')}" }
+            assertEquals(expected, model.uiState.value.arrivingAt)
         }
 
     /**
@@ -175,6 +233,8 @@ class TripViewModelTest {
             observeRide = ObserveRideUseCase(repository),
             watchDriver = WatchDriverUseCase(repository),
             cancelRide = CancelRideUseCase(repository),
+            // Held still, so "arriving at" is a number a test can name (B-77).
+            now = { NOW },
             // The screen's lifetime, in a test that has no screen.
             loopScope = backgroundScope,
         )
@@ -184,3 +244,6 @@ class TripViewModelTest {
         const val SETTLE_MILLIS = 4_000L
     }
 }
+
+/** A Tuesday in September, held still. */
+private const val NOW = 1_788_390_000_000L

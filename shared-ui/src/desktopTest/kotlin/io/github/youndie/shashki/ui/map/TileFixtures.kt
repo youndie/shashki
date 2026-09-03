@@ -301,6 +301,7 @@ internal fun RiderCarOnItsWayDark() {
         stage = TripStage.ARRIVING,
         headline = "3 min",
         meta = "2.1 km to you",
+        fare = null,
     )
 }
 
@@ -313,6 +314,7 @@ internal fun RiderCarOnItsWayLight() {
         stage = TripStage.ARRIVING,
         headline = "3 min",
         meta = "2.1 km to you",
+        fare = null,
     )
 }
 
@@ -322,8 +324,10 @@ private fun TripFixture(
     palette: TilePalette,
     scene: MapScene = tripScene,
     stage: TripStage = TripStage.IN_PROGRESS,
-    headline: String = "airport",
-    meta: String = "18 min · 22.8 km",
+    // The kit's R7, line by line: the minutes left, when that is on the clock and how far, the fare.
+    headline: String = "18 min",
+    meta: String = "arriving 20:06 · 11.2 km left",
+    fare: String? = "$ 28.96",
 ) {
     val latin = kvadrantLatin()
     RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
@@ -333,6 +337,7 @@ private fun TripFixture(
                 stage = stage,
                 headline = headline,
                 meta = meta,
+                fare = fare,
                 driver = TRIP_DRIVER,
                 actionLabel = "call the driver",
                 onCall = {},

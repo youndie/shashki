@@ -72,7 +72,13 @@ One loop asking for both would make a silent phone look like a lost ride.
   (B-75, B-76). When the server has no road yet the words stand in: *on its way*.
 - **Once it has arrived:** *waiting for you*, in the foreground; the accent goes back to being
   nobody's.
-- **During the trip:** the destination and the journey's length, from the quote.
+- **During the trip:** the minutes left at 32, `arriving 20:06 · 11.2 km left` beside them, and the
+  fare once, under (B-77). The minutes and the kilometres are the server's leg to the drop-off,
+  routed from the car's last position; the clock is the view model's, from the rider's own watch —
+  the one they will compare it with. Without a leg the screen falls back to the quote.
+- **The road behind the car goes to 25 % white and the road ahead stays the accent** — "progress is
+  colour, not thickness". The split is at the road vertex nearest the car, made on every position
+  the socket reports, and only once the trip is running: before pickup the car is not on this road.
 
 ### 4.3. The driver row and the plate
 

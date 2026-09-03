@@ -73,6 +73,8 @@ public fun RiderTripInProgress(
     onCall: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The fare, shown once under the figure during the trip — the kit's `420 ₽` line (B-77). */
+    fare: String? = null,
     /**
      * R10 over the top, or `null` (B-43).
      *
@@ -123,6 +125,8 @@ public fun RiderTripInProgress(
                     )
                     KvadrantText(meta, style = type.body.copy(color = colors.subtle))
                 }
+                // The fare, once: what the trip costs, under the figure that says when it ends.
+                fare?.let { KvadrantText(it, style = type.rowEmphasis) }
 
                 DriverRow(driver)
 

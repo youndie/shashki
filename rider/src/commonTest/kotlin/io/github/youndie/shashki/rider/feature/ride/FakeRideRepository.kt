@@ -23,6 +23,8 @@ internal class FakeRideRepository(
     var quotes: QuotesView = QUOTES,
     var ride: RideView = REQUESTED,
     var driver: AssignedDriverView = AssignedDriverView("driver-1", GeoPoint(46.05, 14.51)),
+    /** The road `route` answers with; three points by default, so a test can split it at the car (B-77). */
+    var road: List<GeoPoint> = listOf(GeoPoint(46.0511, 14.5051), GeoPoint(46.10, 14.48), GeoPoint(46.2237, 14.4576)),
     var failWith: Throwable? = null,
 ) : RideRepository {
     var requested: RideRequest? = null
@@ -71,7 +73,7 @@ internal class FakeRideRepository(
     override suspend fun route(
         from: GeoPoint,
         to: GeoPoint,
-    ): RouteView = RouteView(geometry = listOf(from, to), distanceMetres = 1_000, durationSeconds = 120)
+    ): RouteView = RouteView(distanceMetres = 22_806, durationSeconds = 2_079, geometry = road)
 
     override suspend fun driver(rideId: String): AssignedDriverView = driver
 

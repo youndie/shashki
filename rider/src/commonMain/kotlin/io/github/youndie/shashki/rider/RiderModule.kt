@@ -61,6 +61,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import kotlin.time.Clock
 
 /** The crash reporter, or the fact that none is configured. */
 public class CrashReporting(
@@ -225,7 +226,9 @@ public fun riderModule(
             )
         }
         viewModel { (rideId: String) -> MatchingViewModel(rideId, get(), get()) }
-        viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
+        viewModel { (rideId: String) ->
+            TripViewModel(rideId, get(), get(), get(), now = { Clock.System.now().toEpochMilliseconds() })
+        }
         viewModel { (rideId: String) -> FinishedViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
         viewModel { (rideId: String) -> ReceiptViewModel(rideId, get()) }

@@ -2,6 +2,9 @@ package io.github.youndie.shashki.rider.feature.ride.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.LegTarget
+import io.github.youndie.shashki.protocol.LegView
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
@@ -20,6 +23,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 public data class TripUiState(
     val ride: RideView? = null,
@@ -28,6 +34,14 @@ public data class TripUiState(
     val cancelling: Boolean = false,
     /** Whether R10 is up. The fee it shows is the ride's, never a rule repeated here (B-43). */
     val confirming: Boolean = false,
+    /**
+     * `20:06` — when the car arrives, as a clock (B-77).
+     *
+     * **Computed here, once per poll, from the leg the server sent and the client's own clock** —
+     * which is the right clock for a wall-clock time: the rider's watch is the one they will compare
+     * it with. `null` while the trip has no leg to the drop-off yet.
+     */
+    val arrivingAt: String? = null,
 ) {
     public companion object {
         public val LJUBLJANA: io.github.youndie.shashki.protocol.GeoPoint =
@@ -68,6 +82,8 @@ public class TripViewModel(
     private val observeRide: ObserveRideUseCase,
     private val watchDriver: WatchDriverUseCase,
     private val cancelRide: CancelRideUseCase,
+    /** The rider's wall clock, for "arriving 20:06" (B-77). A parameter so a test can hold it still. */
+    private val now: () -> Long,
     /**
      * Where the two loops run. `null` means this view model's own scope, which is what an
      * application wants.
@@ -94,7 +110,12 @@ public class TripViewModel(
                 result
                     .onSuccess { ride ->
                         _uiState.value =
-                            _uiState.value.copy(ride = ride, stage = ride.status.asStage(), scene = sceneFor(ride))
+                            _uiState.value.copy(
+                                ride = ride,
+                                stage = ride.status.asStage(),
+                                scene = sceneFor(ride),
+                                arrivingAt = ride.leg?.takeIf { it.to == LegTarget.DROPOFF }?.let { arrivingAt(it) },
+                            )
                         if (ride.status in ObserveRideUseCase.TERMINAL) _events.send(TripUiEvent.Finished)
                     }.onFailure { _events.send(TripUiEvent.Failed(it.message ?: "the ride could not be read")) }
             }
@@ -104,10 +125,11 @@ public class TripViewModel(
                 // A driver with no position leaves the previous car where it was: the phone is quiet,
                 // the car has not vanished. Removing the marker would be the screen lying about it.
                 val at = driver.at ?: return@collect
+                val scene = _uiState.value.scene
                 _uiState.value =
                     _uiState.value.copy(
                         scene =
-                            _uiState.value.scene.copy(
+                            scene.copy(
                                 cars =
                                     listOf(
                                         CarMarker(
@@ -116,6 +138,16 @@ public class TripViewModel(
                                             bearingDegrees = driver.bearingDegrees,
                                         ),
                                     ),
+                                // **The road behind the car goes to 25 % white and the road ahead
+                                // stays the accent** (B-77) — "progress is colour, not thickness".
+                                // The split is at the vertex nearest the car, and only once the
+                                // trip is running: before pickup the car is not on this road at all.
+                                route =
+                                    if (_uiState.value.stage == TripStage.IN_PROGRESS) {
+                                        road?.let { splitAt(it, at) } ?: scene.route
+                                    } else {
+                                        scene.route
+                                    },
                             ),
                     )
             }
@@ -155,18 +187,67 @@ public class TripViewModel(
         }
     }
 
+    /** The whole road, pickup to drop-off, kept so the car can split it as it moves (B-77). */
+    private var road: List<GeoPoint>? = null
+
     /** The pins and the road; the car arrives on the other loop. */
     private suspend fun sceneFor(ride: RideView): MapScene {
         val existing = _uiState.value.scene
         if (existing.route != null) return existing.copy(camera = MapCamera(ride.pickup))
-        val road = runCatching { watchDriver.roadFor(ride) }.getOrNull()
+        val fetched = runCatching { watchDriver.roadFor(ride) }.getOrNull()
+        road = fetched
         return MapScene(
             camera = MapCamera(ride.pickup),
-            route = road?.let { RouteLine(travelled = emptyList(), ahead = it) },
+            route = fetched?.let { RouteLine(travelled = emptyList(), ahead = it) },
             cars = existing.cars,
             pins = listOf(MapPin(ride.pickup, MapPin.Kind.PICKUP), MapPin(ride.dropoff, MapPin.Kind.DROPOFF)),
         )
     }
+
+    /** `HH:MM` on the rider's clock, [leg]'s seconds from now. */
+    private fun arrivingAt(leg: LegView): String {
+        val at =
+            Instant
+                .fromEpochMilliseconds(
+                    now() + leg.durationSeconds * MILLIS,
+                ).toLocalDateTime(TimeZone.currentSystemDefault())
+        return "${at.hour.toString().padStart(2, '0')}:${at.minute.toString().padStart(2, '0')}"
+    }
+
+    private companion object {
+        const val MILLIS = 1_000L
+    }
+}
+
+/**
+ * The road in its two phases, split where the car is (B-77).
+ *
+ * **Nearest vertex, not nearest point on a segment.** The road comes from the router at a few metres
+ * between vertices, and the car's position from a phone's GPS at a few metres of error; a projection
+ * onto the segment would be precision the inputs do not have. The car itself is the joint, so the
+ * two phases meet under the marker rather than a vertex away from it.
+ */
+internal fun splitAt(
+    road: List<GeoPoint>,
+    car: GeoPoint,
+): RouteLine {
+    if (road.isEmpty()) return RouteLine(travelled = emptyList(), ahead = emptyList())
+    val nearest = road.indices.minBy { distanceSquared(road[it], car) }
+    return RouteLine(
+        travelled = road.subList(0, nearest + 1) + car,
+        ahead =
+            listOf(car) + road.subList(nearest, road.size),
+    )
+}
+
+/** Flat-earth squared distance in degrees — enough to pick a vertex, and cheap enough to do per fix. */
+private fun distanceSquared(
+    a: GeoPoint,
+    b: GeoPoint,
+): Double {
+    val dLat = a.lat - b.lat
+    val dLon = (a.lon - b.lon) * kotlin.math.cos(a.lat * kotlin.math.PI / 180.0)
+    return dLat * dLat + dLon * dLon
 }
 
 /**
