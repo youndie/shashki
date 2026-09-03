@@ -120,12 +120,20 @@ here.
                     # browser where one is installed (scripts/install-chrome.sh), skipped with a
                     # line naming that script where it is not
 make check          # the documentation gate: the index, the links, the coverage map, the chart
+
+bash scripts/stand-tests.sh   # the twelve guards that need the stand above, run against it
 ```
 
 The suite is the argument, so it is worth saying what it holds: every screen against its golden on
 both themes, every glyph against the bundled faces, the saga against a real Postgres at every phase
 boundary, the DI graph resolved rather than declared, every route round-tripped through its own
 address, and the money on each screen compared with what the payment gateway recorded.
+
+**And it is worth saying what it does not hold.** Twelve of those tests talk to another service — a
+provider, a broker, an object store, a mail server — and are skipped unless one is named, because CI
+has none and a suite that fails for want of a container is a suite people learn to ignore. The third
+command is where those run: it points them at the stand, and asserts on the reports rather than the
+exit code, because a skipped test is green (B-88).
 
 ## Language
 
