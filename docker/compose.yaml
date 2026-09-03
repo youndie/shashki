@@ -41,7 +41,7 @@ services:
     # cross-origin in every configuration this stand supports, and the image published before
     # 2026-09-02 answered it with no `Access-Control-Allow-Origin` — the page went blank and sign-in
     # looked like a client bug. youndie/shildik#22 is the whole story.
-    image: ghcr.io/youndie/shildik:0.2.0.13
+    image: ghcr.io/youndie/shildik:0.2.0.14
     depends_on:
       postgres:
         condition: service_healthy
