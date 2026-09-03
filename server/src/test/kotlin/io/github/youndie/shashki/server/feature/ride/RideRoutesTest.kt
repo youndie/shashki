@@ -96,6 +96,12 @@ class RideRoutesTest {
             val offer = client.get(DriverOffers.ForDriver(driverId = "driver-1"))
             assertEquals(HttpStatusCode.OK, offer.status)
             assertEquals(ride.id, offer.body<OfferView>().rideId)
+            // **The card says how far the driver is from the pickup** (B-74): routed from the position
+            // the socket reported, so it is a number here and not a dash.
+            val fromDriver =
+                assertNotNull(offer.body<OfferView>().fromDriverMetres, "the driver's own road to the pickup")
+            assertTrue(fromDriver >= 0)
+            assertNotNull(offer.body<OfferView>().fromDriverSeconds)
 
             val answered =
                 client.post(DriverOffers.Answer(rideId = ride.id)) {

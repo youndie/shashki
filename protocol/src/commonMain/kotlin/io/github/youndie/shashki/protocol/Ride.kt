@@ -333,6 +333,16 @@ public data class OfferView(
     val dropoff: GeoPoint,
     val expiresAtEpochMs: Long,
     val nowEpochMs: Long,
+    /**
+     * The road from where this driver is to the pickup — the kit's `2.1 km · 4 min from you` (B-74).
+     *
+     * `null` when the server has no position for the driver or no road between the two; the card
+     * then shows the leg alone rather than a guess. Routed on the server, from the position the
+     * driver's own socket reported, because the client has no graph and the offer is the moment
+     * the number is decided on.
+     */
+    val fromDriverMetres: Int? = null,
+    val fromDriverSeconds: Int? = null,
 )
 
 /**

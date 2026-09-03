@@ -99,10 +99,11 @@ public fun ShiftContent(
 /**
  * The offer, as words.
  *
- * **The pickup's meta is a dash and that is the honest value.** The kit draws "4 min · 1.2 km"
- * there — how far the *driver* is from the pickup — and the server answers no such question: the
- * quote it sends is the rider's journey, pickup to dropoff. A number borrowed from the wrong leg
- * would read as an answer. The rider's class picker takes the same decision for the same reason.
+ * **The pickup's meta used to be a dash, and the dash was honest until B-74.** The kit draws
+ * `2.1 km · 4 min from you` there — how far the *driver* is from the pickup — and the server
+ * answered no such question; the quote it sent was the rider's journey, and a number borrowed from
+ * the wrong leg would have read as an answer. The server routes the driver's own road now, from the
+ * position their socket reported, and the dash is what remains for a driver it has no position for.
  */
 private fun OfferView.asOfferState(
     secondsLeft: Int,
@@ -114,7 +115,12 @@ private fun OfferView.asOfferState(
         secondsLeft = secondsLeft,
         secondsTotal = secondsTotal,
         pickup = pickup.asCoordinates(),
-        pickupMeta = "—",
+        // `2.1 km · 4 min from you` — the road from where this driver is, routed on the server
+        // (B-74); a dash when it has no position for them or no road, rather than a guess.
+        pickupMeta =
+            fromDriverMetres?.let { metres ->
+                fromDriverSeconds?.let { seconds -> "${metres.asDistance()} · ${seconds.asDuration()} from you" }
+            } ?: "—",
         dropoff = dropoff.asCoordinates(),
         dropoffMeta = "${quote.distanceMetres.asDistance()} · ${quote.durationSeconds.asDuration()}",
     )

@@ -36,7 +36,10 @@ does not arrive on a new page; the driver was looking at this screen and now the
 
 - **Offline**: a word and a button.
 - **Waiting**: "waiting", and the count of positions the socket has taken.
-- **An offer**: the kit's `OfferCard` with its draining bar.
+- **An offer**: the kit's `OfferCard` with its draining bar. The pickup line reads `2.1 km · 4 min
+  from you` — the road from the position this driver's socket last reported, routed on the server
+  when the offer is read (B-74); a dash when the server has no position or no road. The fare stays
+  in the foreground brush on purpose: B-48's 2.11:1 on the light theme, recorded in `OfferCard.kt`.
 
 ## 2. API integration
 

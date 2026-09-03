@@ -7,14 +7,17 @@ import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.server.common.UseCase
 import io.github.youndie.shashki.server.common.suspendRunCatching
+import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.dispatch.DriverReservations
 import io.github.youndie.shashki.server.dispatch.OfferBoard
 import io.github.youndie.shashki.server.feature.ride.saga.DriverAnswer
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
+import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import io.github.youndie.shashki.server.feature.trip.domain.Trip
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
+import io.github.youndie.shashki.server.pricing.RouteEstimator
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichEngine
 import ru.workinprogress.petich.PetichRepository
@@ -125,11 +128,26 @@ public class FindOfferUseCase(
     private val board: OfferBoard,
     private val rides: RideRepository,
     private val clock: PetichClock,
+    /** Where the driver last said they were — the start of the road to the pickup (B-74). */
+    private val index: DriverIndex,
+    private val estimator: RouteEstimator,
 ) {
     public suspend fun forDriver(driverId: String): OfferView? {
         val offer = board.forDriver(driverId) ?: return null
         val ride = rides.find(offer.rideId) ?: return null
         val quote = ride.quote ?: return null
+        // **The road to the pickup, from the position the driver's own socket reported.** The kit's
+        // card says `2.1 km · 4 min from you` and this product's said `—`: the leg it knew was the
+        // ride's, not the driver's. Routed here because the offer is the moment the number is
+        // decided on; `null` — no position, or no road — leaves the dash rather than a guess.
+        val fromDriver =
+            index.whereIs(driverId, clock.nowEpochMs())?.let { presence ->
+                try {
+                    estimator.estimate(presence.at, ride.pickup)
+                } catch (_: NoRouteException) {
+                    null
+                }
+            }
         return OfferView(
             rideId = ride.id,
             rideClass = ride.rideClass,
@@ -141,6 +159,8 @@ public class FindOfferUseCase(
             // rather than subtracting its own wall clock from a deadline it did not set; see
             // `OfferView`.
             nowEpochMs = clock.nowEpochMs(),
+            fromDriverMetres = fromDriver?.distanceMetres,
+            fromDriverSeconds = fromDriver?.durationSeconds,
         )
     }
 }

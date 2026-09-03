@@ -20,7 +20,7 @@ parent_feature: feature-the-trip
 |---|---|---|
 | `WS /api/driver/positions` | **driver ticket** | the driver's position, a few times a minute, straight into the geo-index |
 | `POST /api/driver/ticket` | driver token | one short-lived ticket, for the socket above |
-| `GET /api/driver/offers/{driverId}` | driver token | the offer waiting for this driver, or 404 |
+| `GET /api/driver/offers/{driverId}` | driver token | the offer waiting for this driver, or 404 — with the driver's own road to the pickup routed in (B-74) |
 | `POST /api/driver/offers/{rideId}/answer` | driver token | accept or decline |
 | `POST /api/driver/rides/{rideId}/advance` | driver token | move the trip to the next state |
 | `GET /api/driver/rides/{rideId}/summary` | driver token | D5: what the trip paid, from the payout row; 404 until paid out, 404 for another driver's ride (B-70) |

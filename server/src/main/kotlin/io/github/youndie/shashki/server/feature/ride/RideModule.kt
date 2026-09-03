@@ -279,7 +279,7 @@ public fun rideModule(
                 reservations = get(),
             )
         }
-        factory { FindOfferUseCase(board = get(), rides = get(), clock = get()) }
+        factory { FindOfferUseCase(board = get(), rides = get(), clock = get(), index = get(), estimator = get()) }
         // An explicit lambda and not `factoryOf(::RequestRideUseCase)`: `factoryOf` resolves every
         // constructor parameter through Koin, default values included, and the use case's `ids`
         // is a `() -> String` with a default that no binding provides. Compilation is silent about
