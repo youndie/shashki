@@ -7,10 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.protocol.OfferView
-import io.github.youndie.shashki.ui.format.asCoordinates
-import io.github.youndie.shashki.ui.format.asDistance
-import io.github.youndie.shashki.ui.format.asDuration
-import io.github.youndie.shashki.ui.format.asMoney
+import io.github.youndie.shashki.protocol.format.asCoordinates
+import io.github.youndie.shashki.protocol.format.asDistance
+import io.github.youndie.shashki.protocol.format.asDuration
+import io.github.youndie.shashki.protocol.format.asMoney
 import io.github.youndie.shashki.ui.screens.DriverOfferState
 import io.github.youndie.shashki.ui.screens.DriverShift
 import io.github.youndie.shashki.ui.screens.DriverShiftState

@@ -59,6 +59,14 @@ question only the store can answer; what each one went through is
 `GET /api/rides/{id}/history`, read per ride. Keeping them apart is the point: this is the one screen
 where a reader could see the two stores disagree if they ever did.
 
+## 3a. Where a row goes (B-61)
+
+A row whose ride is over — `COMPLETED` or `CANCELLED` — opens
+[R9·b, the receipt](screen-rider-receipt.md); one still running opens the trip screen that follows
+it. **The view model decides which**, and not the drawing: `RiderHistory` is handed one `onTrip` and
+`HistoryUiState.settled` is the set of ids that are finished. A flag on the row itself would be a
+routing decision inside a `TripRow` — a wire component a server may also send.
+
 ## 4. What the rows say about money
 
 The amount on a row is `RideView.chargedCents` — **what was taken**. A finished ride shows the fare, a

@@ -1,6 +1,8 @@
 package io.github.youndie.shashki.rider
 
+import io.github.youndie.kompot.KompotDegradationSink
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
+import io.github.youndie.shashki.rider.feature.receipt.ui.ReceiptViewModel
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.ObserveRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.QuoteJourneyUseCase
@@ -16,6 +18,7 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.parameter.parametersOf
+import org.koin.core.qualifier.named
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -46,6 +49,12 @@ class RiderGraphTest {
         assertNotNull(koin.get<ObserveRideUseCase>())
         assertNotNull(koin.get<WatchDriverUseCase>())
         assertNotNull(koin.get<MapSurface>())
+        // **Both sinks, because the second is qualified and a qualifier is a string.** The receipt
+        // screen injects `named("receipt")`; a binding declared under any other name resolves to
+        // nothing at the moment the screen is drawn, which is a crash on a screen nobody's test
+        // opens. Two `get`s here are what make the name a contract.
+        assertNotNull(koin.get<KompotDegradationSink>(), "the promo screen's")
+        assertNotNull(koin.get<KompotDegradationSink>(named(RECEIPT_SCREEN)), "the receipt's (B-61)")
     }
 
     /**
@@ -72,6 +81,10 @@ class RiderGraphTest {
         assertNotNull(
             koin.get<TripViewModel> { parametersOf("ride-1") },
             "the trip screen is resolved with the ride's id, as the route passes it",
+        )
+        assertNotNull(
+            koin.get<ReceiptViewModel> { parametersOf("ride-1") },
+            "R9·b is resolved the same way, and its sink is a qualified binding (B-61)",
         )
     }
 

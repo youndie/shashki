@@ -1,7 +1,7 @@
 package io.github.youndie.shashki.rider.feature.ride.ui
 
 import io.github.youndie.shashki.protocol.RideView
-import io.github.youndie.shashki.ui.format.money
+import io.github.youndie.shashki.protocol.format.money
 import io.github.youndie.shashki.ui.screens.CancelPrompt
 
 /**

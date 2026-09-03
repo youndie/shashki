@@ -5,8 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.youndie.shashki.ui.format.asDistance
-import io.github.youndie.shashki.ui.format.asDuration
+import io.github.youndie.shashki.protocol.format.asDistance
+import io.github.youndie.shashki.protocol.format.asDuration
 import io.github.youndie.shashki.ui.screens.MatchingStage
 import io.github.youndie.shashki.ui.screens.RiderMatching
 import org.koin.compose.viewmodel.koinViewModel

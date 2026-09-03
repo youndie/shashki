@@ -1,7 +1,7 @@
 ---
 id: B-65
 title: "A server cannot build a FareBreakdown: the components live where Compose does"
-status: open
+status: done
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
@@ -157,7 +157,8 @@ every one of those eleven files imports from `io.github.youndie.shashki.protocol
 none: [#113](https://github.com/youndie/kompot/issues/113) now carries the reproduction that passes
 and the retraction. The improvement in the message stands on its own and the bump is kept.
 
-**One AC is still open and it is the receipt itself** — a server route that builds a `FareBreakdown`
-from a ride's numbers and a rider that draws it. That is
-[B-61](B-61-the-history-row-and-the-receipt.md)'s R9·b, now unblocked, and this item closes when that
-lands rather than by restating it here.
+**The last AC was the receipt itself** — a server route that builds a `FareBreakdown` from a ride's
+numbers and a rider that draws it — and [B-61](B-61-the-history-row-and-the-receipt.md) landed it the
+same day: `GET /api/rides/{id}/receipt`, composed on the server out of the settlements' own figures,
+drawn by the renderer that had had no caller since kompot was wired up. This item is closed by that
+rather than by restating it.

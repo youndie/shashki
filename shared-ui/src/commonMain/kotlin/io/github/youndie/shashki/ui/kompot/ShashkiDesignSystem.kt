@@ -3,6 +3,7 @@ package io.github.youndie.shashki.ui.kompot
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.text.TextStyle
 import io.github.youndie.kompot.ColorToken
 import io.github.youndie.kompot.KompotDesignSystem
@@ -41,18 +42,33 @@ public object ShashkiDesignSystem : KompotDesignSystem {
         }
     }
 
+    /**
+     * What a name the server sent is set in — **and in this kit's ink, always**.
+     *
+     * **A style with no colour is not neutral, it is Material's.** kompot's `resolveTextColor` uses
+     * the component's colour token if it has one, then the style's own colour, and if neither is set
+     * falls back to `MaterialTheme.colorScheme.onSurface` — read out of `ComponentsKt` rather than
+     * guessed. This kit is not Material, so on the dark theme that fallback is `#1D1B20` on black:
+     * **1.23:1, which is a heading nobody can see.** The promo screen's title had been drawn that
+     * way since B-32 and its golden had been photographing it (B-61 measured the PNG and found it).
+     *
+     * So the ink is filled in here, at the boundary, rather than asked of every server: a tree may
+     * still name a colour and override it, and one that names none is readable by construction.
+     */
     @Composable
     override fun resolveTypography(token: TypographyToken): TextStyle {
         val type = ShashkiTheme.typography
-        return when (token.key) {
-            ShashkiTokens.TYPE_PAGE_TITLE -> type.pageTitle
-            ShashkiTokens.TYPE_FIGURE -> type.figure
-            ShashkiTokens.TYPE_STATE_HEADLINE -> type.stateHeadline
-            ShashkiTokens.TYPE_TILE_LABEL -> type.tileLabel
-            ShashkiTokens.TYPE_BODY -> type.body
-            ShashkiTokens.TYPE_META -> type.meta
-            else -> type.body
-        }
+        val style =
+            when (token.key) {
+                ShashkiTokens.TYPE_PAGE_TITLE -> type.pageTitle
+                ShashkiTokens.TYPE_FIGURE -> type.figure
+                ShashkiTokens.TYPE_STATE_HEADLINE -> type.stateHeadline
+                ShashkiTokens.TYPE_TILE_LABEL -> type.tileLabel
+                ShashkiTokens.TYPE_BODY -> type.body
+                ShashkiTokens.TYPE_META -> type.meta
+                else -> type.body
+            }
+        return if (style.color.isSpecified) style else style.copy(color = KvadrantTheme.colors.foreground)
     }
 
     /**

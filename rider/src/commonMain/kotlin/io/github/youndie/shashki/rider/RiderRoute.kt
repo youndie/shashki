@@ -64,6 +64,20 @@ public sealed interface RiderRoute : NavKey {
         override val path: String get() = "/finished/$rideId"
     }
 
+    /**
+     * R9·b: what a finished ride cost, as the server composed it (B-61).
+     *
+     * **An address of its own, because a receipt is a thing people keep.** A card charge somebody
+     * wants to look at again is exactly the sort of page a browser is asked to bookmark, and a
+     * screen only reachable by tapping a row in a list is a screen that cannot be.
+     */
+    @Serializable
+    public data class Receipt(
+        val rideId: String,
+    ) : RiderRoute {
+        override val path: String get() = "/receipt/$rideId"
+    }
+
     @Serializable
     public data class Trip(
         val rideId: String,
@@ -107,6 +121,10 @@ public sealed interface RiderRoute : NavKey {
                     path.removePrefix(TRIP_PREFIX).takeIf { it.isNotBlank() }?.let(::Trip)
                 }
 
+                path.startsWith(RECEIPT_PREFIX) -> {
+                    path.removePrefix(RECEIPT_PREFIX).takeIf { it.isNotBlank() }?.let(::Receipt)
+                }
+
                 path.startsWith(FINISHED_PREFIX) -> {
                     path.removePrefix(FINISHED_PREFIX).takeIf { it.isNotBlank() }?.let(::Finished)
                 }
@@ -123,5 +141,6 @@ public sealed interface RiderRoute : NavKey {
         private const val TRIP_PREFIX = "/trip/"
         private const val MATCHING_PREFIX = "/matching/"
         private const val FINISHED_PREFIX = "/finished/"
+        private const val RECEIPT_PREFIX = "/receipt/"
     }
 }

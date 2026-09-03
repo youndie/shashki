@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.TripRow
+import io.github.youndie.shashki.protocol.format.asCoordinates
+import io.github.youndie.shashki.protocol.format.asDistance
+import io.github.youndie.shashki.protocol.format.money
 import io.github.youndie.shashki.rider.feature.ride.domain.MyRidesUseCase
-import io.github.youndie.shashki.ui.format.asCoordinates
-import io.github.youndie.shashki.ui.format.asDistance
-import io.github.youndie.shashki.ui.format.money
 import io.github.youndie.shashki.ui.screens.TripMonth
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +32,15 @@ public data class HistoryUiState(
      * as nothing when every ride goes to the same place; a list read by when things happened is R9.
      */
     val months: List<TripMonth> = emptyList(),
+    /**
+     * The rides that are over, and therefore the rows that open a receipt (B-61).
+     *
+     * **A set of ids rather than a flag on the row**, because a row is a `TripRow` — a wire
+     * component, which a server may also send — and a field saying where this client should navigate
+     * would be a routing decision inside a payload. What is over is something this half already
+     * knows: it read the statuses to write the meta line.
+     */
+    val settled: Set<String> = emptySet(),
     val profile: List<Pair<String, String>> = emptyList(),
 )
 
@@ -71,6 +80,10 @@ public class HistoryViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             loading = false,
+                            settled =
+                                rides
+                                    .filter { it.status == RideStatus.COMPLETED || it.status == RideStatus.CANCELLED }
+                                    .mapTo(mutableSetOf()) { it.id },
                             months =
                                 rides.groupBy { ride -> ride.month() }.map { (title, rides) ->
                                     TripMonth(title, rides.map { it.asRow() })

@@ -12,6 +12,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 public fun HistoryScreen(
     onTrip: (String) -> Unit,
+    /** Where a row goes once its ride is over: R9·b, the receipt (B-61). */
+    onReceipt: (String) -> Unit,
     /** How to leave, or `null` where the platform offers it (B-67). */
     onBack: (() -> Unit)? = null,
     onFailed: (String) -> Unit,
@@ -29,13 +31,14 @@ public fun HistoryScreen(
         }
     }
 
-    HistoryContent(uiState, onTrip, modifier = modifier, promo = promo, onBack = onBack)
+    HistoryContent(uiState, onTrip, onReceipt, modifier = modifier, promo = promo, onBack = onBack)
 }
 
 @Composable
 public fun HistoryContent(
     uiState: HistoryUiState,
     onTrip: (String) -> Unit,
+    onReceipt: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     promo: @Composable () -> Unit = {},
@@ -48,7 +51,10 @@ public fun HistoryContent(
         // the answer is in.
         emptyLine = if (uiState.loading) "" else "no trips yet",
         profile = uiState.profile,
-        onTrip = onTrip,
+        // **One callback out of the screen, two destinations behind it.** `RiderHistory` draws a
+        // list and should not learn what a ride status is; which of the two a row opens is decided
+        // here, where the statuses were read.
+        onTrip = { rideId -> if (rideId in uiState.settled) onReceipt(rideId) else onTrip(rideId) },
         modifier = modifier,
         promo = promo,
         onBack = onBack,

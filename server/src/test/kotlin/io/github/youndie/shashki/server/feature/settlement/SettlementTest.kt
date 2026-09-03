@@ -20,6 +20,7 @@ import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.protocol.RouteRequest
 import io.github.youndie.shashki.protocol.TripAdvance
+import io.github.youndie.shashki.protocol.format.money
 import io.github.youndie.shashki.server.billing.PaymentGateway
 import io.github.youndie.shashki.server.billing.Payout
 import io.github.youndie.shashki.server.billing.PayoutRepository
@@ -50,6 +51,9 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.koin.ktor.ext.get
 import ru.workinprogress.petich.PetichClock
 import ru.workinprogress.petich.PetichRepository
@@ -129,6 +133,53 @@ class SettlementTest {
             assertEquals(DRIVER, payout.driverId)
             assertEquals(fare * PLATFORM_REMAINDER / HUNDRED, payout.amountCents)
             assertEquals("USD", payout.currency)
+        }
+
+    /**
+     * **R9·b, end to end** (B-61): the receipt is composed by the server out of what the settlements
+     * actually charged, and the figure on the card is the money the gateway moved.
+     *
+     * The assertion that matters is the last one. A client that added the fare and the tip together
+     * itself would pass every test it had and still be a second opinion about a card charge; here
+     * the number is compared with the gateway's own record, so the tree is right for the reason it
+     * claims to be.
+     */
+    @Test
+    fun `a settled ride answers a receipt built from what was charged`() =
+        testApplication {
+            lateinit var app: Application
+            application {
+                app = this
+                shashki(PostgresHarness.database)
+            }
+            val client = typedClient()
+            startApplication()
+            val ride = assignedRide(client, app)
+
+            // Before the trip ends there is nothing to show, and the address says so rather than
+            // answering an empty card.
+            assertEquals(HttpStatusCode.NotFound, client.get(Rides.Receipt(id = ride.id)).status)
+
+            drive(client, ride.id)
+            client.tip(ride.id, TIP_CENTS)
+            awaitTrue("the tip is settled") { app.get<PaymentGateway>().captured().size == 2 }
+
+            val response = client.get(Rides.Receipt(id = ride.id))
+            assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+            val card =
+                Json
+                    .parseToJsonElement(response.bodyAsText())
+                    .jsonObject["children"]!!
+                    .jsonArray
+                    .map { it.jsonObject }
+                    .single { it["type"]?.jsonPrimitive?.content == "shashki.fare_breakdown" }
+
+            val moved = app.get<PaymentGateway>().captured().sumOf { it.amountCents }
+            assertEquals(money(moved, "USD"), card["amount"]?.jsonPrimitive?.content)
+            assertEquals(
+                listOf("fare", "tip", "paid with"),
+                card["lines"]!!.jsonArray.map { it.jsonObject["label"]?.jsonPrimitive?.content },
+            )
         }
 
     /**
@@ -698,6 +749,9 @@ class SettlementTest {
 
         /** `Commission.DEFAULT`, restated so the test fails when somebody changes the split. */
         const val PLATFORM_REMAINDER = 80L
+
+        /** What the rider gives on top in the receipt's test. Its own settlement, its own line. */
+        const val TIP_CENTS = 300L
         const val CANCELLATION_PERCENT = 25L
 
         /** The kit's middle tip button. */

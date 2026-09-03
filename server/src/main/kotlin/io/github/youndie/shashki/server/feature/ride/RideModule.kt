@@ -32,6 +32,9 @@ import io.github.youndie.shashki.server.feature.rating.data.ExposedRatingReposit
 import io.github.youndie.shashki.server.feature.rating.domain.RateRideUseCase
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
+import io.github.youndie.shashki.server.feature.receipt.data.PetichReceiptRepository
+import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptRepository
+import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptScreenUseCase
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.data.PetichRideRepository
@@ -150,6 +153,10 @@ public fun rideModule(
         // and constructed by nobody — the settlement saga is what calls it (B-37).
         single<ReceiptSender> { receiptSender }
         factory { SendReceiptUseCase(get()) }
+        // R9·b, the receipt as a screen (B-61). It reads the settlements rather than the ride: what
+        // a receipt may say is what the saga actually charged.
+        single<ReceiptRepository> { PetichReceiptRepository(get()) }
+        factory { ReceiptScreenUseCase(get()) }
         // The wait a rider is shown: the candidate query and the router, joined (B-31). Named
         // explicitly rather than `singleOf`, like everything else in this module.
         single { PickupEta(candidates = get(), estimator = get()) }

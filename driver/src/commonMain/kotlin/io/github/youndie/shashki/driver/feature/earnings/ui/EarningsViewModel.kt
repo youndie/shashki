@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
 import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.EarningsView
-import io.github.youndie.shashki.ui.format.money
+import io.github.youndie.shashki.protocol.format.money
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -12,6 +12,7 @@ import io.github.youndie.shashki.server.feature.promo.degradationRoutes
 import io.github.youndie.shashki.server.feature.promo.promoRoutes
 import io.github.youndie.shashki.server.feature.quote.quoteRoutes
 import io.github.youndie.shashki.server.feature.rating.domain.NotFinishedException
+import io.github.youndie.shashki.server.feature.receipt.domain.NoReceiptException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferGoneException
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.ride.domain.OutsideServiceAreaException
@@ -139,6 +140,11 @@ public fun Application.baseModule(modules: List<Module> = emptyList()) {
         exception<NotThisDriversRideException> { call, e ->
             // 404 rather than 403: confirming that somebody else's ride exists is itself an answer.
             call.respond(HttpStatusCode.NotFound, ErrorBody(e.message ?: "not found"))
+        }
+        // A receipt for a ride the settlement has not charged. 404 and not 409: the ride exists and
+        // may well have one later, but there is nothing at this address now.
+        exception<NoReceiptException> { call, e ->
+            call.respond(HttpStatusCode.NotFound, ErrorBody(e.message ?: "no receipt"))
         }
         exception<NothingToSettleException> { call, e ->
             call.respond(HttpStatusCode.Conflict, ErrorBody(e.message ?: "nothing to settle"))

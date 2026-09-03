@@ -14,7 +14,7 @@ import kotlin.test.assertNull
 class RiderRouteTest {
     @Test
     fun `every route survives a round trip through its own address`() {
-        // **All seven, because three of seven is how `/trips` got out.** This list used to name
+        // **All eight, because three of seven is how `/trips` got out.** This list used to name
         // `ClassPicker`, `Callback` and `Trip`; `History` was one of the four nobody added, so R9's
         // address went out into the address bar and came back `null` — a refresh on the rider's own
         // trips landed on the class picker with the URL rewritten to `/`. Found by opening the
@@ -33,6 +33,7 @@ class RiderRouteTest {
                 RiderRoute.Trip("ride-7"),
                 RiderRoute.Matching("ride-7"),
                 RiderRoute.Finished("ride-7"),
+                RiderRoute.Receipt("ride-7"),
             )
 
         for (route in routes) {

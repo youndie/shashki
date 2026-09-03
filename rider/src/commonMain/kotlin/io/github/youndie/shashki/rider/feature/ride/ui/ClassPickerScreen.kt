@@ -6,9 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.youndie.shashki.protocol.RideClass
-import io.github.youndie.shashki.ui.format.asDistance
-import io.github.youndie.shashki.ui.format.asDuration
-import io.github.youndie.shashki.ui.format.asMoney
+import io.github.youndie.shashki.protocol.format.asDistance
+import io.github.youndie.shashki.protocol.format.asDuration
+import io.github.youndie.shashki.protocol.format.asMoney
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.screens.RideClassOffer
 import io.github.youndie.shashki.ui.screens.RiderClassPicker

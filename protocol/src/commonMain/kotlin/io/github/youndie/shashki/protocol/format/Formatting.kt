@@ -1,4 +1,4 @@
-package io.github.youndie.shashki.ui.format
+package io.github.youndie.shashki.protocol.format
 
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.Quote
@@ -6,10 +6,15 @@ import io.github.youndie.shashki.protocol.Quote
 /**
  * The three numbers both applications read, formatted in one place.
  *
- * **It lived in `:rider` and moved here when the driver needed the same fare (B-29)**, which is what
- * its own note below had already predicted: the failure this exists to prevent is the price being
- * rendered differently in the two bundles, and a copy in each bundle is that failure with extra
- * steps.
+ * **It lived in `:rider`, then in `:shared-ui`, and is here because the server formats money too**
+ * (B-29, B-61). Its own argument is what moved it each time: the failure this exists to prevent is a
+ * price rendered differently by whoever prints it, and a copy per printer is that failure with extra
+ * steps. The receipt the server composes says `$ 29.10` because this function says so, and the row
+ * above it in the rider's list says the same because it calls the same one.
+ *
+ * **`:protocol` and not `:shared-ui`, because a renderer is not the only reader.** These are pure
+ * arithmetic over the wire types with no Compose in them; the module that has Compose is the module
+ * the server cannot depend on, and a receipt built there could not be built at all.
  *
  * **Not `String.format`**: it does not exist on Kotlin/Wasm, and the platform-specific ways round it
  * are how a price ends up rendered differently in the two bundles. These do the arithmetic and hand

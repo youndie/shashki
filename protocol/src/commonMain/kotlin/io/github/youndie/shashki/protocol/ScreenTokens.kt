@@ -52,6 +52,20 @@ public object ShashkiTokens {
 
     /** The strip a bar or a tile sits on. */
     public const val COLOR_CHROME: String = "chrome"
+
+    /**
+     * Every typography name, for whoever has to check that all of them behave.
+     *
+     * **A list here rather than in a test**, because a guard that enumerates a vocabulary by hand
+     * stops covering it the day somebody adds a word — which is how three routes of seven came to be
+     * round-tripped (B-45). A token added above and not here is a token this list makes obvious.
+     */
+    public val TYPOGRAPHY: List<String> =
+        listOf(TYPE_PAGE_TITLE, TYPE_FIGURE, TYPE_STATE_HEADLINE, TYPE_TILE_LABEL, TYPE_BODY, TYPE_META)
+
+    /** Every colour name, for the same reason. */
+    public val COLORS: List<String> =
+        listOf(COLOR_BACKGROUND, COLOR_FOREGROUND, COLOR_SUBTLE, COLOR_ACCENT, COLOR_ON_ACCENT, COLOR_CHROME)
 }
 
 /**

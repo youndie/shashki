@@ -9,6 +9,7 @@ import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.feature.rating.domain.NotFinishedException
 import io.github.youndie.shashki.server.feature.rating.domain.RateRideUseCase
+import io.github.youndie.shashki.server.feature.receipt.receiptRoutes
 import io.github.youndie.shashki.server.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RequestRideUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundException
@@ -85,6 +86,10 @@ private fun Route.riderRoutes() {
     get<Rides.ById> { route ->
         call.respond(rides.find(route.id) ?: throw RideNotFoundException(route.id))
     }
+
+    // **R9·b, and it is the rider's** (B-61): a receipt is somebody's own money, so it sits behind
+    // the same tier as ordering rather than beside the promo screen, which is public.
+    receiptRoutes()
 
     // **R8's two, and they are the rider's** (B-44): the same tier as ordering, because rating a
     // driver and giving them money are things somebody does about their own ride. Declared here

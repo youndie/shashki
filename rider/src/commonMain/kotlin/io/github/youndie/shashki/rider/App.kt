@@ -19,6 +19,7 @@ import io.github.youndie.shashki.auth.Session
 import io.github.youndie.shashki.crash.installCrashReporting
 import io.github.youndie.shashki.rider.feature.history.ui.HistoryScreen
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoScreen
+import io.github.youndie.shashki.rider.feature.receipt.ui.ReceiptScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.ClassPickerScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.FinishedScreen
 import io.github.youndie.shashki.rider.feature.ride.ui.MatchingScreen
@@ -180,13 +181,21 @@ private fun RiderNavigation(modifier: Modifier = Modifier) {
                 }
                 entry<RiderRoute.History> {
                     HistoryScreen(
+                        // **Where a row goes depends on whether the ride is over** (B-61). A ride
+                        // still happening has a screen that follows it and no receipt at all; a
+                        // finished or cancelled one has a receipt and nothing left to follow. The
+                        // view model knows which, because it is the half that read the statuses.
                         onTrip = { rideId -> backStack.add(RiderRoute.Trip(rideId)) },
+                        onReceipt = { rideId -> backStack.add(RiderRoute.Receipt(rideId)) },
                         onFailed = { },
                         onBack = back,
                         // **The third pivot item is the screen the server owns** — the same
                         // `PromoScreen`, hosted rather than reimplemented (D11).
                         promo = { PromoScreen(onAction = KompotActionHandler { }) },
                     )
+                }
+                entry<RiderRoute.Receipt> { route ->
+                    ReceiptScreen(rideId = route.rideId, onBack = back)
                 }
                 entry<RiderRoute.Promo> {
                     PromoScreen(
@@ -257,6 +266,7 @@ private val SAVED_STATE =
                     subclass(RiderRoute.Matching::class)
                     subclass(RiderRoute.Trip::class)
                     subclass(RiderRoute.Promo::class)
+                    subclass(RiderRoute.Receipt::class)
                 }
             }
     }

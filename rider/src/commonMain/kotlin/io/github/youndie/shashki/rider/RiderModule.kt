@@ -18,6 +18,10 @@ import io.github.youndie.shashki.rider.feature.promo.data.ReportingDegradationSi
 import io.github.youndie.shashki.rider.feature.promo.domain.LoadPromoUseCase
 import io.github.youndie.shashki.rider.feature.promo.domain.PromoRepository
 import io.github.youndie.shashki.rider.feature.promo.ui.PromoViewModel
+import io.github.youndie.shashki.rider.feature.receipt.data.HttpReceiptRepository
+import io.github.youndie.shashki.rider.feature.receipt.domain.LoadReceiptUseCase
+import io.github.youndie.shashki.rider.feature.receipt.domain.ReceiptRepository
+import io.github.youndie.shashki.rider.feature.receipt.ui.ReceiptViewModel
 import io.github.youndie.shashki.rider.feature.ride.data.HttpRideRepository
 import io.github.youndie.shashki.rider.feature.ride.domain.CancelRideUseCase
 import io.github.youndie.shashki.rider.feature.ride.domain.MyRidesUseCase
@@ -157,7 +161,16 @@ public fun riderModule(
         // The far end of kompot's sink. Bound at last: B-32 built the whole degradation story and
         // recorded that nothing was listening (B-39).
         single<KompotDegradationSink> { ReportingDegradationSink(get(), scope, screen = "promo") }
+        // **A second sink and not a second use of the first**, because the screen's name is the
+        // whole value of the report: "a client could not draw `fare_breakdown`" is a fact, "on the
+        // receipt" is what makes it actionable. A shared binding would file every hole under
+        // "promo" — which is a report that reads as true and points at the wrong screen.
+        single<KompotDegradationSink>(named(RECEIPT_SCREEN)) {
+            ReportingDegradationSink(get(), scope, screen = RECEIPT_SCREEN)
+        }
         factory { LoadPromoUseCase(get()) }
+        single<ReceiptRepository> { HttpReceiptRepository(get()) }
+        factory { LoadReceiptUseCase(get()) }
 
         factory { QuoteJourneyUseCase(get()) }
         factory { RequestRideUseCase(get()) }
@@ -215,6 +228,7 @@ public fun riderModule(
         viewModel { (rideId: String) -> TripViewModel(rideId, get(), get(), get()) }
         viewModel { (rideId: String) -> FinishedViewModel(rideId, get(), get(), get()) }
         viewModel { PromoViewModel(get()) }
+        viewModel { (rideId: String) -> ReceiptViewModel(rideId, get()) }
         // **Who the rider is, as far as this bundle knows.** The name is the configured id and the
         // address is the token's `email` claim, read without verification because verifying is the
         // server's job and this is a label on a screen (B-45).
@@ -232,3 +246,6 @@ public fun riderModule(
 
 /** The provider's client, told apart from the application's by a name rather than by a type. */
 private const val PROVIDER_CLIENT = "provider"
+
+/** The receipt's own name, used both as the qualifier and as what the sink reports (B-61). */
+public const val RECEIPT_SCREEN: String = "receipt"

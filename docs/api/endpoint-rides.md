@@ -116,6 +116,14 @@ honestly means.
 |---|---|---|
 | `POST /api/rides/{id}/rating` | rider token | one to five, once, and only after `COMPLETED` (204) |
 | `POST /api/rides/{id}/tip` | rider token | money on top: a **charge**, not a bigger capture |
+| `GET /api/rides/{id}/receipt` | rider token | R9·b as a **kompot tree** — the card the server composed (B-61) |
+
+**The receipt is a screen and not a DTO, and that is the decision** ([D11](../research/research-architecture.md)'s
+amendment). What a receipt says — which lines, in which order, which of them is the figure — follows
+from what the settlements charged, and both are the server's. A `Receipt` DTO would put the layout
+decision in every client and let two of them disagree about a card charge; a tree puts it where the
+money is. **404 for a ride nobody has settled**: a ride still running has no receipt, and an empty
+card would be a receipt for nothing.
 
 **A tip is a settlement of its own.** The hold the order saga took was the quote and the fare's
 capture consumed it; `capture` cannot exceed a hold here or at a real provider, so a tip is a fresh

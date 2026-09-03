@@ -2,9 +2,16 @@ package io.github.youndie.shashki.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import io.github.youndie.kompot.ColorToken
+import io.github.youndie.kompot.TypographyToken
+import io.github.youndie.kompot.standard.ColumnComponent
+import io.github.youndie.kompot.standard.TextComponent
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.protocol.EarningsTile
+import io.github.youndie.shashki.protocol.FareBreakdown
+import io.github.youndie.shashki.protocol.FareLine
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.ShashkiTokens
 import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
@@ -22,6 +29,7 @@ import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderFinished
 import io.github.youndie.shashki.ui.screens.RiderHistory
 import io.github.youndie.shashki.ui.screens.RiderMatching
+import io.github.youndie.shashki.ui.screens.RiderReceipt
 import io.github.youndie.shashki.ui.screens.TripMonth
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
@@ -347,6 +355,68 @@ private fun RiderHistory(dark: Boolean) {
             emptyLine = "no trips yet",
             profile = listOf("name" to "rider-1", "email" to "rider@example.com"),
             onTrip = {},
+        )
+    }
+}
+
+/**
+ * R9·b: the receipt, and the first screen in this product a **server** composed out of **this
+ * product's own** components (B-61, B-65).
+ *
+ * **The tree here is the one the server sends, written out.** It is a fixture and not a fetch, so
+ * what this golden proves is the drawing rather than the wiring — `SettlementTest` is where the
+ * server's own arithmetic is checked against the money the gateway moved, and `ReceiptTreeTest` is
+ * where the wire format is. What is worth photographing is the card: the figure at 54 because the
+ * server marked it `primary`, every line under it capped at 19 by the kit's rule, and the labels in
+ * the subtle brush against values in the foreground.
+ */
+@ViddikScreenshot(name = "rider receipt", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderReceiptFixture(): Unit = RiderReceipt(dark = true)
+
+/** The same screen on the stock light theme — open question 1's promise, kept (B-48). */
+@ViddikScreenshot(name = "rider receipt light", group = "screens", width = 390, height = 844)
+@Composable
+internal fun RiderReceiptFixtureLight(): Unit = RiderReceipt(dark = false)
+
+@Composable
+private fun RiderReceipt(dark: Boolean) {
+    val latin = kvadrantLatin()
+    RiderTheme(dark = dark, latin = latin, typography = ShashkiTypography.of(latin).portable()) {
+        RiderReceipt(
+            tree =
+                ColumnComponent(
+                    id = "receipt",
+                    spacing = 16,
+                    children =
+                        listOf(
+                            TextComponent(
+                                id = "receipt-title",
+                                text = "receipt",
+                                style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
+                            ),
+                            TextComponent(
+                                id = "receipt-ride",
+                                text = "ride-3",
+                                style = TypographyToken(ShashkiTokens.TYPE_META),
+                                color = ColorToken(ShashkiTokens.COLOR_SUBTLE),
+                            ),
+                            FareBreakdown(
+                                id = "receipt-ride-3",
+                                amount = "$ 31.96",
+                                caption = "economy · 26.3 km · 20 min",
+                                primary = true,
+                                lines =
+                                    listOf(
+                                        FareLine("fare", "$ 28.96"),
+                                        FareLine("tip", "$ 3"),
+                                        FareLine("paid with", "card-4417"),
+                                    ),
+                            ),
+                        ),
+                ),
+            loading = false,
+            onBack = {},
         )
     }
 }

@@ -1615,6 +1615,59 @@ rest still draws.
 decided against Redis. A tree that changes under the reader is a second demo, and this one has not
 been shown yet.
 
+#### Amended 2026-09-03: two screens, and the second is the receipt (B-61)
+
+This used to say **one** screen, and named the fare breakdown as an example of what would be wrong to
+send: "putting the fare breakdown or the trip screen behind a tree would make the demo's core flow
+depend on a mechanism the demo is meant to show". Half of that stands and half of it does not, and
+the half that does not is worth separating carefully.
+
+**What stands: nothing in the flow.** R4, R5, R7 and R8 are drawn natively and will be. A rider who
+cannot order a car because a tree did not arrive is the failure this decision exists to prevent.
+
+**What was wrong: R9·b is not in the flow.** The receipt is a read-only page, reached from a list,
+about a ride that has already ended and been paid for. It meets D11's own test better than the promo
+does — *nothing depends on it*: if the server answers nothing the rider sees "no receipt for this
+ride yet" and everything else in the product works. And it is the screen a server *should* own, by
+D11's own argument about roles: which lines a charge is broken into is a decision about money, and
+money is the server's.
+
+**And the promo alone was not exercising the mechanism.** It is made of kompot's stock vocabulary —
+`column`, `text`, `button` — so the product's own components, their renderers and the kit's three
+composition rules had a golden each and no sender. `FareBreakdown` had a renderer, a golden and no
+caller for two stages, which [B-65](../backlog/B-65-a-server-cannot-build-a-fare-breakdown.md) traced
+to the components being declared in a Compose module the server cannot depend on. With them in
+`:protocol` the receipt is what joins the halves up: declared once, built by a server with no Compose
+in it, registered by KSP on both sides, and drawn here.
+
+**The cost, stated as D11 states its own:** there are now two places a server can put a screen in
+front of a rider, and the second is about money. `ReceiptTreeTest` walks the encoded document for
+tokens and types the way `PromoTreeTest` does; `SettlementTest` compares the figure on the card with
+what the payment gateway actually moved, which is the assertion that matters — a client adding the
+fare and the tip together itself would pass every test it had and still be a second opinion about a
+card charge.
+
+#### And the boundary had a hole in it, which this screen found (B-61)
+
+D11's table above says a backend "cannot paint an unreadable screen because it has no way to say what
+a colour is". That was true and insufficient: **a backend could paint an unreadable screen by saying
+nothing at all.**
+
+kompot's `resolveTextColor` takes the component's colour token, then the style's own colour, and if
+neither is set falls back to `MaterialTheme.colorScheme.onSurface` — read out of `kompot-client`'s
+`ComponentsKt`, not assumed. That is the correct default for a toolkit that must not presume a design
+system. This kit is not Material, so on the dark theme it is `#1D1B20` on black: **1.23:1**. The promo
+screen's own title — "first ride on us", the largest text on it — had been drawn that way since B-32,
+and its golden had been faithfully photographing it for a fortnight.
+
+The fix is one line in `ShashkiDesignSystem.resolveTypography`: a style with no colour of its own gets
+the kit's foreground. A tree may still name a colour and override it; a tree that names none is
+readable by construction. `DesignSystemInkTest` holds every token in the vocabulary to it, in both
+themes, and fails without the line.
+
+**The general shape is the one this repository keeps meeting**: the guarantee was stated about the
+half somebody was looking at. "It cannot name a colour" was checked; "it need not name one" was not.
+
 ### D9. Documentation is in English
 
 Code, comments, test names, exception messages and commit subjects in English, as everywhere in this

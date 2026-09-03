@@ -205,6 +205,21 @@ public class Rides(
         public val id: String,
     )
 
+    /**
+     * `GET /api/rides/{id}/receipt` — R9·b, and the one screen this product composes on the server
+     * out of its *own* components (B-61, B-65).
+     *
+     * **A kompot tree and not a `Receipt` DTO**, which is the whole point: what a receipt looks like
+     * — which lines, in which order, with which of them the figure — is a decision about money, and
+     * money is the server's. A DTO would put that decision in two clients and let them disagree
+     * about a number a card was charged.
+     */
+    @Resource("{id}/receipt")
+    public class Receipt(
+        public val parent: Rides = Rides(),
+        public val id: String,
+    )
+
     @Resource("{id}")
     public class ById(
         public val parent: Rides = Rides(),
