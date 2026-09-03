@@ -57,6 +57,28 @@ public data class EarningsView(
     val weekCents: Long,
     val allTimeCents: Long,
     val currency: String,
+    /** How many rides each sum is made of — the kit's `11 trips` beside the figure (B-81). Fares, not tips. */
+    val todayTrips: Int = 0,
+    val weekTrips: Int = 0,
+    val allTimeTrips: Int = 0,
+    /** What riders have given this driver on average, or `null` for a driver nobody has rated. */
+    val rating: Double? = null,
+    /** The payouts by day, newest first — the kit's D6 *history* list (B-81). */
+    val days: List<PayoutDayView> = emptyList(),
+)
+
+/**
+ * One day of payouts (B-81): the kit's `28 aug · 11 trips · card · 4 280 ₽`.
+ *
+ * **The day is an instant and the client names it** (B-61's rule): a day boundary is a timezone,
+ * and the server's is UTC — the same caveat `GET /api/driver/earnings` records for its sums.
+ */
+@Serializable
+public data class PayoutDayView(
+    val dayStartEpochMs: Long,
+    val trips: Int,
+    val amountCents: Long,
+    val currency: String,
 )
 
 /**

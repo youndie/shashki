@@ -65,6 +65,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import kotlin.time.Clock
 
 /** The crash reporter, or the fact that none is configured. The rider's wrapper, for the same reason. */
 public class CrashReporting(
@@ -232,6 +233,8 @@ public fun driverModule(config: DriverConfig): Module =
                 goOnline = get(),
                 watchOffer = get(),
                 answerOffer = get(),
+                readEarnings = get(),
+                now = { Clock.System.now().toEpochMilliseconds() },
             )
         }
         viewModel { (rideId: String) ->

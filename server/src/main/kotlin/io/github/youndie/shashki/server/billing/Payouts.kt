@@ -71,7 +71,24 @@ public interface PayoutRepository {
         driverId: String,
         sinceEpochMs: Long,
     ): Long
+
+    /** How many fares — not tips — this driver has been paid for since [sinceEpochMs] (B-81). */
+    public fun countFor(
+        driverId: String,
+        sinceEpochMs: Long,
+    ): Int
+
+    /** Everything this driver has been owed, by UTC day, newest first (B-81). */
+    public fun daysFor(driverId: String): List<PayoutDay>
 }
+
+/** One day's payouts, as the repository groups them: the day's start, how many fares, the sum. */
+public data class PayoutDay(
+    val dayStartEpochMs: Long,
+    val trips: Int,
+    val amountCents: Long,
+    val currency: String,
+)
 
 public object PayoutsTable : Table("payouts") {
     public val rideId: Column<String> = varchar("ride_id", 255)
@@ -140,6 +157,51 @@ public class ExposedPayoutRepository(
                 .where { PayoutsTable.rideId eq rideId }
                 .map { it.toPayout() }
         }
+
+    override fun countFor(
+        driverId: String,
+        sinceEpochMs: Long,
+    ): Int =
+        transaction(database) {
+            PayoutsTable
+                .selectAll()
+                .where {
+                    (PayoutsTable.driverId eq driverId) and
+                        (PayoutsTable.createdAt greaterEq sinceEpochMs) and
+                        (PayoutsTable.kind eq Payout.FARE)
+                }.count()
+                .toInt()
+        }
+
+    /**
+     * Grouped here rather than in SQL: a driver's rows are a shift's worth a day, and a day boundary
+     * in UTC is one integer division — the same boundary `sumFor`'s callers use.
+     */
+    override fun daysFor(driverId: String): List<PayoutDay> =
+        transaction(database) {
+            PayoutsTable
+                .selectAll()
+                .where { PayoutsTable.driverId eq driverId }
+                .map {
+                    Triple(
+                        it[PayoutsTable.createdAt] / DAY_MS * DAY_MS,
+                        it[PayoutsTable.kind],
+                        it[PayoutsTable.amountCents] to it[PayoutsTable.currency],
+                    )
+                }.groupBy { it.first }
+                .map { (day, rows) ->
+                    PayoutDay(
+                        dayStartEpochMs = day,
+                        trips = rows.count { it.second == Payout.FARE },
+                        amountCents = rows.sumOf { it.third.first },
+                        currency = rows.first().third.second,
+                    )
+                }.sortedByDescending { it.dayStartEpochMs }
+        }
+
+    private companion object {
+        const val DAY_MS = 86_400_000L
+    }
 }
 
 private fun ResultRow.toPayout() =

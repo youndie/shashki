@@ -41,11 +41,10 @@ public fun EarningsContent(
         today = uiState.today,
         todayLabel = if (uiState.loading) "" else "today",
         tiles = uiState.tiles,
-        // **The per-ride history is not here** and the screen says so rather than drawing an empty
-        // grid: the payout rows carry a ride id, and joining them to the ride's own row is the list
-        // B-45 built for the rider. Doing it for the driver is that item's shape a second time.
-        history = emptyList(),
-        emptyLine = "one line per ride is not built yet",
+        // **By day, not by ride** (B-81): the kit's D6 lists payouts as `28 aug · 11 trips · 4 280 ₽`,
+        // which is the payout rows grouped by the server's day and named by this calendar.
+        history = uiState.history,
+        emptyLine = if (uiState.loading) "" else "no rides yet",
         modifier = modifier,
         onBack = onBack,
     )

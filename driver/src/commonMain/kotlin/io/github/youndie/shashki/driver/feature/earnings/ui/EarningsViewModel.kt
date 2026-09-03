@@ -13,12 +13,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 /** D6 as the screen holds it: today's figure, the tiles, and whether the answer is in. */
 public data class EarningsUiState(
     val loading: Boolean = true,
     val today: String = "",
     val tiles: List<EarningsTile> = emptyList(),
+    /** The kit's D6 *history*: one row per day, `3 september · 2 trips` to `$ 46.32` (B-81). */
+    val history: List<Pair<String, String>> = emptyList(),
 )
 
 public sealed interface EarningsUiEvent {
@@ -65,10 +71,50 @@ internal fun EarningsView.asState(): EarningsUiState =
     EarningsUiState(
         loading = false,
         today = money(todayCents, currency),
+        // The kit's tile is "a number, a unit and a label": the count rides on the label, so a sum
+        // of nothing says `today · 0 trips` rather than a figure with no story (B-81).
         tiles =
             listOf(
-                EarningsTile("today", "today", money(todayCents, currency), size = 2, accent = true),
-                EarningsTile("week", "week", money(weekCents, currency), size = 2),
-                EarningsTile("all", "all time", money(allTimeCents, currency), size = 2),
+                EarningsTile(
+                    "today",
+                    "today · ${todayTrips.trips()}",
+                    money(todayCents, currency),
+                    size = 2,
+                    accent = true,
+                ),
+                EarningsTile("week", "week · ${weekTrips.trips()}", money(weekCents, currency), size = 2),
+                EarningsTile("all", "all time · ${allTimeTrips.trips()}", money(allTimeCents, currency), size = 2),
             ),
+        history =
+            days.map {
+                "${it.dayStartEpochMs.asDay()} · ${it.trips.trips()}" to
+                    money(
+                        it.amountCents,
+                        it.currency,
+                    )
+            },
+    )
+
+internal fun Int.trips(): String = if (this == 1) "1 trip" else "$this trips"
+
+/** `3 september`, on the driver's own calendar — the day boundary is the server's UTC, the name is here. */
+internal fun Long.asDay(): String {
+    val date = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return "${date.day} ${MONTHS[date.month.number - 1]}"
+}
+
+private val MONTHS =
+    listOf(
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
     )

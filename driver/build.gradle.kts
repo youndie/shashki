@@ -48,6 +48,9 @@ kotlin {
             implementation(libs.koin.composeViewmodel)
             implementation(libs.koin.composeNavigation3)
             implementation(libs.navigation3.ui)
+            // The day of a payout row, named on the driver's own calendar (B-81) — as the rider names
+            // a ride's month.
+            implementation(wip.kotlinx.datetime)
             implementation(libs.lifecycle.viewmodelNavigation3)
 
             implementation(wip.kotlinx.coroutines.core)

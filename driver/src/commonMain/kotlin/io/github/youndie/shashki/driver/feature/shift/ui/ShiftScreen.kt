@@ -5,12 +5,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.youndie.shashki.driver.feature.earnings.ui.trips
 import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
+import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.format.asCoordinates
 import io.github.youndie.shashki.protocol.format.asDistance
 import io.github.youndie.shashki.protocol.format.asDuration
 import io.github.youndie.shashki.protocol.format.asMoney
+import io.github.youndie.shashki.protocol.format.money
 import io.github.youndie.shashki.ui.screens.DriverOfferState
 import io.github.youndie.shashki.ui.screens.DriverShift
 import io.github.youndie.shashki.ui.screens.DriverShiftState
@@ -62,6 +65,7 @@ public fun ShiftContent(
         state =
             DriverShiftState(
                 online = uiState.online,
+                tiles = uiState.tiles(),
                 driverLabel = uiState.driverLabel,
                 classLabel =
                     uiState.offer
@@ -124,3 +128,32 @@ private fun OfferView.asOfferState(
         dropoff = dropoff.asCoordinates(),
         dropoffMeta = "${quote.distanceMetres.asDistance()} · ${quote.durationSeconds.asDuration()}",
     )
+
+/**
+ * The kit's D2 tiles (B-81): hours online carries the accent — the number that matters on a shift —
+ * today's takings with the count beside them, and the rating. Acceptance is not here: nothing on
+ * the server counts offers answered against offers made, and a tile with a number nobody measured
+ * would be a decoration.
+ */
+internal fun ShiftUiState.tiles(): List<EarningsTile> {
+    val online = onlineForSeconds ?: return emptyList()
+    val earned = earnings
+    return listOfNotNull(
+        EarningsTile(
+            "online",
+            "hours online",
+            "${online / 3600}:${(online % 3600 / 60).toString().padStart(2, '0')}",
+            size = 2,
+            accent = true,
+        ),
+        earned?.let {
+            EarningsTile(
+                "today",
+                "today · ${it.todayTrips.trips()}",
+                money(it.todayCents, it.currency),
+                size = 2,
+            )
+        },
+        earned?.rating?.let { EarningsTile("rating", "rating", "${(it * 10).toInt() / 10.0}", size = 2) },
+    )
+}

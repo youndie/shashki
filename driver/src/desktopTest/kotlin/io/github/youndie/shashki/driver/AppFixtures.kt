@@ -8,6 +8,7 @@ import io.github.youndie.shashki.driver.feature.shift.ui.ShiftContent
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftUiState
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripContent
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripUiState
+import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.LegTarget
 import io.github.youndie.shashki.protocol.LegView
@@ -70,7 +71,25 @@ internal fun ShiftWaitingLight(): Unit = ShiftWaitingBody(dark = false)
 private fun ShiftWaitingBody(dark: Boolean) {
     Fixture(dark) {
         ShiftContent(
-            uiState = ShiftUiState(driverLabel = "driver-1", online = true, reported = 42),
+            uiState =
+                ShiftUiState(
+                    driverLabel = "driver-1",
+                    online = true,
+                    reported = 42,
+                    // The kit's D2 tiles (B-81): seven hours and change, three rides, the rating.
+                    onlineForSeconds = 25_920,
+                    earnings =
+                        EarningsView(
+                            4_632,
+                            4_632,
+                            4_632,
+                            "USD",
+                            todayTrips = 3,
+                            weekTrips = 3,
+                            allTimeTrips = 3,
+                            rating = 4.9,
+                        ),
+                ),
             onAction = { },
         )
     }

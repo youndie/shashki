@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.driver.feature.shift
 
+import io.github.youndie.shashki.driver.feature.earnings.domain.EarningsRepository
+import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.WatchOfferUseCase
 import io.github.youndie.shashki.driver.feature.shift.data.DevicePositionFixes
@@ -9,6 +11,7 @@ import io.github.youndie.shashki.driver.feature.shift.ui.ShiftUiAction
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftUiEvent
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftViewModel
 import io.github.youndie.shashki.protocol.DriverDecision
+import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import kotlinx.coroutines.CoroutineScope
@@ -374,6 +377,40 @@ class ShiftViewModelTest {
             goOnline = GoOnlineUseCase(shift, DevicePositionFixes { device }),
             watchOffer = WatchOfferUseCase(offers),
             answerOffer = AnswerOfferUseCase(offers),
+            readEarnings = ReadEarningsUseCase(FixedEarnings(EARNINGS)),
+            now = { clock },
             loopScope = scope,
         )
+
+    /** The kit's D2 tiles need a clock and a sum (B-81): the meter counts, the read answers once a minute. */
+    @Test
+    fun `online, the shift counts its hours and reads today's takings`() =
+        runTest(dispatcher) {
+            val model = viewModel(backgroundScope)
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(1.seconds)
+
+            assertEquals(EARNINGS, model.uiState.value.earnings, "read when the shift started")
+            clock += 65_000
+            advanceTimeBy(65.seconds)
+            assertEquals(65, model.uiState.value.onlineForSeconds)
+
+            model.onAction(ShiftUiAction.ToggleOnline)
+            advanceTimeBy(1.seconds)
+            assertEquals(null, model.uiState.value.onlineForSeconds, "offline, there are no hours to show")
+        }
+
+    private class FixedEarnings(
+        private val view: EarningsView,
+    ) : EarningsRepository {
+        override suspend fun earnings(): EarningsView = view
+    }
+
+    private companion object {
+        val EARNINGS =
+            EarningsView(4_632, 4_632, 4_632, "USD", todayTrips = 2, weekTrips = 2, allTimeTrips = 2, rating = 4.9)
+    }
 }
+
+/** The test's own clock: moved by hand where a test needs the hours to pass. */
+private var clock: Long = 1_788_390_000_000L

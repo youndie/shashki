@@ -5,10 +5,12 @@ import io.github.youndie.shashki.protocol.DriverRides
 import io.github.youndie.shashki.protocol.DriverTicket
 import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.OfferAnswer
+import io.github.youndie.shashki.protocol.PayoutDayView
 import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.dispatch.DriverTickets
 import io.github.youndie.shashki.server.feature.auth.driverIdentity
 import io.github.youndie.shashki.server.feature.documents.documentRoutes
+import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.FindOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
@@ -52,6 +54,7 @@ private fun Route.driverEndpoints() {
     val answerOffer by inject<AnswerOfferUseCase>()
     val tickets by inject<DriverTickets>()
     val payouts by inject<PayoutRepository>()
+    val ratings by inject<RatingRepository>()
     val clock by inject<PetichClock>()
     val readSummary by inject<ReadTripSummaryUseCase>()
 
@@ -86,29 +89,36 @@ private fun Route.driverEndpoints() {
     get<DriverEarningsResource> { route ->
         val driverId = call.driverIdentity(route.driverId)
         val now = Instant.ofEpochMilli(clock.nowEpochMs()).atZone(ZoneOffset.UTC)
+        val startOfToday =
+            now
+                .toLocalDate()
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli()
+        val startOfWeek =
+            now
+                .toLocalDate()
+                .with(DayOfWeek.MONDAY)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli()
         call.respond(
             EarningsView(
-                todayCents =
-                    payouts.sumFor(
-                        driverId,
-                        now
-                            .toLocalDate()
-                            .atStartOfDay(ZoneOffset.UTC)
-                            .toInstant()
-                            .toEpochMilli(),
-                    ),
-                weekCents =
-                    payouts.sumFor(
-                        driverId,
-                        now
-                            .toLocalDate()
-                            .with(DayOfWeek.MONDAY)
-                            .atStartOfDay(ZoneOffset.UTC)
-                            .toInstant()
-                            .toEpochMilli(),
-                    ),
+                todayCents = payouts.sumFor(driverId, startOfToday),
+                weekCents = payouts.sumFor(driverId, startOfWeek),
                 allTimeCents = payouts.sumFor(driverId, 0),
                 currency = "USD",
+                // **The counts, the rating and the days the kit's D2 and D6 draw** (B-81): fares
+                // counted rather than rows, so a tip is money in the sum and not a trip in the count.
+                todayTrips = payouts.countFor(driverId, startOfToday),
+                weekTrips = payouts.countFor(driverId, startOfWeek),
+                allTimeTrips = payouts.countFor(driverId, 0),
+                rating = ratings.averageFor(driverId),
+                days =
+                    payouts
+                        .daysFor(
+                            driverId,
+                        ).map { PayoutDayView(it.dayStartEpochMs, it.trips, it.amountCents, it.currency) },
             ),
         )
     }

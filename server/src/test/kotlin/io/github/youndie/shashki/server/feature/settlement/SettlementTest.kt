@@ -603,6 +603,12 @@ class SettlementTest {
 
             client.tip(ride.id, TIP)
             assertEquals(share + TIP, client.earnings().todayCents, "the tip is not in the day it was charged")
+            // **One trip, whatever the tip did to the sum** (B-81): the count is of fares, and the
+            // day list carries the same day with the same number on it.
+            assertEquals(1, client.earnings().todayTrips)
+            val day = client.earnings().days.single()
+            assertEquals(1, day.trips)
+            assertEquals(share + TIP, day.amountCents)
 
             // A cancellation after a driver set off pays a share of the fee, and it lands in the
             // same day — the second settlement is a settlement like any other.

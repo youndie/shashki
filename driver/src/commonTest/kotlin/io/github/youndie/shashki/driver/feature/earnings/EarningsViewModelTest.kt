@@ -5,6 +5,7 @@ import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseC
 import io.github.youndie.shashki.driver.feature.earnings.ui.EarningsViewModel
 import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.protocol.EarningsView
+import io.github.youndie.shashki.protocol.PayoutDayView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -55,9 +56,56 @@ class EarningsViewModelTest {
 
             assertEquals("$ 23.16", state.today)
             assertEquals(listOf("$ 23.16", "$ 118.40", "$ 987.65"), state.tiles.map { it.figure })
-            assertEquals(listOf("today", "week", "all time"), state.tiles.map { it.label })
+            assertEquals(
+                listOf("today · 0 trips", "week · 0 trips", "all time · 0 trips"),
+                state.tiles.map { it.label },
+            )
             assertTrue(state.tiles.all { it.size in EarningsTile.ALLOWED_SIZES }, "a tile the grid cannot draw")
             assertEquals(1, state.tiles.count { it.accent }, "more than one tile asked for the accent")
+        }
+
+    /** The kit's D6: the count beside the sum, and the payouts by day (B-81). */
+    @Test
+    fun `the counts ride on the labels and the days become rows`() =
+        runTest(dispatcher) {
+            val model =
+                EarningsViewModel(
+                    ReadEarningsUseCase(
+                        Fixed(
+                            EarningsView(
+                                todayCents = 4_632,
+                                weekCents = 4_632,
+                                allTimeCents = 4_632,
+                                currency = "USD",
+                                todayTrips = 2,
+                                weekTrips = 2,
+                                allTimeTrips = 2,
+                                days =
+                                    listOf(
+                                        PayoutDayView(
+                                            dayStartEpochMs = 1_788_393_600_000,
+                                            trips = 2,
+                                            amountCents = 4_632,
+                                            currency = "USD",
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    ),
+                )
+            advanceUntilIdle()
+            val state = model.uiState.value
+
+            assertEquals("today · 2 trips", state.tiles.first().label)
+            assertEquals(1, state.history.size)
+            assertTrue(
+                state.history
+                    .single()
+                    .first
+                    .endsWith(" · 2 trips"),
+                state.history.single().first,
+            )
+            assertEquals("$ 46.32", state.history.single().second)
         }
 
     /** A driver who has earned nothing sees zero rather than nothing: the row is the fact. */

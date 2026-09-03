@@ -60,3 +60,12 @@ neighbours.
   driver is that item's shape a second time, and the screen says so rather than drawing an empty grid.
 - **No payout *to* anybody.** The row is the record of what is owed; moving money to a driver is a
   payment provider's product.
+
+## The counts and the days (B-81)
+
+Each tile's label carries how many fares its sum is made of — `today · 3 trips` — and the *history*
+item lists the payouts **by day**: `3 september · 2 trips` against `$ 46.32`, from `EarningsView.days`,
+which the server groups by its UTC day and this client names on its own calendar. Fares are counted
+and tips are not: a tip is money in the sum and not a ride in the count. The kit's `avg 396 ₽` is
+not drawn — an average of three rides on a stand is a decoration, and the count beside the sum is
+the same information without the pretence.

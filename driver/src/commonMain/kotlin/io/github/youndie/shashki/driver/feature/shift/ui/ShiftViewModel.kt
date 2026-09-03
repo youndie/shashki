@@ -3,6 +3,7 @@ package io.github.youndie.shashki.driver.feature.shift.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.youndie.shashki.driver.DriverIdentity
+import io.github.youndie.shashki.driver.feature.earnings.domain.ReadEarningsUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.driver.feature.offer.domain.AnswerOutcome
 import io.github.youndie.shashki.driver.feature.offer.domain.Board
@@ -11,6 +12,7 @@ import io.github.youndie.shashki.driver.feature.offer.domain.remainingAtReceipt
 import io.github.youndie.shashki.driver.feature.shift.domain.GoOnlineUseCase
 import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.protocol.DriverDecision
+import io.github.youndie.shashki.protocol.EarningsView
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.RideClass
@@ -51,6 +53,10 @@ public data class ShiftUiState(
     val secondsLeft: Int = 0,
     val secondsTotal: Int = 0,
     val answering: Boolean = false,
+    /** How long this shift has been online, in seconds — the kit's `7:12 h` tile (B-81). `null` offline. */
+    val onlineForSeconds: Int? = null,
+    /** Today's takings and the rating, read when the shift starts and every minute after (B-81). */
+    val earnings: EarningsView? = null,
 )
 
 public sealed interface ShiftUiAction {
@@ -101,6 +107,10 @@ public class ShiftViewModel(
     private val goOnline: GoOnlineUseCase,
     private val watchOffer: WatchOfferUseCase,
     private val answerOffer: AnswerOfferUseCase,
+    /** D2's tiles: what the shift has been so far (B-81). */
+    private val readEarnings: ReadEarningsUseCase,
+    /** The driver's clock, for the hours online. A parameter so a test can hold it. */
+    private val now: () -> Long,
     /** Where the loops run; `null` is this view model's own scope. See `TripViewModel` for why. */
     loopScope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -113,6 +123,7 @@ public class ShiftViewModel(
 
     private var shift: Job? = null
     private var poll: Job? = null
+    private var meter: Job? = null
     private var countdown: Job? = null
 
     /**
@@ -161,6 +172,22 @@ public class ShiftViewModel(
             scope.launch {
                 watchOffer(driverId).collect { board -> onBoard(board) }
             }
+        // **The meter.** Hours online tick here; the takings are re-read once a minute, because a
+        // sum changes when a ride ends and a screen that asked per second would be asking the
+        // server to count to zero sixty times.
+        val since = now()
+        meter =
+            scope.launch {
+                var ticks = 0
+                while (true) {
+                    if (ticks % EARNINGS_EVERY_SECONDS == 0) {
+                        readEarnings(Unit).onSuccess { _uiState.value = _uiState.value.copy(earnings = it) }
+                    }
+                    _uiState.value = _uiState.value.copy(onlineForSeconds = ((now() - since) / MILLIS).toInt())
+                    delay(1.seconds)
+                    ticks += 1
+                }
+            }
     }
 
     private fun goOffline() {
@@ -168,6 +195,8 @@ public class ShiftViewModel(
         shift = null
         poll?.cancel()
         poll = null
+        meter?.cancel()
+        meter = null
         countdown?.cancel()
         countdown = null
         finished = null
@@ -267,5 +296,10 @@ public class ShiftViewModel(
                     _events.send(ShiftUiEvent.Failed(it.message ?: "the answer did not reach the server"))
                 }
         }
+    }
+
+    private companion object {
+        const val MILLIS = 1_000L
+        const val EARNINGS_EVERY_SECONDS = 60
     }
 }

@@ -35,7 +35,13 @@ From `ShiftUiState`. **Three states and one screen, because that is how a shift 
 does not arrive on a new page; the driver was looking at this screen and now there is a card.
 
 - **Offline**: a word and a button.
-- **Waiting**: "waiting", and the count of positions the socket has taken.
+- **Waiting**: "waiting", and the count of positions the socket has taken — and above it, the kit's
+  D2 tiles (B-81): hours online in the accent, today's takings with the trip count, the rating. The
+  hours are this client's meter from the moment the switch went on; the takings and the rating are
+  `GET /api/driver/earnings`, read when the shift starts and once a minute after. *Acceptance* is
+  not drawn: nothing on the server counts offers answered against offers made, and a tile with a
+  number nobody measured would be a decoration. "A word and a button" was the decision before B-81;
+  the tiles were what the kit asked for and the numbers already existed.
 - **An offer**: the kit's `OfferCard` with its draining bar. The pickup line reads `2.1 km · 4 min
   from you` — the road from the position this driver's socket last reported, routed on the server
   when the offer is read (B-74); a dash when the server has no position or no road. The fare stays

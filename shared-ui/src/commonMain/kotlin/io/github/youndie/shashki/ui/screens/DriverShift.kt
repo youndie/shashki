@@ -20,12 +20,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
+import io.github.youndie.shashki.protocol.EarningsTile
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.EarningsTileGrid
 import io.github.youndie.shashki.ui.components.OfferCard
 
 /** What the shift screen has to say, as plain values. The bundle formats; this draws. */
 public data class DriverShiftState(
     val online: Boolean,
+    /**
+     * The kit's D2 tiles — hours online, today's takings with the count, the rating — while online
+     * and between offers (B-81). Empty offline: the kit swaps the accent tile for chrome and this
+     * product had nothing there at all, which its screen document called a decision.
+     */
+    val tiles: List<EarningsTile> = emptyList(),
     val driverLabel: String,
     val classLabel: String,
     /**
@@ -131,6 +139,13 @@ public fun DriverShift(
         }
 
         Spacer(Modifier.height(GAP))
+
+        // The tiles, under the header and above the wait: the number that matters, and what the
+        // shift has been so far. `EarningsTileGrid` is D6's grid, so the two screens cannot drift.
+        if (state.tiles.isNotEmpty() && state.offer == null) {
+            EarningsTileGrid(state.tiles)
+            Spacer(Modifier.height(GAP))
+        }
 
         val offer = state.offer
         if (offer != null) {
