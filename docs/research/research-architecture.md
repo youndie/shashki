@@ -1911,7 +1911,7 @@ reference in the generated registry an `ERROR TYPE`.
 
 | | What it costs |
 |---|---|
-| kompot scans a dependency's declarations | the toolkit's own change — `getDeclarationsFromPackage` exists in KSP for exactly this — and every consumer gets it. Filed: [youndie/kompot#113](https://github.com/youndie/kompot/issues/113) |
+| kompot scans a dependency's declarations | filed as [#113](https://github.com/youndie/kompot/issues/113) and answered by [#114](https://github.com/youndie/kompot/pull/114): the split is supported and was failing illegibly. **The move still does not resolve here** after the bump to `0.36.2.116`, with and without a processor in the component module — see B-65 for the four things tried |
 | the renderers move to the shared module | Compose in the module every headless thing depends on, which is the thing that module is for not having |
 | the component is declared twice, with a test holding the two together | a copy of the contract, guarded — the shape this repository refuses everywhere else, and the guard is the reason it would be arguable |
 

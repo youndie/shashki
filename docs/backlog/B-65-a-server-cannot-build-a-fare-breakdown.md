@@ -75,3 +75,40 @@ item can simply do:
 the stack rather than about this screen, and the honest state of a reference product is that its
 toolkit makes one of its own properties unreachable. The finding is written where a reader meets it:
 `ServerDrivenComponents.kt`'s own header, and research open question 4.
+
+## The toolkit answered, and the move still does not resolve (2026-09-03)
+
+[youndie/kompot#114](https://github.com/youndie/kompot/pull/114) is merged and the answer is that the
+split **is** supported: a renderer may live in a different module from its component, the pairing
+comes from the renderer's type argument, and kompot's own `:kompot-forms` / `:kompot-forms-client`
+are that shape. What #113 actually reported, in the maintainer's reading, was a processor that failed
+illegibly — it wrote a plausible package into generated code, so the reader saw `ERROR TYPE` in a
+file nobody wrote and concluded the layout was unsupported.
+
+**The toolkit is on `0.36.2.116` here now** and the message is the fix's own:
+
+> Could not resolve the component type of `KompotComponentRenderer<T>` on `TripRowRenderer`. A
+> renderer MAY be declared in a different module from its component… What is required is that the
+> module declaring the component is on THIS module's compile classpath, and that it runs the
+> processor itself for its own registration.
+
+**And the move still does not resolve.** Measured, in this order:
+
+| What was tried | What happened |
+|---|---|
+| components moved to `:protocol`, which `:shared-ui` already has as `api(projects.protocol)` | `:protocol` compiles, the server compiles against the components, `:shared-ui`'s metadata KSP reports all three renderers unresolved |
+| `:protocol` given the processor and its own `kompotModuleTag` | it generates `generatedShashkiProtocolSerializersModule` with all three subclasses — and `:shared-ui`'s error is unchanged |
+| the same with the processor removed from `:protocol` again | the same three errors, verbatim |
+| `:protocol:clean :shared-ui:clean` and a fresh build | the same three errors |
+
+So the requirement the message names is met — the module is on the compile classpath (the Kotlin
+compiler resolves the same types in the same source set; only KSP does not) — and the second half,
+running the processor there, changes nothing. Notably kompot's own `:kompot-forms` does **not** run
+the processor, which suggests that half of the sentence is not the load-bearing one either.
+
+The bump is kept: `0.34.1.101 → 0.36.2.116` is green across `check`, and the legible error is worth
+having on its own. The move is reverted rather than left half-done.
+
+**What is owed next is a report, not another attempt.** Two modules in one Gradle build, same KSP
+2.3.11, the same shape as the toolkit's own pair, and the resolver does not see across the boundary —
+that is a fact for the people who wrote the resolver, and filing it is asked for first.
