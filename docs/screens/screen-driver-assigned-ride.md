@@ -25,6 +25,19 @@ with a fallback that turns an unknown one into prose rather than an identifier.
 golden of this screen showed `ASSIGNED` — the one state where the enum and the word are the same
 string. `assigned ride on the trip` photographs the other case.
 
+## The map, and the kit's figure (B-75)
+
+**360 dp of map above the panel, as R6 has**: the road to the next point drawn from the configured
+point, the car at this driver's own position — the same `PositionFixes` the shift reports up the
+socket — and the two pins. The road is fetched once per leg (to the pickup, then to the drop-off)
+and not per fix; the car marker is what moves. `SHASHKI_TILES` on the desktop and `tilesUrl` on the
+page give it a basemap; without one it draws the style's own background, as the rider does.
+
+**The figure is the minutes to the next point, not the fare.** `RideView.leg` carries the server's
+route from the driver's position; the screen puts its minutes at 54 with `2.1 km to the pickup`
+beside them and the fare on a line below. While the server has no road for the driver — no
+position yet — the fare keeps the slot, labelled as the fare.
+
 ## 0a. Code anchors
 
 | What | File |

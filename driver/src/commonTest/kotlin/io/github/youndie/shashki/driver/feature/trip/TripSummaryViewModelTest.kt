@@ -4,6 +4,7 @@ import io.github.youndie.shashki.driver.DriverIdentity
 import io.github.youndie.shashki.driver.feature.trip.domain.ReadTripSummaryUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.driver.feature.trip.ui.TripSummaryViewModel
+import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.TripSummaryView
@@ -78,6 +79,11 @@ class TripSummaryViewModelTest {
             driverId: String,
             to: RideStatus,
         ): RideView = error("not this screen's")
+
+        override suspend fun road(
+            from: GeoPoint,
+            to: GeoPoint,
+        ): List<GeoPoint> = listOf(from, to)
 
         override suspend fun summary(
             rideId: String,

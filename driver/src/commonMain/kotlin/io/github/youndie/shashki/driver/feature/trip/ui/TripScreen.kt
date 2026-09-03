@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.youndie.shashki.protocol.LegTarget
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.format.asCoordinates
 import io.github.youndie.shashki.protocol.format.asDistance
@@ -46,10 +47,22 @@ public fun DriverTripContent(
     modifier: Modifier = Modifier,
 ) {
     val ride = uiState.ride
+    val leg = ride?.leg
     DriverAssignedRide(
+        scene = uiState.scene,
         state =
             DriverAssignedRideState(
                 status = ride?.status?.asWord() ?: "…",
+                // **The kit's figure is the minutes to the next point, not the fare** (B-75). The
+                // fare is what the screen showed at 54 while the server had no road for the driver;
+                // with `leg` on the ride it moves to a line and the minutes take the slot.
+                figure = leg?.durationSeconds?.asDuration() ?: ride?.quote?.asMoney() ?: "—",
+                figureMeta =
+                    when {
+                        leg == null -> "fare"
+                        leg.to == LegTarget.PICKUP -> "${leg.distanceMetres.asDistance()} to the pickup"
+                        else -> "${leg.distanceMetres.asDistance()} to the drop-off"
+                    },
                 fare = ride?.quote?.asMoney() ?: "—",
                 pickup = ride?.pickup?.asCoordinates() ?: "—",
                 dropoff = ride?.dropoff?.asCoordinates() ?: "—",

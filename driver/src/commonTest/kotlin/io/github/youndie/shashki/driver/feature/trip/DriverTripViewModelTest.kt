@@ -1,5 +1,8 @@
 package io.github.youndie.shashki.driver.feature.trip
 
+import io.github.youndie.shashki.driver.feature.shift.domain.Fix
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionFixes
+import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.driver.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.ObserveTripUseCase
 import io.github.youndie.shashki.driver.feature.trip.domain.TripRepository
@@ -16,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
@@ -118,6 +122,11 @@ class DriverTripViewModelTest {
 
         override suspend fun read(rideId: String): RideView = ride
 
+        override suspend fun road(
+            from: GeoPoint,
+            to: GeoPoint,
+        ): List<GeoPoint> = listOf(from, to)
+
         override suspend fun summary(
             rideId: String,
             driverId: String,
@@ -141,6 +150,10 @@ class DriverTripViewModelTest {
             identity = { "driver-1" },
             observeTrip = ObserveTripUseCase(trips),
             advanceTrip = AdvanceTripUseCase(trips),
+            // A parked driver: the configured point, once. The map is not what these tests are about.
+            positions = PositionFixes { configured -> flowOf(Fix(configured, PositionSource.CONFIGURED)) },
+            configured = GeoPoint(46.05, 14.51),
+            roads = trips,
             loopScope = scope,
         )
 

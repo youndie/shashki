@@ -49,6 +49,15 @@ attempt is out (from one), and the offer's deadline beside the server's clock at
 read — both ends, for the reason `OfferView` gives. It is `null` before the first driver has been
 asked and the moment one has answered; a countdown over an assigned ride would be a lie.
 
+## The driver's next leg (B-75)
+
+`RideView.leg` is the road from where the assigned driver last said they were to the next point of
+the trip — the pickup until they have arrived, the drop-off after — routed on the server from the
+position the driver's socket reported, at the moment of the read. `null` before a driver is
+assigned, once the trip is over, when the server has no position for the driver, or when there is no
+road between the two. One field, three readers: D4's figure, R6's minutes-to-the-car and R7's
+minutes-left all come from it.
+
 ## Routes — all of them, no exceptions
 
 | Method and path | Auth tier | Purpose |

@@ -39,6 +39,7 @@ public fun main() {
                     katcherUrl = katcherUrl().takeIf { it.isNotBlank() },
                     katcherAppKey = katcherAppKey().takeIf { it.isNotBlank() },
                     release = release(),
+                    tilesUrl = tilesUrl().takeIf { it.isNotBlank() },
                     signIn = signInConfig(),
                 ),
             scope = scope,
@@ -89,3 +90,6 @@ private external fun oidcRealm(): String
 
 @JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.oidcClient) || 'rider'")
 private external fun oidcClient(): String
+
+@JsFun("() => (globalThis.SHASHKI && globalThis.SHASHKI.tilesUrl) || ''")
+private external fun tilesUrl(): String

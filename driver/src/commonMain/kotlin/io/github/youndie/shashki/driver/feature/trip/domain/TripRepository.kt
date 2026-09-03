@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.driver.feature.trip.domain
 
+import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.TripSummaryView
@@ -20,6 +21,12 @@ public interface TripRepository {
         driverId: String,
         to: RideStatus,
     ): RideView
+
+    /** The road between two points, for the map D4 draws it on (B-75). Asked once per leg; a road does not change. */
+    public suspend fun road(
+        from: GeoPoint,
+        to: GeoPoint,
+    ): List<GeoPoint>
 
     /** What the trip that just ended paid — the kit's D5 (B-70). 404 until the settlement has paid it out. */
     public suspend fun summary(

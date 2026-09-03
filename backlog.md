@@ -42,11 +42,10 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (7)
+## Open (6)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-75](docs/backlog/B-75-the-drivers-trip-screen-has-no-map-and-no-eta.md) `[ ]` | D4 has no map and no time to the pickup | P3 | M | - |
 | [B-76](docs/backlog/B-76-the-plate-is-accent-where-the-kit-inverts-it.md) `[ ]` | R6's plate is an accent chip; the kit inverts it — and the card says the trip's length, not the driver's | P3 | S | - |
 | [B-77](docs/backlog/B-77-in-progress-does-not-say-when-or-how-far.md) `[ ]` | R7 does not say when you arrive or how far is left, and the travelled road stays lit | P3 | S | - |
 | [B-78](docs/backlog/B-78-history-rows-wrap-and-the-pivot-clips.md) `[ ]` | R9's rows wrap unevenly, a cancelled ride says — for 0, and the pivot header is clipped | P3 | S | - |
@@ -54,7 +53,7 @@ re-prioritising one must never move its file.
 | [B-80](docs/backlog/B-80-the-state-branches-the-kit-draws-and-the-product-cannot-reach.md) `[ ]` | Four state branches the kit draws and the product cannot reach | P3 | M | - |
 | [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[ ]` | D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not | P3 | M | - |
 
-## Closed (74)
+## Closed (75)
 
 **Remove the unknowns**
 
@@ -150,6 +149,7 @@ re-prioritising one must never move its file.
 - [B-72](docs/backlog/B-72-a-class-tile-says-zero-minutes-and-no-car.md) `[x]` - A class tile says 0 min and names no car
 - [B-73](docs/backlog/B-73-matching-says-less-than-the-kit-does.md) `[x]` - R5 says less than the kit's matching screen: no count, no clock, no class and price
 - [B-74](docs/backlog/B-74-the-offer-card-is-white-where-the-kit-is-amber.md) `[x]` - D3's fare is white where the kit's is amber, and two of its lines are empty
+- [B-75](docs/backlog/B-75-the-drivers-trip-screen-has-no-map-and-no-eta.md) `[x]` - D4 has no map and no time to the pickup
 
 <!-- END INDEX -->
 

@@ -39,6 +39,13 @@ import io.github.youndie.shashki.protocol.DriverTicket
 import io.github.youndie.shashki.protocol.DriverTickets
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
+import io.github.youndie.shashki.ui.map.CanvasMapSurface
+import io.github.youndie.shashki.ui.map.MapSurface
+import io.github.youndie.shashki.ui.map.tiles.HttpRangeReader
+import io.github.youndie.shashki.ui.map.tiles.NoTiles
+import io.github.youndie.shashki.ui.map.tiles.PmtilesArchive
+import io.github.youndie.shashki.ui.map.tiles.PmtilesTileSource
+import io.github.youndie.shashki.ui.map.tiles.TilePalette
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpResponseValidator
@@ -86,6 +93,8 @@ public data class DriverConfig(
     val katcherUrl: String?,
     val katcherAppKey: String?,
     val release: String,
+    /** Where `city.pmtiles` is, or `null` for a map with no basemap — the rider's own rule (B-75). */
+    val tilesUrl: String? = null,
     /**
      * The provider, or `null` for a demo that signs nobody in — the rider's `signIn` exactly (B-52).
      *
@@ -187,6 +196,16 @@ public fun driverModule(config: DriverConfig): Module =
         factory { ReadEarningsUseCase(get()) }
 
         single<TripRepository> { HttpTripRepository(get()) }
+        // **The same map the rider has, for the same reason** (B-75): D4 draws the road to the pickup
+        // and then to the drop-off, and a driver is the person who needs it most. No archive is a
+        // running configuration — the style's own background with the road and the car on it.
+        single<MapSurface> {
+            val tiles =
+                config.tilesUrl?.let { url ->
+                    PmtilesTileSource { PmtilesArchive.open(HttpRangeReader(get(), url)) }
+                } ?: NoTiles
+            CanvasMapSurface(tiles, TilePalette.Dark)
+        }
         factory { ObserveTripUseCase(get()) }
         factory { AdvanceTripUseCase(get()) }
         factory { ReadTripSummaryUseCase(get(), get()) }
@@ -215,7 +234,9 @@ public fun driverModule(config: DriverConfig): Module =
                 answerOffer = get(),
             )
         }
-        viewModel { (rideId: String) -> DriverTripViewModel(rideId, get(), get(), get()) }
+        viewModel { (rideId: String) ->
+            DriverTripViewModel(rideId, get(), get(), get(), positions = get(), configured = config.at, roads = get())
+        }
         viewModel { (rideId: String) -> TripSummaryViewModel(rideId, get()) }
         viewModel { EarningsViewModel(get()) }
         // The picker is the platform's and is left at its default here: the graph has nothing to say

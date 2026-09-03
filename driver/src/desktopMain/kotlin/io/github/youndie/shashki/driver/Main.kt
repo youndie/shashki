@@ -35,6 +35,7 @@ public fun main() {
                         katcherUrl = System.getenv("SHASHKI_KATCHER_URL"),
                         katcherAppKey = System.getenv("SHASHKI_KATCHER_KEY"),
                         release = System.getenv("SHASHKI_RELEASE") ?: "dev",
+                        tilesUrl = System.getenv("SHASHKI_TILES"),
                         // No provider: a window has no redirect to come back from, and a server
                         // with one refuses every driver route this build makes (B-52). The desktop
                         // driver is for looking at screens and for driving a local stand.

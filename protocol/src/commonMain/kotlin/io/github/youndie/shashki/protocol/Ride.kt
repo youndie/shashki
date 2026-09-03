@@ -167,7 +167,28 @@ public data class RideView(
      * after one has answered — R5's own numbers, and only R5's.
      */
     val search: SearchView? = null,
+    /**
+     * The road from where the driver is to the next point of the trip (B-75).
+     *
+     * **One field for two screens.** D4 puts the minutes to the pickup at 54 and the kilometres
+     * beside it; R6 wants the same number for the car it is watching; R7 wants the leg to the
+     * drop-off. It is routed on the server from the position the driver's socket last reported —
+     * the client has no graph — and is `null` before a driver is assigned, when the server has no
+     * position for them, or once the trip is over.
+     */
+    val leg: LegView? = null,
 )
+
+/** The driver's next leg: to the pickup until they have arrived, to the drop-off after (B-75). */
+@Serializable
+public data class LegView(
+    val to: LegTarget,
+    val distanceMetres: Int,
+    val durationSeconds: Int,
+)
+
+@Serializable
+public enum class LegTarget { PICKUP, DROPOFF }
 
 /**
  * The kit's R5: `14 cars within 3 km · asking the closest first · 0:24`.

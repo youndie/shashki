@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.driver
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.driver.feature.shift.domain.PositionSource
 import io.github.youndie.shashki.driver.feature.shift.ui.ShiftContent
@@ -8,6 +9,8 @@ import io.github.youndie.shashki.driver.feature.shift.ui.ShiftUiState
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripContent
 import io.github.youndie.shashki.driver.feature.trip.ui.DriverTripUiState
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.LegTarget
+import io.github.youndie.shashki.protocol.LegView
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
@@ -15,6 +18,13 @@ import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.ui.DriverTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
+import io.github.youndie.shashki.ui.map.CarMarker
+import io.github.youndie.shashki.ui.map.LocalMapSurface
+import io.github.youndie.shashki.ui.map.MapCamera
+import io.github.youndie.shashki.ui.map.MapPin
+import io.github.youndie.shashki.ui.map.MapScene
+import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
+import io.github.youndie.shashki.ui.map.RouteLine
 import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
 /**
@@ -170,22 +180,47 @@ private fun AssignedRideBody(
     dark: Boolean,
     status: RideStatus = RideStatus.ASSIGNED,
 ) {
+    val toPickup = status == RideStatus.ASSIGNED
     Fixture(dark) {
-        DriverTripContent(
-            uiState =
-                DriverTripUiState(
-                    RideView(
-                        id = "ride-1",
-                        status = status,
-                        rideClass = RideClass.ECONOMY,
-                        pickup = PICKUP,
-                        dropoff = DROPOFF,
-                        quote = QUOTE,
-                        driverId = "driver-1",
+        // The screen draws a map and a golden has no archive: the placeholder is what every map
+        // fixture in this repository uses, for the reason B-01 gives.
+        CompositionLocalProvider(LocalMapSurface provides PlaceholderMapSurface()) {
+            DriverTripContent(
+                uiState =
+                    DriverTripUiState(
+                        RideView(
+                            id = "ride-1",
+                            status = status,
+                            rideClass = RideClass.ECONOMY,
+                            pickup = PICKUP,
+                            dropoff = DROPOFF,
+                            quote = QUOTE,
+                            driverId = "driver-1",
+                            // **The kit's figure** (B-75): the road from where the driver is to the
+                            // next point, routed on the server — to the pickup before it, to the
+                            // drop-off after.
+                            leg =
+                                if (toPickup) {
+                                    LegView(LegTarget.PICKUP, 2_100, 240)
+                                } else {
+                                    LegView(LegTarget.DROPOFF, 11_200, 1_080)
+                                },
+                        ),
+                        scene =
+                            MapScene(
+                                camera = MapCamera(CAR),
+                                route =
+                                    RouteLine(
+                                        travelled = emptyList(),
+                                        ahead = if (toPickup) listOf(CAR, PICKUP) else listOf(PICKUP, DROPOFF),
+                                    ),
+                                cars = listOf(CarMarker(id = "me", at = CAR, self = true)),
+                                pins = listOf(MapPin(PICKUP, MapPin.Kind.PICKUP), MapPin(DROPOFF, MapPin.Kind.DROPOFF)),
+                            ),
                     ),
-                ),
-            onAction = { },
-        )
+                onAction = { },
+            )
+        }
     }
 }
 
@@ -201,6 +236,7 @@ private fun Fixture(
 }
 
 private val PICKUP = GeoPoint(46.0511, 14.5051)
+private val CAR = GeoPoint(46.0560, 14.5100)
 private val DROPOFF = GeoPoint(46.2237, 14.4576)
 private val QUOTE = Quote(22_806, 2_079, 2_490, "USD")
 

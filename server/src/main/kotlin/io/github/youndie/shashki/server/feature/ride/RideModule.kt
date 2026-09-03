@@ -241,6 +241,8 @@ public fun rideModule(
                 get(),
                 get(),
                 now = { get<PetichClock>().nowEpochMs() },
+                index = get(),
+                estimator = get(),
                 sagaIndex = SagaIndex(database, get()),
             )
         }

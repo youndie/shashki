@@ -1,19 +1,24 @@
 package io.github.youndie.shashki.server.feature.ride.data
 
 import io.github.youndie.shashki.protocol.DriverView
+import io.github.youndie.shashki.protocol.LegTarget
+import io.github.youndie.shashki.protocol.LegView
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideStatus
 import io.github.youndie.shashki.protocol.RideView
 import io.github.youndie.shashki.protocol.SearchView
+import io.github.youndie.shashki.server.dispatch.DriverIndex
 import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.ride.saga.Enriched
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
+import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
+import io.github.youndie.shashki.server.pricing.RouteEstimator
 import ru.workinprogress.petich.Petich
 import ru.workinprogress.petich.PetichPhase
 import ru.workinprogress.petich.PetichRepository
@@ -41,6 +46,9 @@ public class PetichRideRepository(
     private val drivers: DriverRepository,
     /** The server's clock, so R5's countdown is a duration handed over rather than a difference (B-73). */
     private val now: () -> Long,
+    /** Where the assigned driver last said they were, and the road from there (B-75). */
+    private val index: DriverIndex,
+    private val estimator: RouteEstimator,
     private val sagaIndex: SagaIndex? = null,
     private val commission: Commission = Commission.DEFAULT,
 ) : RideRepository {
@@ -88,7 +96,32 @@ public class PetichRideRepository(
             // different saga — `<ride>:settlement` — because the ride's row is the order's; reading
             // it here is what lets R8 show a sum rather than a promise.
             chargedCents = charged(id),
+            leg = current.nextLeg(),
         )
+    }
+
+    /**
+     * The driver's next leg, routed from where their socket last put them (B-75).
+     *
+     * To the pickup until the car has arrived, to the drop-off from then on; `null` while nobody is
+     * assigned, once the trip is over, when the server has no position for the driver, or when the
+     * router has no road between the two — a number there would be a promise.
+     */
+    private fun RideView.nextLeg(): LegView? {
+        val target =
+            when (status) {
+                RideStatus.ASSIGNED, RideStatus.ARRIVING -> LegTarget.PICKUP
+                RideStatus.ARRIVED, RideStatus.IN_PROGRESS -> LegTarget.DROPOFF
+                else -> return null
+            }
+        val at = driverId?.let { index.whereIs(it, now()) }?.at ?: return null
+        val estimate =
+            try {
+                estimator.estimate(at, if (target == LegTarget.PICKUP) pickup else dropoff)
+            } catch (_: NoRouteException) {
+                return null
+            }
+        return LegView(target, estimate.distanceMetres, estimate.durationSeconds)
     }
 
     /**

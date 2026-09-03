@@ -31,6 +31,6 @@ public data class Fix(
  * candidate has been told a small lie by the button — and a permission that is never granted would
  * make that lie permanent.
  */
-public interface PositionFixes {
+public fun interface PositionFixes {
     public fun fixes(configured: GeoPoint): Flow<Fix>
 }

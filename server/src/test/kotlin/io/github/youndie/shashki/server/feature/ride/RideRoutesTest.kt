@@ -5,6 +5,7 @@ import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.DriverReport
 import io.github.youndie.shashki.protocol.GeoPoint
+import io.github.youndie.shashki.protocol.LegTarget
 import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.OfferView
 import io.github.youndie.shashki.protocol.RideClass
@@ -115,6 +116,11 @@ class RideRoutesTest {
             val read = client.get(Rides.ById(id = ride.id))
             assertEquals(RideStatus.ASSIGNED, read.body<RideView>().status)
             assertNull(read.body<RideView>().search, "a countdown over an assigned ride would be a lie")
+            // **The driver's next leg, routed from where the socket put them** (B-75): to the pickup
+            // until they have arrived, and a number because the position is known.
+            val leg = assertNotNull(read.body<RideView>().leg, "the leg to the pickup")
+            assertEquals(LegTarget.PICKUP, leg.to)
+            assertTrue(leg.distanceMetres >= 0 && leg.durationSeconds >= 0)
             assertEquals(
                 HttpStatusCode.NotFound,
                 client.get(DriverOffers.ForDriver(driverId = "driver-1")).status,
