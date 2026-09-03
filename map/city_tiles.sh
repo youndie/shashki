@@ -7,7 +7,7 @@
 # step and a fast link to Geofabrik's neighbours. Nothing it writes belongs in git: the output
 # directory is `build/city`, and B-07 is what carries the archive to bochka.
 #
-#   ~/.claude/bin/wsl-run 'bash map/city_tiles.sh'          # everything
+#   bash map/city_tiles.sh                                  # everything
 #   OUT=/tmp/city bash map/city_tiles.sh tiles              # one step: tiles | graph | glyphs
 #
 set -euo pipefail

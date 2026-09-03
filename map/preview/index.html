@@ -4,8 +4,10 @@
   `map/city_tiles.sh` produces. It is not a golden and never will be — a GL surface cannot go into
   a viddik snapshot (research §1.8a) — so it is a picture a person looks at.
 
-    scp -P 2222 youndie@127.0.0.1:shashki-city/{city.pmtiles,route.geojson} map/preview/
-    scp -r -P 2222 youndie@127.0.0.1:shashki-city/glyphs map/preview/
+    cp "$CITY"/{city.pmtiles,route.geojson} map/preview/
+    cp -r "$CITY"/glyphs map/preview/
+
+    where $CITY is wherever map/city_tiles.sh wrote them.
     cp map/shashki-map-*.json map/preview/
     python3 map/preview/serve.py 8731
     open 'http://127.0.0.1:8731/index.html?style=dark&zoom=15'

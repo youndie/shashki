@@ -228,7 +228,7 @@ val osmExtract: File? =
 /**
  * The tag, which names a commit.
  *
- * **Passed in rather than read from git**, because the machine this builds on is a mutagen replica
+ * **Passed in rather than read from git**, because the machine this builds on may be a checkout
  * with no `.git` in it — `git rev-parse` there answers about nothing. CI and the wrapper pass
  * `-PcommitSha`; a local build without one gets a `dev-` tag, which is honest about being unreadable
  * rather than pretending to be `latest`.

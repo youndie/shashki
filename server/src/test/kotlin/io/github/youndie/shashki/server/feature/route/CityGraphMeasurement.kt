@@ -14,12 +14,12 @@ import kotlin.time.measureTime
  *
  * **Skipped unless the extract is there, and that is stated rather than hidden.** The archive is
  * 41 MB and is not in git (B-06), so neither CI nor a fresh checkout runs this; it is run by hand
- * against `/home/youndie/shashki-city/Ljubljana.osm.pbf` on the Linux box and the number is written
+ * against the city extract `map/city_tiles.sh` produces, and the number is written
  * into B-23. A test that quietly skips is a test that proves nothing, so the reason it skipped is in
  * the message and the measured figures are in the backlog item rather than only here.
  *
  * ```bash
- * SHASHKI_OSM_FILE=/home/youndie/shashki-city/Ljubljana.osm.pbf ./gradlew :server:test --tests '*CityGraphMeasurement*'
+ * SHASHKI_OSM_FILE=<city>/Ljubljana.osm.pbf ./gradlew :server:test --tests '*CityGraphMeasurement*'
  * ```
  */
 class CityGraphMeasurement {

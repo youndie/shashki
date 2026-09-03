@@ -33,7 +33,7 @@ routing graph that imports in **under four seconds**, and two glyph stacks of 1.
 comes near the sizes that would have reopened the choice.
 
 Everything below is produced by [`map/city_tiles.sh`](../../map/city_tiles.sh) on the Linux box —
-`wsl-run 'bash map/city_tiles.sh'` — into `build/city`, which is git-ignored on purpose: B-07 is
+`bash map/city_tiles.sh` — into `build/city`, which is git-ignored on purpose: B-07 is
 what carries the archive to bochka, and a binary in the tree would be a copy nobody re-derives.
 
 **The two style documents are now in the tree, in `map/`, and that is a deliberate exception.** The

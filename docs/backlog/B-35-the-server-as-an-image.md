@@ -107,7 +107,7 @@ canvas long enough to write a `--screenshot`, so there is no picture of it.
 **Two smaller things worth keeping.** `pull_policy: never`, because a compose pointed at a locally
 built image otherwise fails with `pull access denied … or may require docker login` — a message about
 credentials for a problem that is "you have not built it yet". And the tag is passed in rather than
-read from git: the build machine is a mutagen replica with no `.git`, so `git rev-parse` there
+read from git: the build machine is a checkout with no `.git`, so `git rev-parse` there
 answers about nothing.
 
 **Not covered:** the image is 569 MB, of which 104 MB is the JRE base, 41 MB the application, 31 MB
