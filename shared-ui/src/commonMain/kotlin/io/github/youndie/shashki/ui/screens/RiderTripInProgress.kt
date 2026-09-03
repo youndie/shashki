@@ -19,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import io.github.youndie.kvadrant.components.KvadrantAppBarButton
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
+import io.github.youndie.shashki.ui.components.LabelledAppBarButton
 import io.github.youndie.shashki.ui.map.MapPane
 import io.github.youndie.shashki.ui.map.MapScene
 
@@ -179,17 +179,8 @@ private fun TripBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            KvadrantAppBarButton(onClick = onCall, label = null) {
-                Image(
-                    painter = rememberVectorPainter(ShashkiIcons.card),
-                    contentDescription = null,
-                    modifier = Modifier.size(ROW_GLYPH).align(Alignment.Center),
-                    colorFilter = ColorFilter.tint(colors.foreground),
-                )
-            }
-            KvadrantText(actionLabel, style = type.body)
-        }
+        // One control for the ring and its words (B-71), as on R4.
+        LabelledAppBarButton(actionLabel, ShashkiIcons.card, onClick = onCall)
         // Cancelling is behind the dots once the trip has started: the kit puts destructive actions
         // in the overflow, and a trip in progress is not cancelled by a control the thumb rests on.
         KvadrantText(

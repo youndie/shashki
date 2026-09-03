@@ -19,13 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import io.github.youndie.kvadrant.components.KvadrantAppBarButton
 import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.ShashkiIcons
 import io.github.youndie.shashki.ui.ShashkiTheme
 import io.github.youndie.shashki.ui.components.ClassTile
 import io.github.youndie.shashki.ui.components.ClassTileState
+import io.github.youndie.shashki.ui.components.LabelledAppBarButton
 import io.github.youndie.shashki.ui.map.MapPane
 import io.github.youndie.shashki.ui.map.MapScene
 
@@ -180,17 +180,10 @@ private fun OrderBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            KvadrantAppBarButton(onClick = { if (canOrder) onOrder() }, label = null) {
-                Image(
-                    painter = rememberVectorPainter(ShashkiIcons.check),
-                    contentDescription = null,
-                    modifier = Modifier.size(ROW_GLYPH).align(Alignment.Center),
-                    colorFilter = ColorFilter.tint(if (canOrder) colors.foreground else colors.disabled),
-                )
-            }
-            KvadrantText(label, style = type.body.copy(color = if (canOrder) colors.foreground else colors.disabled))
-        }
+        // **The words take the tap as well as the ring** (B-71). This used to be the library's ring
+        // with a `KvadrantText` beside it, and only the ring was pressable: *order · $ 28.96* tapped
+        // on the label did nothing, which read as an order that had failed.
+        LabelledAppBarButton(label, ShashkiIcons.check, onClick = onOrder, enabled = canOrder)
         Spacer(Modifier.size(0.dp))
         // **The dots go somewhere now** (B-45). They were the kit's shape with nothing behind them
         // until R9 existed; the rider's own pages are what an overflow on this screen is for.
