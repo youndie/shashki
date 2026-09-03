@@ -81,6 +81,13 @@ broker's address pointed at a port nothing listens on:
 | the stand as it stands | 0 | every guard this stand can answer for ran and passed; 1 named above did not |
 | `SHASHKI_BOOBLIK=127.0.0.1:1` | 1 | this run did NOT check everything — read the lists above |
 
+**Using it as a stranger would is what found its last gap.** Run from a fresh clone of the published
+repository, ten of twelve passed and `SignInJoinsUpTest` failed with "the stand is not protecting
+anything" — true, and reading like a defect: that stand was up with the open-auth override, so four
+of these guards had nothing to check. The script now asks `GET /api/rides?mine=true` first, which is
+protected and has no side effects, and says plainly which stand it is looking at before it spends
+four minutes proving it.
+
 **What this does not become is a CI job.** The services are the point of the gate: CI has no shildik
 and buying one would trade a skip nobody sees for a queue everybody waits on. What was missing was
 never the automation, it was the *one line* that a person with a stand up could run — and the count

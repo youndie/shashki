@@ -67,6 +67,19 @@ trap cleanup EXIT
 # reported as uncovered below rather than passed over in silence.
 if [ -n "${SHASHKI_KATCHER_URL:-}" ]; then export SHASHKI_KATCHER_URL SHASHKI_KATCHER_KEY; fi
 
+# **Four of these guards are about tokens, so the stand has to be the authenticated one.** Run
+# against a stand whose `SHASHKI_OIDC_ISSUER` is empty, they fail saying "the stand is not protecting
+# anything" — which is true and reads like a defect. `GET /api/rides?mine=true` is protected and has
+# no side effects, so its status is the cheapest way to ask which stand this is. Found running this
+# script from a fresh clone of the published repository, where the stand happened to be open (B-88).
+protected_status=$(curl -s -o /dev/null -w '%{http_code}' -m 5 "$SHASHKI_SERVER/api/rides?mine=true" 2>/dev/null)
+if [ "$protected_status" != "401" ]; then
+  echo "warning: $SHASHKI_SERVER answered $protected_status to a protected route, not 401." >&2
+  echo "         This stand has no provider configured, so the four sign-in guards will fail." >&2
+  echo "         Bring it up without the open-auth override to check them." >&2
+  echo >&2
+fi
+
 echo "the stand these guards are pointed at:"
 printf '  %-24s %s\n' server "$SHASHKI_SERVER" shildik "$SHASHKI_SHILDIK" bochka "$SHASHKI_BOCHKA" \
   booblik "$SHASHKI_BOOBLIK" tiles "$SHASHKI_TILES" osm "$SHASHKI_OSM_FILE" \
