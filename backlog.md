@@ -46,7 +46,7 @@ re-prioritising one must never move its file.
 
 No open tasks.
 
-## Closed (83)
+## Closed (84)
 
 **Remove the unknowns**
 
@@ -151,6 +151,7 @@ No open tasks.
 - [B-81](docs/backlog/B-81-the-shift-screen-and-earnings-say-less-than-the-kit.md) `[x]` - D2 is a word and a button, and D6 is three sums: what the kit's tiles say that these do not
 - [B-82](docs/backlog/B-82-pressing-a-tile-moves-nothing.md) `[x]` - Pressing a tile moves nothing: the kit's tilt was drawing inside the surface
 - [B-83](docs/backlog/B-83-the-accept-bar-overran-the-decline-ring.md) `[x]` - The offer's accept bar is 293 dp where the kit caps it at 200, and overruns the decline ring
+- [B-84](docs/backlog/B-84-the-first-ci-run-had-no-browser-and-said-no-tests.md) `[x]` - Every wasm suite on the first public CI run reported no tests, and neither half of the reason was the tests
 
 <!-- END INDEX -->
 
