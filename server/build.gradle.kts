@@ -151,7 +151,7 @@ configurations.configureEach {
 //
 // metrik and tracy each publish a multiplatform `agent`, and its JVM artifact is `agent-jvm-<version>
 // .jar` in both. The libraries are independent and happen to share a version number today, so
-// `ru.workinprogress.metrik:agent-jvm:0.1.13` and `ru.workinprogress.tracy:agent-jvm:0.1.13` are two
+// `io.github.youndie.metrik:agent-jvm:0.2.16` and `io.github.youndie.tracy:agent-jvm:0.2.14` are two
 // files with one name. `installDist` refuses, and is right to.
 //
 // **What must not be done is setting a `duplicatesStrategy`.** Every value of it keeps one file and

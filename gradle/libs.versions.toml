@@ -67,12 +67,12 @@ composeUiTest = "1.12.0"
 navigation3 = "1.2.0-alpha02"
 # The OIDC surface as `@Resource` classes, so a browser client does not build the path from strings.
 # The wasmJs target arrived with youndie/shildik#20.
-shildik = "0.2.0.13"
+shildik = "0.3.0.15"
 # katcher's own wire types. The browser target arrived with youndie/katcher#32.
 booblik = "0.3.1"
-metrik = "0.1.13"
-tracy = "0.1.13"
-katcher = "0.6.40"
+metrik = "0.2.16"
+tracy = "0.2.14"
+katcher = "0.7.42"
 kompot = "0.36.2.116"
 kvadrant = "0.2.0"
 viddik = "0.3.3.19"
@@ -129,7 +129,7 @@ koin-composeViewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js" }
 
-katcher-shared = { module = "ru.workinprogress.katcher:shared", version.ref = "katcher" }
+katcher-shared = { module = "io.github.youndie.katcher:shared", version.ref = "katcher" }
 
 # The broker the ride's own events go through. A numbered publish rather than `-SNAPSHOT` (B-13),
 # and the same number as the image the stand runs — a client and a broker that disagree about the
@@ -139,13 +139,13 @@ booblik-client = { module = "io.github.youndie.booblik:booblik-client", version.
 # Watching the service. Both are numbered publishes rather than `-SNAPSHOT` (B-13), and both are
 # agents rather than servers: what a service links is the thing that sends, never the thing that
 # stores.
-metrik-agent = { module = "ru.workinprogress.metrik:agent", version.ref = "metrik" }
-tracy-agent = { module = "ru.workinprogress.tracy:agent", version.ref = "tracy" }
+metrik-agent = { module = "io.github.youndie.metrik:agent", version.ref = "metrik" }
+tracy-agent = { module = "io.github.youndie.tracy:agent", version.ref = "tracy" }
 
-shildik-oidcAuthServer = { module = "ru.workinprogress.shildik:oidc-auth-server", version.ref = "shildik" }
-shildik-oidcAuthCore = { module = "ru.workinprogress.shildik:oidc-auth-core", version.ref = "shildik" }
+shildik-oidcAuthServer = { module = "io.github.youndie.shildik:oidc-auth-server", version.ref = "shildik" }
+shildik-oidcAuthCore = { module = "io.github.youndie.shildik:oidc-auth-core", version.ref = "shildik" }
 
-shildik-sharedOidc = { module = "ru.workinprogress.shildik:shared-oidc", version.ref = "shildik" }
+shildik-sharedOidc = { module = "io.github.youndie.shildik:shared-oidc", version.ref = "shildik" }
 
 kompot-standard = { module = "io.github.youndie:kompot-standard", version.ref = "kompot" }
 

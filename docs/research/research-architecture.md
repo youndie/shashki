@@ -811,7 +811,7 @@ ingest endpoint is documented. See [D6](#d6-the-browser-clients-post-to-katchers
 | The ingest is **public by construction**: `route("api") { reportRoute(…) }` sits outside the `authenticate(HEADER_USER_AUTH)` block the pages are inside. An application that has just crashed cannot be asked to sign in, and the `appKey` is what identifies it | `katcher/server/src/commonMain/.../ConfigureRouting.kt` |
 | The ingest answers **202 Accepted**, not 200 — it queues the report. An unknown or revoked key is **401** before anything is queued | `katcher/core/src/commonMain/.../report/ReportRouting.kt`, and measured |
 | End to end against `ghcr.io/youndie/katcher:0.6.2`: a report from shashki's own reporter appears as `IllegalStateException no MapSurface in composition`, tagged `production · 2026.09.02-b10`, with the release in katcher's own release filter | measured against the container |
-| `ru.workinprogress.katcher:shared` — the module holding `CreateReportParams` — publishes jvm, four native desktop targets, three iOS ones and mingw. **No `wasmJs`**, so a browser cannot reach the type either | `katcher/shared/build.gradle.kts` |
+| `io.github.youndie.katcher:shared` — the module holding `CreateReportParams` — publishes jvm, four native desktop targets, three iOS ones and mingw. **No `wasmJs`**, so a browser cannot reach the type either | `katcher/shared/build.gradle.kts` |
 
 The last row is the same shape as §1.6c1's finding about `shared-oidc`, and it has the same answer:
 not a missing *variant* but a missing **target**, on a module that depends on nothing but
