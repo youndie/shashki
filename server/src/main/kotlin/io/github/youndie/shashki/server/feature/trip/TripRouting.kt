@@ -4,13 +4,13 @@ import io.github.youndie.shashki.protocol.DriverRides
 import io.github.youndie.shashki.protocol.TripAdvance
 import io.github.youndie.shashki.server.feature.auth.driverIdentity
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
+import io.github.youndie.shildik.oidc.JWT_AUTH_OIDC
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
-import ru.workinprogress.oidc.JWT_AUTH_OIDC
 
 /**
  * `POST /api/driver/rides/{rideId}/advance` — the driver moves the trip along.

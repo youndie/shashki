@@ -23,7 +23,7 @@ import io.github.youndie.shashki.protocol.TripRow
 import io.github.youndie.shashki.ui.RiderTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
 import io.github.youndie.shashki.ui.portable
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * **Each of the kit's three renderer-side rules, fed the payload that breaks it.**

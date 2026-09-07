@@ -1,6 +1,6 @@
 package io.github.youndie.shashki.server.dispatch
 
-import ru.workinprogress.petich.PetichClock
+import io.github.youndie.petich.PetichClock
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.encoding.Base64

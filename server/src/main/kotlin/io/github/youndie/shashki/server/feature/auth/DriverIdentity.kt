@@ -1,8 +1,8 @@
 package io.github.youndie.shashki.server.feature.auth
 
+import io.github.youndie.shildik.oidc.OidcPrincipal
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.principal
-import ru.workinprogress.oidc.OidcPrincipal
 
 /**
  * Which driver is making this request (B-52).

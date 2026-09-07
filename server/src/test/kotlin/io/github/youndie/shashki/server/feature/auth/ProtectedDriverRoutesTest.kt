@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.auth
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverDecision
@@ -17,6 +18,7 @@ import io.github.youndie.shashki.server.dispatch.DroppedFrames
 import io.github.youndie.shashki.server.shashki
 import io.github.youndie.shashki.server.testing.PostgresHarness
 import io.github.youndie.shashki.server.testing.awaitTrue
+import io.github.youndie.shildik.oidc.OidcConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.resources.Resources
@@ -38,8 +40,6 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.get
-import ru.workinprogress.oidc.OidcConfig
-import ru.workinprogress.petich.PetichClock
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

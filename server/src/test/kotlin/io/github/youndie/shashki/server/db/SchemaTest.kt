@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.server.db
 
+import io.github.youndie.petich.postgres.OutboxEventsTable
+import io.github.youndie.petich.postgres.PetichTable
 import io.github.youndie.shashki.server.billing.PayoutsTable
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.trip.data.TripsTable
@@ -7,8 +9,6 @@ import io.github.youndie.shashki.server.testing.PostgresHarness
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
-import ru.workinprogress.petich.postgres.OutboxEventsTable
-import ru.workinprogress.petich.postgres.PetichTable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

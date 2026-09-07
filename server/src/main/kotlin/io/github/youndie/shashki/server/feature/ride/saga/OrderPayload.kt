@@ -1,11 +1,11 @@
 package io.github.youndie.shashki.server.feature.ride.saga
 
+import io.github.youndie.petich.PetichPayload
+import io.github.youndie.petich.ResumePayload
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ru.workinprogress.petich.PetichPayload
-import ru.workinprogress.petich.ResumePayload
 
 /**
  * What the order saga starts with: the request, verbatim.

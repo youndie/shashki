@@ -16,7 +16,7 @@ import io.github.youndie.shashki.ui.map.LocalMapSurface
 import io.github.youndie.shashki.ui.map.MapCamera
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.tiles.TilePalette
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * The application's own screens, photographed without a graph and without a server.

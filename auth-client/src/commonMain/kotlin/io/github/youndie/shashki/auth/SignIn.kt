@@ -1,10 +1,10 @@
 package io.github.youndie.shashki.auth
 
 import dev.whyoleg.cryptography.random.CryptographyRandom
+import io.github.youndie.shildik.shared.OAuth2
 import io.ktor.http.URLBuilder
 import io.ktor.resources.href
 import io.ktor.resources.serialization.ResourcesFormat
-import ru.workinprogress.shildik.shared.OAuth2
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**

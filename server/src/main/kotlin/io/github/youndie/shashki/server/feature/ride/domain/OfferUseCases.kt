@@ -1,5 +1,10 @@
 package io.github.youndie.shashki.server.feature.ride.domain
 
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.PetichRepository
+import io.github.youndie.petich.PetichResult
+import io.github.youndie.petich.PetichStatus
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.OfferAnswer
 import io.github.youndie.shashki.protocol.OfferView
@@ -18,11 +23,6 @@ import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayloa
 import io.github.youndie.shashki.server.feature.trip.domain.Trip
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.pricing.RouteEstimator
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichEngine
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.petich.PetichResult
-import ru.workinprogress.petich.PetichStatus
 
 /**
  * A driver's answer resumes the suspended saga. What comes back is the ride as the *rider* sees it,
@@ -170,7 +170,7 @@ private suspend fun resume(
     sagas: PetichRepository,
     rides: RideRepository,
     rideId: String,
-    payload: ru.workinprogress.petich.ResumePayload,
+    payload: io.github.youndie.petich.ResumePayload,
 ) {
     val saga = sagas.findById(rideId) ?: throw RideNotFoundException(rideId)
     when (val result = engine.process(saga.copy(resumePayload = payload))) {

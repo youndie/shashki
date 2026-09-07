@@ -2,7 +2,7 @@ package io.github.youndie.shashki.ui
 
 import androidx.compose.ui.text.TextStyle
 import io.github.youndie.kvadrant.theme.KvadrantTypography
-import ru.workinprogress.viddik.core.ViddikPlatformTextStyle
+import io.github.youndie.viddik.core.ViddikPlatformTextStyle
 
 /**
  * The ramp with hinting and smoothing pinned, so a golden means the same thing on two operating
@@ -13,7 +13,7 @@ import ru.workinprogress.viddik.core.ViddikPlatformTextStyle
  * are why it exists at all: the suite's first run on Linux failed on twenty-odd images and every one
  * was text, because the font file is the same across hosts and the rasteriser is not.
  *
- * `ViddikPlatformTextStyle` is public in `ru.workinprogress.viddik.core`, so what has to be copied is
+ * `ViddikPlatformTextStyle` is public in `io.github.youndie.viddik.core`, so what has to be copied is
  * the shape and not the mechanism. **Every slot**, because a ramp with one unpinned style is a ramp
  * with one unportable golden — and [pinned] separately for any fixture that builds a `TextStyle` by
  * hand, which is the case kvadrant found still failing after it had pinned the ramp.

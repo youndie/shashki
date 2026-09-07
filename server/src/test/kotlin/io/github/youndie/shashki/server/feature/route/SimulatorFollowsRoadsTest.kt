@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.route
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.baseModule
@@ -24,7 +25,6 @@ import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 import org.koin.ktor.ext.get
-import ru.workinprogress.petich.PetichClock
 import kotlin.math.max
 import kotlin.test.Test
 import kotlin.test.assertTrue

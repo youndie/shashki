@@ -1,5 +1,10 @@
 package io.github.youndie.shashki.server.feature.ride.data
 
+import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichPhase
+import io.github.youndie.petich.PetichRepository
+import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.shashki.protocol.DriverView
 import io.github.youndie.shashki.protocol.LegTarget
 import io.github.youndie.shashki.protocol.LegView
@@ -19,11 +24,6 @@ import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.pricing.RouteEstimator
-import ru.workinprogress.petich.Petich
-import ru.workinprogress.petich.PetichPhase
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.petich.PetichStatus
-import ru.workinprogress.petich.SimpleEnrichedPayload
 
 /**
  * The ride, read off the saga's row — and, once a driver has started driving, off the trip's.

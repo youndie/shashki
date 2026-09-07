@@ -2,7 +2,7 @@ package io.github.youndie.shashki.driver
 
 import androidx.compose.ui.text.TextStyle
 import io.github.youndie.shashki.ui.ShashkiTypography
-import ru.workinprogress.viddik.core.ViddikPlatformTextStyle
+import io.github.youndie.viddik.core.ViddikPlatformTextStyle
 
 /**
  * The ramp with hinting and smoothing pinned, so a golden means the same thing on two machines.

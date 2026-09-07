@@ -8,6 +8,7 @@ import io.github.youndie.shashki.protocol.RideRequest
 import io.github.youndie.shashki.protocol.Rides
 import io.github.youndie.shashki.server.shashki
 import io.github.youndie.shashki.server.testing.PostgresHarness
+import io.github.youndie.shildik.oidc.OidcConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,7 +32,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import ru.workinprogress.oidc.OidcConfig
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,8 +1,8 @@
 package io.github.youndie.shashki.server.dispatch
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
-import ru.workinprogress.petich.PetichClock
 
 /**
  * The candidate query: the online drivers of the requested class, nearest first, better rated

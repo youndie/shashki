@@ -1,7 +1,7 @@
 package io.github.youndie.shashki.server.observability
 
+import io.github.youndie.tracy.agent.AgentConfig
 import org.slf4j.LoggerFactory
-import ru.workinprogress.tracy.agent.AgentConfig
 
 /**
  * Where the metrics and the traces go, or the fact that they go nowhere.
@@ -89,5 +89,5 @@ public object ObservabilityConfig {
  * ones, so "no tracing configured" cannot be a `single<TracyAgent?>`.
  */
 public class Observability(
-    public val tracy: ru.workinprogress.tracy.agent.TracyAgent?,
+    public val tracy: io.github.youndie.tracy.agent.TracyAgent?,
 )

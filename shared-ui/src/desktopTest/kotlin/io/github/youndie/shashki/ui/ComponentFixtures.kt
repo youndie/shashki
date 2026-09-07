@@ -15,7 +15,7 @@ import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.ui.components.ClassTile
 import io.github.youndie.shashki.ui.components.ClassTileState
 import io.github.youndie.shashki.ui.components.OfferCard
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * The kit's ClassTile block: economy selected, comfort default, business unavailable — at the

@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.server.dispatch
 
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.protocol.RideRequest
@@ -26,8 +28,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import org.koin.ktor.ext.get
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.SimpleEnrichedPayload
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

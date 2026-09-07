@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.crash
 
+import io.github.youndie.katcher.feature.report.Breadcrumb
+import io.github.youndie.katcher.feature.report.CreateReportParams
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -8,8 +10,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
-import ru.workinprogress.feature.report.Breadcrumb
-import ru.workinprogress.feature.report.CreateReportParams
 
 /** Where katcher is and who we are to it. */
 public data class CrashReporterConfig(

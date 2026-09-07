@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.AssignedDriverView
 import io.github.youndie.shashki.protocol.RideRating
 import io.github.youndie.shashki.protocol.RideRequest
@@ -16,6 +17,8 @@ import io.github.youndie.shashki.server.feature.ride.domain.RideNotFoundExceptio
 import io.github.youndie.shashki.server.feature.ride.domain.RideRepository
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
+import io.github.youndie.shildik.oidc.JWT_AUTH_OIDC
+import io.github.youndie.shildik.oidc.OidcPrincipal
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
@@ -25,9 +28,6 @@ import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
-import ru.workinprogress.oidc.JWT_AUTH_OIDC
-import ru.workinprogress.oidc.OidcPrincipal
-import ru.workinprogress.petich.PetichClock
 
 /**
  * `POST /api/rides`, `GET /api/rides/{id}`.
