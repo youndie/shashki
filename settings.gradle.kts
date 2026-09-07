@@ -9,22 +9,20 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         // Written out by hand, and it has to be: `pluginManagement` is evaluated before any settings
-        // plugin is applied — including the sborka one, which is fetched through it. The viddik
-        // Gradle plugin lives here too, and it is not on the plugin portal either.
+        // plugin is applied — including the sborka one, which is fetched through it, and which is
+        // published here rather than to the plugin portal.
         //
         // Filtered, because an unfiltered repository takes part in resolving *every* plugin: it is
         // asked for coordinates it has never held, and the day its host is unreachable Gradle
         // disables it and fails plugins that live elsewhere.
+        //
+        // One group and not two. The portfolio's move to `io.github.youndie` is done: nothing this
+        // build resolves is under `ru.workinprogress` any more, and a filter matching a group the
+        // server is never asked for reads as a dependency that is not there. viddik is not in this
+        // list either — 0.4.0 is on Maven Central, and this server answers 404 for it.
         maven("https://reposilite.kotlin.website/snapshots") {
             name = "wip-snapshots"
-            content {
-                // Both groups on purpose. The portfolio is moving to `io.github.youndie` and sborka
-                // is already there — the plugin marker and the jar behind it are under the new one.
-                // The old one is held by the library versions published before the move: they are
-                // still on the server and resolve as before.
-                includeGroupByRegex("io\\.github\\.youndie.*")
-                includeGroupByRegex("ru\\.workinprogress.*")
-            }
+            content { includeGroupByRegex("io\\.github\\.youndie.*") }
         }
     }
 }
@@ -38,33 +36,6 @@ plugins {
     id("io.github.youndie.sborka.settings") version "0.3.0.41"
 }
 
-dependencyResolutionManagement {
-    repositories {
-        // kvadrant-ui and viddik are both on this host and under **different groups** — kvadrant
-        // publishes as `io.github.youndie`, viddik as `ru.workinprogress` — so the conventions'
-        // own declaration, which filters to the latter, does not reach kvadrant. Two filters rather
-        // than one unfiltered repository, for the reason spelled out above.
-        //
-        // `/snapshots` and not `/releases` is where kvadrant-core 0.1.0 actually is; checked rather
-        // than assumed, because `/releases/io/github/youndie` is a 404.
-        maven("https://reposilite.kotlin.website/snapshots") {
-            name = "wip-snapshots"
-            content {
-                includeGroupByRegex("ru\\.workinprogress.*")
-                includeGroupByRegex("io\\.github\\.youndie.*")
-            }
-        }
-        // Navigation 3's runtime half is published by Google and not mirrored to Maven Central —
-        // `androidx.navigation3:navigation3-runtime` is a 404 there. Filtered like the others: an
-        // unfiltered repository takes part in resolving every dependency.
-        google {
-            content {
-                includeGroupByRegex("androidx\\..*")
-                includeGroupByRegex("com\\.google\\.android.*")
-            }
-        }
-    }
-}
 
 // The protocol both halves read, the server that speaks it, and the rider that speaks to it.
 //
