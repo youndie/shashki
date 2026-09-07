@@ -1,8 +1,8 @@
 plugins {
     alias(wip.plugins.kotlinJvm)
     alias(wip.plugins.kotlinSerialization)
-    id("ru.workinprogress.sborka.jvm")
-    id("ru.workinprogress.sborka.lint")
+    id("io.github.youndie.sborka.jvm")
+    id("io.github.youndie.sborka.lint")
     application
 }
 

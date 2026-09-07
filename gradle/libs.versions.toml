@@ -9,7 +9,7 @@
 # The convention plugins. The settings plugin is versioned in `settings.gradle.kts`; these are the
 # project half, and they need a version here because the root build has to put them on the plugin
 # classpath — see the note there.
-sborka = "0.2.0.27"
+sborka = "0.3.0.41"
 
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
@@ -183,7 +183,7 @@ s3-client = { module = "io.github.youndie:s3-client", version.ref = "s3kn" }
 s3-client-jvm = { module = "io.github.youndie:s3-client-jvm", version.ref = "s3kn" }
 
 [plugins]
-sborkaJvm = { id = "ru.workinprogress.sborka.jvm", version.ref = "sborka" }
-sborkaKmp = { id = "ru.workinprogress.sborka.kmp", version.ref = "sborka" }
-sborkaLint = { id = "ru.workinprogress.sborka.lint", version.ref = "sborka" }
+sborkaJvm = { id = "io.github.youndie.sborka.jvm", version.ref = "sborka" }
+sborkaKmp = { id = "io.github.youndie.sborka.kmp", version.ref = "sborka" }
+sborkaLint = { id = "io.github.youndie.sborka.lint", version.ref = "sborka" }
 viddik = { id = "ru.workinprogress.viddik", version.ref = "viddik" }

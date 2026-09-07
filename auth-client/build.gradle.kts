@@ -1,8 +1,8 @@
 plugins {
     alias(wip.plugins.kotlinMultiplatform)
     alias(wip.plugins.kotlinSerialization)
-    id("ru.workinprogress.sborka.kmp")
-    id("ru.workinprogress.sborka.lint")
+    id("io.github.youndie.sborka.kmp")
+    id("io.github.youndie.sborka.lint")
 }
 
 kotlin {
