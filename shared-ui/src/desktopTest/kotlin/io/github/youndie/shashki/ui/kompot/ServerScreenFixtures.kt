@@ -6,7 +6,7 @@ import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.ui.RiderTheme
 import io.github.youndie.shashki.ui.ShashkiTypography
 import io.github.youndie.shashki.ui.portable
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * A screen the server owns, drawn in this kit.

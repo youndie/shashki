@@ -1,7 +1,7 @@
 package io.github.youndie.shashki.server.feature.auth
 
+import io.github.youndie.shildik.oidc.OidcConfig
 import org.slf4j.LoggerFactory
-import ru.workinprogress.oidc.OidcConfig
 
 /**
  * Where the identity provider is, or the fact that there is none.

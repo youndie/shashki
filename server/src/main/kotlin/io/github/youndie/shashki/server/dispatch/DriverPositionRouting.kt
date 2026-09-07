@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.dispatch
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverReport
@@ -13,7 +14,6 @@ import io.ktor.websocket.readText
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
-import ru.workinprogress.petich.PetichClock
 import java.util.concurrent.atomic.AtomicLong
 
 /**

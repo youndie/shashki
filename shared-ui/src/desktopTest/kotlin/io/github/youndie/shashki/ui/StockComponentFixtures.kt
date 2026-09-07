@@ -24,7 +24,7 @@ import io.github.youndie.kvadrant.foundation.KvadrantText
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.kvadrant.theme.KvadrantTheme
 import io.github.youndie.shashki.protocol.TripRow
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * Every stock component this product will actually draw, under [RiderTheme], laid out as the kit's

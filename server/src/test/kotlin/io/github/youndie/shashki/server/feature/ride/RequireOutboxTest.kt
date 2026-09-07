@@ -1,11 +1,11 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.PetichEngineConfig
+import io.github.youndie.petich.PetichRepository
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
 import io.github.youndie.shashki.server.pricing.ServiceArea
-import ru.workinprogress.petich.Petich
-import ru.workinprogress.petich.PetichEngine
-import ru.workinprogress.petich.PetichEngineConfig
-import ru.workinprogress.petich.PetichRepository
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue

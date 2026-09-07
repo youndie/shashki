@@ -2,6 +2,7 @@
 
 package io.github.youndie.shashki.crash
 
+import io.github.youndie.katcher.feature.report.CreateReportParams
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -14,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import ru.workinprogress.feature.report.CreateReportParams
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

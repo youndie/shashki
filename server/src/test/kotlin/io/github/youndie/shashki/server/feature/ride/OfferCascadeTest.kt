@@ -1,6 +1,13 @@
 package io.github.youndie.shashki.server.feature.ride
 
 import com.zaxxer.hikari.HikariDataSource
+import io.github.youndie.petich.ExpireResult
+import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichInterceptor
+import io.github.youndie.petich.PetichResult
+import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.SuspendedPetichSweeper
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -31,13 +38,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.runTest
-import ru.workinprogress.petich.ExpireResult
-import ru.workinprogress.petich.Petich
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichInterceptor
-import ru.workinprogress.petich.PetichResult
-import ru.workinprogress.petich.PetichStatus
-import ru.workinprogress.petich.SuspendedPetichSweeper
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

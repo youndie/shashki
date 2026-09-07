@@ -1,5 +1,11 @@
 package io.github.youndie.shashki.server.di
 
+import io.github.youndie.petich.CompensationFailureHandler
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.PetichEngineConfig
+import io.github.youndie.petich.PetichEngineMetrics
+import io.github.youndie.petich.PetichRepository
 import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
 import io.github.youndie.shashki.server.feature.events.Events
@@ -16,6 +22,7 @@ import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.TripRepository
 import io.github.youndie.shashki.server.observability.Observability
+import io.github.youndie.tracy.agent.TracyAgent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -27,13 +34,6 @@ import org.koin.test.verify.MissingKoinDefinitionException
 import org.koin.test.verify.definition
 import org.koin.test.verify.injectedParameters
 import org.koin.test.verify.verify
-import ru.workinprogress.petich.CompensationFailureHandler
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichEngine
-import ru.workinprogress.petich.PetichEngineConfig
-import ru.workinprogress.petich.PetichEngineMetrics
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.tracy.agent.TracyAgent
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -174,11 +174,11 @@ class KoinGraphTest {
     }
 
     private object NoSagas : PetichRepository {
-        override suspend fun findById(id: String): ru.workinprogress.petich.Petich? = null
+        override suspend fun findById(id: String): io.github.youndie.petich.Petich? = null
 
-        override suspend fun saveOrGet(petich: ru.workinprogress.petich.Petich) = petich
+        override suspend fun saveOrGet(petich: io.github.youndie.petich.Petich) = petich
 
-        override suspend fun update(petich: ru.workinprogress.petich.Petich): Boolean = true
+        override suspend fun update(petich: io.github.youndie.petich.Petich): Boolean = true
     }
 
     private object NoRides : RideRepository {

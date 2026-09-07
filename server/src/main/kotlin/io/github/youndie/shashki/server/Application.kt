@@ -1,5 +1,11 @@
 package io.github.youndie.shashki.server
 
+import io.github.youndie.metrik.agent.Metrik
+import io.github.youndie.petich.OptimisticLockException
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.SuspendedPetichSweeper
+import io.github.youndie.petich.outbox.OutboxRelayWorker
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
 import io.github.youndie.shashki.server.dispatch.driverPositionRoutes
@@ -32,6 +38,9 @@ import io.github.youndie.shashki.server.feature.trip.tripRoutes
 import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.observability.ObservabilityConfig
 import io.github.youndie.shashki.server.pricing.RouteEstimator
+import io.github.youndie.shildik.oidc.OidcConfig
+import io.github.youndie.shildik.oidc.configureAuth
+import io.github.youndie.tracy.agent.Tracy
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -56,15 +65,6 @@ import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
-import ru.workinprogress.metrik.agent.Metrik
-import ru.workinprogress.oidc.OidcConfig
-import ru.workinprogress.oidc.configureAuth
-import ru.workinprogress.petich.OptimisticLockException
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichEngine
-import ru.workinprogress.petich.SuspendedPetichSweeper
-import ru.workinprogress.petich.outbox.OutboxRelayWorker
-import ru.workinprogress.tracy.agent.Tracy
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 

@@ -22,8 +22,8 @@ import io.github.youndie.shashki.ui.screens.RiderClassPicker
 import io.github.youndie.shashki.ui.screens.RiderTripInProgress
 import io.github.youndie.shashki.ui.screens.TripDriver
 import io.github.youndie.shashki.ui.screens.TripStage
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 import kotlinx.coroutines.runBlocking
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
 
 /** The fixture tile: the city centre, out of the archive rather than out of a loose file. */
 internal val cityTile: MvtTile by lazy {

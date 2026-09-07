@@ -1,5 +1,12 @@
 package io.github.youndie.shashki.server.feature.settlement
 
+import io.github.youndie.petich.InterceptorResult
+import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichInterceptor
+import io.github.youndie.petich.PetichPhase
+import io.github.youndie.petich.PetichResult
+import io.github.youndie.petich.PetichStatus
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
@@ -24,13 +31,6 @@ import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayloa
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
 import io.github.youndie.shashki.server.testing.PostgresHarness
 import kotlinx.coroutines.test.runTest
-import ru.workinprogress.petich.InterceptorResult
-import ru.workinprogress.petich.Petich
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichInterceptor
-import ru.workinprogress.petich.PetichPhase
-import ru.workinprogress.petich.PetichResult
-import ru.workinprogress.petich.PetichStatus
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -305,7 +305,7 @@ class SettlementSagaTest {
 
     /** What ENRICHMENT would have left, for the abandoned-process case that starts after it. */
     private fun enrichedFor(charge: Long) =
-        ru.workinprogress.petich.SimpleEnrichedPayload(
+        io.github.youndie.petich.SimpleEnrichedPayload(
             mapOf(
                 io.github.youndie.shashki.server.feature.settlement.saga.Settled.CHARGE_AMOUNT to charge.toString(),
                 io.github.youndie.shashki.server.feature.settlement.saga.Settled.PAYOUT_AMOUNT to

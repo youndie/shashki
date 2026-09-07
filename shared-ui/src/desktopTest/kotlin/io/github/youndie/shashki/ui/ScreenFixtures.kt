@@ -33,7 +33,7 @@ import io.github.youndie.shashki.ui.screens.RiderHistory
 import io.github.youndie.shashki.ui.screens.RiderMatching
 import io.github.youndie.shashki.ui.screens.RiderReceipt
 import io.github.youndie.shashki.ui.screens.TripMonth
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * R4 with a map-shaped hole where the renderer will go.

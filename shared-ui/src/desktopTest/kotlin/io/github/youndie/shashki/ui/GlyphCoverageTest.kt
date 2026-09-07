@@ -8,8 +8,8 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.youndie.shashki.ui.map.FIXTURE_TILES
 import io.github.youndie.shashki.ui.map.cityTiles
 import io.github.youndie.shashki.ui.map.tiles.labelText
-import ru.workinprogress.viddik.core.ViddikGlyphCoverage
-import ru.workinprogress.viddik.generated.GeneratedViddikRegistry
+import io.github.youndie.viddik.core.ViddikGlyphCoverage
+import io.github.youndie.viddik.generated.GeneratedViddikRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

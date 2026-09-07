@@ -26,7 +26,7 @@ import io.github.youndie.shashki.ui.map.MapPin
 import io.github.youndie.shashki.ui.map.MapScene
 import io.github.youndie.shashki.ui.map.PlaceholderMapSurface
 import io.github.youndie.shashki.ui.map.RouteLine
-import ru.workinprogress.viddik.annotations.ViddikScreenshot
+import io.github.youndie.viddik.annotations.ViddikScreenshot
 
 /**
  * The driver's own screens, photographed without a graph, a socket or a server.

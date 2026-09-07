@@ -1,5 +1,13 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.InterceptorResult
+import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichInterceptor
+import io.github.youndie.petich.PetichPhase
+import io.github.youndie.petich.PetichResult
+import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -30,14 +38,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
-import ru.workinprogress.petich.InterceptorResult
-import ru.workinprogress.petich.Petich
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichInterceptor
-import ru.workinprogress.petich.PetichPhase
-import ru.workinprogress.petich.PetichResult
-import ru.workinprogress.petich.PetichStatus
-import ru.workinprogress.petich.SimpleEnrichedPayload
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -81,7 +81,7 @@ class OrderSagaTest {
 
     /** The saga stops to ask the nearest driver; the driver says yes. Two passes, as in production. */
     private suspend fun runToAssigned(
-        engine: ru.workinprogress.petich.PetichEngine,
+        engine: io.github.youndie.petich.PetichEngine,
         id: String,
     ): PetichResult {
         val parked = engine.process(order(id))

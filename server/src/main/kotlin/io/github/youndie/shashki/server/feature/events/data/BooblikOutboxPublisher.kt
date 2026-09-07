@@ -1,13 +1,13 @@
 package io.github.youndie.shashki.server.feature.events.data
 
+import io.github.youndie.booblik.TopicName
+import io.github.youndie.booblik.net.client.BooblikConnection
+import io.github.youndie.booblik.net.client.Producer
+import io.github.youndie.booblik.net.client.TopicHandle
+import io.github.youndie.petich.outbox.OutboxPublisher
+import io.github.youndie.petich.outbox.OutboxRecord
 import io.github.youndie.shashki.server.feature.events.EventsConfig
 import kotlinx.coroutines.CoroutineScope
-import ru.workinprogress.booblik.TopicName
-import ru.workinprogress.booblik.net.client.BooblikConnection
-import ru.workinprogress.booblik.net.client.Producer
-import ru.workinprogress.booblik.net.client.TopicHandle
-import ru.workinprogress.petich.outbox.OutboxPublisher
-import ru.workinprogress.petich.outbox.OutboxRecord
 import java.net.InetSocketAddress
 
 /**

@@ -1,5 +1,8 @@
 package io.github.youndie.shashki.server.feature.events.data
 
+import io.github.youndie.booblik.TopicName
+import io.github.youndie.booblik.net.client.BooblikSubscriber
+import io.github.youndie.booblik.net.client.StartPosition
 import io.github.youndie.shashki.server.feature.events.EventsConfig
 import io.github.youndie.shashki.server.feature.events.domain.RideHistory
 import kotlinx.coroutines.CoroutineScope
@@ -9,9 +12,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.LoggerFactory
-import ru.workinprogress.booblik.TopicName
-import ru.workinprogress.booblik.net.client.BooblikSubscriber
-import ru.workinprogress.booblik.net.client.StartPosition
 import java.net.InetSocketAddress
 
 /**

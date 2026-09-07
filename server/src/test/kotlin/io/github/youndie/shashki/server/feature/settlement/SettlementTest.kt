@@ -1,5 +1,9 @@
 package io.github.youndie.shashki.server.feature.settlement
 
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichRepository
+import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.DriverEarnings
@@ -56,10 +60,6 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.ktor.ext.get
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.petich.PetichStatus
-import ru.workinprogress.petich.SimpleEnrichedPayload
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

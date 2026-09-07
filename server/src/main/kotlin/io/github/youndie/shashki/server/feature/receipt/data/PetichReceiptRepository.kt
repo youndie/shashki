@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.server.feature.receipt.data
 
+import io.github.youndie.petich.PetichRepository
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.shashki.server.feature.driver.domain.DriverRepository
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptRepository
@@ -7,8 +9,6 @@ import io.github.youndie.shashki.server.feature.receipt.domain.SettledRide
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
 import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.petich.SimpleEnrichedPayload
 
 /**
  * The receipt, read off the sagas that charged the card.
@@ -51,5 +51,5 @@ public class PetichReceiptRepository(
     }
 }
 
-private fun ru.workinprogress.petich.Petich.charge(): Long? =
+private fun io.github.youndie.petich.Petich.charge(): Long? =
     (enrichedPayload as? SimpleEnrichedPayload)?.data?.get(Settled.CHARGE_AMOUNT)?.toLongOrNull()

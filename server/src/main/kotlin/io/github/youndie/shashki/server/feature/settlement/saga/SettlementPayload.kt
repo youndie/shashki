@@ -1,10 +1,10 @@
 package io.github.youndie.shashki.server.feature.settlement.saga
 
+import io.github.youndie.petich.PetichPayload
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ru.workinprogress.petich.PetichPayload
 
 /**
  * What the settlement saga starts with: everything the order saga already established, copied.

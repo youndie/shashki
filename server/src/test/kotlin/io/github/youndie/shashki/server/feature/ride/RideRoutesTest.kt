@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DriverDecision
 import io.github.youndie.shashki.protocol.DriverOffers
@@ -39,7 +40,6 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.get
-import ru.workinprogress.petich.PetichClock
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

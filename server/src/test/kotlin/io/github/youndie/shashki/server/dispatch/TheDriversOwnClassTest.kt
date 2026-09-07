@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.dispatch
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.DRIVER_POSITIONS_PATH
 import io.github.youndie.shashki.protocol.DRIVER_TICKET_QUERY
 import io.github.youndie.shashki.protocol.DriverReport
@@ -15,7 +16,6 @@ import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.get
-import ru.workinprogress.petich.PetichClock
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue

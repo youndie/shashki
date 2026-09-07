@@ -46,7 +46,7 @@ public data class CodeChallenge(
 /**
  * Generating the pair — the half of PKCE that belongs to the client.
  *
- * shildik has the other half (`ru.workinprogress.shildik.crypto.Pkce.matches`) and nothing else:
+ * shildik has the other half (`io.github.youndie.shildik.crypto.Pkce.matches`) and nothing else:
  * verifying is the provider's job and generating is ours, so there is no code here that duplicates
  * code there. The primitive is deliberately the same library, so the two halves agree by
  * construction rather than by coincidence.

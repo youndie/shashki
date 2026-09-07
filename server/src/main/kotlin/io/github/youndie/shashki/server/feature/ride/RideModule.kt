@@ -1,5 +1,9 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.PetichInterceptor
+import io.github.youndie.petich.PetichRepository
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
 import io.github.youndie.shashki.server.billing.PaymentGateway
@@ -73,6 +77,8 @@ import io.github.youndie.shashki.server.observability.Observability
 import io.github.youndie.shashki.server.observability.ObservabilityConfig
 import io.github.youndie.shashki.server.pricing.Pricing
 import io.github.youndie.shashki.server.pricing.RouteEstimator
+import io.github.youndie.tracy.agent.TracyAgent
+import io.github.youndie.tracy.agent.TracyDelivery
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import kotlinx.coroutines.CoroutineScope
@@ -84,12 +90,6 @@ import org.koin.core.module.dsl.onOptions
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import ru.workinprogress.petich.PetichClock
-import ru.workinprogress.petich.PetichEngine
-import ru.workinprogress.petich.PetichInterceptor
-import ru.workinprogress.petich.PetichRepository
-import ru.workinprogress.tracy.agent.TracyAgent
-import ru.workinprogress.tracy.agent.TracyDelivery
 import java.net.InetSocketAddress
 
 /**

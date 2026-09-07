@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.PetichClock
 import io.github.youndie.shashki.protocol.DriverOffers
 import io.github.youndie.shashki.protocol.DriverRides
 import io.github.youndie.shashki.protocol.DriverTicket
@@ -15,6 +16,7 @@ import io.github.youndie.shashki.server.feature.ride.domain.AnswerOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.FindOfferUseCase
 import io.github.youndie.shashki.server.feature.ride.domain.OfferNotFoundException
 import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
+import io.github.youndie.shildik.oidc.JWT_AUTH_OIDC
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.resources.get
@@ -22,8 +24,6 @@ import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
-import ru.workinprogress.oidc.JWT_AUTH_OIDC
-import ru.workinprogress.petich.PetichClock
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneOffset
