@@ -21,7 +21,11 @@ logback = "1.5.20"
 coroutinesSwing = "1.11.0"
 # The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
 # choose — a different one here is a version conflict, not a preference.
-petich = "0.1.0.18"
+#
+# A RELEASE NOW, AND FROM CENTRAL. petich moved to `io.github.youndie.petich` and published 0.1.0;
+# `0.1.0.18` was a snapshot of the old group and is not coming back. Nothing here resolves petich
+# from the Reposilite any more.
+petich = "0.1.0"
 # **A snapshot, pinned by build metadata like smtpkn below.** s3kn publishes no release — its own
 # README leaves Maven Central until the API stops moving — so a demo that wants a real authenticated
 # write against the object store takes the snapshot (B-47) and applies B-13's documented fallback to
@@ -99,9 +103,9 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
 # artefact and the failure would name a variant rather than the reason.
 ktor-resources = { module = "io.ktor:ktor-resources" }
 
-petich-core = { module = "io.github.youndie:petich-core", version.ref = "petich" }
-petich-postgres = { module = "io.github.youndie:petich-postgres", version.ref = "petich" }
-petich-outboxCore = { module = "io.github.youndie:petich-outbox-core", version.ref = "petich" }
+petich-core = { module = "io.github.youndie.petich:petich-core", version.ref = "petich" }
+petich-postgres = { module = "io.github.youndie.petich:petich-postgres", version.ref = "petich" }
+petich-outboxCore = { module = "io.github.youndie.petich:petich-outbox-core", version.ref = "petich" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
