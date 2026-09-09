@@ -35,6 +35,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.cos
 import kotlin.random.Random
 import kotlin.time.Duration
@@ -152,6 +153,10 @@ public class DriverSimulator(
                     advance(at, ahead, config.speedMetresPerSecond * config.reportInterval.inWholeMilliseconds / MILLIS)
             }
         } finally {
+            @Suppress(
+                "ktlint:kapkan:cancellation-swallowed",
+                "closing the session is synchronous, and this finally must run on the way out",
+            )
             runCatching { session.close() }
         }
     }
@@ -171,17 +176,20 @@ public class DriverSimulator(
         from: GeoPoint,
         to: GeoPoint,
     ): List<GeoPoint> =
-        runCatching {
+        try {
             val response =
                 client.post(Routes()) {
                     contentType(ContentType.Application.Json)
                     setBody(RouteRequest(from = from, to = to))
                 }
             response.body<RouteView>().geometry.takeIf { it.size >= 2 } ?: listOf(to)
-        }.getOrElse {
+        } catch (e: CancellationException) {
+            // The simulator stopping is not a road the server could not give.
+            throw e
+        } catch (e: Throwable) {
             // `warn` and not `debug`: a simulated car that stops using the roads still moves, so
             // this failure is invisible in the demo and looks like a rendering problem in the map.
-            log.warn("no road from {} to {}, driving straight: {}", from, to, it.message)
+            log.warn("no road from {} to {}, driving straight: {}", from, to, e.message)
             listOf(to)
         }
 
@@ -210,8 +218,13 @@ public class DriverSimulator(
 
     private suspend fun watchForOffers(driverId: String) {
         while (currentCoroutineContext().isActive) {
-            runCatching { answerAnyOffer(driverId) }
-                .onFailure { log.debug("{} could not read its offer: {}", driverId, it.message) }
+            try {
+                answerAnyOffer(driverId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                log.debug("{} could not read its offer: {}", driverId, e.message)
+            }
             delay(config.pollInterval)
         }
     }
@@ -235,16 +248,18 @@ public class DriverSimulator(
         decision: DriverDecision,
     ) {
         val token = config.token(driverId)
-        runCatching {
+        try {
             client.post(DriverOffers.Answer(rideId = offer.rideId)) {
                 token?.let(::bearer)
                 contentType(ContentType.Application.Json)
                 setBody(OfferAnswer(driverId, decision))
             }
-        }.onFailure {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
             // Two drivers can be polled into answering the same offer, and the second loses; that is
             // the server being right, not the simulator being broken.
-            log.debug("{} could not answer {}: {}", driverId, offer.rideId, it.message)
+            log.debug("{} could not answer {}: {}", driverId, offer.rideId, e.message)
         }
     }
 

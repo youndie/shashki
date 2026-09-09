@@ -96,6 +96,10 @@ public class SmtpReceiptSender(
             }
             result.rejected.isEmpty() && result.accepted.isNotEmpty()
         } finally {
+            @Suppress(
+                "ktlint:kapkan:cancellation-swallowed",
+                "quitting the session is the way out: rethrowing here would leave it open",
+            )
             runCatching { session.quit() }
         }
     }

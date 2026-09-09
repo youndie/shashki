@@ -8,6 +8,7 @@ import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
 import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.flow.toList
 import kotlinx.io.readByteArray
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The documents in an S3-compatible store, written and read with s3kn (B-47).
@@ -41,24 +42,44 @@ public class S3DocumentStore(
         driverId: String,
         kind: DocumentKind,
     ): ByteArray? =
-        runCatching {
+        @Suppress(
+            "ktlint:kapkan:swallowed-failure",
+            "документа нет — это и есть ответ `null`, который экран показывает как «не загружен»",
+        )
+        try {
             client.get(bucket, key(driverId, kind)) { it.body.readRemaining().readByteArray() }
-        }.getOrNull()
+        } catch (e: CancellationException) {
+            // A cancelled read is not a document that is not there, and `null` here means exactly
+            // "not there" to the screen that asked.
+            throw e
+        } catch (_: Throwable) {
+            null
+        }
 
     /**
      * One listing rather than three `head`s: the states of all three documents are one screen, and
      * a prefix listing is the one request that answers it.
      */
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "листинг не ответил — экран показывает то же, что и при пустом бакете, и это осознанно",
+    )
     override suspend fun states(driverId: String): List<DriverDocumentView> {
         val prefix = "drivers/$driverId/"
         val sizes =
-            runCatching {
+            try {
                 client
                     .list(bucket, prefix = prefix)
                     .toList()
                     .flatMap { it.objects }
                     .associate { it.key.removePrefix(prefix) to it.size }
-            }.getOrDefault(emptyMap())
+            } catch (e: CancellationException) {
+                // An empty map draws the screen as "nothing uploaded", which is a different answer
+                // from "the listing was called off".
+                throw e
+            } catch (_: Throwable) {
+                emptyMap()
+            }
 
         return DocumentKind.entries.map { kind ->
             val size = sizes[kind.name]

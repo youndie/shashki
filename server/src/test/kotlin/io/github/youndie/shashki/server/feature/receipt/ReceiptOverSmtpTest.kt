@@ -121,6 +121,10 @@ class ReceiptOverSmtpTest {
                 "no $SMTP_VARIABLE / $WRONG_CA_VARIABLE: this control needs the same Mailpit and an unrelated CA",
             )
 
+            @Suppress(
+                "ktlint:kapkan:cancellation-swallowed",
+                "a test capturing the throw it is about; nothing cancels this scope",
+            )
             val failure =
                 runCatching {
                     SmtpReceiptSender(
