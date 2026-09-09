@@ -7,6 +7,7 @@ import io.github.youndie.shashki.protocol.RideView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -24,7 +25,18 @@ public class ObserveTripUseCase(
     public operator fun invoke(rideId: String): Flow<Result<RideView>> =
         flow {
             while (true) {
-                emit(runCatching { trips.read(rideId) })
+                emit(
+                    // Not `runCatching`: leaving the screen cancels this flow, and a cancellation
+                    // folded into `Result.failure` is drawn as "the trip could not be read" on a
+                    // screen that is already gone -- while the loop below goes round again.
+                    try {
+                        Result.success(trips.read(rideId))
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Throwable) {
+                        Result.failure(e)
+                    },
+                )
                 delay(interval)
             }
         }

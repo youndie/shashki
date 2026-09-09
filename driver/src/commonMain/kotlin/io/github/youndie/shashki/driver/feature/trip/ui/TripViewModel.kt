@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 public data class DriverTripUiState(
     val ride: RideView? = null,
@@ -111,6 +112,10 @@ public class DriverTripViewModel(
      * rather than the live fix on purpose: a road re-fetched every fix is a search per second for a
      * line that hardly moves, and the car marker is what shows where the driver actually is.
      */
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "нет дороги — карта рисуется без маршрута; это и есть запасной вид экрана, а не потеря",
+    )
     private suspend fun sceneFor(ride: RideView): MapScene {
         val existing = _uiState.value.scene
         val target =
@@ -121,7 +126,15 @@ public class DriverTripViewModel(
         val pins = listOf(MapPin(ride.pickup, MapPin.Kind.PICKUP), MapPin(ride.dropoff, MapPin.Kind.DROPOFF))
         if (target == roadFor) return existing.copy(pins = pins)
         val (from, to) = if (target == LegTarget.PICKUP) configured to ride.pickup else ride.pickup to ride.dropoff
-        val road = runCatching { roads.road(from, to) }.getOrNull()
+        val road =
+            try {
+                roads.road(from, to)
+            } catch (e: CancellationException) {
+                // Leaving the screen is not a road the server could not draw.
+                throw e
+            } catch (_: Throwable) {
+                null
+            }
         if (road != null) roadFor = target
         return existing.copy(
             route = road?.let { RouteLine(travelled = emptyList(), ahead = it) } ?: existing.route,

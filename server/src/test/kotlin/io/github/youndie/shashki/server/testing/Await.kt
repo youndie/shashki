@@ -15,6 +15,10 @@ suspend fun awaitTrue(
     timeoutMillis: Long = 15_000,
     condition: suspend () -> Boolean,
 ) {
+    @Suppress(
+        "ktlint:kapkan:cancellation-swallowed",
+        "a test helper whose subject is the timeout; nothing else cancels this scope",
+    )
     runCatching {
         withTimeout(timeoutMillis) {
             while (!condition()) delay(20)

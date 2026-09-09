@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Instant
 
 public data class TripUiState(
@@ -208,10 +209,22 @@ public class TripViewModel(
     private var lastFixAt: Long? = null
 
     /** The pins and the road; the car arrives on the other loop. */
+    @Suppress(
+        "ktlint:kapkan:swallowed-failure",
+        "нет дороги — карта рисуется без маршрута; это и есть запасной вид экрана, а не потеря",
+    )
     private suspend fun sceneFor(ride: RideView): MapScene {
         val existing = _uiState.value.scene
         if (existing.route != null) return existing.copy(camera = MapCamera(ride.pickup))
-        val fetched = runCatching { watchDriver.roadFor(ride) }.getOrNull()
+        val fetched =
+            try {
+                watchDriver.roadFor(ride)
+            } catch (e: CancellationException) {
+                // Leaving the screen is not a road the server could not draw.
+                throw e
+            } catch (_: Throwable) {
+                null
+            }
         road = fetched
         return MapScene(
             camera = MapCamera(ride.pickup),

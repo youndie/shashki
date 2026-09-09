@@ -11,6 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The near end of kompot's degradation sink: tell the server what this build could not draw.
@@ -46,7 +47,9 @@ public class ReportingDegradationSink(
         drawnAsFallback: Boolean,
     ) {
         scope.launch {
-            runCatching {
+            // `try` and not `runCatching`: this class exists so that a degradation is never invisible,
+            // and a cancelled post is not a report the server refused.
+            try {
                 client.post(Degradations()) {
                     // **Set here rather than left to the client's `defaultRequest`.** The
                     // application's client sets it for every call, so this looked redundant — and
@@ -56,6 +59,10 @@ public class ReportingDegradationSink(
                     contentType(ContentType.Application.Json)
                     setBody(DegradationReport(kind.name, originalType, screen, drawnAsFallback))
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                // Nothing to do about it here; see the note above about who can see this fail.
             }
         }
     }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 public data class ShiftUiState(
@@ -153,7 +154,7 @@ public class ShiftViewModel(
         _uiState.value = _uiState.value.copy(driverLabel = driverId, online = true, reported = 0)
         shift =
             scope.launch {
-                runCatching {
+                try {
                     goOnline(driverId, rideClass, rating, at).collect { sent ->
                         _uiState.value =
                             _uiState.value.copy(
@@ -161,10 +162,14 @@ public class ShiftViewModel(
                                 positionSource = sent.source,
                             )
                     }
-                }.onFailure {
+                } catch (e: CancellationException) {
+                    // Going offline cancels this job. Reported as a failure it put "the position
+                    // socket closed" on the screen of a driver who had just asked to stop.
+                    throw e
+                } catch (e: Throwable) {
                     // A socket that will not open is the whole feature failing, and silently looking
                     // online for an hour is the failure mode this exists to avoid.
-                    _events.send(ShiftUiEvent.Failed(it.message ?: "the position socket closed"))
+                    _events.send(ShiftUiEvent.Failed(e.message ?: "the position socket closed"))
                 }
                 goOffline()
             }

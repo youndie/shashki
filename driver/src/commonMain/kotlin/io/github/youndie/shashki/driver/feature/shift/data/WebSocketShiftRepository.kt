@@ -59,6 +59,10 @@ public class WebSocketShiftRepository(
                         val text = (frame as? Frame.Text)?.readText() ?: continue
                         // An unreadable acknowledgement is not a position: it is dropped rather than
                         // counted, for the same reason the server drops an unreadable report.
+                        @Suppress(
+                            "ktlint:kapkan:cancellation-swallowed",
+                            "the frame is already read on the line above; decoding it suspends nowhere",
+                        )
                         runCatching { json.decodeFromString(DriverReport.serializer(), text) }
                             .onSuccess { this@channelFlow.send(it) }
                     }
