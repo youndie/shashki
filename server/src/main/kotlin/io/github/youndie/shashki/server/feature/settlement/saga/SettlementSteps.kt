@@ -195,10 +195,23 @@ public class CaptureStep(
         petich: Petich,
         payload: SettlementPayload,
     ) {
-        // The tip's own charge, or the fare's hold. A compensation that refunded the hold for a tip
-        // would give back the fare — the ride the rider was happy with.
-        val id = petich.enriched(Settled.CHARGE_ID) ?: payload.holdId
-        payments.refund(HoldId(id))
+        // **Undone the way it was done, and the two kinds do not share a fallback** (#13). `run`
+        // charges a tip and captures a hold for everything else; the undo splits at the same line.
+        //
+        // A tip gives back the charge it left behind — and nothing at all when it left none. The
+        // absence is the case that matters: `CHARGE_ID` is recorded only after `charge` returns, so
+        // a call that threw or timed out leaves none, and the hold this payload carries is the
+        // *fare's* — `SettleRideUseCase` hands every kind the ride's own hold, and for a tip that
+        // one was captured when the trip ended. Falling back to it here would give the rider back
+        // the ride they were happy with, and the gateway would find it in `captured` and remove it
+        // without a word. What that costs is a charge that did reach the far side and whose id
+        // never came home: it stays taken, because there is no id here with which to refund it, and
+        // a rollback that says so is better than one that refunds the wrong money.
+        if (payload.kind == SettlementPayload.Kind.TIP) {
+            petich.enriched(Settled.CHARGE_ID)?.let { payments.refund(HoldId(it)) }
+            return
+        }
+        payments.refund(HoldId(payload.holdId))
     }
 }
 

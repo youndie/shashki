@@ -83,6 +83,16 @@ number.
   throws rather than charging twice
 * **Automated:** `shashki SettlementSagaTest`
 
+### Scenario: a tip's charge never comes back
+
+* **Given:** a settled fare, and a tip whose `charge` throws or times out — so nothing recorded the
+  charge's id
+* **When:** that step is rolled back
+* **Then:** **the fare stays captured.** A tip's undo gives back the tip's own charge and nothing
+  else; the hold its payload carries belongs to the fare, and refunding it would return the ride the
+  rider was happy with
+* **Automated:** `shashki SettlementSagaTest`
+
 ### Scenario: the rider cancels after a driver was assigned
 
 * **Given:** an assigned ride
