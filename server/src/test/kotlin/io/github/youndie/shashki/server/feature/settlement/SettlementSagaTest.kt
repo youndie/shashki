@@ -158,6 +158,42 @@ class SettlementSagaTest {
             assertNull(payouts.find(RIDE, Payout.TIP), "a payout survived the death")
         }
 
+    /**
+     * **The same undo, for the tip whose charge never came back** (youndie/shashki#13).
+     *
+     * The test above is this one's positive control: when `charge` returned, `CHARGE_ID` names what
+     * to give back and the tip's own money is refunded. Here the call threw — a gateway timeout, a
+     * reset connection — so the step never returned and nothing recorded `CHARGE_ID`. What the
+     * compensation must **not** do then is fall back to `payload.holdId`, because
+     * `SettleRideUseCase` gives every kind the ride's own hold and for a tip that hold is the fare,
+     * already captured. Refunding it gives the rider back the ride they were happy with, and
+     * `InMemoryPaymentGateway.refund` finds that hold in `captured` and removes it without a word.
+     *
+     * **`compensate` is called here rather than reached through the engine, and that is the point.**
+     * petich 0.1.0 begins a rollback one step *below* the failure, so the step that threw is never
+     * asked to undo itself and this cannot happen today. petich 0.3.0 calls it (youndie/petich#59),
+     * because an engine cannot tell an effect that reached the far side from a call that never
+     * landed. Making that call by hand is what lets the guard exist before the upgrade instead of
+     * after it.
+     */
+    @Test
+    fun `a tip whose charge never landed does not refund the fare`() =
+        runTest {
+            val fare = payments.hold("card-4417", FARE, "USD")
+            payments.capture(fare, FARE)
+
+            // The saga as it stands when `charge` throws: the tip's payload carries the ride's hold,
+            // and nothing has enriched CHARGE_ID.
+            val saga = settlement(fare, SettlementPayload.Kind.TIP, id = "tip-no-charge", tip = TIP)
+            CaptureStep(payments).compensate(saga, saga.payload as SettlementPayload)
+
+            assertEquals(
+                listOf(FARE),
+                payments.captured().map { it.amountCents },
+                "the tip's rollback gave back the fare",
+            )
+        }
+
     /** B-37's second and third criteria, at every boundary. */
     @Test
     fun `dying after any phase leaves no money taken and no payout standing`() =
