@@ -12,7 +12,7 @@ import io.github.youndie.petich.PetichMemberContext
 import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.SimpleEnrichedPayload
-import io.github.youndie.petich.petich
+import io.github.youndie.petich.petichDefinition
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.server.billing.HoldId
@@ -453,7 +453,7 @@ public fun orderPetich(
     offers.tracing = tracing
 
     // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.
-    return petich(ORDER_SAGA_TYPE) {
+    return petichDefinition(ORDER_SAGA_TYPE) {
         // Two of the six turned out to be checks, and their own comments had said so: "Nothing to
         // undo — a quote is a number", and "rejects rather than compensates".
         enrich("quote", quote)

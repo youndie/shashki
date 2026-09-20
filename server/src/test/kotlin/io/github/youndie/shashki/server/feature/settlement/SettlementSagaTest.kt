@@ -17,7 +17,7 @@ import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.PetichStepRecord
-import io.github.youndie.petich.petich
+import io.github.youndie.petich.petichDefinition
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
@@ -400,7 +400,7 @@ class SettlementSagaTest {
      * from a filter would be asserting against its own copy.
      */
     private fun definitionDying(at: String): PetichDefinition<SettlementPayload> =
-        petich(SETTLEMENT_SAGA_TYPE) {
+        petichDefinition(SETTLEMENT_SAGA_TYPE) {
             enrich("charge-and-payout", ChargeAndPayout())
             if (at == "settleable") validate(at, DyingCheck(at)) else validate("settleable", Settleable())
             if (at == "capture") step(at, Dying(at)) else step("capture", CaptureStep(payments))

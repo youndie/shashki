@@ -13,7 +13,7 @@ import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.SimpleEnrichedPayload
-import io.github.youndie.petich.petich
+import io.github.youndie.petich.petichDefinition
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -330,7 +330,7 @@ class OrderSagaTest {
     private fun definitionDying(at: String): PetichDefinition<OrderPayload> {
         val candidates = FixedCandidateSource()
         val offers = offerStep(candidates)
-        return petich(ORDER_SAGA_TYPE) {
+        return petichDefinition(ORDER_SAGA_TYPE) {
             enrich("quote", QuoteStep(StraightLineRouteEstimator(), Pricing()))
             if (at == "service-area") {
                 validate(at, DyingCheck(at))

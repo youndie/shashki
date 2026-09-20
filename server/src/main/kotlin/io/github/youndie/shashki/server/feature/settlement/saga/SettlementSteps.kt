@@ -10,7 +10,7 @@ import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.PetichStepRecord
 import io.github.youndie.petich.SimpleEnrichedPayload
-import io.github.youndie.petich.petich
+import io.github.youndie.petich.petichDefinition
 import io.github.youndie.petich.recorded
 import io.github.youndie.shashki.server.billing.HoldId
 import io.github.youndie.shashki.server.billing.PaymentGateway
@@ -438,7 +438,7 @@ public fun settlementPetich(
     val publish = PublishSettled(json, receipts).also { it.tracing = tracing }
 
     // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.
-    return petich(SETTLEMENT_SAGA_TYPE) {
+    return petichDefinition(SETTLEMENT_SAGA_TYPE) {
         enrich("charge-and-payout", chargeAndPayout)
         validate("settleable", settleable)
         step("capture", capture)
