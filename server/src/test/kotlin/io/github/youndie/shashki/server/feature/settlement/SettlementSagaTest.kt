@@ -24,6 +24,7 @@ import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.HoldId
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
 import io.github.youndie.shashki.server.billing.Payout
+import io.github.youndie.shashki.server.feature.receipt.data.ExposedReceiptClaims
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
@@ -75,10 +76,14 @@ class SettlementSagaTest {
     private val clock = PetichClock { System.currentTimeMillis() }
     private val receipts = RecordingReceipts()
 
+    // THE REAL LEDGER, against the harness's database. A fake that said yes every time would make
+    // the claim look like it worked while the relay saw two messages (B-92).
+    private val claims = ExposedReceiptClaims(PostgresHarness.database, clock)
+
     // THE PRODUCTION FACTORY, not a hand-built copy of it. A list assembled here would be a second
     // declaration of the saga's order, and the one that drifts is the one nobody deploys.
     private fun definition(sender: ReceiptSender = receipts): PetichDefinition<SettlementPayload> =
-        settlementPetich(payments, payouts, SendReceiptUseCase(sender), json)
+        settlementPetich(payments, payouts, SendReceiptUseCase(sender), claims, json)
 
     private fun engine(definition: PetichDefinition<SettlementPayload>) =
         sagaEngine(storage, clock, definitions = listOf(definition))
@@ -345,6 +350,47 @@ class SettlementSagaTest {
             assertEquals(listOf(RideSettledEvent.TYPE), storage.outbox.fetchPending().map { it.type })
         }
 
+    /**
+     * **B-92: one receipt, however many times the last pass runs.**
+     *
+     * Two causes and the item insists on both. The first is a process dying inside the announcement;
+     * the second is the ordinary one — `processWithRetry` re-runs the WHOLE pass on an
+     * optimistic-lock conflict, so two requests touching one settlement are enough on healthy
+     * instances. Staged here by running the same settlement through the engine twice, which is what
+     * either cause looks like to `PublishSettled`.
+     *
+     * **It counts sends.** Asserting on `receipt_claims` would pass while the relay saw two
+     * messages, which is the only thing a rider would notice.
+     */
+    @Test
+    fun `a settlement whose last pass runs twice sends one receipt`() =
+        runTest {
+            val hold = payments.hold("fixture-claim", "card-4417", FARE, "USD")
+            val engine = engine(definition())
+
+            val first = engine.process(settlement(hold, SettlementPayload.Kind.FARE))
+            assertIs<PetichResult.Success>(first)
+            assertEquals(1, receipts.sent.size)
+
+            // The same saga again, exactly as a re-driven or retried pass arrives: the row is
+            // already COMPLETED, so this is the cheapest faithful way to say "that member ran
+            // twice" without reaching into petich's retry loop.
+            engine.process(checkNotNull(storage.petiches.findById(RIDE_SAGA)))
+
+            assertEquals(1, receipts.sent.size, "the rider was sent a second receipt")
+        }
+
+    /** And the claim is per settlement rather than per ride, because a tip is a second settlement. */
+    @Test
+    fun `a claim taken by one member does not silence another`() =
+        runTest {
+            val fresh = ExposedReceiptClaims(PostgresHarness.database, clock)
+
+            assertEquals(true, fresh.claim("ride-1:publish-settled", RIDE))
+            assertEquals(false, fresh.claim("ride-1:publish-settled", RIDE), "the second caller must lose")
+            assertEquals(true, fresh.claim("ride-1:publish-tipped", RIDE), "a different member is a different claim")
+        }
+
     private class RecordingReceipts : ReceiptSender {
         val sent = mutableListOf<Receipt>()
 
@@ -408,7 +454,7 @@ class SettlementSagaTest {
             if (at == "publish-settled") {
                 announce(at, DyingAnnouncement(at))
             } else {
-                announce("publish-settled", PublishSettled(json, SendReceiptUseCase(receipts)))
+                announce("publish-settled", PublishSettled(json, SendReceiptUseCase(receipts), claims))
             }
         }
 

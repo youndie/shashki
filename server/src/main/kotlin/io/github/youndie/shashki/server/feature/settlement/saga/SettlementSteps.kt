@@ -17,6 +17,7 @@ import io.github.youndie.shashki.server.billing.PaymentGateway
 import io.github.youndie.shashki.server.billing.Payout
 import io.github.youndie.shashki.server.billing.PayoutRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
+import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptClaims
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
 import io.github.youndie.shashki.server.feature.ride.saga.RideOutboxEvent
 import io.github.youndie.shashki.server.observability.Observability
@@ -361,6 +362,7 @@ private fun SettlementPayload.payoutKind(): String = if (kind == SettlementPaylo
 public class PublishSettled(
     private val json: Json,
     private val receipts: SendReceiptUseCase,
+    private val claims: ReceiptClaims,
 ) : SettlementAnnouncement() {
     override suspend fun run(
         ctx: PetichAnnouncementContext,
@@ -370,7 +372,30 @@ public class PublishSettled(
         val payout = ctx.enriched(Settled.PAYOUT_AMOUNT)?.toLongOrNull() ?: error("nothing was paid out")
         // **No receipt for a tip** (B-44): the rider was already sent what the ride cost, and a
         // second mail saying "you were generous" is a mail nobody asked for.
-        val sent = if (payload.kind == SettlementPayload.Kind.TIP) false else sendReceipt(payload, charge)
+        //
+        // **And no second receipt for a pass that ran twice** (B-92). petich advances the position
+        // after this body returns, so a crash here — or far more ordinarily an optimistic-lock
+        // conflict, which re-runs the WHOLE pass up to `maxProcessAttempts` times — sends the mail
+        // again. Naming the send would not help: SMTP deduplicates nothing. So the claim is taken
+        // first, outside the saga's transaction, and a re-run finds it gone.
+        val sent =
+            when {
+                payload.kind == SettlementPayload.Kind.TIP -> {
+                    false
+                }
+
+                !claims.claim(ctx.idempotencyKey, payload.rideId) -> {
+                    // Somebody already sent it. `false` here would say "the receipt never went",
+                    // which is a different fact and the one `Settled.RECEIPT` is read for — so the
+                    // enrichment below keeps saying what the first attempt made true.
+                    LOG.info("ride {} already had its receipt claimed; not sending again", payload.rideId)
+                    true
+                }
+
+                else -> {
+                    sendReceipt(payload, charge)
+                }
+            }
 
         val event =
             RideSettledEvent(
@@ -437,6 +462,7 @@ public fun settlementPetich(
     payments: PaymentGateway,
     payouts: PayoutRepository,
     receipts: SendReceiptUseCase,
+    claims: ReceiptClaims,
     json: Json,
     tracing: Observability? = null,
     commission: Commission = Commission.DEFAULT,
@@ -449,7 +475,7 @@ public fun settlementPetich(
     val settleable = Settleable().also { it.tracing = tracing }
     val capture = CaptureStep(payments).also { it.tracing = tracing }
     val payout = PayoutStep(payouts).also { it.tracing = tracing }
-    val publish = PublishSettled(json, receipts).also { it.tracing = tracing }
+    val publish = PublishSettled(json, receipts, claims).also { it.tracing = tracing }
 
     // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.
     return petichDefinition(SETTLEMENT_SAGA_TYPE) {
