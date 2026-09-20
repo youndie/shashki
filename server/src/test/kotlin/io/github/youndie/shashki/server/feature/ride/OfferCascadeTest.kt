@@ -45,6 +45,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * B-12: the offer is a suspended saga. Three declines cascade with nothing held; a deadline nobody
@@ -52,15 +53,16 @@ import kotlin.test.assertTrue
  */
 class OfferCascadeTest {
     private val json = sagaJson()
-    private val storage = SagaStorage(PostgresHarness.database, json)
-    private val payments = InMemoryPaymentGateway()
-    private val reservations = InMemoryDriverReservations()
-    private val board = InMemoryOfferBoard()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /** A clock the test moves, so "ninety seconds later" costs nothing. */
     private var now = 1_000_000L
     private val clock = PetichClock { now }
+
+    private val storage = SagaStorage(PostgresHarness.database, json, clock)
+    private val payments = InMemoryPaymentGateway()
+    private val reservations = InMemoryDriverReservations()
+    private val board = InMemoryOfferBoard()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val fired = mutableListOf<Pair<String, String>>()
     private val timeouts = OfferTimeouts(scope) { rideId, driverId -> fired += rideId to driverId }
@@ -226,6 +228,65 @@ class OfferCascadeTest {
 
     private fun activeConnections(): Int =
         (PostgresHarness.dataSource as HikariDataSource).hikariPoolMXBean.activeConnections
+
+    /**
+     * **B-93: the half of the sweeper this application had switched off.**
+     *
+     * `SuspendedPetichSweeper` was built without a `stuckAfter`, and petich's default is `null` —
+     * which leaves the stranded-saga re-drive off. So the sweeper expired suspensions and nothing
+     * else, and a saga whose instance died mid-pass sat in `PROCESSING` for ever holding whatever it
+     * held. `Application.kt` gives it ninety seconds now, derived there from petich's timeout table.
+     *
+     * Staged the way the suite's other death tests stage one: a row left in `PROCESSING` by hand,
+     * which is what an unplugged process leaves behind. The clock then moves past the threshold,
+     * because the whole question is whether the sweeper looks at all.
+     */
+    @Test
+    fun `a saga a dead process left in processing is re-driven`() =
+        runTest {
+            val first = engine.process(order("ride-abandoned"))
+            assertTrue(first is PetichResult.ActionRequired, "the saga should be waiting for a driver: $first")
+
+            // What a died-mid-pass row looks like: PROCESSING rather than PENDING_SIGNATURE, so the
+            // expiry queue does not own it and only the stranded queue can.
+            val parked = checkNotNull(storage.petiches.findById("ride-abandoned"))
+            storage.petiches.update(parked.copy(status = PetichStatus.PROCESSING, version = parked.version + 1))
+
+            now += 91_000
+
+            val swept =
+                SuspendedPetichSweeper(
+                    storage.petiches,
+                    engine,
+                    clock = clock,
+                    pollInterval = kotlin.time.Duration.INFINITE,
+                    stuckAfter = 90.seconds,
+                ).sweepStuck()
+
+            assertEquals(1, swept, "the sweeper never looked at a saga its own configuration hides")
+        }
+
+    /** And the control: before the threshold it is a slow instance, not a dead one. */
+    @Test
+    fun `a saga touched a moment ago is left alone`() =
+        runTest {
+            engine.process(order("ride-busy"))
+            val parked = checkNotNull(storage.petiches.findById("ride-busy"))
+            storage.petiches.update(parked.copy(status = PetichStatus.PROCESSING, version = parked.version + 1))
+
+            now += 30_000
+
+            val swept =
+                SuspendedPetichSweeper(
+                    storage.petiches,
+                    engine,
+                    clock = clock,
+                    pollInterval = kotlin.time.Duration.INFINITE,
+                    stuckAfter = 90.seconds,
+                ).sweepStuck()
+
+            assertEquals(0, swept, "re-driving a saga a live instance is working on runs its members twice")
+        }
 
     private fun order(id: String): Petich =
         Petich(

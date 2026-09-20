@@ -178,16 +178,19 @@ public class InMemoryPaymentGateway : PaymentGateway {
 /**
  * How long a provider has to remember an idempotency key for the replay in a compensation to work.
  *
- * **A number the integration has to satisfy, not one this code enforces.** petich rolls a saga back
- * within the pass that failed, and re-drives a stranded one only when `SuspendedPetichSweeper` is
- * given a `stuckAfter` — which this application does not give it, so a rollback here lives inside a
- * single `process` call and finishes in seconds. The bound that would apply if that re-drive were
- * switched on is petich's:
+ * **A number the integration has to satisfy, not one this code enforces**, and since B-93 the
+ * product it is measured against has both its factors. A rollback used to live inside a single
+ * `process` call, because `SuspendedPetichSweeper` had no `stuckAfter` and its re-drive was off;
+ * now it can span passes, and petich's bound applies:
  *
  *     keyRetention > maxCompensationAttempts × stuckAfter
  *
- * Twenty-four hours is what the providers this mock stands in for offer, and it clears both by a
- * margin nothing here is close to. It is written down so that the day somebody sets `stuckAfter`,
- * the inequality is in the same file as the thing it constrains.
+ * `maxCompensationAttempts` is petich's default **3** — this application configures only
+ * `requireOutbox` — and `STUCK_AFTER` in `Application.kt` is **90 s**, so the bound is four and a
+ * half minutes. Twenty-four hours is what the providers this mock stands in for offer, and it clears
+ * that by two orders of magnitude.
+ *
+ * Both numbers are named rather than described so that raising either one is visibly a change to
+ * this inequality.
  */
 public val KEY_RETENTION: Duration = 24.hours

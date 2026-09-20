@@ -67,15 +67,17 @@ import kotlin.time.Duration
  */
 class SettlementSagaTest {
     private val json = sagaJson()
-    private val storage = SagaStorage(PostgresHarness.database, json)
-    private val payments = InMemoryPaymentGateway()
-    private val payouts = ExposedPayoutRepository(PostgresHarness.database) { 0L }
 
     @Suppress(
         "ktlint:kapkan:wall-clock",
         "the engine needs a clock and this test asserts on money moved, not on time",
     )
     private val clock = PetichClock { System.currentTimeMillis() }
+
+    private val storage = SagaStorage(PostgresHarness.database, json, clock)
+    private val payments = InMemoryPaymentGateway()
+    private val payouts = ExposedPayoutRepository(PostgresHarness.database) { 0L }
+
     private val receipts = RecordingReceipts()
 
     // THE REAL LEDGER, against the harness's database. A fake that said yes every time would make

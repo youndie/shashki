@@ -44,10 +44,29 @@ public fun sagaJson(): Json =
 public class SagaStorage(
     database: Database,
     json: Json,
+    /**
+     * **The same clock the engine and the sweeper use, and it was not** (B-93).
+     *
+     * `ExposedPetichRepository` takes a clock and defaults it to the wall clock, so this passed none
+     * and the store stamped `updated_at` from `System.currentTimeMillis()` while everything else in
+     * the saga read the injected `PetichClock`. In production both are the wall clock and nothing
+     * shows. The sweeper's stranded query compares one against the other — `updated_at < now -
+     * stuckAfter` — so with a controlled clock the two are years apart and it matches nothing,
+     * silently.
+     *
+     * That is why this parameter exists rather than a test that moved its own clock to meet the
+     * store: one mechanism, one source of time.
+     *
+     * **And it has no default.** One was written here first and `kapkan`'s wall-clock rule refused
+     * it, in as many words: a time that has to agree with somebody else's is a value carried in,
+     * not one read here. That is the whole defect restated — a default is what let the two clocks
+     * diverge without anybody choosing it.
+     */
+    clock: PetichClock,
 ) {
     public val petichTable: PetichTable = PetichTable(json)
     public val outboxTable: OutboxEventsTable = OutboxEventsTable()
-    public val petiches: ExposedPetichRepository = ExposedPetichRepository(database, petichTable, outboxTable)
+    public val petiches: ExposedPetichRepository = ExposedPetichRepository(database, petichTable, outboxTable, clock)
     public val outbox: ExposedOutboxRepository = ExposedOutboxRepository(database, outboxTable)
 }
 
