@@ -46,7 +46,7 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[ ]` | A hold whose answer is lost is never released, because the id it would be released by came back in that answer | P1 | M | - |
+| [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[~]` | A hold whose answer is lost is never released, because the id it would be released by came back in that answer | P1 | M | - |
 | [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[ ]` | A receipt goes out again every time the settlement's last pass is retried | P1 | M | - |
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 

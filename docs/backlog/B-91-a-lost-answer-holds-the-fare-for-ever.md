@@ -1,7 +1,7 @@
 ---
 id: B-91
 title: "A hold whose answer is lost is never released, because the id it would be released by came back in that answer"
-status: open
+status: wip
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
