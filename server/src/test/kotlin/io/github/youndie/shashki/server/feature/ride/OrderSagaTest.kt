@@ -180,9 +180,20 @@ class OrderSagaTest {
     @Test
     fun `a saga the first process abandoned is finished by the next one, from where it stopped`() =
         runTest {
-            // What `kill -9` after AUTHORIZATION committed actually leaves: a PROCESSING row parked
-            // at the start of EXECUTION, with the quote and the hold id in its enriched payload —
-            // and a real hold in the gateway, because that side effect happened before the death.
+            // What `kill -9` after the hold committed actually leaves: a PROCESSING row parked
+            // INSIDE EXECUTION at the member after `hold-payment`, with the quote and the hold id
+            // in its enriched payload — and a real hold in the gateway, because that side effect
+            // happened before the death.
+            //
+            // The index is what makes this safe, not the phase. The hold used to sit in
+            // AUTHORIZATION, and it was tempting to read this test as "a committed phase boundary
+            // protects the hold from running twice". It never did: petich commits
+            // `currentInterceptorIndex = index + 1` after EVERY member that proceeds, and writes
+            // nothing at all when a phase ends. So the row that survives a death names the member,
+            // and moving `hold-payment` from AUTHORIZATION into EXECUTION moved the number from
+            // (AUTHORIZATION, past-the-end) to (EXECUTION, 1) without weakening anything.
+            // `HoldPaymentStep` is not idempotent and does not need to be.
+            //
             // Reconstructed by hand rather than staged with a fake step, because a step that
             // *suspends* leaves a different row (PENDING_SIGNATURE, waiting for a resume payload)
             // and a step that *throws* is compensated on the spot; neither is a dead process.
@@ -191,7 +202,8 @@ class OrderSagaTest {
                 order("ride-resumed").copy(
                     status = PetichStatus.PROCESSING,
                     currentPhase = PetichPhase.EXECUTION,
-                    currentInterceptorIndex = 0,
+                    // EXECUTION is [hold-payment, offer, driver-answer]; 1 is "the hold is done".
+                    currentInterceptorIndex = 1,
                     enrichedPayload =
                         SimpleEnrichedPayload(
                             mapOf(
@@ -206,8 +218,8 @@ class OrderSagaTest {
             storage.petiches.saveOrGet(parked)
 
             // A fresh process picks the row up: the sweeper, a retried request, or the next call
-            // for that id. It continues at EXECUTION — not re-running AUTHORIZATION and holding
-            // twice — asks a driver and parks; the driver's answer finishes it.
+            // for that id. It continues at the member the index names — not re-running the hold
+            // and holding twice — asks a driver and parks; the driver's answer finishes it.
             val engineB = engineWith()
             val firstPass = engineB.process(checkNotNull(storage.petiches.findById("ride-resumed")))
             assertIs<PetichResult.ActionRequired>(firstPass)
@@ -289,7 +301,7 @@ class OrderSagaTest {
             } else {
                 validate("service-area", ServiceAreaStep { ServiceArea.LJUBLJANA })
             }
-            if (at == "hold-payment") authorize(at, Dying(at)) else authorize("hold-payment", HoldPaymentStep(payments))
+            if (at == "hold-payment") step(at, Dying(at)) else step("hold-payment", HoldPaymentStep(payments))
             if (at == "offer") step(at, Dying(at)) else step("offer", offers)
             step("driver-answer", DriverAnswerStep(candidates, reservations, offers))
             if (at == "publish-assigned") {

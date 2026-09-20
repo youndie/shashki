@@ -252,7 +252,13 @@ class SettlementSagaTest {
                 settlement(hold, SettlementPayload.Kind.FARE).copy(
                     status = PetichStatus.PROCESSING,
                     currentPhase = PetichPhase.EXECUTION,
-                    currentInterceptorIndex = 0,
+                    // The capture used to be an AUTHORIZATION member and this read 0. What keeps it
+                    // from running twice was never the phase boundary — petich writes nothing when a
+                    // phase ends and commits `index + 1` after every member that proceeds — so the
+                    // row a death leaves names the member. EXECUTION is [capture, payout]; 1 is
+                    // "the money already moved". The assertion below checks it against the gateway
+                    // too, so this number cannot quietly become the only thing under test.
+                    currentInterceptorIndex = 1,
                     enrichedPayload = enrichedFor(FARE),
                 )
             storage.petiches.saveOrGet(parked)
@@ -365,7 +371,7 @@ class SettlementSagaTest {
         petich(SETTLEMENT_SAGA_TYPE) {
             enrich("charge-and-payout", ChargeAndPayout())
             if (at == "settleable") validate(at, DyingCheck(at)) else validate("settleable", Settleable())
-            if (at == "capture") authorize(at, Dying(at)) else authorize("capture", CaptureStep(payments))
+            if (at == "capture") step(at, Dying(at)) else step("capture", CaptureStep(payments))
             if (at == "payout") step(at, Dying(at)) else step("payout", PayoutStep(payouts))
             if (at == "publish-settled") {
                 announce(at, Dying(at))
