@@ -1,6 +1,8 @@
 package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichAnnouncement
+import io.github.youndie.petich.PetichAnnouncementContext
 import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
@@ -26,7 +28,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.OfferStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
 import io.github.youndie.shashki.server.feature.ride.saga.OrderStep
-import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
+import io.github.youndie.shashki.server.feature.ride.saga.PublishAssigned
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RideAssignedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
@@ -152,8 +154,14 @@ class OrderSagaTest {
         runTest {
             // The process "dies" at the boundary after phase N by the step of phase N+1 throwing —
             // which is what an unplugged process looks like to the saga: the next step never
-            // returns. petich compensates 1..N. Every boundary before POST_PROCESSING is tried.
-            for (dieBefore in listOf("service-area", "hold-payment", "offer", "publish-assigned")) {
+            // returns. petich compensates 1..N.
+            //
+            // **POST_PROCESSING is not in this list, and used to be.** A death in `publish-assigned`
+            // released the fare and freed the driver — a ride that had been assigned, un-assigned
+            // because the sentence announcing it could not be built. petich B-41 made an
+            // announcement a member that cannot do that, and the case below is the same death with
+            // the opposite assertion.
+            for (dieBefore in listOf("service-area", "hold-payment", "offer")) {
                 val engine = engineWith(definitionDying(at = dieBefore))
                 val id = "ride-dies-before-$dieBefore"
 
@@ -175,6 +183,34 @@ class OrderSagaTest {
                     "$dieBefore: an event escaped a saga that never completed",
                 )
             }
+        }
+
+    /**
+     * The other half of the list above, and the one that changed: **a ride is not un-assigned
+     * because its announcement died** (petich B-41).
+     *
+     * `publish-assigned` used to be a step, so a death there rolled the whole ride back — the fare
+     * released, the driver freed, a rider told there were no cars because a JSON encoder threw. An
+     * announcement runs when the work is done and petich no longer lets it undo any of it: the saga
+     * completes, the hold and the reservation stand, and only the event is missing.
+     */
+    @Test
+    fun `a ride whose announcement dies keeps its driver and its hold`() =
+        runTest {
+            val engine = engineWith(definitionDying(at = "publish-assigned"))
+            val id = "ride-announcement-dies"
+
+            var result = engine.process(order(id))
+            if (result is PetichResult.ActionRequired) {
+                val saga = checkNotNull(storage.petiches.findById(id))
+                result =
+                    engine.process(saga.copy(resumePayload = DriverAnswer("driver-1", DriverAnswer.Outcome.ACCEPT)))
+            }
+
+            assertIs<PetichResult.Success>(result)
+            assertEquals(1, payments.activeHolds().size, "the fare was released over a notification")
+            assertEquals("driver-1", reservations.reservedFor(id), "the driver was freed over a notification")
+            assertEquals(emptyList(), storage.outbox.fetchPending(), "the event is the only thing missing")
         }
 
     @Test
@@ -305,11 +341,26 @@ class OrderSagaTest {
             if (at == "offer") step(at, Dying(at)) else step("offer", offers)
             step("driver-answer", DriverAnswerStep(candidates, reservations, offers))
             if (at == "publish-assigned") {
-                announce(at, Dying(at))
+                announce(at, DyingAnnouncement(at))
             } else {
-                announce("publish-assigned", PublishAssignedStep(json))
+                announce("publish-assigned", PublishAssigned(json))
             }
         }
+    }
+
+    /**
+     * The same death, in the one member that petich will not roll back over (B-41).
+     *
+     * It cannot be [Dying]: an announcement is not a step any more, and that is the point — by the
+     * time this runs the driver is reserved and the fare is held.
+     */
+    private class DyingAnnouncement(
+        private val key: String,
+    ) : PetichAnnouncement<OrderPayload> {
+        override suspend fun announce(
+            ctx: PetichAnnouncementContext,
+            payload: OrderPayload,
+        ): Unit = error("process died before $key answered")
     }
 
     private class Dying(

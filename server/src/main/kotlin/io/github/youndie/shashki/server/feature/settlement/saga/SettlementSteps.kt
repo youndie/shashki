@@ -1,5 +1,7 @@
 package io.github.youndie.shashki.server.feature.settlement.saga
 
+import io.github.youndie.petich.PetichAnnouncement
+import io.github.youndie.petich.PetichAnnouncementContext
 import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichDefinition
@@ -25,12 +27,39 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
 /**
+ * The announcing half of [SettlementStep], and the difference is the whole of petich B-41.
+ *
+ * A member here runs when the ride is assigned or the money has moved. It cannot `reject`, `fail`,
+ * park the saga or be compensated, because none of those verbs is on its context or its type — and
+ * an exception it throws is counted by petich rather than rolled back. The span is wrapped the same
+ * way and off the same name, so a trace does not care which half a member belongs to.
+ */
+public abstract class SettlementAnnouncement : PetichAnnouncement<SettlementPayload> {
+    final override suspend fun announce(
+        ctx: PetichAnnouncementContext,
+        payload: SettlementPayload,
+    ) {
+        val agent = tracing?.tracy ?: return run(ctx, payload)
+        withSpan(SettlementStep.spanName(ctx.stepKey), agent) { run(ctx, payload) }
+    }
+
+    protected abstract suspend fun run(
+        ctx: PetichAnnouncementContext,
+        payload: SettlementPayload,
+    )
+
+    /** Set once by the graph, exactly as on [SettlementStep]. */
+    public var tracing: Observability? = null
+}
+
+/**
  * One step per phase, like the order saga's, and for the same reason: a step exists because it can
  * be undone, so the two are the same list.
  *
  * **`supports` is what lets both sagas share one engine.** The row carries a [SettlementPayload] or
  * an `OrderPayload`; each interceptor answers for the one it knows and the engine skips the rest.
  */
+
 public abstract class SettlementStep : PetichStep<SettlementPayload> {
     /**
      * One span per member, in one place — `OrderStep` carries the argument.
@@ -301,16 +330,26 @@ private fun SettlementPayload.payoutKind(): String = if (kind == SettlementPaylo
  * be the tail wagging the dog". The failure is not silent: it goes in the log and in the saga's own
  * enriched payload, so a ride whose receipt never went can be found afterwards.
  *
+ * **The swallowing stays, and its reason has changed** (petich B-41). It used to be the only thing
+ * standing between a dead mail relay and a refunded fare: this was a `PetichStep`, and a step that
+ * throws is compensated. It is a [PetichAnnouncement] now, so petich will not roll a settlement back
+ * over it whatever happens here — that part is the type's job and no longer this member's.
+ *
+ * What is left is the reason a type cannot take away: **a member that dies cannot write down that it
+ * died.** `Settled.RECEIPT` is how a ride whose receipt never went is found afterwards, and the only
+ * way to record a failed send is to survive it. So the `getOrElse` below is bookkeeping, not
+ * defence, and the event is emitted after it so that both readings are committed together.
+ *
  * **A settlement with no address is not a failure either.** The rider's email comes from the token
  * (B-26), and a demo pointed at no provider has no token and therefore no address. That is written
  * down rather than papered over with a fabricated recipient.
  */
-public class PublishSettledStep(
+public class PublishSettled(
     private val json: Json,
     private val receipts: SendReceiptUseCase,
-) : SettlementStep() {
+) : SettlementAnnouncement() {
     override suspend fun run(
-        ctx: PetichStepContext,
+        ctx: PetichAnnouncementContext,
         payload: SettlementPayload,
     ) {
         val charge = ctx.enriched(Settled.CHARGE_AMOUNT)?.toLongOrNull() ?: error("nothing was charged")
@@ -369,7 +408,7 @@ public class PublishSettledStep(
     }
 
     private companion object {
-        val LOG = LoggerFactory.getLogger(PublishSettledStep::class.java)
+        val LOG = LoggerFactory.getLogger(PublishSettled::class.java)
     }
 }
 
@@ -396,7 +435,7 @@ public fun settlementPetich(
     val settleable = Settleable().also { it.tracing = tracing }
     val capture = CaptureStep(payments).also { it.tracing = tracing }
     val payout = PayoutStep(payouts).also { it.tracing = tracing }
-    val publish = PublishSettledStep(json, receipts).also { it.tracing = tracing }
+    val publish = PublishSettled(json, receipts).also { it.tracing = tracing }
 
     // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.
     return petich(SETTLEMENT_SAGA_TYPE) {

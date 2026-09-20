@@ -20,7 +20,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.ORDER_SAGA_TYPE
 import io.github.youndie.shashki.server.feature.ride.saga.OfferStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.ride.saga.OrderPayload
-import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
+import io.github.youndie.shashki.server.feature.ride.saga.PublishAssigned
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
