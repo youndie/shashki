@@ -230,7 +230,16 @@ private fun Petich.rideStatus(): RideStatus =
             RideStatus.ASSIGNED
         }
 
-        PetichStatus.REJECTED, PetichStatus.FAILED, PetichStatus.COMPENSATING -> {
+        // COMPENSATION_FAILED joins the three that already meant CANCELLED, and surfacing it
+        // separately would be a product decision this repository has not made: from the rider's
+        // side the ride is off either way. What it means underneath is that the rollback gave up —
+        // petich stopped retrying and handed it to the failure handler — so the operator's view is
+        // where the difference belongs, not this one.
+        PetichStatus.REJECTED,
+        PetichStatus.FAILED,
+        PetichStatus.COMPENSATING,
+        PetichStatus.COMPENSATION_FAILED,
+        -> {
             RideStatus.CANCELLED
         }
 

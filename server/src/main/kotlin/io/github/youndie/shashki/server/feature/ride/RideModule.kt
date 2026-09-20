@@ -2,7 +2,6 @@ package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichEngine
-import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichRepository
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -58,17 +57,13 @@ import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
+import io.github.youndie.shashki.server.feature.ride.saga.orderPetich
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
-import io.github.youndie.shashki.server.feature.settlement.saga.CaptureStep
-import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayoutStep
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
-import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
-import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
-import io.github.youndie.shashki.server.feature.settlement.saga.SettleableStep
-import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
+import io.github.youndie.shashki.server.feature.settlement.saga.settlementPetich
 import io.github.youndie.shashki.server.feature.trip.data.ExposedTripRepository
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
@@ -206,32 +201,36 @@ public fun rideModule(
         // a cycle, broken by resolving the engine lazily at fire time rather than at construction.
         single { OfferTimeouts(get()) { rideId, driverId -> get<ExpireOfferUseCase>().invoke(rideId, driverId) } }
         single { OfferStep(get(), get(), get(), get(), get()) }
-        single<List<PetichInterceptor<*>>> {
-            // Every step gets the agent, once, where the list is built — see `OrderStep.tracing`.
+        single<PetichEngine> {
+            // BOTH SAGAS AS DEFINITIONS, and the interceptor list is gone. It used to hold eleven
+            // members of two sagas interleaved, told apart by `supports`; petich resolves the row by
+            // type now, so each saga is one declaration in the order it runs.
+            //
+            // They are built here rather than bound: two `single<List<…>>` of different generic
+            // types erase to the same `List<*>`, so Koin hands out whichever it saw last — which is
+            // how a definition arrived where an interceptor was wanted and the first ride answered
+            // 500. Only this line needs them.
             val tracing = get<Observability>()
-            listOf(
-                QuoteStep(get(), get()),
-                ServiceAreaStep { get<RouteEstimator>().servedArea },
-                HoldPaymentStep(get()),
-                get<OfferStep>(),
-                DriverAnswerStep(get(), get(), get()),
-                PublishAssignedStep(get()),
-                // The second saga, in the same engine: each interceptor answers for the payload it
-                // knows, so one engine runs whichever saga the row carries (B-37).
-                ChargeAndPayoutStep(),
-                SettleableStep(),
-                CaptureStep(get()),
-                PayoutStep(get()),
-                PublishSettledStep(get(), get()),
-            ).onEach { step ->
-                when (step) {
-                    is OrderStep -> step.tracing = tracing
-                    is SettlementStep -> step.tracing = tracing
-                    else -> Unit
-                }
-            }
+            sagaEngine(
+                get(),
+                get(),
+                definitions =
+                    listOf(
+                        orderPetich(
+                            routes = get(),
+                            pricing = get(),
+                            area = { get<RouteEstimator>().servedArea },
+                            payments = get(),
+                            offers = get<OfferStep>(),
+                            candidates = get(),
+                            reservations = get(),
+                            json = get(),
+                            tracing = tracing,
+                        ),
+                        settlementPetich(get(), get(), get(), get(), tracing = tracing),
+                    ),
+            )
         }
-        single<PetichEngine> { sagaEngine(get(), get(), get()) }
         single<PetichRepository> { get<SagaStorage>().petiches }
 
         // The trip and the ledger: two rows the order saga does not own (research §1.4c, B-37).

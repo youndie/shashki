@@ -1,13 +1,17 @@
 package io.github.youndie.shashki.server.feature.ride
 
-import io.github.youndie.petich.InterceptorResult
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichCheck
+import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
-import io.github.youndie.petich.PetichInterceptor
+import io.github.youndie.petich.PetichDefinition
 import io.github.youndie.petich.PetichPhase
 import io.github.youndie.petich.PetichResult
 import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.PetichStep
+import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.SimpleEnrichedPayload
+import io.github.youndie.petich.petich
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -27,6 +31,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RideAssignedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
+import io.github.youndie.shashki.server.feature.ride.saga.orderPetich
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
@@ -65,19 +70,26 @@ class OrderSagaTest {
     private fun offerStep(candidates: FixedCandidateSource = FixedCandidateSource()) =
         OfferStep(candidates, reservations, InMemoryOfferBoard(), clock, timeouts)
 
-    private fun stepsWith(candidates: FixedCandidateSource = FixedCandidateSource()): List<PetichInterceptor<*>> {
-        val offers = offerStep(candidates)
-        return listOf(
-            QuoteStep(StraightLineRouteEstimator(), Pricing()),
-            ServiceAreaStep { ServiceArea.LJUBLJANA },
-            HoldPaymentStep(payments),
-            offers,
-            DriverAnswerStep(candidates, reservations, offers),
-            PublishAssignedStep(json),
+    // THE PRODUCTION FACTORY, not a hand-built copy of it. A list assembled here would be a second
+    // declaration of the saga's order, and the one that drifts is the one nobody deploys.
+    private fun definitionWith(
+        candidates: FixedCandidateSource = FixedCandidateSource(),
+    ): PetichDefinition<OrderPayload> =
+        orderPetich(
+            routes = StraightLineRouteEstimator(),
+            pricing = Pricing(),
+            area = { ServiceArea.LJUBLJANA },
+            payments = payments,
+            offers = offerStep(candidates),
+            candidates = candidates,
+            reservations = reservations,
+            json = json,
         )
-    }
 
-    private val steps: List<PetichInterceptor<*>> = stepsWith()
+    private val definition: PetichDefinition<OrderPayload> = definitionWith()
+
+    private fun engineWith(definition: PetichDefinition<OrderPayload> = this.definition) =
+        sagaEngine(storage, clock, definitions = listOf(definition))
 
     /** The saga stops to ask the nearest driver; the driver says yes. Two passes, as in production. */
     private suspend fun runToAssigned(
@@ -100,24 +112,27 @@ class OrderSagaTest {
      * wrong is worse than a missing one: it groups every phase of every saga under one row.
      */
     @Test
-    fun `every step's span name carries its own phase`() {
-        val named = steps.filterIsInstance<OrderStep>()
-        assertEquals(steps.size, named.size, "a step outside the base class is a step with no span")
+    fun `every member's span name is its own key`() {
+        // THE SAME ASSERTION IT ALWAYS MADE, addressed differently. The name used to carry the
+        // phase, because a step knew its phase; a member's address is its key now, so that is what
+        // the name carries — and the key is stricter, since the builder refuses two members under
+        // one key and two spans therefore cannot collide.
+        val keys = definition.members.map { it.key }
+        assertEquals(6, keys.size, "a member outside the definition is a member with no span")
 
-        named.forEach { step ->
-            assertFalse('$' in step.spanName, "an unexpanded template: ${step.spanName}")
-            assertTrue(
-                step.spanName.startsWith("saga.order.${step.phase}."),
-                "${step.spanName} does not name the phase it belongs to",
-            )
+        keys.forEach { key ->
+            val name = OrderStep.spanName(key)
+            assertFalse('$' in name, "an unexpanded template: $name")
+            assertTrue(name.startsWith("saga.order."), "$name does not say which saga it belongs to")
+            assertTrue(name.endsWith(key), "$name does not name the member it belongs to")
         }
-        assertEquals(named.size, named.map { it.spanName }.toSet().size, "two steps share a span name")
+        assertEquals(keys.size, keys.map { OrderStep.spanName(it) }.toSet().size, "two members share a span name")
     }
 
     @Test
     fun `a ride runs through every phase, holds the fare, reserves a driver and leaves one event in the outbox`() =
         runTest {
-            val result = runToAssigned(sagaEngine(steps, storage, clock), "ride-ok")
+            val result = runToAssigned(engineWith(), "ride-ok")
 
             assertIs<PetichResult.Success>(result)
             assertEquals(PetichStatus.COMPLETED, result.petich.status)
@@ -138,13 +153,8 @@ class OrderSagaTest {
             // The process "dies" at the boundary after phase N by the step of phase N+1 throwing —
             // which is what an unplugged process looks like to the saga: the next step never
             // returns. petich compensates 1..N. Every boundary before POST_PROCESSING is tried.
-            for (dieBefore in listOf(
-                PetichPhase.VALIDATION,
-                PetichPhase.AUTHORIZATION,
-                PetichPhase.EXECUTION,
-                PetichPhase.POST_PROCESSING,
-            )) {
-                val engine = sagaEngine(steps.withDeathAt(dieBefore), storage, clock)
+            for (dieBefore in listOf("service-area", "hold-payment", "offer", "publish-assigned")) {
+                val engine = engineWith(definitionDying(at = dieBefore))
                 val id = "ride-dies-before-$dieBefore"
 
                 var result = engine.process(order(id))
@@ -198,7 +208,7 @@ class OrderSagaTest {
             // A fresh process picks the row up: the sweeper, a retried request, or the next call
             // for that id. It continues at EXECUTION — not re-running AUTHORIZATION and holding
             // twice — asks a driver and parks; the driver's answer finishes it.
-            val engineB = sagaEngine(steps, storage, clock)
+            val engineB = engineWith()
             val firstPass = engineB.process(checkNotNull(storage.petiches.findById("ride-resumed")))
             assertIs<PetichResult.ActionRequired>(firstPass)
             assertEquals(
@@ -225,11 +235,7 @@ class OrderSagaTest {
     fun `no cars nearby compensates the hold rather than leaving the rider charged`() =
         runTest {
             val result =
-                sagaEngine(
-                    stepsWith(FixedCandidateSource(emptyList())),
-                    storage,
-                    clock,
-                ).process(order("ride-no-cars"))
+                engineWith(definitionWith(FixedCandidateSource(emptyList()))).process(order("ride-no-cars"))
 
             assertIs<PetichResult.Error>(result)
             assertEquals(emptyList(), payments.activeHolds().toList())
@@ -240,7 +246,7 @@ class OrderSagaTest {
         runTest {
             val far = order("ride-far", pickup = GeoPoint(48.8566, 2.3522))
 
-            val result = sagaEngine(steps, storage, clock).process(far)
+            val result = engineWith().process(far)
 
             assertIs<PetichResult.Error>(result)
             assertEquals(emptyList(), payments.activeHolds().toList())
@@ -267,22 +273,55 @@ class OrderSagaTest {
                 ),
         )
 
-    /** The step at [phase] throws — the process died before it could answer. */
-    private fun List<PetichInterceptor<*>>.withDeathAt(phase: PetichPhase): List<PetichInterceptor<*>> =
-        map { step ->
-            if (step.phase == phase) {
-                object : OrderStep() {
-                    override val phase = phase
-
-                    override suspend fun run(
-                        petich: Petich,
-                        payload: OrderPayload,
-                    ): InterceptorResult = error("process died before $phase answered")
-                }
+    /**
+     * A death is the member never returning, addressed by key rather than by phase.
+     *
+     * Written out rather than mapped over a list: the order is a declaration now, and a test that
+     * rebuilt it from a filter would be asserting against its own copy of it.
+     */
+    private fun definitionDying(at: String): PetichDefinition<OrderPayload> {
+        val candidates = FixedCandidateSource()
+        val offers = offerStep(candidates)
+        return petich(ORDER_SAGA_TYPE) {
+            enrich("quote", QuoteStep(StraightLineRouteEstimator(), Pricing()))
+            if (at == "service-area") {
+                validate(at, DyingCheck(at))
             } else {
-                step
+                validate("service-area", ServiceAreaStep { ServiceArea.LJUBLJANA })
+            }
+            if (at == "hold-payment") authorize(at, Dying(at)) else authorize("hold-payment", HoldPaymentStep(payments))
+            if (at == "offer") step(at, Dying(at)) else step("offer", offers)
+            step("driver-answer", DriverAnswerStep(candidates, reservations, offers))
+            if (at == "publish-assigned") {
+                announce(at, Dying(at))
+            } else {
+                announce("publish-assigned", PublishAssignedStep(json))
             }
         }
+    }
+
+    private class Dying(
+        private val key: String,
+    ) : PetichStep<OrderPayload> {
+        override suspend fun execute(
+            ctx: PetichStepContext,
+            payload: OrderPayload,
+        ): Unit = error("process died before $key answered")
+
+        override suspend fun compensate(
+            ctx: PetichStepContext,
+            payload: OrderPayload,
+        ) = Unit
+    }
+
+    private class DyingCheck(
+        private val key: String,
+    ) : PetichCheck<OrderPayload> {
+        override suspend fun check(
+            ctx: PetichCheckContext,
+            payload: OrderPayload,
+        ): Unit = error("process died before $key answered")
+    }
 
     private companion object {
         val LJUBLJANA_CENTRE = GeoPoint(46.0511, 14.5051)
