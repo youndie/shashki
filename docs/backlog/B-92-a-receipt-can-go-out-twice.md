@@ -1,7 +1,7 @@
 ---
 id: B-92
 title: "A receipt goes out again every time the settlement's last pass is retried"
-status: open
+status: wip
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
