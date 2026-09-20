@@ -1,18 +1,39 @@
 package io.github.youndie.shashki.server.billing
 
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 
 /**
  * The payment provider as the saga sees it: a hold, and the three things that can happen to it.
  * The brief's "mock cashier" — the provider is emulated, the integration contract is real.
  *
- * `hold` is the order saga's AUTHORIZATION step and `release` is its compensation. `capture` is the
- * settlement saga's AUTHORIZATION step (research §1.4c) and **`refund` is its compensation** — a
- * saga whose money step cannot be undone is a saga in name only, and the step after the capture is a
- * payout, which can fail.
+ * `hold` is the order saga's EXECUTION step and `release` is its compensation. `capture` is the
+ * settlement saga's EXECUTION step and **`refund` is its compensation** — a saga whose money step
+ * cannot be undone is a saga in name only, and the step after the capture is a payout, which can
+ * fail. (Both said AUTHORIZATION until petich B-39 moved the acting members out of that phase.)
+ *
+ * **The two calls that CREATE money movement take a caller-chosen key; the three that undo it take
+ * the id this gateway generated.** That asymmetry is not an oversight, it is what a real provider
+ * offers (B-91): an idempotency key deduplicates a repeat and cannot be cancelled by. So a
+ * compensation whose answer was lost cannot say "cancel whatever is under this key" — it **replays**
+ * the same request under the same key, reads the id out of the answer it gets back, and undoes by
+ * that. petich B-48 calls this the second form and its README writes it out.
+ *
+ * **What that costs the caller is a retention window**, and it is this gateway's to state: a key is
+ * remembered for [KEY_RETENTION], and the replay only works inside it. Longer than any rollback can
+ * take, or the replay is not a replay but a second charge — see the value's own note.
  */
 public interface PaymentGateway {
+    /**
+     * [key] names this hold before it is taken, so that a repeat of the same request is answered
+     * with the same hold rather than taking a second one.
+     *
+     * It is `ctx.idempotencyKey` at every call site in the sagas — deterministic, and identical on
+     * the forward pass and inside the compensation, which is the whole reason the replay works.
+     */
     public fun hold(
+        key: String,
         paymentMethodId: String,
         amountCents: Long,
         currency: String,
@@ -51,6 +72,7 @@ public interface PaymentGateway {
      * capture in one, with no hold behind it, refundable like any other capture.
      */
     public fun charge(
+        key: String,
         paymentMethodId: String,
         amountCents: Long,
         currency: String,
@@ -78,16 +100,32 @@ public data class Hold(
 public class InMemoryPaymentGateway : PaymentGateway {
     private val holds = ConcurrentHashMap<HoldId, Hold>()
     private val captured = ConcurrentHashMap<HoldId, Hold>()
+
+    /**
+     * What each key produced, which is the half of a provider a mock usually leaves out.
+     *
+     * Without it the emulation is *easier* than the real thing in the one place the saga leans on
+     * it, and a rollback that replays would take a second hold here while working against a real
+     * provider. A mock that is kinder than production is a mock that hides B-91.
+     *
+     * Never evicted, because the process is the window: nothing here survives a restart anyway, and
+     * inventing an expiry would be inventing a number. What a deployed provider gives is
+     * [KEY_RETENTION], and the note there is the one a real integration has to satisfy.
+     */
+    private val byKey = ConcurrentHashMap<String, HoldId>()
     private var next = 0
 
     override fun hold(
+        key: String,
         paymentMethodId: String,
         amountCents: Long,
         currency: String,
     ): HoldId {
         require(amountCents > 0) { "a hold of $amountCents cents is not a hold" }
+        byKey[key]?.let { return it }
         val id = HoldId("hold-${++next}")
         holds[id] = Hold(id, paymentMethodId, amountCents, currency)
+        byKey[key] = id
         return id
     }
 
@@ -115,13 +153,16 @@ public class InMemoryPaymentGateway : PaymentGateway {
     }
 
     override fun charge(
+        key: String,
         paymentMethodId: String,
         amountCents: Long,
         currency: String,
     ): HoldId {
         require(amountCents > 0) { "a charge of $amountCents cents is not a charge" }
+        byKey[key]?.let { return it }
         val id = HoldId("charge-${++next}")
         captured[id] = Hold(id, paymentMethodId, amountCents, currency)
+        byKey[key] = id
         return id
     }
 
@@ -133,3 +174,20 @@ public class InMemoryPaymentGateway : PaymentGateway {
 
     override fun captured(): Collection<Hold> = captured.values.toList()
 }
+
+/**
+ * How long a provider has to remember an idempotency key for the replay in a compensation to work.
+ *
+ * **A number the integration has to satisfy, not one this code enforces.** petich rolls a saga back
+ * within the pass that failed, and re-drives a stranded one only when `SuspendedPetichSweeper` is
+ * given a `stuckAfter` — which this application does not give it, so a rollback here lives inside a
+ * single `process` call and finishes in seconds. The bound that would apply if that re-drive were
+ * switched on is petich's:
+ *
+ *     keyRetention > maxCompensationAttempts × stuckAfter
+ *
+ * Twenty-four hours is what the providers this mock stands in for offer, and it clears both by a
+ * margin nothing here is close to. It is written down so that the day somebody sets `stuckAfter`,
+ * the inequality is in the same file as the thing it constrains.
+ */
+public val KEY_RETENTION: Duration = 24.hours

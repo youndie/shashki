@@ -209,19 +209,40 @@ public class HoldPaymentStep(
         payload: OrderPayload,
     ) {
         val quote = ctx.quote() ?: return ctx.reject("no quote to hold against")
-        val hold = payments.hold(payload.paymentMethodId, quote.amountCents, quote.currency)
+        val hold = payments.hold(ctx.idempotencyKey, payload.paymentMethodId, quote.amountCents, quote.currency)
         // ENRICHED AND NOT RECORDED, deliberately. A record is evidence for this member's own undo;
         // the hold is read by `SettleRideUseCase` and by the ride's repository long after this saga
-        // finished, which is what the payload carried forward is for (petich D4). The undo below
-        // reads it back the same way anybody else does.
+        // finished, which is what the payload carried forward is for (petich D4).
         ctx.enrich(SimpleEnrichedPayload(mapOf(Enriched.HOLD_ID to hold.value)))
     }
 
+    /**
+     * **Replayed rather than read back, and that is B-91.**
+     *
+     * The undo used to be `ctx.enriched(HOLD_ID)?.let { release(it) }`, which is correct whenever
+     * the id is there and does nothing in the one case petich calls this for: the gateway commits,
+     * the answer is lost, the phase times out. `ctx.enrich` never ran and could not have — the id
+     * arrives IN the answer that was lost — so the rider's fare stayed held and nothing would ever
+     * let go of it.
+     *
+     * Naming the hold is not enough by itself: this gateway cancels by the id it generated, not by
+     * the caller's key, which is what a real provider offers. So the compensation makes the SAME
+     * request under the SAME key and undoes by the id that comes back (petich B-48's second form):
+     * if the first call landed, this is answered by it and no second hold is taken; if it never
+     * landed, this creates one and the line below releases it. Net zero either way, which is what
+     * the absent id could not tell us.
+     *
+     * The enriched id stays where it was — that channel has a reader outside this saga and is not
+     * what was broken.
+     */
     override suspend fun compensate(
         ctx: PetichStepContext,
         payload: OrderPayload,
     ) {
-        ctx.enriched(Enriched.HOLD_ID)?.let { payments.release(HoldId(it)) }
+        val quote = ctx.quote() ?: return
+        payments.release(
+            payments.hold(ctx.idempotencyKey, payload.paymentMethodId, quote.amountCents, quote.currency),
+        )
     }
 }
 
