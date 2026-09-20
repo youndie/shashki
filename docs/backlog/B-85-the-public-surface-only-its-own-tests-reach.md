@@ -96,7 +96,9 @@ visibility where the test is in the same module, and a sentence where it is not.
 **An unjoined half (1).** `Projection.toGeo()` — declared on the interface, implemented twice,
 correct in both, and called by nothing outside a test, while `toCanvas` is called by every screen that
 draws a marker. No screen lets a rider pick a place by touching the map. Filed as **B-94** with the
-two ways out and their sizes.
+two ways out and their sizes. It is a `shared-ui` matter and has nothing to do with the saga engine,
+which B-94 now says outright — the prior instances of this shape are *this* repository's B-32, B-37,
+B-41 and B-42, and those numbers mean something else entirely in petich's backlog.
 
 **Reached outside the class files (3).** `RideAssignedEvent`, `RideSettledEvent` — serialised into
 the outbox and read by a relay; the Kotlin type is local, the **wire contract is not**, and narrowing

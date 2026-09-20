@@ -19,10 +19,19 @@ turn a canvas point back into a place is a map you can look at and not one you c
 in this product lets a rider pick a pickup or a dropoff by touching the map.** Addresses are typed,
 or they come from the stub geocoder.
 
-This is the shape the repository has now found five times — a mechanism written at both ends and
-joined at neither (B-32, B-37, B-41, B-42, and this). It is cited from B-85, which sorted twenty-five
-findings of the same report and concluded that this is the one that is not merely a test's window
-into a mechanism.
+**Nothing here involves petich.** This is `shared-ui`'s map and a Compose screen; the saga engine
+does not appear in it. Saying so because the numbers below invite the opposite reading: they are
+**this repository's** items, and a reader who has been living in petich's backlog will read `B-41` and
+`B-42` as the announcement type and the builder's name, which are different items in a different
+repository that happen to share the numbers.
+
+This is the shape *shashki* has now found five times — a mechanism written at both ends and joined at
+neither: [B-32](B-32-which-screens-the-server-sends.md) (which screens the server sends),
+[B-37](B-37-the-settlement-saga.md) (the settlement saga written and not called),
+[B-41](B-41-the-rider-actually-signs-in.md) (the rider signing in),
+[B-42](B-42-a-driver-is-reserved-for-life.md) (a driver reserved for ever), and this. Cited from
+B-85, which sorted twenty-five findings of the same report and concluded that this is the one that is
+not merely a test's window into a mechanism.
 
 ## Two ways out, and they are not the same size
 
