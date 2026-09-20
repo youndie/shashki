@@ -7,6 +7,7 @@ import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichDefinition
+import io.github.youndie.petich.PetichMemberProbe
 import io.github.youndie.petich.PetichPhase
 import io.github.youndie.petich.PetichResult
 import io.github.youndie.petich.PetichSideEffect
@@ -194,11 +195,13 @@ class SettlementSagaTest {
             // The saga as it stands when `charge` throws: the tip's payload carries the ride's hold,
             // and nothing has enriched CHARGE_ID.
             val saga = settlement(fare, SettlementPayload.Kind.TIP, id = "tip-no-charge", tip = TIP)
-            // A CONTEXT DOUBLE, because the call under test is a compensation and a compensation takes
-            // one. The saga is the one where `charge` threw, so nothing was recorded — which is the
-            // whole case: `ctx.recorded<Charged>()` answers null and the undo refunds nothing rather
-            // than falling back to the hold this payload carries, which is the FARE's.
-            CaptureStep(payments).compensate(NoRecord(saga), saga.payload as SettlementPayload)
+            // THE CONTEXT PETICH SHIPS, not a double of it — which matters here more than
+            // anywhere: the case IS that nothing was recorded, and a hand-written context that only
+            // remembered what happened in front of it would answer null for a record the saga
+            // carries and pass while production failed.
+            CaptureStep(
+                payments,
+            ).compensate(PetichMemberProbe(saga, stepKey = "capture"), saga.payload as SettlementPayload)
 
             assertEquals(
                 listOf(FARE),
@@ -392,36 +395,6 @@ class SettlementSagaTest {
             ctx: PetichCheckContext,
             payload: SettlementPayload,
         ): Unit = error("process died before $key answered")
-    }
-
-    /** What a member's context is when nothing was recorded — the case the undo above turns on. */
-    private class NoRecord(
-        override val petich: Petich,
-        override val stepKey: String = "capture",
-    ) : PetichStepContext {
-        override fun enrich(payload: EnrichedPayload): Unit = error("not part of this case")
-
-        override fun record(value: PetichStepRecord): Unit = error("not part of this case")
-
-        override fun recordedValue(): PetichStepRecord? = null
-
-        override fun emit(event: OutboxEvent): Unit = error("not part of this case")
-
-        override fun attach(effect: PetichSideEffect): Unit = error("not part of this case")
-
-        override fun suspendFor(
-            action: String,
-            ttl: Duration?,
-        ): Unit = error("not part of this case")
-
-        override fun reject(reason: String): Unit = error("not part of this case")
-
-        override fun resuspendFor(
-            action: String,
-            ttl: Duration?,
-        ): Unit = error("not part of this case")
-
-        override fun fail(reason: String): Unit = error("not part of this case")
     }
 
     private companion object {
