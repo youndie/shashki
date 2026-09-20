@@ -281,6 +281,17 @@ public class OfferStep(
         /** How many the index had when this cascade started — the number R5 shows (B-73). */
         nearby: Int,
     ) {
+        // **THIS CASCADE IS OUTSIDE petich's IDEMPOTENCY RULE, and it is worth saying why** (petich
+        // B-47). That rule is about naming a REMOTE effect before calling it, so that a re-run
+        // arrives under a name the far side has seen and a rollback can cancel by it. Both effects
+        // below are in this process — `InMemoryOfferBoard` and a map of timers, neither of them
+        // even suspending — so there is no far side to deduplicate anything and nothing to name.
+        //
+        // The moment either becomes a call out of the process, the rule applies AND its cascade
+        // half applies: a member that asks one candidate after another must discriminate the key
+        // per attempt — `ctx.idempotencyKey(driverId)` — because the plain key is issued per member
+        // and the second offer would otherwise arrive under the first offer's name. Its rollback
+        // then owes a withdrawal per driver asked, not one for the last.
         val expiresAt = clock.nowEpochMs() + OFFER_SECONDS * MILLIS
         board.post(Offer(payload.rideId, driverId, expiresAt))
         timeouts.schedule(payload.rideId, driverId, OFFER_SECONDS)
