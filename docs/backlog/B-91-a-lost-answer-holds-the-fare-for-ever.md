@@ -26,6 +26,28 @@ What neither half covers is the ordinary failure of a distributed system:
 
 `SettlementSteps.CaptureStep` has the same shape against `capture`.
 
+**petich B-48 says which form this port needs, and it is not the simple one.** `hold()` returns a
+generated `HoldId` and `release()` takes that id — the caller's name buys a replay, not a handle — so
+"cancel whatever is under this key" has nothing to address here. The form for a far side that only
+deduplicates is **replay then cancel by the id the replay returns**:
+
+```kotlin
+override suspend fun compensate(ctx: PetichStepContext, payload: OrderPayload) {
+    val hold = payments.hold(ctx.idempotencyKey, payload.paymentMethodId, quote.amountCents, …)
+    payments.release(hold.id)
+}
+```
+
+If the first call landed, the replay is answered by it and no second hold is taken; if it never
+landed, the replay creates one and the release removes it. Net zero either way, which is exactly what
+the missing record could not tell us. It costs one extra gateway call on the rollback path.
+
+That form has a precondition this repository owns rather than petich: **the gateway must remember an
+idempotency key for longer than `maxCompensationAttempts × stuckAfter`.** Past that window the replay
+is not a replay — it is a second hold, released, with the first still standing. petich's
+`ReplayThenCancelTest` keeps that failure as a live case; whatever we do here has to state which
+window our gateway actually gives us.
+
 petich B-43 named this class of defect and added `ctx.idempotencyKey` — a deterministic
 `"<saga id>:<member key>"`, the same string on the forward pass and in the compensation — so a
 rollback can say "cancel whatever is under this name" and be a no-op when there is nothing. **konekt
@@ -35,8 +57,11 @@ port cannot express it yet.
 
 ## Acceptance
 
-- `PaymentGateway` can be told what to call an operation, and can be asked to release or void by that
-  name rather than only by the id it generated.
+- `PaymentGateway` can be told what to call an operation. Whether it also gains "release by that
+  name" or keeps generated-id cancellation and takes the replay form is decided against what the real
+  gateway offers, not against what is convenient — petich B-48 has both shapes written out.
+- If the replay form is chosen, the gateway's actual key-retention window is named in the item's
+  findings and checked against `maxCompensationAttempts × stuckAfter` for our configuration.
 - `HoldPaymentStep` and `CaptureStep` name their effect before the call and undo by that name. The id
   stays in the enriched payload — that channel has a second reader and is not what is wrong.
 - A test where the gateway **commits and then loses the answer**, and the fare is released anyway. A
