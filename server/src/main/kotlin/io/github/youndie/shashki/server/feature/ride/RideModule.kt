@@ -35,7 +35,9 @@ import io.github.youndie.shashki.server.feature.rating.data.ExposedRatingReposit
 import io.github.youndie.shashki.server.feature.rating.domain.RateRideUseCase
 import io.github.youndie.shashki.server.feature.rating.domain.RatingRepository
 import io.github.youndie.shashki.server.feature.receipt.ReceiptConfig
+import io.github.youndie.shashki.server.feature.receipt.data.ExposedReceiptClaims
 import io.github.youndie.shashki.server.feature.receipt.data.PetichReceiptRepository
+import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptClaims
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptRepository
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptScreenUseCase
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
@@ -117,6 +119,9 @@ public fun rideModule(
         single<PetichClock> { PetichClock { System.currentTimeMillis() } }
         single<Json> { sagaJson() }
         singleOf(::SagaStorage)
+
+        // B-92: written before the mail, so a pass that runs twice sends one receipt.
+        single<ReceiptClaims> { ExposedReceiptClaims(get(), get()) }
 
         // B-23's one line. `RoutingConfig` decides between the graph and the straight-line
         // stand-in, and says loudly which it chose — the stand-in is still reachable because the
@@ -227,7 +232,7 @@ public fun rideModule(
                             json = get(),
                             tracing = tracing,
                         ),
-                        settlementPetich(get(), get(), get(), get(), tracing = tracing),
+                        settlementPetich(get(), get(), get(), get(), get(), tracing = tracing),
                     ),
             )
         }

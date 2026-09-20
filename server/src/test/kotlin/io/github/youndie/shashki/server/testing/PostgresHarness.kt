@@ -75,7 +75,12 @@ object PostgresHarness {
                 // `ratings` joined the list with B-44 — and left the same footprint on the way
                 // in: a rating from one test averaged into the next one's, and the assertion about
                 // a sort key read 4.0 for a driver the test had just given a 3.
-                it.execute("TRUNCATE TABLE petiches, outbox_events, trips, payouts, ratings")
+                // And `receipt_claims` with B-92, which is the THIRD table this hand-written list
+                // has learned about the same way: a claim left by one test silenced the next one's
+                // receipt, and the assertion failed on a send that never happened rather than on the
+                // fixture that prevented it. A list beside a growing set of tables is a list that is
+                // always one behind.
+                it.execute("TRUNCATE TABLE petiches, outbox_events, trips, payouts, ratings, receipt_claims")
             }
             connection.commit()
         }

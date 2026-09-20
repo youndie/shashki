@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server.db
 import io.github.youndie.petich.postgres.OutboxEventsTable
 import io.github.youndie.petich.postgres.PetichTable
 import io.github.youndie.shashki.server.billing.PayoutsTable
+import io.github.youndie.shashki.server.feature.receipt.data.ReceiptClaimsTable
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.trip.data.TripsTable
 import io.github.youndie.shashki.server.testing.PostgresHarness
@@ -20,7 +21,8 @@ import kotlin.test.assertEquals
 class SchemaTest {
     // petich's two, plus the two the settlement needs: a trip is not a saga and a payout is a
     // ledger row (research §1.4c, B-37).
-    private val tables: List<Table> = listOf(PetichTable(sagaJson()), OutboxEventsTable(), TripsTable, PayoutsTable)
+    private val tables: List<Table> =
+        listOf(PetichTable(sagaJson()), OutboxEventsTable(), TripsTable, PayoutsTable, ReceiptClaimsTable)
 
     @Test
     fun `the migrated schema needs no further DDL for the tables the server declares`() {
@@ -38,6 +40,6 @@ class SchemaTest {
     @Test
     fun `the schema test is looking at something`() {
         // The guard on the guard: an empty list is also what an empty table list produces.
-        assertEquals(4, tables.size)
+        assertEquals(5, tables.size)
     }
 }

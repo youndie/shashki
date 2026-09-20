@@ -17,6 +17,7 @@ import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.PetichStepRecord
+import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.petich.petichDefinition
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
@@ -24,6 +25,7 @@ import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.HoldId
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
 import io.github.youndie.shashki.server.billing.Payout
+import io.github.youndie.shashki.server.feature.receipt.data.ExposedReceiptClaims
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
@@ -38,6 +40,7 @@ import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettled
 import io.github.youndie.shashki.server.feature.settlement.saga.RideSettledEvent
 import io.github.youndie.shashki.server.feature.settlement.saga.SETTLEMENT_SAGA_TYPE
 import io.github.youndie.shashki.server.feature.settlement.saga.Settleable
+import io.github.youndie.shashki.server.feature.settlement.saga.Settled
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
 import io.github.youndie.shashki.server.feature.settlement.saga.settlementPetich
@@ -75,10 +78,14 @@ class SettlementSagaTest {
     private val clock = PetichClock { System.currentTimeMillis() }
     private val receipts = RecordingReceipts()
 
+    // THE REAL LEDGER, against the harness's database. A fake that said yes every time would make
+    // the claim look like it worked while the relay saw two messages (B-92).
+    private val claims = ExposedReceiptClaims(PostgresHarness.database, clock)
+
     // THE PRODUCTION FACTORY, not a hand-built copy of it. A list assembled here would be a second
     // declaration of the saga's order, and the one that drifts is the one nobody deploys.
     private fun definition(sender: ReceiptSender = receipts): PetichDefinition<SettlementPayload> =
-        settlementPetich(payments, payouts, SendReceiptUseCase(sender), json)
+        settlementPetich(payments, payouts, SendReceiptUseCase(sender), claims, json)
 
     private fun engine(definition: PetichDefinition<SettlementPayload>) =
         sagaEngine(storage, clock, definitions = listOf(definition))
@@ -345,6 +352,64 @@ class SettlementSagaTest {
             assertEquals(listOf(RideSettledEvent.TYPE), storage.outbox.fetchPending().map { it.type })
         }
 
+    /**
+     * **B-92: one receipt, however many times the last pass runs.**
+     *
+     * Two causes and both end here: a process dying inside the announcement, and — far more
+     * ordinarily — `processWithRetry` re-running the WHOLE pass on an optimistic-lock conflict, up
+     * to `maxProcessAttempts` times. Either way `PublishSettled` runs again with the same saga.
+     *
+     * **The member is called directly, and the first version of this test was wrong.** Running the
+     * saga through the engine twice passes whether or not the claim works, because petich
+     * short-circuits a terminal saga and never reaches the member — a test that was green for a
+     * reason that had nothing to do with what it claimed. A mutation caught it. `PetichMemberProbe`
+     * is petich's own context, so this asks the member exactly what the engine asks it.
+     *
+     * **It counts sends.** Asserting on `receipt_claims` would pass while the relay saw two
+     * messages, which is the only thing a rider would notice.
+     */
+    @Test
+    fun `a member that runs twice sends one receipt`() =
+        runTest {
+            val member = PublishSettled(json, SendReceiptUseCase(receipts), claims)
+            val payload = settlement(HoldId("hold-x"), SettlementPayload.Kind.FARE).payload as SettlementPayload
+
+            member.announce(probeFor(payload), payload)
+            member.announce(probeFor(payload), payload)
+
+            assertEquals(1, receipts.sent.size, "the rider was sent a second receipt")
+        }
+
+    /** The same member on a different settlement of the same ride is not the same claim. */
+    @Test
+    fun `a tip is a second settlement and takes its own claim`() =
+        runTest {
+            val fresh = ExposedReceiptClaims(PostgresHarness.database, clock)
+
+            assertEquals(true, fresh.claim("$RIDE:settled:publish-settled", RIDE))
+            assertEquals(false, fresh.claim("$RIDE:settled:publish-settled", RIDE), "the second caller must lose")
+            assertEquals(true, fresh.claim("$RIDE:tipped:publish-settled", RIDE), "a tip is a different settlement")
+        }
+
+    /** What the engine hands the announcement: the two amounts its body reads. */
+    private fun probeFor(payload: SettlementPayload) =
+        PetichMemberProbe(
+            Petich(
+                id = RIDE_SAGA,
+                type = SETTLEMENT_SAGA_TYPE,
+                status = PetichStatus.PROCESSING,
+                payload = payload,
+                enrichedPayload =
+                    SimpleEnrichedPayload(
+                        mapOf(
+                            Settled.CHARGE_AMOUNT to FARE.toString(),
+                            Settled.PAYOUT_AMOUNT to (FARE - 1).toString(),
+                        ),
+                    ),
+            ),
+            stepKey = "publish-settled",
+        )
+
     private class RecordingReceipts : ReceiptSender {
         val sent = mutableListOf<Receipt>()
 
@@ -408,7 +473,7 @@ class SettlementSagaTest {
             if (at == "publish-settled") {
                 announce(at, DyingAnnouncement(at))
             } else {
-                announce("publish-settled", PublishSettled(json, SendReceiptUseCase(receipts)))
+                announce("publish-settled", PublishSettled(json, SendReceiptUseCase(receipts), claims))
             }
         }
 
