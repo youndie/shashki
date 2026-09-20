@@ -42,14 +42,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[ ]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 
-## Closed (92)
+## Closed (93)
 
 **Remove the unknowns**
 
@@ -163,6 +162,7 @@ re-prioritising one must never move its file.
 - [B-90](docs/backlog/B-90-a-moving-coordinate-in-a-published-build.md) `[x]` - Publishing the repository made a moving snapshot coordinate a defect, and pinning its root pinned half of it
 - [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[x]` - A hold whose answer is lost is never released, because the id it would be released by came back in that answer
 - [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[x]` - A receipt goes out again every time the settlement's last pass is retried
+- [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[x]` - A saga whose process died is never picked up, because stuckAfter was never set
 
 <!-- END INDEX -->
 

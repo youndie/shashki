@@ -58,15 +58,17 @@ import kotlin.test.assertTrue
  */
 class OrderSagaTest {
     private val json = sagaJson()
-    private val storage = SagaStorage(PostgresHarness.database, json)
-    private val payments = InMemoryPaymentGateway()
-    private val reservations = InMemoryDriverReservations()
 
     @Suppress(
         "ktlint:kapkan:wall-clock",
         "the engine needs a clock and this test asserts on the saga's phases, not on time",
     )
     private val clock = PetichClock { System.currentTimeMillis() }
+
+    private val storage = SagaStorage(PostgresHarness.database, json, clock)
+    private val payments = InMemoryPaymentGateway()
+    private val reservations = InMemoryDriverReservations()
+
     private val timeouts = OfferTimeouts(CoroutineScope(SupervisorJob() + Dispatchers.Default)) { _, _ -> }
 
     private fun offerStep(candidates: FixedCandidateSource = FixedCandidateSource()) =

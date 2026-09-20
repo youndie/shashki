@@ -87,6 +87,35 @@ private const val PORT: Int = 8080
 private val WEBSOCKET_PING = 15.seconds
 
 /**
+ * How long a saga must sit untouched in `PROCESSING` before the sweeper re-drives it (B-93).
+ *
+ * **Unset until now, which meant the half of the sweeper that recovers a dead process was switched
+ * off.** It expired suspensions and nothing else: a saga whose instance died mid-pass sat in
+ * `PROCESSING` for ever, holding whatever it held. petich has had the re-drive since its B-26 and
+ * this application had simply never given it a number.
+ *
+ * **The number is a formula, not a taste**, and petich says which: there is no lease and no owner
+ * column, so nothing distinguishes a dead process from a slow one, and re-driving a saga a live
+ * instance is still working on runs its members twice.
+ *
+ *     stuckAfter > max(phaseTimeoutsMs ∪ compensationTimeoutsMs)
+ *
+ * We override neither table, so both are petich's defaults and their maximum is AUTHORIZATION's
+ * **30 s**. The bound is per member rather than per pass because every member that proceeds writes,
+ * and the store stamps `updated_at` on every write — so the gap the sweeper measures is one member's
+ * timeout, not a saga's.
+ *
+ * Ninety seconds is three times that bound. The margin covers the write that follows a member which
+ * took its full timeout, plus the optimistic-retry backoff, which is `2^n × 20 ms` over at most five
+ * attempts — about 1.5 s, negligible beside the 60 s of headroom.
+ *
+ * **What it constrains elsewhere:** `KEY_RETENTION` in `PaymentGateway.kt`, because a rollback can
+ * now span passes and petich's bound on that is `maxCompensationAttempts × stuckAfter` — 3 × 90 s,
+ * four and a half minutes, against a 24-hour window.
+ */
+private val STUCK_AFTER = 90.seconds
+
+/**
  * Everything that needs no database: the plugins, the error mapping and the health probe. Split
  * out so a test — and the probe itself — can have a server without a database, and so the list of
  * plugins is readable on its own.
@@ -279,12 +308,17 @@ public fun Application.shashki(
     }
 
     // Two workers the saga cannot do without and the request path never sees. The sweeper rolls
-    // back sagas that suspended for a driver nobody came back for (B-12's deadline); the relay
-    // delivers what the outbox holds. Both stop with the application, through its own scope.
+    // back sagas that suspended for a driver nobody came back for (B-12's deadline) AND re-drives
+    // the ones a dead process left mid-pass (B-93); the relay delivers what the outbox holds. Both
+    // stop with the application, through its own scope.
     val storage = get<SagaStorage>()
     val engine = get<PetichEngine>()
-    SuspendedPetichSweeper(repository = storage.petiches, engine = engine, clock = get<PetichClock>())
-        .start(this)
+    SuspendedPetichSweeper(
+        repository = storage.petiches,
+        engine = engine,
+        clock = get<PetichClock>(),
+        stuckAfter = STUCK_AFTER,
+    ).start(this)
     // **The relay runs only when there is somewhere to deliver to** (B-38). Until then this started
     // it against a `LoggingPublisher`, which marked every event delivered because it had written a
     // line — not a fallback but a broker outage nobody could notice. With no broker the events stay
