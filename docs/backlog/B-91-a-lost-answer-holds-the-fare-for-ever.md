@@ -1,7 +1,7 @@
 ---
 id: B-91
 title: "A hold whose answer is lost is never released, because the id it would be released by came back in that answer"
-status: wip
+status: done
 priority: P1
 size: M
 stage: stage-6-what-running-it-said
@@ -68,3 +68,62 @@ port cannot express it yet.
   test where the call never landed does not exercise this: there the id is absent *and* the hold is
   absent, so a rollback that does nothing is right by accident.
 - The fake gateway used by the suites grows the same behaviour, or the test above cannot exist.
+
+## Findings
+
+**The replay form, because the gateway leaves no other.** `hold` and `charge` take a caller-chosen
+key; `release`, `capture` and `refund` keep addressing by the id the gateway generated. That
+asymmetry is not laziness — it is what a real provider offers, and petich B-48 names the consequence:
+a compensation cannot say "cancel whatever is under this key", so it **replays** the same request
+under the same key and undoes by the id that comes back.
+
+**The item's premise about `CaptureStep` was half wrong, and the half that was right is better than
+it said.**
+
+- **The fare and fee branch has no hole at all.** `capture(HoldId(payload.holdId), …)` and
+  `refund(HoldId(payload.holdId))` are both addressed by an id the **payload already carries**.
+  Nothing there waits for an answer, so the lost-answer case cannot reach it. It is unchanged, and
+  the code now says why so the next reader does not have to re-derive it.
+- **The tip branch had the hole, and the author had already found it.** The comment standing there
+  said the charge "stays taken, because there is no id here with which to refund it, and a rollback
+  that says so is better than one that refunds the wrong money". Both halves true; what was missing
+  was a third option. B-48 is that option, and the note is replaced by the fix rather than deleted.
+
+**The mock gateway was kinder than production, which is how this survived.** `InMemoryPaymentGateway`
+did not deduplicate by key at all — it had no key. A mock easier than the thing it stands in for
+hides exactly the defect that only appears against the real one, so it now remembers what each key
+produced. The KDoc says that in as many words.
+
+**The retention window, named and checked as the acceptance demanded.** `KEY_RETENTION` is 24 hours,
+which is what the providers this mock stands in for offer. Against our configuration:
+
+- `maxCompensationAttempts` is petich's default **3** — this application configures only
+  `requireOutbox`;
+- **`stuckAfter` is unset**, so `SuspendedPetichSweeper`'s stranded-saga re-drive is switched off
+  here, and a rollback lives inside a single `process` call and finishes in seconds.
+
+So petich's `keyRetention > maxCompensationAttempts × stuckAfter` is not binding today — the product
+is undefined because one factor is null — and 24 hours clears the real bound by a margin nothing here
+approaches. The inequality is written beside the constant so that the day somebody sets `stuckAfter`
+it is in the same file as the thing it constrains.
+
+**A second finding, out of scope and filed separately:** that unset `stuckAfter` means **this
+application never re-drives a saga whose process died**. petich has had that machinery since B-26 and
+shashki has never switched it on. It is `B-93`.
+
+**The test is the one the acceptance insisted on.** `LostAnswerReleasesTheFareTest` has a gateway that
+**commits and then throws**, which is a lost answer as the caller sees it. Four cases: the fare is
+released; no second hold is taken when the first landed; a call that never landed is still a rollback
+that does nothing (the older rule is not weakened); and — kept live rather than written in a KDoc —
+a gateway that has forgotten the key leaves the first hold standing, which is what the retention
+inequality exists to prevent.
+
+**Checked by mutation after the implementation was committed:** putting the old
+`ctx.enriched(HOLD_ID)?.let { release(it) }` back fails two of the four. Restored, tree clean.
+
+**petich `0.4.0.88` → `0.4.0.97`**, because `ctx.idempotencyKey` arrived after the pinned build.
+`0.4.0.98` exists for `petich-core` and **not** for `petich-postgres` or `petich-scheduler`, so the
+newest number is not the newest usable version — `.97` is the newest complete one, verified by
+`javap` on the jar rather than by its number.
+
+**Verification.** `:server:build --rerun-tasks` on the Linux box, exit code read rather than piped.
