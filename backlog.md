@@ -47,7 +47,7 @@ re-prioritising one must never move its file.
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
-| [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
+| [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[~]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
 ## Closed (91)
 

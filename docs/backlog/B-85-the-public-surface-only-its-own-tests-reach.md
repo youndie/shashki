@@ -1,7 +1,7 @@
 ---
 id: B-85
 title: "Twenty-four public declarations that nothing but their own tests reaches"
-status: open
+status: wip
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
