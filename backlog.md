@@ -49,7 +49,7 @@ re-prioritising one must never move its file.
 | [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[ ]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 
-## Closed (91)
+## Closed (92)
 
 **Remove the unknowns**
 
