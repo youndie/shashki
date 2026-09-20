@@ -187,9 +187,12 @@ class OfferCascadeTest {
             now += OfferStep.MATCHING_BUDGET.inWholeMilliseconds + 1
 
             val swept =
-                SuspendedPetichSweeper(storage.petiches, engineFor = {
-                    engine
-                }, clock = clock, pollInterval = Long.MAX_VALUE.let { kotlin.time.Duration.INFINITE }).sweep()
+                SuspendedPetichSweeper(
+                    storage.petiches,
+                    engine,
+                    clock = clock,
+                    pollInterval = kotlin.time.Duration.INFINITE,
+                ).sweep()
 
             assertEquals(1, swept, "the sweeper found the expired saga")
             assertEquals(emptyMap(), reservations.all(), "the driver is freed")

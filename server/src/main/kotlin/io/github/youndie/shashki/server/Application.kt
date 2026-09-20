@@ -283,7 +283,7 @@ public fun Application.shashki(
     // delivers what the outbox holds. Both stop with the application, through its own scope.
     val storage = get<SagaStorage>()
     val engine = get<PetichEngine>()
-    SuspendedPetichSweeper(repository = storage.petiches, engineFor = { engine }, clock = get<PetichClock>())
+    SuspendedPetichSweeper(repository = storage.petiches, engine = engine, clock = get<PetichClock>())
         .start(this)
     // **The relay runs only when there is somewhere to deliver to** (B-38). Until then this started
     // it against a `LoggingPublisher`, which marked every event delivered because it had written a
