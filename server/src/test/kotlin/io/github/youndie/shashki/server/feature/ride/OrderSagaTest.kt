@@ -233,7 +233,7 @@ class OrderSagaTest {
             // Reconstructed by hand rather than staged with a fake step, because a step that
             // *suspends* leaves a different row (PENDING_SIGNATURE, waiting for a resume payload)
             // and a step that *throws* is compensated on the spot; neither is a dead process.
-            val hold = payments.hold("card-4417", amountCents = 1_000, currency = "USD")
+            val hold = payments.hold("fixture-1", "card-4417", amountCents = 1_000, currency = "USD")
             val parked =
                 order("ride-resumed").copy(
                     status = PetichStatus.PROCESSING,

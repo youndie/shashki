@@ -46,11 +46,11 @@ re-prioritising one must never move its file.
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[ ]` | A hold whose answer is lost is never released, because the id it would be released by came back in that answer | P1 | M | - |
 | [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[ ]` | A receipt goes out again every time the settlement's last pass is retried | P1 | M | - |
+| [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
-## Closed (89)
+## Closed (90)
 
 **Remove the unknowns**
 
@@ -161,6 +161,7 @@ re-prioritising one must never move its file.
 - [B-88](docs/backlog/B-88-the-guards-that-need-the-stand-never-ran.md) `[x]` - Twelve guards need a stand, the stand runs for hours, and nothing ever pointed one at the other
 - [B-89](docs/backlog/B-89-the-forgery-that-forged-nothing-one-run-in-four.md) `[x]` - The signature the acceptance test forges is unchanged one run in four, and the test then accuses the server
 - [B-90](docs/backlog/B-90-a-moving-coordinate-in-a-published-build.md) `[x]` - Publishing the repository made a moving snapshot coordinate a defect, and pinning its root pinned half of it
+- [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[x]` - A hold whose answer is lost is never released, because the id it would be released by came back in that answer
 
 <!-- END INDEX -->
 

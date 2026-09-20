@@ -257,7 +257,7 @@ public class CaptureStep(
         // the trip ended and is gone, and `capture` cannot exceed a hold in this gateway or in a
         // real one. What comes back is the id the refund below needs.
         if (payload.kind == SettlementPayload.Kind.TIP) {
-            val id = payments.charge(payload.paymentMethodId, charge, payload.quote.currency)
+            val id = payments.charge(ctx.idempotencyKey, payload.paymentMethodId, charge, payload.quote.currency)
             // RECORDED AGAINST THIS MEMBER rather than merged into the payload the saga carries
             // forward. `Settled.CHARGE_ID` used to live in the enriched payload, which is a shared
             // map with a different lifetime and a different reader — and the only thing that ever
@@ -276,19 +276,33 @@ public class CaptureStep(
         // **Undone the way it was done, and the two kinds do not share a fallback** (#13). `run`
         // charges a tip and captures a hold for everything else; the undo splits at the same line.
         //
-        // A tip gives back the charge it left behind — and nothing at all when it left none. The
-        // absence is the case that matters: `CHARGE_ID` is recorded only after `charge` returns, so
-        // a call that threw or timed out leaves none, and the hold this payload carries is the
-        // *fare's* — `SettleRideUseCase` hands every kind the ride's own hold, and for a tip that
-        // one was captured when the trip ended. Falling back to it here would give the rider back
-        // the ride they were happy with, and the gateway would find it in `captured` and remove it
-        // without a word. What that costs is a charge that did reach the far side and whose id
-        // never came home: it stays taken, because there is no id here with which to refund it, and
-        // a rollback that says so is better than one that refunds the wrong money.
+        // A tip gives back the charge it left behind, and it no longer has to guess whether it left
+        // one.
+        //
+        // **This is where the cost written down here used to be paid** (B-91). `CHARGE_ID` is
+        // recorded only after `charge` returns, so a call that reached the far side and lost its
+        // answer left no record — and the note that stood here said as much and accepted it: "it
+        // stays taken, because there is no id here with which to refund it, and a rollback that says
+        // so is better than one that refunds the wrong money". Both halves of that were true. What
+        // was missing was a third option.
+        //
+        // petich B-48 is the third option: the charge is named before it is made, so the undo can
+        // REPLAY the same request under the same key and refund the id that comes back. Answered by
+        // the first call if it landed, creating and removing it if it did not. The fallback the note
+        // rejected stays rejected — the hold this payload carries is the *fare's*, and refunding it
+        // would give the rider back the ride they were happy with.
         if (payload.kind == SettlementPayload.Kind.TIP) {
-            ctx.recorded<Charged>()?.let { payments.refund(HoldId(it.chargeId)) }
+            // The same amount `run` used, from the same place: the replay has to be the SAME request
+            // or the gateway is entitled to treat it as a different one.
+            val charge = ctx.enriched(Settled.CHARGE_AMOUNT)?.toLongOrNull() ?: return
+            payments.refund(
+                payments.charge(ctx.idempotencyKey, payload.paymentMethodId, charge, payload.quote.currency),
+            )
             return
         }
+        // **Unchanged, and for a reason worth stating:** a capture is addressed by the hold id the
+        // PAYLOAD carries, not by an id that comes back in an answer. Nothing here depends on a
+        // reply arriving, so the lost-answer case this item is about cannot reach it.
         payments.refund(HoldId(payload.holdId))
     }
 }

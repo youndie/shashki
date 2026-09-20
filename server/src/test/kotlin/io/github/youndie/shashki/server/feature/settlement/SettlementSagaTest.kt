@@ -89,7 +89,7 @@ class SettlementSagaTest {
     @Test
     fun `a fare runs every phase, takes the money once, records the payout and leaves one event`() =
         runTest {
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-1", "card-4417", FARE, "USD")
             val result = engine(definition()).process(settlement(hold, SettlementPayload.Kind.FARE))
 
             assertIs<PetichResult.Success>(result)
@@ -117,7 +117,7 @@ class SettlementSagaTest {
     @Test
     fun `a fee runs the same phases and takes a quarter`() =
         runTest {
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-2", "card-4417", FARE, "USD")
             val result = engine(definition()).process(settlement(hold, SettlementPayload.Kind.FEE))
 
             assertIs<PetichResult.Success>(result)
@@ -191,7 +191,7 @@ class SettlementSagaTest {
     @Test
     fun `a tip whose charge never landed does not refund the fare`() =
         runTest {
-            val fare = payments.hold("card-4417", FARE, "USD")
+            val fare = payments.hold("fixture-3", "card-4417", FARE, "USD")
             payments.capture(fare, FARE)
 
             // The saga as it stands when `charge` throws: the tip's payload carries the ride's hold,
@@ -222,7 +222,7 @@ class SettlementSagaTest {
             // that cannot do that; the case below is the same death with the opposite assertion.
             for (dieBefore in listOf("settleable", "capture", "payout")) {
                 PostgresHarness.truncateAll()
-                val hold = payments.hold("card-4417", FARE, "USD")
+                val hold = payments.hold("fixture-4", "card-4417", FARE, "USD")
                 val engine = engine(definitionDying(at = dieBefore))
 
                 val result = engine.process(settlement(hold, SettlementPayload.Kind.FARE, id = "s-$dieBefore"))
@@ -252,7 +252,7 @@ class SettlementSagaTest {
     fun `a settlement whose announcement dies keeps the money where it moved it`() =
         runTest {
             PostgresHarness.truncateAll()
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-5", "card-4417", FARE, "USD")
 
             val result =
                 engine(definitionDying(at = "publish-settled"))
@@ -277,7 +277,7 @@ class SettlementSagaTest {
     @Test
     fun `a settlement the first process abandoned is finished by the next one, and takes nothing more`() =
         runTest {
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-6", "card-4417", FARE, "USD")
             payments.capture(hold, FARE)
 
             val parked =
@@ -311,7 +311,7 @@ class SettlementSagaTest {
     @Test
     fun `the receipt carries the ride and the amount that was taken`() =
         runTest {
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-7", "card-4417", FARE, "USD")
             engine(definition()).process(settlement(hold, SettlementPayload.Kind.FEE))
 
             val receipt = receipts.sent.single()
@@ -334,7 +334,7 @@ class SettlementSagaTest {
                 object : ReceiptSender {
                     override suspend fun send(receipt: Receipt): Boolean = error("the relay refused the connection")
                 }
-            val hold = payments.hold("card-4417", FARE, "USD")
+            val hold = payments.hold("fixture-8", "card-4417", FARE, "USD")
 
             val result =
                 engine(definition(refusing)).process(settlement(hold, SettlementPayload.Kind.FARE))
