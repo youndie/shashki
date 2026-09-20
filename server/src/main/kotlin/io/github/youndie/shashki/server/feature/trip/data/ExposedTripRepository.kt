@@ -12,7 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 
-public object TripsTable : Table("trips") {
+internal object TripsTable : Table("trips") {
     public val rideId: Column<String> = varchar("ride_id", 255)
     public val driverId: Column<String> = varchar("driver_id", 255)
     public val status: Column<String> = varchar("status", 50)

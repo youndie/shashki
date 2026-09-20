@@ -1,7 +1,7 @@
 ---
 id: B-85
 title: "Twenty-four public declarations that nothing but their own tests reaches"
-status: wip
+status: done
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
@@ -61,3 +61,70 @@ has a different answer:
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/billing/PaymentGateway.kt`,
   `server/src/main/kotlin/io/github/youndie/shashki/server/dispatch/Dispatch.kt`,
   `shared-ui/src/commonMain/kotlin/io/github/youndie/shashki/ui/map/MapProjection.kt`
+
+## Findings
+
+### The list was stale before it was worked, which is the first thing worth knowing
+
+The item counted **29 findings, 24 of them "tests only"**. Running the report again read **35 and
+25**. Six arrived from work done since it was filed: `OrderStep`, `OrderCheck`, `OrderAnnouncement`,
+`SettlementStep`, `SettlementCheck`, `SettlementAnnouncement` — the member base classes the petich
+migration created or renamed. Five of those six are the "used inside its own file" category this item
+explicitly excluded, which means **the excluded category grows with every migration** and the number
+that matters is the other one.
+
+So a tally written once decays. The number below is dated for that reason.
+
+### The twenty-five, sorted
+
+**A test's window into a mechanism — the production path never asks (17).** The answer is narrower
+visibility where the test is in the same module, and a sentence where it is not.
+
+| declaration | why it is one |
+| --- | --- |
+| `PaymentGateway.Hold`, `activeHolds()`, `captured()` | the mock's read-backs; the saga writes, only a test looks |
+| `DriverSimulator`, `SimulatedBehaviour`, `SimulatorConfig`, `start()` | a load fixture, never wired into the application |
+| `DriverIndex.onlineCount()` | a count nothing routes on |
+| `DriverReservations.all()`, `reservedFor()` | assertions about a map the saga writes through two other methods |
+| `OfferBoard.forRide()` | `forDriver` is the one a route calls; this is the mirror a test needs |
+| `DroppedFrames.total()`, `DegradationCounter.count()`, `total()` | counters whose production reader is a log line, not a caller |
+| `OfferTimeouts.pending()` | the cascade's timers, visible only to the test that asserts one exists |
+| `MapSurface.emptyScene()` | the empty state a screenshot test renders |
+| `TileProjection`, `MemoryTileSource` | the single-tile picture the goldens are still drawn from |
+| `PlaceholderMapSurface` | the same, and **cross-module** — see below |
+
+**An unjoined half (1).** `Projection.toGeo()` — declared on the interface, implemented twice,
+correct in both, and called by nothing outside a test, while `toCanvas` is called by every screen that
+draws a marker. No screen lets a rider pick a place by touching the map. Filed as **B-94** with the
+two ways out and their sizes.
+
+**Reached outside the class files (3).** `RideAssignedEvent`, `RideSettledEvent` — serialised into
+the outbox and read by a relay; the Kotlin type is local, the **wire contract is not**, and narrowing
+it would say the opposite of what is true. `TripsTable` — reached by Exposed and by the migration,
+which is why `SchemaTest` exists; narrowed anyway, because Exposed reads the object from inside the
+module.
+
+**Cross-module, and the control is what said so (1).** `ShashkiTokens` is named in three modules'
+sources. And `PlaceholderMapSurface` is reached from **`driver`'s** tests — `internal` failed to
+compile on it and nothing else, which is a sharper answer than reading could have given: "only tests
+reach it" and "only its own module reaches it" are different facts, and the report says the first.
+
+### What was narrowed, and the control
+
+Six are `internal` now: `DriverSimulator`, `SimulatedBehaviour`, `SimulatorConfig`, `TripsTable`,
+`MemoryTileSource`, `TileProjection`. `./gradlew check` is green after, which is the control the
+acceptance asked for — they were only ever reached from their own module. A seventh,
+`PlaceholderMapSurface`, was tried and reverted; the compiler named it.
+
+The rest cannot be narrowed for reasons rather than by preference: an interface member cannot reduce
+visibility below its interface's (`activeHolds`, `captured`, `forRide`, `all`, `reservedFor`,
+`onlineCount`, `pending`, `toGeo`, `emptyScene`), and the two events are a wire contract.
+
+### The tally, dated
+
+**2026-09-20, after this item:** `./gradlew kapkanJoins` reports **29 findings, 19 of them "tests
+only"** — down from 35 and 25. The six that moved are the six narrowed. Nothing was deleted and
+nothing was suppressed.
+
+A run that reports more than 19 has found something new; a run that reports 19 has found the same
+pile, already judged, and needs no second reading until this file is out of date again.
