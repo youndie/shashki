@@ -25,7 +25,7 @@ coroutinesSwing = "1.11.0"
 # A RELEASE NOW, AND FROM CENTRAL. petich moved to `io.github.youndie.petich` and published 0.1.0;
 # `0.1.0.18` was a snapshot of the old group and is not coming back. Nothing here resolves petich
 # from the Reposilite any more.
-petich = "0.4.0.76"
+petich = "0.4.0.77"
 # **A snapshot, pinned by build metadata like smtpkn below.** s3kn publishes no release — its own
 # README leaves Maven Central until the API stops moving — so a demo that wants a real authenticated
 # write against the object store takes the snapshot (B-47) and applies B-13's documented fallback to

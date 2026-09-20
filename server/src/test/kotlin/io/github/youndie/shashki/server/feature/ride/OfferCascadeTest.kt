@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.youndie.petich.ExpireResult
 import io.github.youndie.petich.Petich
 import io.github.youndie.petich.PetichClock
-import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichResult
 import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.SuspendedPetichSweeper
@@ -26,6 +25,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RiderCancelled
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
+import io.github.youndie.shashki.server.feature.ride.saga.orderPetich
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.pricing.Pricing
@@ -66,16 +66,24 @@ class OfferCascadeTest {
     private val timeouts = OfferTimeouts(scope) { rideId, driverId -> fired += rideId to driverId }
     private val offers = OfferStep(FixedCandidateSource(), reservations, board, clock, timeouts)
 
-    private val steps: List<PetichInterceptor<*>> =
-        listOf(
-            QuoteStep(StraightLineRouteEstimator(), Pricing()),
-            ServiceAreaStep { ServiceArea.LJUBLJANA },
-            HoldPaymentStep(payments),
-            offers,
-            DriverAnswerStep(FixedCandidateSource(), reservations, offers),
-            PublishAssignedStep(json),
+    private val engine =
+        sagaEngine(
+            storage,
+            clock,
+            definitions =
+                listOf(
+                    orderPetich(
+                        routes = StraightLineRouteEstimator(),
+                        pricing = Pricing(),
+                        area = { ServiceArea.LJUBLJANA },
+                        payments = payments,
+                        offers = offers,
+                        candidates = FixedCandidateSource(),
+                        reservations = reservations,
+                        json = json,
+                    ),
+                ),
         )
-    private val engine = sagaEngine(steps, storage, clock)
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()

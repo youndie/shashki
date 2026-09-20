@@ -1,13 +1,16 @@
 package io.github.youndie.shashki.server.feature.ride.saga
 
-import io.github.youndie.petich.InterceptorResult
 import io.github.youndie.petich.OutboxEvent
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichCheck
+import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
-import io.github.youndie.petich.PetichInterceptor
-import io.github.youndie.petich.PetichPayload
-import io.github.youndie.petich.PetichPhase
+import io.github.youndie.petich.PetichDefinition
+import io.github.youndie.petich.PetichMemberContext
+import io.github.youndie.petich.PetichStep
+import io.github.youndie.petich.PetichStepContext
 import io.github.youndie.petich.SimpleEnrichedPayload
+import io.github.youndie.petich.petich
 import io.github.youndie.shashki.protocol.GeoPoint
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.server.billing.HoldId
@@ -30,89 +33,112 @@ import kotlin.time.Duration.Companion.seconds
  * One step per phase, and each is one class because the reason a step exists is the reason it can
  * be undone. The order is petich's; the priorities are all 0 because there is one step per phase.
  */
-public abstract class OrderStep : PetichInterceptor<OrderPayload> {
-    final override fun supports(payload: PetichPayload): Boolean = payload is OrderPayload
-
+public abstract class OrderStep : PetichStep<OrderPayload> {
     /**
-     * Every step is a span, and it is one line here rather than one per step.
+     * Every member is a span, and it is one line here rather than one per member.
      *
      * **B-39's criterion is that a saga's phases are visible in a trace**, and the natural way to get
-     * there — wrapping each `intercept` — is ten call sites that a new step forgets. `intercept` is
-     * final and delegates to [run], so a step written tomorrow is traced tomorrow. Outside a request
+     * there — wrapping each body — is ten call sites that a new member forgets. `execute` is final
+     * and delegates to [run], so a member written tomorrow is traced tomorrow. Outside a request
      * there is no context and `withSpan` is a no-op that still runs the block, which is exactly what a
      * saga resumed by the sweeper should be: unattributed rather than invented.
+     *
+     * `supports` used to sit here too: the row carried an [OrderPayload] or a settlement's, and each
+     * interceptor answered for the one it knew. The definition's type answers that now.
      */
-    final override suspend fun intercept(
-        petich: Petich,
+    final override suspend fun execute(
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult {
-        val agent = tracing?.tracy ?: return run(petich, payload)
-        return withSpan(spanName, agent) { run(petich, payload) }
+    ) {
+        val agent = tracing?.tracy ?: return run(ctx, payload)
+        withSpan(spanName(ctx.stepKey), agent) { run(ctx, payload) }
     }
 
-    /**
-     * **Named, so that a test can read it.** The first version built this string inline and shipped
-     * a name with the dollar sign still in it to the collector — an unexpanded template, invisible to the
-     * compiler and to every test, and found by looking at what actually arrived. A name is a value
-     * like any other and is asserted like one.
-     */
-    public val spanName: String get() = "saga.order.$phase.${this::class.simpleName}"
-
     protected abstract suspend fun run(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult
+    )
 
     /**
      * The agent, set once by the graph.
      *
      * **A mutable property and not a constructor parameter**, which is the ugly half of this and is
-     * deliberate: the steps are built in a list inside `rideModule` and threading an agent through
+     * deliberate: the members are built where the definition is and threading an agent through
      * ten constructors — six of which do not want one — is how a cross-cutting concern becomes a
      * parameter everybody copies. It is written once, before the engine exists.
      */
     public var tracing: Observability? = null
 
-    /** Steps with nothing to undo say so by leaving this alone. */
+    /** Members with nothing to undo say so by leaving this alone. */
     override suspend fun compensate(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
     ) {}
 
-    protected fun Petich.enriched(key: String): String? = (enrichedPayload as? SimpleEnrichedPayload)?.data?.get(key)
-
-    protected fun Petich.quote(): Quote? {
-        val distance = enriched(Enriched.QUOTE_DISTANCE)?.toIntOrNull() ?: return null
-        val duration = enriched(Enriched.QUOTE_DURATION)?.toIntOrNull() ?: return null
-        val amount = enriched(Enriched.QUOTE_AMOUNT)?.toLongOrNull() ?: return null
-        val currency = enriched(Enriched.QUOTE_CURRENCY) ?: return null
-        return Quote(distance, duration, amount, currency)
+    public companion object {
+        /**
+         * **Named, so that a test can read it.** The first version built this string inline and
+         * shipped a name with the dollar sign still in it to the collector — an unexpanded template,
+         * invisible to the compiler and to every test, and found by looking at what actually
+         * arrived. A name is a value like any other and is asserted like one.
+         *
+         * **Keyed by the member rather than by its phase.** A member carries no phase now, and the
+         * key is stricter anyway: the builder refuses two members under one key, so two spans cannot
+         * share a name by construction rather than by a test noticing.
+         */
+        public fun spanName(key: String): String = "saga.order.$key"
     }
+}
+
+/** The same span, for the members that have nothing to undo and so are checks rather than steps. */
+public abstract class OrderCheck : PetichCheck<OrderPayload> {
+    final override suspend fun check(
+        ctx: PetichCheckContext,
+        payload: OrderPayload,
+    ) {
+        val agent = tracing?.tracy ?: return run(ctx, payload)
+        withSpan(OrderStep.spanName(ctx.stepKey), agent) { run(ctx, payload) }
+    }
+
+    protected abstract suspend fun run(
+        ctx: PetichCheckContext,
+        payload: OrderPayload,
+    )
+
+    public var tracing: Observability? = null
+}
+
+internal fun PetichMemberContext.enriched(key: String): String? =
+    (petich.enrichedPayload as? SimpleEnrichedPayload)?.data?.get(key)
+
+internal fun PetichMemberContext.quote(): Quote? {
+    val distance = enriched(Enriched.QUOTE_DISTANCE)?.toIntOrNull() ?: return null
+    val duration = enriched(Enriched.QUOTE_DURATION)?.toIntOrNull() ?: return null
+    val amount = enriched(Enriched.QUOTE_AMOUNT)?.toLongOrNull() ?: return null
+    val currency = enriched(Enriched.QUOTE_CURRENCY) ?: return null
+    return Quote(distance, duration, amount, currency)
 }
 
 /** ENRICHMENT: the route and what it costs. Nothing to undo — a quote is a number. */
 public class QuoteStep(
     private val routes: RouteEstimator,
     private val pricing: Pricing,
-) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.ENRICHMENT
-
+) : OrderCheck() {
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichCheckContext,
         payload: OrderPayload,
-    ): InterceptorResult {
+    ) {
         val estimate = routes.estimate(payload.pickup, payload.dropoff)
         val quote = pricing.quote(payload.pickup, payload.rideClass, estimate)
-        return InterceptorResult.Proceed(
-            enrichedPayload =
-                SimpleEnrichedPayload(
-                    mapOf(
-                        Enriched.QUOTE_DISTANCE to quote.distanceMetres.toString(),
-                        Enriched.QUOTE_DURATION to quote.durationSeconds.toString(),
-                        Enriched.QUOTE_AMOUNT to quote.amountCents.toString(),
-                        Enriched.QUOTE_CURRENCY to quote.currency,
-                    ),
+        ctx.enrich(
+            SimpleEnrichedPayload(
+                mapOf(
+                    Enriched.QUOTE_DISTANCE to quote.distanceMetres.toString(),
+                    Enriched.QUOTE_DURATION to quote.durationSeconds.toString(),
+                    Enriched.QUOTE_AMOUNT to quote.amountCents.toString(),
+                    Enriched.QUOTE_CURRENCY to quote.currency,
                 ),
+            ),
         )
     }
 }
@@ -130,18 +156,16 @@ public class ServiceAreaStep(
      * graph is opened lazily so that a module can be built without one.
      */
     private val area: () -> ServiceArea,
-) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.VALIDATION
-
+) : OrderCheck() {
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichCheckContext,
         payload: OrderPayload,
-    ): InterceptorResult =
+    ) {
         when {
-            payload.pickup !in area() -> InterceptorResult.Reject("pickup is outside the service area")
-            payload.dropoff !in area() -> InterceptorResult.Reject("dropoff is outside the service area")
-            else -> InterceptorResult.Proceed()
+            payload.pickup !in area() -> ctx.reject("pickup is outside the service area")
+            payload.dropoff !in area() -> ctx.reject("dropoff is outside the service area")
         }
+    }
 }
 
 /**
@@ -151,22 +175,24 @@ public class ServiceAreaStep(
 public class HoldPaymentStep(
     private val payments: PaymentGateway,
 ) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.AUTHORIZATION
-
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult {
-        val quote = petich.quote() ?: return InterceptorResult.Reject("no quote to hold against")
+    ) {
+        val quote = ctx.quote() ?: return ctx.reject("no quote to hold against")
         val hold = payments.hold(payload.paymentMethodId, quote.amountCents, quote.currency)
-        return InterceptorResult.Proceed(enrichedPayload = SimpleEnrichedPayload(mapOf(Enriched.HOLD_ID to hold.value)))
+        // ENRICHED AND NOT RECORDED, deliberately. A record is evidence for this member's own undo;
+        // the hold is read by `SettleRideUseCase` and by the ride's repository long after this saga
+        // finished, which is what the payload carried forward is for (petich D4). The undo below
+        // reads it back the same way anybody else does.
+        ctx.enrich(SimpleEnrichedPayload(mapOf(Enriched.HOLD_ID to hold.value)))
     }
 
     override suspend fun compensate(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
     ) {
-        petich.enriched(Enriched.HOLD_ID)?.let { payments.release(HoldId(it)) }
+        ctx.enriched(Enriched.HOLD_ID)?.let { payments.release(HoldId(it)) }
     }
 }
 
@@ -192,35 +218,40 @@ public class OfferStep(
     private val clock: PetichClock,
     private val timeouts: OfferTimeouts,
 ) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.EXECUTION
-    override val priority: Int = 10
-
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult {
+    ) {
         val nearby = candidates.candidates(payload.pickup, payload.rideClass)
         val first =
             nearby.firstOrNull { reservations.reserve(it.driverId, payload.rideId) }
-                ?: return InterceptorResult.Compensate(NO_CARS)
-        return offer(payload, first.driverId, attempt = 0, suspend = true, nearby = nearby.size)
+                ?: return ctx.fail(NO_CARS)
+        offer(ctx, payload, first.driverId, attempt = 0, again = false, nearby = nearby.size)
     }
 
     override suspend fun compensate(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
     ) {
-        withdraw(petich, payload)
+        withdraw(ctx, payload)
     }
 
     internal fun offer(
+        ctx: PetichStepContext,
         payload: OrderPayload,
         driverId: String,
         attempt: Int,
-        suspend: Boolean,
+        /**
+         * Whether the next answer belongs to the member that is asking (B-37).
+         *
+         * The first offer is made by [OfferStep] and answered by [DriverAnswerStep], so it suspends
+         * and the saga moves on by one. Every offer after it is made *from* `DriverAnswerStep`,
+         * which has to keep the next answer for itself — the member is the cascade.
+         */
+        again: Boolean,
         /** How many the index had when this cascade started — the number R5 shows (B-73). */
         nearby: Int,
-    ): InterceptorResult {
+    ) {
         val expiresAt = clock.nowEpochMs() + OFFER_SECONDS * MILLIS
         board.post(Offer(payload.rideId, driverId, expiresAt))
         timeouts.schedule(payload.rideId, driverId, OFFER_SECONDS)
@@ -233,27 +264,25 @@ public class OfferStep(
                     Enriched.OFFER_CANDIDATES to nearby.toString(),
                 ),
             )
-        return if (suspend) {
-            InterceptorResult.Suspend(ACTION_DRIVER_ANSWER, enriched, ttl = MATCHING_BUDGET)
+        ctx.enrich(enriched)
+        if (again) {
+            ctx.resuspendFor(ACTION_DRIVER_ANSWER, ttl = MATCHING_BUDGET)
         } else {
-            InterceptorResult.Resuspend(ACTION_DRIVER_ANSWER, enriched, ttl = MATCHING_BUDGET)
+            ctx.suspendFor(ACTION_DRIVER_ANSWER, ttl = MATCHING_BUDGET)
         }
     }
 
     /** The offer is over and the driver is free again: decline, ignore, cancel, rollback. */
     internal fun withdraw(
-        petich: Petich,
+        ctx: PetichMemberContext,
         payload: OrderPayload,
     ) {
-        withdrawKeepingReservation(petich, payload)
-        petich.enriched(Enriched.OFFER_DRIVER)?.let { reservations.release(it, payload.rideId) }
+        withdrawKeepingReservation(payload)
+        ctx.enriched(Enriched.OFFER_DRIVER)?.let { reservations.release(it, payload.rideId) }
     }
 
     /** The offer is over because the driver took it: off the board, timer cancelled, reservation kept. */
-    internal fun withdrawKeepingReservation(
-        @Suppress("UNUSED_PARAMETER") petich: Petich,
-        payload: OrderPayload,
-    ) {
+    internal fun withdrawKeepingReservation(payload: OrderPayload) {
         board.withdraw(payload.rideId)
         timeouts.cancel(payload.rideId)
     }
@@ -283,52 +312,43 @@ public class DriverAnswerStep(
     private val reservations: DriverReservations,
     private val offers: OfferStep,
 ) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.EXECUTION
-    override val priority: Int = 0
-
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult {
-        val offered =
-            petich.enriched(Enriched.OFFER_DRIVER) ?: return InterceptorResult.Compensate("resumed with no offer out")
-        return when (val answer = petich.resumePayload) {
+    ) {
+        val offered = ctx.enriched(Enriched.OFFER_DRIVER) ?: return ctx.fail("resumed with no offer out")
+        when (val answer = ctx.petich.resumePayload) {
             is RiderCancelled -> {
-                offers.withdraw(petich, payload)
-                InterceptorResult.Compensate(answer.reason)
+                offers.withdraw(ctx, payload)
+                ctx.fail(answer.reason)
             }
 
             is DriverAnswer -> {
-                if (answer.driverId !=
-                    offered
-                ) {
-                    return InterceptorResult.Resuspend(ACTION_DRIVER_ANSWER, ttl = OfferStep.MATCHING_BUDGET)
+                if (answer.driverId != offered) {
+                    // Somebody else's answer: nothing changed, and the driver who WAS asked still
+                    // owes one — so the next answer has to come back here (B-37).
+                    return ctx.resuspendFor(ACTION_DRIVER_ANSWER, ttl = OfferStep.MATCHING_BUDGET)
                 }
                 when (answer.outcome) {
                     DriverAnswer.Outcome.ACCEPT -> {
-                        offers.withdrawKeepingReservation(petich, payload)
-                        InterceptorResult.Proceed(
-                            enrichedPayload =
-                                SimpleEnrichedPayload(
-                                    mapOf(Enriched.DRIVER_ID to offered),
-                                ),
-                        )
+                        offers.withdrawKeepingReservation(payload)
+                        ctx.enrich(SimpleEnrichedPayload(mapOf(Enriched.DRIVER_ID to offered)))
                     }
 
                     DriverAnswer.Outcome.DECLINE, DriverAnswer.Outcome.IGNORED -> {
-                        offers.withdraw(petich, payload)
-                        val attempt = (petich.enriched(Enriched.OFFER_ATTEMPT)?.toIntOrNull() ?: 0) + 1
+                        offers.withdraw(ctx, payload)
+                        val attempt = (ctx.enriched(Enriched.OFFER_ATTEMPT)?.toIntOrNull() ?: 0) + 1
                         val nearby = candidates.candidates(payload.pickup, payload.rideClass)
                         val next =
                             nearby
                                 .drop(attempt)
                                 .firstOrNull { reservations.reserve(it.driverId, payload.rideId) }
-                                ?: return InterceptorResult.Compensate(OfferStep.NO_CARS)
+                                ?: return ctx.fail(OfferStep.NO_CARS)
                         // The count the rider was first told, kept: the index answers the question
                         // afresh each attempt, and a number that shrank while they watched would
                         // read as cars leaving rather than as the cascade moving down its list.
-                        val told = petich.enriched(Enriched.OFFER_CANDIDATES)?.toIntOrNull() ?: nearby.size
-                        offers.offer(payload, next.driverId, attempt, suspend = false, nearby = told)
+                        val told = ctx.enriched(Enriched.OFFER_CANDIDATES)?.toIntOrNull() ?: nearby.size
+                        offers.offer(ctx, payload, next.driverId, attempt, again = true, nearby = told)
                     }
                 }
             }
@@ -336,16 +356,16 @@ public class DriverAnswerStep(
             // Resumed by something that is not an answer — a retried request, say. Nothing changed;
             // keep waiting for the driver who was asked.
             else -> {
-                InterceptorResult.Resuspend(ACTION_DRIVER_ANSWER, ttl = OfferStep.MATCHING_BUDGET)
+                ctx.resuspendFor(ACTION_DRIVER_ANSWER, ttl = OfferStep.MATCHING_BUDGET)
             }
         }
     }
 
     override suspend fun compensate(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
     ) {
-        petich.enriched(Enriched.DRIVER_ID)?.let { reservations.release(it, payload.rideId) }
+        ctx.enriched(Enriched.DRIVER_ID)?.let { reservations.release(it, payload.rideId) }
     }
 }
 
@@ -357,29 +377,62 @@ public class DriverAnswerStep(
 public class PublishAssignedStep(
     private val json: Json,
 ) : OrderStep() {
-    override val phase: PetichPhase = PetichPhase.POST_PROCESSING
-
     override suspend fun run(
-        petich: Petich,
+        ctx: PetichStepContext,
         payload: OrderPayload,
-    ): InterceptorResult {
+    ) {
         val event =
             RideAssignedEvent(
                 rideId = payload.rideId,
                 riderId = payload.riderId,
-                driverId = petich.enriched(Enriched.DRIVER_ID) ?: error("POST_PROCESSING reached with no driver"),
-                quote = petich.quote() ?: error("POST_PROCESSING reached with no quote"),
+                driverId = ctx.enriched(Enriched.DRIVER_ID) ?: error("the announcement was reached with no driver"),
+                quote = ctx.quote() ?: error("the announcement was reached with no quote"),
             )
-        return InterceptorResult.Proceed(
-            outboxEvents =
-                listOf(
-                    RideOutboxEvent(
-                        id = "${payload.rideId}:assigned",
-                        type = RideAssignedEvent.TYPE,
-                        payload = json.encodeToString(RideAssignedEvent.serializer(), event),
-                    ),
-                ),
+        ctx.emit(
+            RideOutboxEvent(
+                id = "${payload.rideId}:assigned",
+                type = RideAssignedEvent.TYPE,
+                payload = json.encodeToString(RideAssignedEvent.serializer(), event),
+            ),
         )
+    }
+}
+
+/**
+ * The order saga, in the order it runs.
+ *
+ * **The two EXECUTION members were `priority = 10` and `priority = 0`.** That pair is the clearest
+ * thing the definition model buys here: the order of the offer and the answer to it was two numbers
+ * in two files, read by sorting them in your head, and it is now two adjacent lines.
+ */
+public fun orderPetich(
+    routes: RouteEstimator,
+    pricing: Pricing,
+    area: () -> ServiceArea,
+    payments: PaymentGateway,
+    offers: OfferStep,
+    candidates: CandidateSource,
+    reservations: DriverReservations,
+    json: Json,
+    tracing: Observability? = null,
+): PetichDefinition<OrderPayload> {
+    val quote = QuoteStep(routes, pricing).also { it.tracing = tracing }
+    val serviceArea = ServiceAreaStep(area).also { it.tracing = tracing }
+    val hold = HoldPaymentStep(payments).also { it.tracing = tracing }
+    val answer = DriverAnswerStep(candidates, reservations, offers).also { it.tracing = tracing }
+    val publish = PublishAssignedStep(json).also { it.tracing = tracing }
+    offers.tracing = tracing
+
+    // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.
+    return petich(ORDER_SAGA_TYPE) {
+        // Two of the six turned out to be checks, and their own comments had said so: "Nothing to
+        // undo — a quote is a number", and "rejects rather than compensates".
+        enrich("quote", quote)
+        validate("service-area", serviceArea)
+        authorize("hold-payment", hold)
+        step("offer", offers)
+        step("driver-answer", answer)
+        announce("publish-assigned", publish)
     }
 }
 

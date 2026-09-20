@@ -26,7 +26,6 @@ class RequireOutboxTest {
         val refusal =
             assertFailsWith<IllegalArgumentException> {
                 PetichEngine(
-                    interceptors = listOf(ServiceAreaStep { ServiceArea.LJUBLJANA }),
                     repository = PlainRepository,
                     config = PetichEngineConfig(requireOutbox = true),
                 )
@@ -36,6 +35,6 @@ class RequireOutboxTest {
 
     @Test
     fun `the same repository is accepted when the outbox is not required, which is the defect this guards`() {
-        PetichEngine(interceptors = listOf(ServiceAreaStep { ServiceArea.LJUBLJANA }), repository = PlainRepository)
+        PetichEngine(repository = PlainRepository)
     }
 }

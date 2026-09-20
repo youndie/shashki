@@ -6,7 +6,6 @@ import io.github.youndie.petich.PetichDefinition
 import io.github.youndie.petich.PetichEngine
 import io.github.youndie.petich.PetichEngineConfig
 import io.github.youndie.petich.PetichEngineMetrics
-import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichPayload
 import io.github.youndie.petich.PetichStepRecord
 import io.github.youndie.petich.SimpleEnrichedPayload
@@ -71,19 +70,17 @@ public class SagaStorage(
  * the place to find out.
  */
 public fun sagaEngine(
-    steps: List<PetichInterceptor<*>>,
     storage: SagaStorage,
     @Suppress(
         "ktlint:kapkan:wall-clock",
         "the default of the engine's injectable clock; every saga test passes its own",
     )
     clock: PetichClock = PetichClock { System.currentTimeMillis() },
-    // LAST AND DEFAULTED, for the same reason petich put it last on the engine: every call written
-    // against the older shape still compiles, and the migration does not have to move in one step.
-    definitions: List<PetichDefinition<*>> = emptyList(),
+    // NO LONGER DEFAULTED: it was, so that the migration could move one saga at a time, and both
+    // have moved. An engine built here with no definitions is a bug rather than a stage.
+    definitions: List<PetichDefinition<*>>,
 ): PetichEngine =
     PetichEngine(
-        interceptors = steps,
         repository = storage.petiches,
         config = PetichEngineConfig(requireOutbox = true),
         clock = clock,

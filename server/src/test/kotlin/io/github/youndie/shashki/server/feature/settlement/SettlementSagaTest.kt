@@ -1,14 +1,12 @@
 package io.github.youndie.shashki.server.feature.settlement
 
 import io.github.youndie.petich.EnrichedPayload
-import io.github.youndie.petich.InterceptorResult
 import io.github.youndie.petich.OutboxEvent
 import io.github.youndie.petich.Petich
 import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichDefinition
-import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichPhase
 import io.github.youndie.petich.PetichResult
 import io.github.youndie.petich.PetichSideEffect
@@ -80,7 +78,7 @@ class SettlementSagaTest {
         settlementPetich(payments, payouts, SendReceiptUseCase(sender), json)
 
     private fun engine(definition: PetichDefinition<SettlementPayload>) =
-        sagaEngine(emptyList(), storage, clock, definitions = listOf(definition))
+        sagaEngine(storage, clock, definitions = listOf(definition))
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()
@@ -417,6 +415,11 @@ class SettlementSagaTest {
         ): Unit = error("not part of this case")
 
         override fun reject(reason: String): Unit = error("not part of this case")
+
+        override fun resuspendFor(
+            action: String,
+            ttl: Duration?,
+        ): Unit = error("not part of this case")
 
         override fun fail(reason: String): Unit = error("not part of this case")
     }

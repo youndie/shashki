@@ -2,7 +2,6 @@ package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichEngine
-import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichRepository
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
 import io.github.youndie.shashki.server.billing.InMemoryPaymentGateway
@@ -58,6 +57,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
+import io.github.youndie.shashki.server.feature.ride.saga.orderPetich
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
@@ -201,33 +201,34 @@ public fun rideModule(
         // a cycle, broken by resolving the engine lazily at fire time rather than at construction.
         single { OfferTimeouts(get()) { rideId, driverId -> get<ExpireOfferUseCase>().invoke(rideId, driverId) } }
         single { OfferStep(get(), get(), get(), get(), get()) }
-        single<List<PetichInterceptor<*>>> {
-            // Every step gets the agent, once, where the list is built — see `OrderStep.tracing`.
-            val tracing = get<Observability>()
-            listOf<OrderStep>(
-                QuoteStep(get(), get()),
-                ServiceAreaStep { get<RouteEstimator>().servedArea },
-                HoldPaymentStep(get()),
-                get<OfferStep>(),
-                DriverAnswerStep(get(), get(), get()),
-                PublishAssignedStep(get()),
-                // The settlement saga used to be five more entries here, told apart from these by
-                // `supports`. It is a definition now (B-32), so what is left in this list is one
-                // saga rather than two interleaved.
-            ).onEach { step -> step.tracing = tracing }
-        }
         single<PetichEngine> {
-            // THE DEFINITIONS ARE BUILT HERE rather than bound, and that is not tidiness. A
-            // `single<List<PetichDefinition<*>>>` beside the `single<List<PetichInterceptor<*>>>`
-            // above compiles and then loses: both erase to `List<*>`, so Koin hands out whichever it
-            // saw last and the engine got a definition where it wanted an interceptor —
-            // `PetichDefinition cannot be cast to PetichInterceptor`, at the first ride, as a 500.
-            // Only this line needs them, so only this line builds them.
+            // BOTH SAGAS AS DEFINITIONS, and the interceptor list is gone. It used to hold eleven
+            // members of two sagas interleaved, told apart by `supports`; petich resolves the row by
+            // type now, so each saga is one declaration in the order it runs.
+            //
+            // They are built here rather than bound: two `single<List<…>>` of different generic
+            // types erase to the same `List<*>`, so Koin hands out whichever it saw last — which is
+            // how a definition arrived where an interceptor was wanted and the first ride answered
+            // 500. Only this line needs them.
+            val tracing = get<Observability>()
             sagaEngine(
                 get(),
                 get(),
-                get(),
-                definitions = listOf(settlementPetich(get(), get(), get(), get(), tracing = get<Observability>())),
+                definitions =
+                    listOf(
+                        orderPetich(
+                            routes = get(),
+                            pricing = get(),
+                            area = { get<RouteEstimator>().servedArea },
+                            payments = get(),
+                            offers = get<OfferStep>(),
+                            candidates = get(),
+                            reservations = get(),
+                            json = get(),
+                            tracing = tracing,
+                        ),
+                        settlementPetich(get(), get(), get(), get(), tracing = tracing),
+                    ),
             )
         }
         single<PetichRepository> { get<SagaStorage>().petiches }
