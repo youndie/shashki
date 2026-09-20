@@ -429,7 +429,7 @@ public fun orderPetich(
         // undo — a quote is a number", and "rejects rather than compensates".
         enrich("quote", quote)
         validate("service-area", serviceArea)
-        authorize("hold-payment", hold)
+        step("hold-payment", hold)
         step("offer", offers)
         step("driver-answer", answer)
         announce("publish-assigned", publish)

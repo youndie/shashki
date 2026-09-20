@@ -402,7 +402,7 @@ public fun settlementPetich(
     return petich(SETTLEMENT_SAGA_TYPE) {
         enrich("charge-and-payout", chargeAndPayout)
         validate("settleable", settleable)
-        authorize("capture", capture)
+        step("capture", capture)
         step("payout", payout)
         announce("publish-settled", publish)
     }
