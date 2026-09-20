@@ -42,15 +42,14 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[~]` | A receipt goes out again every time the settlement's last pass is retried | P1 | M | - |
 | [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
 | [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
 
-## Closed (90)
+## Closed (91)
 
 **Remove the unknowns**
 
@@ -162,6 +161,7 @@ re-prioritising one must never move its file.
 - [B-89](docs/backlog/B-89-the-forgery-that-forged-nothing-one-run-in-four.md) `[x]` - The signature the acceptance test forges is unchanged one run in four, and the test then accuses the server
 - [B-90](docs/backlog/B-90-a-moving-coordinate-in-a-published-build.md) `[x]` - Publishing the repository made a moving snapshot coordinate a defect, and pinning its root pinned half of it
 - [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[x]` - A hold whose answer is lost is never released, because the id it would be released by came back in that answer
+- [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[x]` - A receipt goes out again every time the settlement's last pass is retried
 
 <!-- END INDEX -->
 
