@@ -44,7 +44,7 @@ public interface TileSource {
  * city bytes with no archive, no transport and no coroutine, and this is what "the tiles are already
  * in memory" looks like as a type.
  */
-public class MemoryTileSource(
+internal class MemoryTileSource(
     private val tiles: Map<TileCoordinate, MvtTile>,
 ) : TileSource {
     override fun loaded(coordinate: TileCoordinate): MvtTile? = tiles[coordinate]

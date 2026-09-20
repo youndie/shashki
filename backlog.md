@@ -47,9 +47,9 @@ re-prioritising one must never move its file.
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[ ]` | A saga whose process died is never picked up, because stuckAfter was never set | P1 | S | - |
-| [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[ ]` | Twenty-four public declarations that nothing but their own tests reaches | P2 | M | - |
+| [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[ ]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 
-## Closed (91)
+## Closed (92)
 
 **Remove the unknowns**
 
@@ -155,6 +155,7 @@ re-prioritising one must never move its file.
 - [B-82](docs/backlog/B-82-pressing-a-tile-moves-nothing.md) `[x]` - Pressing a tile moves nothing: the kit's tilt was drawing inside the surface
 - [B-83](docs/backlog/B-83-the-accept-bar-overran-the-decline-ring.md) `[x]` - The offer's accept bar is 293 dp where the kit caps it at 200, and overruns the decline ring
 - [B-84](docs/backlog/B-84-the-first-ci-run-had-no-browser-and-said-no-tests.md) `[x]` - Every wasm suite on the first public CI run reported no tests, and neither half of the reason was the tests
+- [B-85](docs/backlog/B-85-the-public-surface-only-its-own-tests-reach.md) `[x]` - Twenty-four public declarations that nothing but their own tests reaches
 - [B-86](docs/backlog/B-86-the-waiting-counters-label-reads-as-a-taxi-rank-not-a-heartbeat.md) `[x]` - The waiting screen's own count reads as a taxi-rank position, not the socket heartbeat it is
 - [B-87](docs/backlog/B-87-the-recorded-reproduction-leaves-its-own-control-skipped.md) `[x]` - B-14's recorded reproduction sets three variables and its control needs four, so following it runs the half that proves nothing
 - [B-88](docs/backlog/B-88-the-guards-that-need-the-stand-never-ran.md) `[x]` - Twelve guards need a stand, the stand runs for hours, and nothing ever pointed one at the other

@@ -43,9 +43,9 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /** What a simulated driver does when offered a ride. B-12's acceptance needs the last two. */
-public enum class SimulatedBehaviour { ACCEPT, DECLINE, IGNORE }
+internal enum class SimulatedBehaviour { ACCEPT, DECLINE, IGNORE }
 
-public data class SimulatorConfig(
+internal data class SimulatorConfig(
     val drivers: Int = 20,
     val centre: GeoPoint = LJUBLJANA,
     val radiusMetres: Double = 3_000.0,
@@ -94,7 +94,7 @@ public data class SimulatorConfig(
  * that matters for matching — drivers are in different places and the places change — does not
  * depend on the road bending.
  */
-public class DriverSimulator(
+internal class DriverSimulator(
     private val client: HttpClient,
     private val config: SimulatorConfig = SimulatorConfig(),
     private val json: Json = Json,

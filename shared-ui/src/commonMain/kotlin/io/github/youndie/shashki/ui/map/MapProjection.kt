@@ -147,7 +147,7 @@ public class MapViewport(
  * belongs to, and the picture would look almost right — which is the worst kind of wrong for
  * something whose only test is a screenshot.
  */
-public class TileProjection(
+internal class TileProjection(
     private val tile: TileCoordinate,
     private val side: Float,
 ) : Projection {
