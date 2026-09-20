@@ -2,6 +2,8 @@ package io.github.youndie.shashki.server.feature.ride.saga
 
 import io.github.youndie.petich.OutboxEvent
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichAnnouncement
+import io.github.youndie.petich.PetichAnnouncementContext
 import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
@@ -30,9 +32,36 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
+ * The announcing half of [OrderStep], and the difference is the whole of petich B-41.
+ *
+ * A member here runs when the ride is assigned or the money has moved. It cannot `reject`, `fail`,
+ * park the saga or be compensated, because none of those verbs is on its context or its type — and
+ * an exception it throws is counted by petich rather than rolled back. The span is wrapped the same
+ * way and off the same name, so a trace does not care which half a member belongs to.
+ */
+public abstract class OrderAnnouncement : PetichAnnouncement<OrderPayload> {
+    final override suspend fun announce(
+        ctx: PetichAnnouncementContext,
+        payload: OrderPayload,
+    ) {
+        val agent = tracing?.tracy ?: return run(ctx, payload)
+        withSpan(OrderStep.spanName(ctx.stepKey), agent) { run(ctx, payload) }
+    }
+
+    protected abstract suspend fun run(
+        ctx: PetichAnnouncementContext,
+        payload: OrderPayload,
+    )
+
+    /** Set once by the graph, exactly as on [OrderStep]. */
+    public var tracing: Observability? = null
+}
+
+/**
  * One step per phase, and each is one class because the reason a step exists is the reason it can
  * be undone. The order is petich's; the priorities are all 0 because there is one step per phase.
  */
+
 public abstract class OrderStep : PetichStep<OrderPayload> {
     /**
      * Every member is a span, and it is one line here rather than one per member.
@@ -374,11 +403,11 @@ public class DriverAnswerStep(
  * state. petich persists the event through `OutboxAwarePetichRepository`; delivering it is the relay
  * worker's job, and it can only be lost if `requireOutbox` is off — which it is not.
  */
-public class PublishAssignedStep(
+public class PublishAssigned(
     private val json: Json,
-) : OrderStep() {
+) : OrderAnnouncement() {
     override suspend fun run(
-        ctx: PetichStepContext,
+        ctx: PetichAnnouncementContext,
         payload: OrderPayload,
     ) {
         val event =
@@ -420,7 +449,7 @@ public fun orderPetich(
     val serviceArea = ServiceAreaStep(area).also { it.tracing = tracing }
     val hold = HoldPaymentStep(payments).also { it.tracing = tracing }
     val answer = DriverAnswerStep(candidates, reservations, offers).also { it.tracing = tracing }
-    val publish = PublishAssignedStep(json).also { it.tracing = tracing }
+    val publish = PublishAssigned(json).also { it.tracing = tracing }
     offers.tracing = tracing
 
     // THE TYPE COMES FROM THE CONSTANT the rest of the code already uses, never spelled by hand.

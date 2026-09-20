@@ -53,7 +53,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.HoldPaymentStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferStep
 import io.github.youndie.shashki.server.feature.ride.saga.OfferTimeouts
 import io.github.youndie.shashki.server.feature.ride.saga.OrderStep
-import io.github.youndie.shashki.server.feature.ride.saga.PublishAssignedStep
+import io.github.youndie.shashki.server.feature.ride.saga.PublishAssigned
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep

@@ -3,6 +3,8 @@ package io.github.youndie.shashki.server.feature.settlement
 import io.github.youndie.petich.EnrichedPayload
 import io.github.youndie.petich.OutboxEvent
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichAnnouncement
+import io.github.youndie.petich.PetichAnnouncementContext
 import io.github.youndie.petich.PetichCheck
 import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
@@ -32,7 +34,7 @@ import io.github.youndie.shashki.server.feature.settlement.saga.CaptureStep
 import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayout
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
-import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
+import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettled
 import io.github.youndie.shashki.server.feature.settlement.saga.RideSettledEvent
 import io.github.youndie.shashki.server.feature.settlement.saga.SETTLEMENT_SAGA_TYPE
 import io.github.youndie.shashki.server.feature.settlement.saga.Settleable
@@ -214,7 +216,11 @@ class SettlementSagaTest {
     @Test
     fun `dying after any phase leaves no money taken and no payout standing`() =
         runTest {
-            for (dieBefore in listOf("settleable", "capture", "payout", "publish-settled")) {
+            // **`publish-settled` is not in this list, and used to be.** A death in the receipt
+            // member gave the fare back and deleted the payout — a settlement undone because the
+            // sentence announcing it could not be built. petich B-41 made an announcement a member
+            // that cannot do that; the case below is the same death with the opposite assertion.
+            for (dieBefore in listOf("settleable", "capture", "payout")) {
                 PostgresHarness.truncateAll()
                 val hold = payments.hold("card-4417", FARE, "USD")
                 val engine = engine(definitionDying(at = dieBefore))
@@ -234,6 +240,31 @@ class SettlementSagaTest {
         }
 
     /**
+     * The other half of the list above: **money is not given back because a receipt member died**
+     * (petich B-41).
+     *
+     * This is the stronger form of `a receipt that cannot be sent does not roll the settlement back`
+     * below. That one is the member surviving a failure it catches by hand; this one is the member
+     * not surviving at all, and the settlement standing anyway — which used to be a full refund and
+     * a deleted payout, decided by whatever threw inside a notification.
+     */
+    @Test
+    fun `a settlement whose announcement dies keeps the money where it moved it`() =
+        runTest {
+            PostgresHarness.truncateAll()
+            val hold = payments.hold("card-4417", FARE, "USD")
+
+            val result =
+                engine(definitionDying(at = "publish-settled"))
+                    .process(settlement(hold, SettlementPayload.Kind.FARE, id = "s-announcement-dies"))
+
+            assertIs<PetichResult.Success>(result)
+            assertEquals(FARE, payments.captured().single().amountCents, "the fare was refunded over a notification")
+            assertNotNull(payouts.find(RIDE), "the payout was deleted over a notification")
+            assertEquals(emptyList(), storage.outbox.fetchPending(), "the event is the only thing missing")
+        }
+
+    /**
      * **"Captured exactly once" lives in the gateway, and this is where that is asserted.**
      *
      * A process that dies after the money moves and before the row is written leaves a `PROCESSING`
@@ -242,6 +273,7 @@ class SettlementSagaTest {
      * is gone throws rather than charging twice, which is the difference between a bug that is found
      * and a bug that is a bank statement.
      */
+
     @Test
     fun `a settlement the first process abandoned is finished by the next one, and takes nothing more`() =
         runTest {
@@ -374,11 +406,21 @@ class SettlementSagaTest {
             if (at == "capture") step(at, Dying(at)) else step("capture", CaptureStep(payments))
             if (at == "payout") step(at, Dying(at)) else step("payout", PayoutStep(payouts))
             if (at == "publish-settled") {
-                announce(at, Dying(at))
+                announce(at, DyingAnnouncement(at))
             } else {
-                announce("publish-settled", PublishSettledStep(json, SendReceiptUseCase(receipts)))
+                announce("publish-settled", PublishSettled(json, SendReceiptUseCase(receipts)))
             }
         }
+
+    /** The same death, in the one member petich will not roll back over (B-41). */
+    private class DyingAnnouncement(
+        private val key: String,
+    ) : PetichAnnouncement<SettlementPayload> {
+        override suspend fun announce(
+            ctx: PetichAnnouncementContext,
+            payload: SettlementPayload,
+        ): Unit = error("process died before $key answered")
+    }
 
     private class Dying(
         private val key: String,
