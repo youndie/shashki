@@ -1,7 +1,7 @@
 ---
 id: B-93
 title: "A saga whose process died is never picked up, because stuckAfter was never set"
-status: open
+status: wip
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
