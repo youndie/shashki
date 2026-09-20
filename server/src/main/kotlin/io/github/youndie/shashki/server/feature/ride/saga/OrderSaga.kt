@@ -2,16 +2,19 @@ package io.github.youndie.shashki.server.feature.ride.saga
 
 import io.github.youndie.petich.EnrichedPayload
 import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichDefinition
 import io.github.youndie.petich.PetichEngine
 import io.github.youndie.petich.PetichEngineConfig
 import io.github.youndie.petich.PetichEngineMetrics
 import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichPayload
+import io.github.youndie.petich.PetichStepRecord
 import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.petich.postgres.ExposedOutboxRepository
 import io.github.youndie.petich.postgres.ExposedPetichRepository
 import io.github.youndie.petich.postgres.OutboxEventsTable
 import io.github.youndie.petich.postgres.PetichTable
+import io.github.youndie.shashki.server.feature.settlement.saga.Charged
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -30,6 +33,11 @@ public fun sagaJson(): Json =
                     subclass(SettlementPayload::class)
                 }
                 polymorphic(EnrichedPayload::class) { subclass(SimpleEnrichedPayload::class) }
+                // What a member recorded about what it did, by that member's key. A record whose
+                // class is not registered fails to deserialize, and the member it belongs to then
+                // compensates blind — which for `Charged` means a tip's refund that cannot find the
+                // charge it is meant to give back.
+                polymorphic(PetichStepRecord::class) { subclass(Charged::class) }
             }
     }
 
@@ -47,11 +55,11 @@ public class SagaStorage(
 /**
  * The engine, and the two settings that are decisions rather than defaults.
  *
- * **One engine for both sagas, because that is what `supports` is for.** The order saga and the
- * settlement (B-37) have different steps and different payloads; each interceptor answers whether it
- * handles the payload in front of it, so one engine over both step lists runs whichever saga the row
- * carries. Two engines would be two configurations to keep in step and two places to forget
- * `requireOutbox`.
+ * **One engine for both sagas**, as before — but for a better reason than `supports`. It used to run
+ * whichever saga the row carried because each interceptor answered whether it handled the payload in
+ * front of it. petich now keeps definitions by type and resolves the row itself, so the settlement
+ * arrives as a `PetichDefinition` and the order saga as the interceptor list it still is. The two
+ * models sit side by side here on purpose: this is the migration, and B-33 removes the older arm.
  *
  * **`requireOutbox = true`.** Without it an engine whose repository cannot store events drops them,
  * the saga completes, its state is correct, and only the consumer at the far end never runs
@@ -70,6 +78,9 @@ public fun sagaEngine(
         "the default of the engine's injectable clock; every saga test passes its own",
     )
     clock: PetichClock = PetichClock { System.currentTimeMillis() },
+    // LAST AND DEFAULTED, for the same reason petich put it last on the engine: every call written
+    // against the older shape still compiles, and the migration does not have to move in one step.
+    definitions: List<PetichDefinition<*>> = emptyList(),
 ): PetichEngine =
     PetichEngine(
         interceptors = steps,
@@ -77,6 +88,7 @@ public fun sagaEngine(
         config = PetichEngineConfig(requireOutbox = true),
         clock = clock,
         metrics = RefusingMetrics,
+        definitions = definitions,
     )
 
 private object RefusingMetrics : PetichEngineMetrics {

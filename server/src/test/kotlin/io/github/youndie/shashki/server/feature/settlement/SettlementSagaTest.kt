@@ -1,12 +1,22 @@
 package io.github.youndie.shashki.server.feature.settlement
 
+import io.github.youndie.petich.EnrichedPayload
 import io.github.youndie.petich.InterceptorResult
+import io.github.youndie.petich.OutboxEvent
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichCheck
+import io.github.youndie.petich.PetichCheckContext
 import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichDefinition
 import io.github.youndie.petich.PetichInterceptor
 import io.github.youndie.petich.PetichPhase
 import io.github.youndie.petich.PetichResult
+import io.github.youndie.petich.PetichSideEffect
 import io.github.youndie.petich.PetichStatus
+import io.github.youndie.petich.PetichStep
+import io.github.youndie.petich.PetichStepContext
+import io.github.youndie.petich.PetichStepRecord
+import io.github.youndie.petich.petich
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
 import io.github.youndie.shashki.server.billing.ExposedPayoutRepository
@@ -20,15 +30,16 @@ import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.settlement.saga.CaptureStep
-import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayoutStep
+import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayout
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
 import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
 import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
 import io.github.youndie.shashki.server.feature.settlement.saga.RideSettledEvent
 import io.github.youndie.shashki.server.feature.settlement.saga.SETTLEMENT_SAGA_TYPE
-import io.github.youndie.shashki.server.feature.settlement.saga.SettleableStep
+import io.github.youndie.shashki.server.feature.settlement.saga.Settleable
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementPayload
 import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
+import io.github.youndie.shashki.server.feature.settlement.saga.settlementPetich
 import io.github.youndie.shashki.server.testing.PostgresHarness
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -39,6 +50,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 
 /**
  * The settlement saga against a real Postgres, and B-37's second criterion made literal: **whichever
@@ -62,14 +74,13 @@ class SettlementSagaTest {
     private val clock = PetichClock { System.currentTimeMillis() }
     private val receipts = RecordingReceipts()
 
-    private fun steps(sender: ReceiptSender = receipts): List<PetichInterceptor<*>> =
-        listOf(
-            ChargeAndPayoutStep(),
-            SettleableStep(),
-            CaptureStep(payments),
-            PayoutStep(payouts),
-            PublishSettledStep(json, SendReceiptUseCase(sender)),
-        )
+    // THE PRODUCTION FACTORY, not a hand-built copy of it. A list assembled here would be a second
+    // declaration of the saga's order, and the one that drifts is the one nobody deploys.
+    private fun definition(sender: ReceiptSender = receipts): PetichDefinition<SettlementPayload> =
+        settlementPetich(payments, payouts, SendReceiptUseCase(sender), json)
+
+    private fun engine(definition: PetichDefinition<SettlementPayload>) =
+        sagaEngine(emptyList(), storage, clock, definitions = listOf(definition))
 
     @BeforeTest
     fun clean() = PostgresHarness.truncateAll()
@@ -78,7 +89,7 @@ class SettlementSagaTest {
     fun `a fare runs every phase, takes the money once, records the payout and leaves one event`() =
         runTest {
             val hold = payments.hold("card-4417", FARE, "USD")
-            val result = sagaEngine(steps(), storage, clock).process(settlement(hold, SettlementPayload.Kind.FARE))
+            val result = engine(definition()).process(settlement(hold, SettlementPayload.Kind.FARE))
 
             assertIs<PetichResult.Success>(result)
             assertEquals(emptyList(), payments.activeHolds().toList(), "the hold outlived the settlement")
@@ -106,7 +117,7 @@ class SettlementSagaTest {
     fun `a fee runs the same phases and takes a quarter`() =
         runTest {
             val hold = payments.hold("card-4417", FARE, "USD")
-            val result = sagaEngine(steps(), storage, clock).process(settlement(hold, SettlementPayload.Kind.FEE))
+            val result = engine(definition()).process(settlement(hold, SettlementPayload.Kind.FEE))
 
             assertIs<PetichResult.Success>(result)
             val fee = FARE * Commission.DEFAULT.cancellationPercent / 100
@@ -128,7 +139,7 @@ class SettlementSagaTest {
     fun `a tip charges the card, pays the driver in full and leaves the fare alone`() =
         runTest {
             val result =
-                sagaEngine(steps(), storage, clock)
+                engine(definition())
                     .process(settlement(HoldId("no-hold"), SettlementPayload.Kind.TIP, tip = TIP))
 
             assertIs<PetichResult.Success>(result)
@@ -146,7 +157,7 @@ class SettlementSagaTest {
     @Test
     fun `a tip that dies before its payout gives the money back`() =
         runTest {
-            val engine = sagaEngine(steps().withDeathAt(PetichPhase.EXECUTION), storage, clock)
+            val engine = engine(definitionDying(at = "payout"))
 
             val result =
                 engine.process(
@@ -185,7 +196,11 @@ class SettlementSagaTest {
             // The saga as it stands when `charge` throws: the tip's payload carries the ride's hold,
             // and nothing has enriched CHARGE_ID.
             val saga = settlement(fare, SettlementPayload.Kind.TIP, id = "tip-no-charge", tip = TIP)
-            CaptureStep(payments).compensate(saga, saga.payload as SettlementPayload)
+            // A CONTEXT DOUBLE, because the call under test is a compensation and a compensation takes
+            // one. The saga is the one where `charge` threw, so nothing was recorded — which is the
+            // whole case: `ctx.recorded<Charged>()` answers null and the undo refunds nothing rather
+            // than falling back to the hold this payload carries, which is the FARE's.
+            CaptureStep(payments).compensate(NoRecord(saga), saga.payload as SettlementPayload)
 
             assertEquals(
                 listOf(FARE),
@@ -198,15 +213,10 @@ class SettlementSagaTest {
     @Test
     fun `dying after any phase leaves no money taken and no payout standing`() =
         runTest {
-            for (dieBefore in listOf(
-                PetichPhase.VALIDATION,
-                PetichPhase.AUTHORIZATION,
-                PetichPhase.EXECUTION,
-                PetichPhase.POST_PROCESSING,
-            )) {
+            for (dieBefore in listOf("settleable", "capture", "payout", "publish-settled")) {
                 PostgresHarness.truncateAll()
                 val hold = payments.hold("card-4417", FARE, "USD")
-                val engine = sagaEngine(steps().withDeathAt(dieBefore), storage, clock)
+                val engine = engine(definitionDying(at = dieBefore))
 
                 val result = engine.process(settlement(hold, SettlementPayload.Kind.FARE, id = "s-$dieBefore"))
 
@@ -247,11 +257,7 @@ class SettlementSagaTest {
             storage.petiches.saveOrGet(parked)
 
             val resumed =
-                sagaEngine(
-                    steps(),
-                    storage,
-                    clock,
-                ).process(checkNotNull(storage.petiches.findById(RIDE_SAGA)))
+                engine(definition()).process(checkNotNull(storage.petiches.findById(RIDE_SAGA)))
 
             assertIs<PetichResult.Success>(resumed)
             assertEquals(1, payments.captured().size, "the money moved a second time")
@@ -267,7 +273,7 @@ class SettlementSagaTest {
     fun `the receipt carries the ride and the amount that was taken`() =
         runTest {
             val hold = payments.hold("card-4417", FARE, "USD")
-            sagaEngine(steps(), storage, clock).process(settlement(hold, SettlementPayload.Kind.FEE))
+            engine(definition()).process(settlement(hold, SettlementPayload.Kind.FEE))
 
             val receipt = receipts.sent.single()
             assertEquals(RIDE, receipt.rideId)
@@ -292,11 +298,7 @@ class SettlementSagaTest {
             val hold = payments.hold("card-4417", FARE, "USD")
 
             val result =
-                sagaEngine(
-                    steps(refusing),
-                    storage,
-                    clock,
-                ).process(settlement(hold, SettlementPayload.Kind.FARE))
+                engine(definition(refusing)).process(settlement(hold, SettlementPayload.Kind.FARE))
 
             assertIs<PetichResult.Success>(result)
             assertEquals(FARE, payments.captured().single().amountCents)
@@ -350,22 +352,74 @@ class SettlementSagaTest {
             ),
         )
 
-    /** A death is the next step never returning, which is what an unplugged process looks like. */
-    private fun List<PetichInterceptor<*>>.withDeathAt(phase: PetichPhase): List<PetichInterceptor<*>> =
-        map { step ->
-            if (step.phase == phase) {
-                object : SettlementStep() {
-                    override val phase = phase
-
-                    override suspend fun run(
-                        petich: Petich,
-                        payload: SettlementPayload,
-                    ): InterceptorResult = error("process died before $phase answered")
-                }
+    /**
+     * A death is the member never returning, which is what an unplugged process looks like.
+     *
+     * **Addressed by key rather than by phase**, which is what the model changed: a member's phase
+     * is the definition's layout and its key is its identity. The substitution is written out rather
+     * than mapped over a list, because the order is a declaration now and a test that rebuilt it
+     * from a filter would be asserting against its own copy.
+     */
+    private fun definitionDying(at: String): PetichDefinition<SettlementPayload> =
+        petich(SETTLEMENT_SAGA_TYPE) {
+            enrich("charge-and-payout", ChargeAndPayout())
+            if (at == "settleable") validate(at, DyingCheck(at)) else validate("settleable", Settleable())
+            if (at == "capture") authorize(at, Dying(at)) else authorize("capture", CaptureStep(payments))
+            if (at == "payout") step(at, Dying(at)) else step("payout", PayoutStep(payouts))
+            if (at == "publish-settled") {
+                announce(at, Dying(at))
             } else {
-                step
+                announce("publish-settled", PublishSettledStep(json, SendReceiptUseCase(receipts)))
             }
         }
+
+    private class Dying(
+        private val key: String,
+    ) : PetichStep<SettlementPayload> {
+        override suspend fun execute(
+            ctx: PetichStepContext,
+            payload: SettlementPayload,
+        ): Unit = error("process died before $key answered")
+
+        override suspend fun compensate(
+            ctx: PetichStepContext,
+            payload: SettlementPayload,
+        ) = Unit
+    }
+
+    private class DyingCheck(
+        private val key: String,
+    ) : PetichCheck<SettlementPayload> {
+        override suspend fun check(
+            ctx: PetichCheckContext,
+            payload: SettlementPayload,
+        ): Unit = error("process died before $key answered")
+    }
+
+    /** What a member's context is when nothing was recorded — the case the undo above turns on. */
+    private class NoRecord(
+        override val petich: Petich,
+        override val stepKey: String = "capture",
+    ) : PetichStepContext {
+        override fun enrich(payload: EnrichedPayload): Unit = error("not part of this case")
+
+        override fun record(value: PetichStepRecord): Unit = error("not part of this case")
+
+        override fun recordedValue(): PetichStepRecord? = null
+
+        override fun emit(event: OutboxEvent): Unit = error("not part of this case")
+
+        override fun attach(effect: PetichSideEffect): Unit = error("not part of this case")
+
+        override fun suspendFor(
+            action: String,
+            ttl: Duration?,
+        ): Unit = error("not part of this case")
+
+        override fun reject(reason: String): Unit = error("not part of this case")
+
+        override fun fail(reason: String): Unit = error("not part of this case")
+    }
 
     private companion object {
         const val RIDE = "ride-1"

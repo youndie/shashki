@@ -62,13 +62,8 @@ import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.settlement.domain.SettleRideUseCase
-import io.github.youndie.shashki.server.feature.settlement.saga.CaptureStep
-import io.github.youndie.shashki.server.feature.settlement.saga.ChargeAndPayoutStep
 import io.github.youndie.shashki.server.feature.settlement.saga.Commission
-import io.github.youndie.shashki.server.feature.settlement.saga.PayoutStep
-import io.github.youndie.shashki.server.feature.settlement.saga.PublishSettledStep
-import io.github.youndie.shashki.server.feature.settlement.saga.SettleableStep
-import io.github.youndie.shashki.server.feature.settlement.saga.SettlementStep
+import io.github.youndie.shashki.server.feature.settlement.saga.settlementPetich
 import io.github.youndie.shashki.server.feature.trip.data.ExposedTripRepository
 import io.github.youndie.shashki.server.feature.trip.domain.AdvanceTripUseCase
 import io.github.youndie.shashki.server.feature.trip.domain.ReadTripSummaryUseCase
@@ -209,29 +204,32 @@ public fun rideModule(
         single<List<PetichInterceptor<*>>> {
             // Every step gets the agent, once, where the list is built — see `OrderStep.tracing`.
             val tracing = get<Observability>()
-            listOf(
+            listOf<OrderStep>(
                 QuoteStep(get(), get()),
                 ServiceAreaStep { get<RouteEstimator>().servedArea },
                 HoldPaymentStep(get()),
                 get<OfferStep>(),
                 DriverAnswerStep(get(), get(), get()),
                 PublishAssignedStep(get()),
-                // The second saga, in the same engine: each interceptor answers for the payload it
-                // knows, so one engine runs whichever saga the row carries (B-37).
-                ChargeAndPayoutStep(),
-                SettleableStep(),
-                CaptureStep(get()),
-                PayoutStep(get()),
-                PublishSettledStep(get(), get()),
-            ).onEach { step ->
-                when (step) {
-                    is OrderStep -> step.tracing = tracing
-                    is SettlementStep -> step.tracing = tracing
-                    else -> Unit
-                }
-            }
+                // The settlement saga used to be five more entries here, told apart from these by
+                // `supports`. It is a definition now (B-32), so what is left in this list is one
+                // saga rather than two interleaved.
+            ).onEach { step -> step.tracing = tracing }
         }
-        single<PetichEngine> { sagaEngine(get(), get(), get()) }
+        single<PetichEngine> {
+            // THE DEFINITIONS ARE BUILT HERE rather than bound, and that is not tidiness. A
+            // `single<List<PetichDefinition<*>>>` beside the `single<List<PetichInterceptor<*>>>`
+            // above compiles and then loses: both erase to `List<*>`, so Koin hands out whichever it
+            // saw last and the engine got a definition where it wanted an interceptor —
+            // `PetichDefinition cannot be cast to PetichInterceptor`, at the first ride, as a 500.
+            // Only this line needs them, so only this line builds them.
+            sagaEngine(
+                get(),
+                get(),
+                get(),
+                definitions = listOf(settlementPetich(get(), get(), get(), get(), tracing = get<Observability>())),
+            )
+        }
         single<PetichRepository> { get<SagaStorage>().petiches }
 
         // The trip and the ledger: two rows the order saga does not own (research §1.4c, B-37).
