@@ -2,7 +2,6 @@ package io.github.youndie.shashki.server.feature.ride
 
 import io.github.youndie.petich.Petich
 import io.github.youndie.petich.PetichClock
-import io.github.youndie.petich.PetichEngineConfig
 import io.github.youndie.petich.PetichResult
 import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.petichDefinition
@@ -165,23 +164,12 @@ class AnnouncementFailureTest {
             assertTrue("no driver" !in published, "the announcement's own words reached the outbox: $published")
         }
 
-    @Test
-    fun `an engine with no announcement handler is refused at construction`() {
-        // The switch beside `requireOutbox`, and this is what holds it wired: without the argument
-        // in `sagaEngine` the config below refuses, so the two cannot drift apart silently.
-        val failure =
-            runCatching {
-                io.github.youndie.petich.PetichEngine(
-                    repository = storage.petiches,
-                    config = PetichEngineConfig(requireAnnouncementFailureHandler = true),
-                    clock = clock,
-                    definitions = emptyList(),
-                )
-            }.exceptionOrNull()
-
-        assertIs<IllegalArgumentException>(failure)
-        assertTrue(failure.message?.contains("no-op") == true, "${failure.message}")
-    }
+    // NO TEST HERE FOR `requireAnnouncementFailureHandler` ITSELF, and that is the finding rather
+    // than an omission (B-97). One that built its own engine would assert petich's guard and nothing
+    // about whether this server uses it — the shape B-95 had to correct. What the flag actually buys
+    // is checked by mutation instead: take the handler out of `sagaEngine` and leave the flag, and
+    // every saga test in this repository fails at construction with petich's own sentence. A guard
+    // that cannot be unwired quietly needs no test of its own; it needs the rest of the suite.
 
     private class SilentReceipts : ReceiptSender {
         override suspend fun send(receipt: Receipt): Boolean = true
