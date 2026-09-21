@@ -1,7 +1,7 @@
 ---
 id: B-97
 title: "A ride can be assigned and settled without anyone downstream being told"
-status: open
+status: wip
 priority: P2
 size: S
 stage: stage-6-what-running-it-said

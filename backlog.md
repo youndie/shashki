@@ -47,7 +47,7 @@ re-prioritising one must never move its file.
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
-| [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[ ]` | A ride can be assigned and settled without anyone downstream being told | P2 | S | B-96 |
+| [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[~]` | A ride can be assigned and settled without anyone downstream being told | P2 | S | B-96 |
 
 ## Closed (95)
 
