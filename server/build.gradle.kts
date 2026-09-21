@@ -100,6 +100,12 @@ dependencies {
     // The Koin graph is verified statically in a test, because the alternative is the first request.
     testImplementation(wip.koin.test)
     testImplementation(libs.ktor.server.testHost)
+    // ON THE TEST COMPILE PATH so a test can read what was logged (B-95). logback is already this
+    // service's backend at runtime; `runtimeOnly` puts it on the test runtime path and not on the
+    // compile one, and `SweeperSaysWhatItDidTest` attaches a `ListAppender` to the real logger
+    // rather than to a seam of its own — the thing it has to prove is that the sweeper's callback
+    // reaches a log line, and a lambda the test supplied would prove it about the lambda.
+    testImplementation(libs.logback.classic)
     // The route tests build their URLs from the same @Resource classes a real client would.
     testImplementation(libs.ktor.client.contentNegotiation)
     testImplementation(libs.ktor.client.resources)

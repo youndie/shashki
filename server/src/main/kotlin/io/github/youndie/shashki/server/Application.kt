@@ -4,7 +4,6 @@ import io.github.youndie.metrik.agent.Metrik
 import io.github.youndie.petich.OptimisticLockException
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichEngine
-import io.github.youndie.petich.SuspendedPetichSweeper
 import io.github.youndie.petich.outbox.OutboxRelayWorker
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
@@ -27,6 +26,7 @@ import io.github.youndie.shashki.server.feature.ride.driverRoutes
 import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.rideRoutes
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
+import io.github.youndie.shashki.server.feature.ride.saga.sagaSweeper
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.route.routeRoutes
@@ -313,7 +313,9 @@ public fun Application.shashki(
     // stop with the application, through its own scope.
     val storage = get<SagaStorage>()
     val engine = get<PetichEngine>()
-    SuspendedPetichSweeper(
+    // Through `sagaSweeper` rather than inline, so that the callbacks it wires are held by a test
+    // rather than by this line (B-95).
+    sagaSweeper(
         repository = storage.petiches,
         engine = engine,
         clock = get<PetichClock>(),
