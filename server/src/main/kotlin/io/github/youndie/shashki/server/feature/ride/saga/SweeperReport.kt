@@ -1,7 +1,12 @@
 package io.github.youndie.shashki.server.feature.ride.saga
 
+import io.github.youndie.petich.ExpiringPetichRepository
 import io.github.youndie.petich.Petich
+import io.github.youndie.petich.PetichClock
+import io.github.youndie.petich.PetichEngine
+import io.github.youndie.petich.SuspendedPetichSweeper
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration
 
 /**
  * What the sweeper says about itself, because otherwise it says nothing (B-95).
@@ -62,3 +67,43 @@ internal class SweeperReport(
         log.error("no definition for saga type {} — row {} is being skipped", petich.type, petich.id)
     }
 }
+
+/**
+ * The sweeper this application runs, wired — and a function rather than eleven lines inside
+ * `Application`'s module, because the wiring is the thing B-95 is about (B-95).
+ *
+ * A test that builds its own sweeper proves that [SweeperReport] works and that petich calls back.
+ * It does not prove that the application passes the callbacks, which is exactly what was wrong:
+ * unwire the three below and such a test stays green. So the composition has a name, and
+ * `SweeperSaysWhatItDidTest` builds the same one the server does.
+ */
+internal fun sagaSweeper(
+    repository: ExpiringPetichRepository,
+    engine: PetichEngine,
+    clock: PetichClock,
+    stuckAfter: Duration?,
+    report: SweeperReport = SweeperReport(),
+): SuspendedPetichSweeper =
+    SuspendedPetichSweeper(
+        repository = repository,
+        engine = engine,
+        clock = clock,
+        // The poll interval is petich's own default, on purpose: naming it here would be a second
+        // copy of a number nobody in this application has an opinion about.
+        stuckAfter = stuckAfter,
+        // THE THREE THAT SAY SOMETHING NOBODY ELSE CAN (B-95).
+        onUnknownType = report::unknownType,
+        onRevived = report::revived,
+        onWorkerFailure = report::workerFailure,
+        // AND THE THREE LEFT OUT, deliberately, so the next reader knows it was a choice:
+        //
+        // `onExpired` is "your confirmation window has passed" — a notification this product does
+        // not send, and the rollback it reports has already happened either way.
+        //
+        // `onContended` counts a saga another replica claimed first. Worth a line on more than one
+        // instance and nothing on one; this deployment is one.
+        //
+        // `onNotExpired` is the ordinary race of the poll interval against the deadline — the path
+        // that exists to be lost safely. A rate that is always high means the interval is fighting
+        // the deadline, which is a tuning question nobody here has.
+    )

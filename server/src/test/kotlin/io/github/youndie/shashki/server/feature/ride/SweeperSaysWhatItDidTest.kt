@@ -12,9 +12,8 @@ import io.github.youndie.petich.PetichPhase
 import io.github.youndie.petich.PetichStatus
 import io.github.youndie.petich.PetichStep
 import io.github.youndie.petich.PetichStepContext
-import io.github.youndie.petich.SuspendedPetichSweeper
 import io.github.youndie.petich.petichDefinition
-import io.github.youndie.shashki.server.feature.ride.saga.SweeperReport
+import io.github.youndie.shashki.server.feature.ride.saga.sagaSweeper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -99,19 +98,22 @@ class SweeperSaysWhatItDidTest {
             definitions = listOf(petichDefinition<Fare>("fare") { step("settle", Inert()) }),
         )
 
+    /**
+     * THE SERVER'S OWN WIRING, not a sweeper this test assembled.
+     *
+     * The first version of this file built its own `SuspendedPetichSweeper` with the three
+     * callbacks passed, and stayed green when they were deleted from `Application` — proving that
+     * `SweeperReport` works and nothing about whether anything calls it. That is the item's defect
+     * reproduced inside its own test, which is why the composition has a name.
+     */
     private fun sweeperOver(
         repository: Rows,
-        report: SweeperReport,
         stuckAfter: kotlin.time.Duration? = null,
-    ) = SuspendedPetichSweeper(
+    ) = sagaSweeper(
         repository = repository,
         engine = engineOver(repository),
         clock = PetichClock { NOW },
-        pollInterval = 30.minutes,
         stuckAfter = stuckAfter,
-        onUnknownType = report::unknownType,
-        onRevived = report::revived,
-        onWorkerFailure = report::workerFailure,
     )
 
     /** Everything written under `shashki.sweeper` while [body] runs. */
@@ -138,7 +140,7 @@ class SweeperSaysWhatItDidTest {
                     // Through `start` rather than `sweep()`, because the catch that calls the
                     // reporter is in the worker's loop: a direct `sweep()` would throw at the test
                     // and report nothing, which is the version of this test that proves nothing.
-                    val job = sweeperOver(repository, SweeperReport()).start(this)
+                    val job = sweeperOver(repository).start(this)
                     runCurrent()
                     job.cancel()
                 }
@@ -165,7 +167,7 @@ class SweeperSaysWhatItDidTest {
         )
 
         val lines =
-            recorded { runTest { sweeperOver(repository, SweeperReport(), stuckAfter = 5.minutes).sweepStuck() } }
+            recorded { runTest { sweeperOver(repository, stuckAfter = 5.minutes).sweepStuck() } }
 
         // B-93 gave the sweeper this job and nobody read the answer. The rate is normally zero, and
         // its becoming non-zero is the only sign this system has that instances die mid-saga.
@@ -188,7 +190,7 @@ class SweeperSaysWhatItDidTest {
             ),
         )
 
-        val lines = recorded { runTest { sweeperOver(repository, SweeperReport()).sweep() } }
+        val lines = recorded { runTest { sweeperOver(repository).sweep() } }
 
         // The engine skips these rather than ending them, which is right — a deploy that dropped a
         // definition would otherwise finish every saga of that type, irreversibly. It is also why

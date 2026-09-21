@@ -4,7 +4,6 @@ import io.github.youndie.metrik.agent.Metrik
 import io.github.youndie.petich.OptimisticLockException
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichEngine
-import io.github.youndie.petich.SuspendedPetichSweeper
 import io.github.youndie.petich.outbox.OutboxRelayWorker
 import io.github.youndie.shashki.server.db.DatabaseConfig
 import io.github.youndie.shashki.server.db.DatabaseFactory
@@ -27,7 +26,7 @@ import io.github.youndie.shashki.server.feature.ride.driverRoutes
 import io.github.youndie.shashki.server.feature.ride.rideModule
 import io.github.youndie.shashki.server.feature.ride.rideRoutes
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
-import io.github.youndie.shashki.server.feature.ride.saga.SweeperReport
+import io.github.youndie.shashki.server.feature.ride.saga.sagaSweeper
 import io.github.youndie.shashki.server.feature.route.RoutingConfig
 import io.github.youndie.shashki.server.feature.route.data.NoRouteException
 import io.github.youndie.shashki.server.feature.route.routeRoutes
@@ -314,29 +313,13 @@ public fun Application.shashki(
     // stop with the application, through its own scope.
     val storage = get<SagaStorage>()
     val engine = get<PetichEngine>()
-    val sweeperReport = SweeperReport()
-    SuspendedPetichSweeper(
+    // Through `sagaSweeper` rather than inline, so that the callbacks it wires are held by a test
+    // rather than by this line (B-95).
+    sagaSweeper(
         repository = storage.petiches,
         engine = engine,
         clock = get<PetichClock>(),
         stuckAfter = STUCK_AFTER,
-        // THE THREE THAT SAY SOMETHING NOBODY ELSE CAN (B-95). This was built with four of its ten
-        // parameters and the other six default to no-ops, so a sweeper whose query had been failing
-        // every pass for an hour read exactly like one with nothing to sweep.
-        onUnknownType = sweeperReport::unknownType,
-        onRevived = sweeperReport::revived,
-        onWorkerFailure = sweeperReport::workerFailure,
-        // AND THE THREE LEFT UNWIRED, deliberately, so the next reader knows it was a choice:
-        //
-        // `onExpired` is "your confirmation window has passed" — a notification this product does
-        // not send, and the rollback it reports has already happened either way.
-        //
-        // `onContended` counts a saga another replica claimed first. Worth a line on more than one
-        // instance and worth nothing on one; this deployment is one.
-        //
-        // `onNotExpired` is the ordinary race of the poll interval against the deadline — the path
-        // that exists to be lost safely. A rate that is always high means the interval is fighting
-        // the deadline, which is a tuning question nobody here has.
     ).start(this)
     // **The relay runs only when there is somewhere to deliver to** (B-38). Until then this started
     // it against a `LoggingPublisher`, which marked every event delivered because it had written a
