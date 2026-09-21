@@ -1,7 +1,7 @@
 ---
 id: B-94
 title: "A tap on the map cannot become a place, though the projection has always known how"
-status: open
+status: question
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
