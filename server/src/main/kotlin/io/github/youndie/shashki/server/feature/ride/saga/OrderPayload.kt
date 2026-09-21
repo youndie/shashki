@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("order")
 public class OrderPayload(
-    public val rideId: String,
+    public override val rideId: String,
     public val riderId: String,
     public val pickup: GeoPoint,
     public val dropoff: GeoPoint,
@@ -47,7 +47,8 @@ public class OrderPayload(
      * `0` for the rows written before this field existed, which sort last and say so honestly.
      */
     public val requestedAtEpochMs: Long = 0,
-) : PetichPayload()
+) : PetichPayload(),
+    AboutARide
 
 /**
  * Keys into the saga's enriched payload — the values each step leaves for the ones after it and

@@ -20,6 +20,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.slf4j.LoggerFactory
 
 /** The `Json` the saga's rows are written with. Polymorphism is registered here and nowhere else. */
 public fun sagaJson(): Json =
@@ -101,10 +102,16 @@ public fun sagaEngine(
 ): PetichEngine =
     PetichEngine(
         repository = storage.petiches,
-        config = PetichEngineConfig(requireOutbox = true),
+        // BOTH REFUSALS, and the second is the first one's twin (B-97). `requireOutbox` refuses an
+        // engine whose events would be dropped; this refuses one whose announcements would fail in
+        // silence. Same shape, same consequence — a `COMPLETED` saga, a correct row, and a consumer
+        // that is never told — and it had no switch only because the handler arrived one petich
+        // snapshot after the version this server was pinned to.
+        config = PetichEngineConfig(requireOutbox = true, requireAnnouncementFailureHandler = true),
         clock = clock,
         metrics = RefusingMetrics,
         definitions = definitions,
+        announcementFailureHandler = AnnouncementFailures(sagaJson()),
     )
 
 private object RefusingMetrics : PetichEngineMetrics {
@@ -115,4 +122,24 @@ private object RefusingMetrics : PetichEngineMetrics {
         error(
             "$count outbox event(s) of saga type '$type' were dropped — requireOutbox is meant to make this impossible",
         )
+
+    /**
+     * **Counted, not thrown, and the asymmetry with the method above is the whole of it** (B-97).
+     *
+     * A dropped event is a wiring mistake that `requireOutbox` is meant to make impossible, so its
+     * ever firing means something changed under the constructor. A failed announcement is a delivery
+     * problem at runtime — a broker that is down, an SMTP server that is not answering — and killing
+     * the pass over one would undo exactly what petich B-49 exists to do: the work is already done,
+     * and the saga must finish. The rate is the reading, and
+     * [AnnouncementFailures] is what makes the fact leave the database.
+     */
+    override fun onAnnouncementFailed(
+        type: String,
+        key: String,
+        reason: String,
+    ) {
+        LOG.warn("announcement {} of saga type {} failed: {}", key, type, reason)
+    }
+
+    private val LOG = LoggerFactory.getLogger("shashki.saga")
 }
