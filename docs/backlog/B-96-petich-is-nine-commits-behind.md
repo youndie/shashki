@@ -1,7 +1,7 @@
 ---
 id: B-96
 title: "petich is pinned one commit before the handler B-97 needs, and nine behind"
-status: open
+status: done
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
@@ -46,3 +46,47 @@ which is why this is one item rather than a sentence in B-97.
 - `./gradlew check` green where it runs, native half included.
 - The saga tests that exist for a dead process (B-93's) still pass — B-51 and B-55 both moved code
   those exercise.
+
+## Findings
+
+**No source change.** `:server:compileKotlin` and `:server:compileTestKotlin` both pass against
+`0.4.0.106` untouched, which is what "additive" had to mean and not what it was allowed to be
+assumed to mean. Nine petich commits, one of them a behaviour change this application had a test for
+the old shape of — B-51 makes a fault outside a member roll the saga back instead of writing `FAILED`
+and undoing nothing — and the suite is green, so nothing here asserted the old behaviour.
+
+**The migration is held by a test that already existed, which is the best outcome this item could
+have had.** `SchemaTest` asks Exposed what DDL is still required to reach `PetichTable`, and
+`PetichTable` is petich's. Take `V7__petich_0_4_0_106.sql` away and it fails by name:
+
+```
+the migrations do not match the Exposed tables; still required:
+ALTER TABLE petiches ADD compensating_from_index INT NULL
+ALTER TABLE petiches ADD compensating_towards VARCHAR(32) NULL
+```
+
+That is the positive control for the whole item — it proves the columns are needed, that the
+spellings match, and that a future petich column cannot arrive here unnoticed. `SchemaTest` also
+carries its own vacuity guard ("the schema test is looking at something"), so an empty answer cannot
+come from an empty table list.
+
+**`INT` and `VARCHAR(32)`, not the JSON dance V5 had to do.** The spelling difference V5 documents is
+about petich's JSON-shaped columns, where `PetichTable` declares `json()` and the native schema
+prints `TEXT`. These two are `integer()` and `varchar(…, 32)` in `PetichTable` and `INT` and
+`VARCHAR(32)` in `Schema.kt` — checked in petich's tree, not remembered — so petich's upgrade notes
+copy across as they stand. The `ALTER`s Exposed printed above are the same two.
+
+**The catalogue comment had been wrong for longer than this item is old.** It said "a release now,
+and from Central … nothing here resolves petich from the Reposilite any more". `0.4.0.97` answers
+**404 on Central and 200 on the Reposilite**, so the build has been resolving from the place its own
+comment said it had stopped using. That sentence was true of `0.1.0`; the version moved four times
+under it and the justification stayed. Corrected in the same commit as the bump, which is the only
+time anybody was going to read it.
+
+**Verification.** `./gradlew check` on the Linux box against a real Postgres, exit code read rather
+than piped and the result files' timestamps read rather than the log: green, 33 test classes.
+`OfferCascadeTest` — the dead-process and stranded-saga cases B-93 added, and the ones B-51 and B-55
+moved code under — 9 tests, no failures. `make check` clean.
+
+**Not done here:** the announcement failure handler and `requireAnnouncementFailureHandler`. That is
+B-97, which this unblocks.
