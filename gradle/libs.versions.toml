@@ -22,10 +22,18 @@ coroutinesSwing = "1.11.0"
 # The saga engine; petich-postgres pins Exposed 1.4.0 in its own POM, so that number is not ours to
 # choose — a different one here is a version conflict, not a preference.
 #
-# A RELEASE NOW, AND FROM CENTRAL. petich moved to `io.github.youndie.petich` and published 0.1.0;
-# `0.1.0.18` was a snapshot of the old group and is not coming back. Nothing here resolves petich
-# from the Reposilite any more.
-petich = "0.4.0.97"
+# **A SNAPSHOT, FROM THE REPOSILITE, and the sentence that stood here said the opposite** (B-96). It
+# read "a release now, and from Central … nothing here resolves petich from the Reposilite any
+# more", which was true of `0.1.0` and of nothing since: `0.4.0.97` answers 404 on Central and 200 on
+# the Reposilite, so this build has been resolving from the place its own comment said it had stopped
+# using. The justification expired and the sentence stayed.
+#
+# petich publishes 0.2.0 to Central and everything after it as a build-numbered snapshot from its
+# main, which is what the `io.github.youndie.*` filter in `settings.gradle.kts` is there for.
+#
+# `0.4.0.106` carries B-49 and B-51..B-57. Of those only B-54 costs anything here: two nullable
+# columns on the saga table, added by `V7__petich_0_4_0_106.sql`.
+petich = "0.4.0.106"
 # **A snapshot, pinned by build metadata like smtpkn below.** s3kn publishes no release — its own
 # README leaves Maven Central until the API stops moving — so a demo that wants a real authenticated
 # write against the object store takes the snapshot (B-47) and applies B-13's documented fallback to
