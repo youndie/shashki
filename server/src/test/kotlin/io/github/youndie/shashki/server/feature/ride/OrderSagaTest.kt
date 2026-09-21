@@ -31,6 +31,7 @@ import io.github.youndie.shashki.server.feature.ride.saga.OrderStep
 import io.github.youndie.shashki.server.feature.ride.saga.PublishAssigned
 import io.github.youndie.shashki.server.feature.ride.saga.QuoteStep
 import io.github.youndie.shashki.server.feature.ride.saga.RideAssignedEvent
+import io.github.youndie.shashki.server.feature.ride.saga.SagaAnnouncementFailedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.ServiceAreaStep
 import io.github.youndie.shashki.server.feature.ride.saga.orderPetich
@@ -194,7 +195,12 @@ class OrderSagaTest {
      * `publish-assigned` used to be a step, so a death there rolled the whole ride back — the fare
      * released, the driver freed, a rider told there were no cars because a JSON encoder threw. An
      * announcement runs when the work is done and petich no longer lets it undo any of it: the saga
-     * completes, the hold and the reservation stand, and only the event is missing.
+     * completes and the hold and the reservation stand.
+     *
+     * **"Only the event is missing" is what this used to say, and B-97 is why it no longer does.**
+     * The announcement that could not be made now leaves `saga.announcement-failed` behind, so the
+     * far side learns that the assignment it was owed never came. `AnnouncementFailureTest` is where
+     * that is the subject; here it is the one line of this test that had to change.
      */
     @Test
     fun `a ride whose announcement dies keeps its driver and its hold`() =
@@ -212,7 +218,11 @@ class OrderSagaTest {
             assertIs<PetichResult.Success>(result)
             assertEquals(1, payments.activeHolds().size, "the fare was released over a notification")
             assertEquals("driver-1", reservations.reservedFor(id), "the driver was freed over a notification")
-            assertEquals(emptyList(), storage.outbox.fetchPending(), "the event is the only thing missing")
+            assertEquals(
+                listOf(SagaAnnouncementFailedEvent.TYPE),
+                storage.outbox.fetchPending().map { it.type },
+                "the announcement that could not be made left nothing behind",
+            )
         }
 
     @Test

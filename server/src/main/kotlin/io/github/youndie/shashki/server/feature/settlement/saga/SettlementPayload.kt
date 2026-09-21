@@ -3,6 +3,7 @@ package io.github.youndie.shashki.server.feature.settlement.saga
 import io.github.youndie.petich.PetichPayload
 import io.github.youndie.shashki.protocol.Quote
 import io.github.youndie.shashki.protocol.RideClass
+import io.github.youndie.shashki.server.feature.ride.saga.AboutARide
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,7 +21,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("settlement")
 public class SettlementPayload(
-    public val rideId: String,
+    public override val rideId: String,
     public val riderId: String,
     public val driverId: String,
     public val holdId: String,
@@ -40,7 +41,8 @@ public class SettlementPayload(
     public val paymentMethodId: String = "",
     /** What the rider gave on top, in cents. Nought for the two settlements that are not a tip. */
     public val tipCents: Long = 0,
-) : PetichPayload() {
+) : PetichPayload(),
+    AboutARide {
     /**
      * Which of the two settlements this is.
      *

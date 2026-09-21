@@ -42,14 +42,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
-| [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[ ]` | A ride can be assigned and settled without anyone downstream being told | P2 | S | B-96 |
 
-## Closed (95)
+## Closed (96)
 
 **Remove the unknowns**
 
@@ -166,6 +165,7 @@ re-prioritising one must never move its file.
 - [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[x]` - A saga whose process died is never picked up, because stuckAfter was never set
 - [B-95](docs/backlog/B-95-the-sweeper-is-silent-about-everything.md) `[x]` - The sweeper reports nothing, so a broken one and an idle one read the same
 - [B-96](docs/backlog/B-96-petich-is-nine-commits-behind.md) `[x]` - petich is pinned one commit before the handler B-97 needs, and nine behind
+- [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[x]` - A ride can be assigned and settled without anyone downstream being told
 
 <!-- END INDEX -->
 

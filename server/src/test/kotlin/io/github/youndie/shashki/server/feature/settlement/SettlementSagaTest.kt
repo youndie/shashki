@@ -29,6 +29,7 @@ import io.github.youndie.shashki.server.feature.receipt.data.ExposedReceiptClaim
 import io.github.youndie.shashki.server.feature.receipt.domain.Receipt
 import io.github.youndie.shashki.server.feature.receipt.domain.ReceiptSender
 import io.github.youndie.shashki.server.feature.receipt.domain.SendReceiptUseCase
+import io.github.youndie.shashki.server.feature.ride.saga.SagaAnnouncementFailedEvent
 import io.github.youndie.shashki.server.feature.ride.saga.SagaStorage
 import io.github.youndie.shashki.server.feature.ride.saga.sagaEngine
 import io.github.youndie.shashki.server.feature.ride.saga.sagaJson
@@ -270,7 +271,13 @@ class SettlementSagaTest {
             assertIs<PetichResult.Success>(result)
             assertEquals(FARE, payments.captured().single().amountCents, "the fare was refunded over a notification")
             assertNotNull(payouts.find(RIDE), "the payout was deleted over a notification")
-            assertEquals(emptyList(), storage.outbox.fetchPending(), "the event is the only thing missing")
+            // **"Only the event is missing" is what this said until B-97.** The announcement that
+            // could not be made now leaves a row of its own — keyed by the RIDE and not by this
+            // saga, whose id is `s-announcement-dies` here and `<ride>:settlement` in production,
+            // neither of which a consumer could route on.
+            val failed = storage.outbox.fetchPending().single()
+            assertEquals(SagaAnnouncementFailedEvent.TYPE, failed.type)
+            assertEquals("$RIDE:announcement-failed-publish-settled", failed.id)
         }
 
     /**
