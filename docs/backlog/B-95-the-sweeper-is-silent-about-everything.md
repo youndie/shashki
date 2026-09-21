@@ -1,7 +1,7 @@
 ---
 id: B-95
 title: "The sweeper reports nothing, so a broken one and an idle one read the same"
-status: open
+status: wip
 priority: P2
 size: S
 stage: stage-6-what-running-it-said
