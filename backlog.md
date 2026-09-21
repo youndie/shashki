@@ -42,16 +42,15 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (4)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
-| [B-95](docs/backlog/B-95-the-sweeper-is-silent-about-everything.md) `[~]` | The sweeper reports nothing, so a broken one and an idle one read the same | P2 | S | - |
 | [B-96](docs/backlog/B-96-petich-is-nine-commits-behind.md) `[ ]` | petich is pinned one commit before the handler B-97 needs, and nine behind | P2 | M | - |
 | [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[ ]` | A ride can be assigned and settled without anyone downstream being told | P2 | S | B-96 |
 
-## Closed (93)
+## Closed (94)
 
 **Remove the unknowns**
 
@@ -166,6 +165,7 @@ re-prioritising one must never move its file.
 - [B-91](docs/backlog/B-91-a-lost-answer-holds-the-fare-for-ever.md) `[x]` - A hold whose answer is lost is never released, because the id it would be released by came back in that answer
 - [B-92](docs/backlog/B-92-a-receipt-can-go-out-twice.md) `[x]` - A receipt goes out again every time the settlement's last pass is retried
 - [B-93](docs/backlog/B-93-a-dead-process-leaves-its-saga-for-ever.md) `[x]` - A saga whose process died is never picked up, because stuckAfter was never set
+- [B-95](docs/backlog/B-95-the-sweeper-is-silent-about-everything.md) `[x]` - The sweeper reports nothing, so a broken one and an idle one read the same
 
 <!-- END INDEX -->
 
