@@ -1,7 +1,7 @@
 ---
 id: B-96
 title: "petich is pinned one commit before the handler B-97 needs, and nine behind"
-status: open
+status: wip
 priority: P2
 size: M
 stage: stage-6-what-running-it-said
