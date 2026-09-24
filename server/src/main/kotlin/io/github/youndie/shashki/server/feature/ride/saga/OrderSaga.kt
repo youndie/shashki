@@ -8,6 +8,7 @@ import io.github.youndie.petich.PetichEngineConfig
 import io.github.youndie.petich.PetichEngineMetrics
 import io.github.youndie.petich.PetichPayload
 import io.github.youndie.petich.PetichStepRecord
+import io.github.youndie.petich.PetichTracer
 import io.github.youndie.petich.SimpleEnrichedPayload
 import io.github.youndie.petich.postgres.ExposedOutboxRepository
 import io.github.youndie.petich.postgres.ExposedPetichRepository
@@ -99,6 +100,10 @@ public fun sagaEngine(
     // NO LONGER DEFAULTED: it was, so that the migration could move one saga at a time, and both
     // have moved. An engine built here with no definitions is a bug rather than a stage.
     definitions: List<PetichDefinition<*>>,
+    // What each saga did, event by event (B-98). Defaulted to nothing, because every saga test builds
+    // its engine here and only the one that asserts on the trace wants one; production passes a
+    // `LinePetichTracer` from `RideModule`.
+    tracer: PetichTracer = PetichTracer.NoOp,
 ): PetichEngine =
     PetichEngine(
         repository = storage.petiches,
@@ -112,6 +117,7 @@ public fun sagaEngine(
         metrics = RefusingMetrics,
         definitions = definitions,
         announcementFailureHandler = AnnouncementFailures(sagaJson()),
+        tracer = tracer,
     )
 
 private object RefusingMetrics : PetichEngineMetrics {

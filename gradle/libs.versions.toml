@@ -31,9 +31,14 @@ coroutinesSwing = "1.11.0"
 # petich publishes 0.2.0 to Central and everything after it as a build-numbered snapshot from its
 # main, which is what the `io.github.youndie.*` filter in `settings.gradle.kts` is there for.
 #
-# `0.4.0.106` carries B-49 and B-51..B-57. Of those only B-54 costs anything here: two nullable
+# `0.4.0.106` carried B-49 and B-51..B-57. Of those only B-54 cost anything here: two nullable
 # columns on the saga table, added by `V7__petich_0_4_0_106.sql`.
-petich = "0.4.0.106"
+#
+# `0.4.0.112` adds petich B-58/B-59/B-65/B-60, and no column (B-98): `PetichTracer` and the
+# `LinePetichTracer` this server writes its saga trace through, an announcement whose own deadline
+# no longer rolls the saga back, and the engine writing `PROCESSING` itself — which is what lets the
+# sweeper find a saga created `DRAFT` that died mid-pass.
+petich = "0.4.0.112"
 # **A snapshot, pinned by build metadata like smtpkn below.** s3kn publishes no release — its own
 # README leaves Maven Central until the API stops moving — so a demo that wants a real authenticated
 # write against the object store takes the snapshot (B-47) and applies B-13's documented fallback to
