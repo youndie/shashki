@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.LinePetichTracer
 import io.github.youndie.petich.Petich
 import io.github.youndie.petich.PetichAnnouncement
 import io.github.youndie.petich.PetichAnnouncementContext
@@ -133,6 +134,33 @@ class OrderSagaTest {
         }
         assertEquals(keys.size, keys.map { OrderStep.spanName(it) }.toSet().size, "two members share a span name")
     }
+
+    /**
+     * **The trace the server logs, read back as lines** (B-98). One pass parks at the offer and one
+     * carries the ride on; a reader of these lines, with nothing else, has to be able to say both.
+     */
+    @Test
+    fun `a ride's trace names where it waited and how it ended`() =
+        runTest {
+            val lines = mutableListOf<String>()
+            val traced =
+                sagaEngine(
+                    storage,
+                    clock,
+                    definitions = listOf(definition),
+                    tracer = LinePetichTracer("test", clock, lines::add),
+                )
+
+            assertIs<PetichResult.Success>(runToAssigned(traced, "ride-traced"))
+
+            assertTrue(lines.isNotEmpty() && lines.all { it.startsWith("petich.trace ") }, lines.joinToString("\n"))
+            assertTrue(lines.all { " saga=ride-traced " in it }, lines.joinToString("\n"))
+            assertTrue(lines.any { "event=MemberSuspended" in it }, "where it waited:\n" + lines.joinToString("\n"))
+            assertTrue(
+                lines.last().endsWith("event=Finished status=COMPLETED"),
+                "how it ended:\n" + lines.joinToString("\n"),
+            )
+        }
 
     @Test
     fun `a ride runs through every phase, holds the fare, reserves a driver and leaves one event in the outbox`() =

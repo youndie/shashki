@@ -38,6 +38,14 @@ public object ObservabilityConfig {
 
     private val LOG = LoggerFactory.getLogger(ObservabilityConfig::class.java)
 
+    /**
+     * Which replica this process is, for the saga trace (B-98): petich's tracer events carry no such
+     * thing because the engine has none to give, so the line stamps it. `HOSTNAME` is the pod name
+     * under Kubernetes and the container id under plain Docker; `local` on a laptop.
+     */
+    public fun replica(env: (String) -> String? = System::getenv): String =
+        env("HOSTNAME")?.takeIf { it.isNotBlank() } ?: "local"
+
     /** `host:port` for metrik's UDP ingest, or `null`. */
     public fun metrik(env: (String) -> String? = System::getenv): Pair<String, String>? {
         val endpoint = env(METRIK_ENDPOINT_VARIABLE)?.takeIf { it.isNotBlank() }

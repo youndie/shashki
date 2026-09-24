@@ -1,5 +1,6 @@
 package io.github.youndie.shashki.server.feature.ride
 
+import io.github.youndie.petich.LinePetichTracer
 import io.github.youndie.petich.PetichClock
 import io.github.youndie.petich.PetichEngine
 import io.github.youndie.petich.PetichRepository
@@ -87,7 +88,10 @@ import org.koin.core.module.dsl.onOptions
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
+
+private val SAGA_TRACE = LoggerFactory.getLogger("shashki.saga")
 
 /**
  * The ride feature's graph. The database is handed in because it is built before Koin is, and the
@@ -234,6 +238,10 @@ public fun rideModule(
                         ),
                         settlementPetich(get(), get(), get(), get(), get(), tracing = tracing),
                     ),
+                // ONE LINE PER SAGA EVENT, into the log (B-98). petich asks whether two weeks of
+                // reading these answers anything a counting test double had not (its B-60); the
+                // lines are `petich.trace …`, so they are one grep away from everything else here.
+                tracer = LinePetichTracer(ObservabilityConfig.replica(), get<PetichClock>(), SAGA_TRACE::info),
             )
         }
         single<PetichRepository> { get<SagaStorage>().petiches }
