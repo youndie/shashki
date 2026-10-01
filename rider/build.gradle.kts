@@ -35,9 +35,9 @@ kotlin {
             implementation(projects.crashClient)
             api(projects.protocol)
 
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.ui)
+            implementation(wip.compose.runtime)
+            implementation(wip.compose.foundation)
+            implementation(wip.compose.ui)
             implementation(libs.kvadrant.core)
             // The component model and its vocabulary. The renderers come with `:shared-ui`; what the
             // rider needs is the types, so it can hold a tree and hand it over.
@@ -77,7 +77,7 @@ kotlin {
             // `runComposeUiTest`, for the one test that composes a `NavDisplay`: whether two entries
             // of one route get two view models is a property of the composition, not of the graph
             // (B-69).
-            implementation(libs.compose.uiTest)
+            implementation(wip.compose.ui.test)
             // A real engine for the one test that signs in against a real provider and then calls a
             // real server with what it got.
             implementation(libs.ktor.client.cio)

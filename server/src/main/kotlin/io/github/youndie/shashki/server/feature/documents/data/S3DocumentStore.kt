@@ -5,7 +5,7 @@ import io.github.youndie.shashki.protocol.DocumentKind
 import io.github.youndie.shashki.protocol.DocumentState
 import io.github.youndie.shashki.protocol.DriverDocumentView
 import io.github.youndie.shashki.server.feature.documents.domain.DocumentStore
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.flow.toList
 import kotlinx.io.readByteArray
 import kotlin.coroutines.cancellation.CancellationException
@@ -47,7 +47,7 @@ public class S3DocumentStore(
             "документа нет — это и есть ответ `null`, который экран показывает как «не загружен»",
         )
         try {
-            client.get(bucket, key(driverId, kind)) { it.body.readRemaining().readByteArray() }
+            client.get(bucket, key(driverId, kind)) { it.body.readBuffer().readByteArray() }
         } catch (e: CancellationException) {
             // A cancelled read is not a document that is not there, and `null` here means exactly
             // "not there" to the screen that asked.

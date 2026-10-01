@@ -47,9 +47,9 @@ kotlin {
             // Named rather than reached through `compose.*`: those accessors are deprecated in
             // Compose 1.12, and they say so only when the build script is compiled — which happens
             // on an empty Gradle home and nowhere else. See B-27.
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.ui)
+            implementation(wip.compose.runtime)
+            implementation(wip.compose.foundation)
+            implementation(wip.compose.ui)
             implementation(libs.kvadrant.core)
             // The server-driven subset. B-17 puts the kit's composition rules in the renderer,
             // because only a renderer can decide what happens to a payload a rule forbids.
@@ -88,7 +88,7 @@ kotlin {
                 // The glyph-coverage guard composes every registered fixture and reads its text off
                 // the semantics tree; that is the only way to check strings that live as literals
                 // inside composables without asking each fixture to declare them.
-                implementation(libs.compose.uiTest)
+                implementation(wip.compose.ui.test)
                 // A real engine for the one test that reads the archive off a running store.
                 implementation(libs.ktor.client.cio)
             }
@@ -156,16 +156,23 @@ ktlint {
 
 tasks.named("check") { dependsOn(tasks.named("compileKotlinWasmJs")) }
 
-// **Every Compose artefact named by hand is checked against the version the plugin applies.**
+// **No Compose artefact may be pinned in this repository's own catalog.**
 //
 // The accessors would have carried the plugin's own version; they are deprecated in Compose 1.12 and
 // say so only when the build script is compiled, which is why this surfaced during B-13's empty-cache
-// build and not in five hundred incremental ones. Naming the artefacts trades a warning for numbers
+// build and not in five hundred incremental ones. Naming the artefacts traded a warning for numbers
 // that can drift, and a Compose UI a minor away from its runtime is the `NoSuchMethodError` research
 // §1.2 describes.
 //
+// The artefacts this repository names — runtime, foundation, ui, ui-test — now come from `wip`, where
+// they ride the same `composeMultiplatform` reference as the plugin, so they cannot drift by
+// construction. What is left to guard is `libs`: a Compose artefact added there tomorrow (a material3,
+// say) would carry a number of its own again, and this says so instead of letting it compile.
+//
 // **By group rather than by alias**, so an artefact added tomorrow is covered without anybody
-// remembering to extend a list here — which is the difference between a guard and an inventory.
+// remembering to extend a list here — which is the difference between a guard and an inventory. The
+// empty-list guard that stood here went with the artefacts: an empty `libs` list is the state this
+// check exists to keep, not a sign that it stopped looking.
 run {
     val expected = wip.versions.composeMultiplatform.get()
     val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -173,10 +180,6 @@ run {
         catalog.libraryAliases
             .mapNotNull { alias -> catalog.findLibrary(alias).orElse(null)?.get() }
             .filter { it.module.group.startsWith("org.jetbrains.compose") }
-
-    // The vacuity guard. A check over an empty list passes for ever and reports nothing, and the day
-    // somebody puts these back behind an accessor this should say so rather than go quiet.
-    check(named.isNotEmpty()) { "no Compose artefact is named by hand any more; this check passes over nothing" }
 
     val drifted = named.filter { it.versionConstraint.requiredVersion != expected }
     check(drifted.isEmpty()) {
