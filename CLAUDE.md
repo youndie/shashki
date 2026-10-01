@@ -20,8 +20,8 @@ which half of the product the task is in.
 
 | The task is | Use |
 |---|---|
-| a server feature or endpoint — domain and data layers, repository, use case, routing, the DI module | **`server-feature-impl`** |
-| a client feature — repository / use case / view model, the Screen/Content split, wiring through DI | **`client-feature-impl`** |
+| a server feature or endpoint — domain and data layers, repository, use case, routing, the DI module | **`ktor-server-feature`** |
+| a client feature — repository / use case / view model, the Screen/Content split, wiring through DI | **`compose-client-feature`** |
 
 Invoke the skill first and follow it; this file does not restate what it says. The division of labour
 is the point — a skill carries *how* the layers are built and changes when that changes, while this
