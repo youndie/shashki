@@ -9,7 +9,7 @@
 # The convention plugins. The settings plugin is versioned in `settings.gradle.kts`; these are the
 # project half, and they need a version here because the root build has to put them on the plugin
 # classpath — see the note there.
-sborka = "0.4.0.43"
+sborka = "0.4.0.111"
 
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
@@ -80,12 +80,6 @@ smtpkn = "0.1.0-20260917.184706-4"
 smtpknTransport = "0.1.0-20260917.184706-3"
 graphhopper = "11.0"
 cryptography = "0.6.0"
-# **Every Compose artefact this repository names by hand rides this one reference**, and
-# shared-ui/build.gradle.kts checks it against the version the plugin applies. Compose 1.12 deprecated
-# the `compose.runtime` / `compose.foundation` / `compose.ui` / `compose.uiTest` accessors in favour
-# of naming the artefacts — which trades a warning for a number that can drift, so the number is
-# guarded. The name is historical: it was `ui-test` alone until B-27.
-composeUiTest = "1.12.0"
 # Server-driven UI. A CI-numbered publish, not a `-SNAPSHOT`.
 # Navigation 3 for Compose Multiplatform. **An alpha, and the only line published for `wasmJs`** —
 # pinned like everything else, but pre-release quality, and the runtime half comes from Google's
@@ -179,15 +173,6 @@ kompot-client = { module = "io.github.youndie:kompot-client", version.ref = "kom
 kompot-core = { module = "io.github.youndie:kompot-core", version.ref = "kompot" }
 kompot-registryAnnotations = { module = "io.github.youndie:kompot-registry-annotations", version.ref = "kompot" }
 kompot-registryProcessor = { module = "io.github.youndie:kompot-registry-processor", version.ref = "kompot" }
-
-# Compose's UI test harness, named directly rather than through `compose.uiTest` — that accessor is
-# deprecated in 1.12 ("specify dependency directly") and the deprecation only surfaced on a clean
-# build, because a warm configuration cache never re-evaluated the script. The version rides
-# `wip.versions.composeMultiplatform`, so it cannot drift from the Compose the plugin applies.
-compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeUiTest" }
-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeUiTest" }
-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeUiTest" }
-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeUiTest" }
 
 smtpkn-client = { module = "io.github.youndie:smtp-client", version.ref = "smtpkn" }
 smtpkn-transportKtor = { module = "io.github.youndie:smtp-transport-ktor", version.ref = "smtpknTransport" }

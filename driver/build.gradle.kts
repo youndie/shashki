@@ -30,9 +30,9 @@ kotlin {
             implementation(projects.crashClient)
             api(projects.protocol)
 
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.ui)
+            implementation(wip.compose.runtime)
+            implementation(wip.compose.foundation)
+            implementation(wip.compose.ui)
             implementation(libs.kvadrant.core)
             implementation(project.dependencies.platform("io.ktor:ktor-bom:${wip.versions.ktor.get()}"))
             implementation(libs.ktor.client.core)
