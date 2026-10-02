@@ -80,55 +80,13 @@ jobs:
           eval "$(bash scripts/install-chrome.sh --export)"
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
-      # B-100, TEMPORARY: the memory evidence. A sampler of the runner and of every JVM by role, and
-      # a GC log for each JVM through JAVA_TOOL_OPTIONS, so that the build measured is the build that
-      # fails - no Kotlin property is set to get the log.
-      - name: "B-100: start the memory sampler (temporary)"
-        run: |
-          mkdir -p /tmp/b100/gc
-          { echo "nproc=$(nproc)"; free -m; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo; echo "cgroup memory.max: $(cat /sys/fs/cgroup/memory.max 2>/dev/null)"; } > /tmp/b100/host.txt
-          cat /tmp/b100/host.txt
-          cat > /tmp/b100/sample.sh <<'EOF'
-          i=0
-          while :; do
-            i=$((i+1))
-            line="$(date -u +%H:%M:%S) avail_mb=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)"
-            while read -r pid rss args; do
-              case "$args" in
-                *KotlinCompileDaemon*) role=kotlin ;;
-                *GradleDaemon*) role=gradle ;;
-                *GradleWorkerMain*) role=worker ;;
-                *GradleWrapperMain*) role=client ;;
-                *) role=java ;;
-              esac
-              line="$line $role:$pid=$((rss/1024))"
-              [ -e /tmp/b100/args-$pid.txt ] || echo "$args" > /tmp/b100/args-$pid.txt
-              # every third sample a full collection in each Kotlin daemon: its heap after one is the
-              # live set, which a young collection's figure is not (the first control showed it)
-              if [ $role = kotlin ] && [ $((i % 3)) = 0 ]; then
-                "${args%%/java *}/jcmd" "$pid" GC.run > /dev/null 2>&1 &
-              fi
-            done < <(ps -eo pid=,rss=,args= | awk '$3 ~ /\/java$/')
-            line="$line chrome=$(ps -eo rss=,comm= | awk '/chrom/{s+=$1} END{print int(s/1024)}') node=$(ps -eo rss=,comm= | awk '$2=="node"{s+=$1} END{print int(s/1024)}')"
-            echo "$line"
-            sleep 2
-          done
-          EOF
-          nohup setsid bash /tmp/b100/sample.sh > /tmp/b100/mem.log 2>&1 &
-
       # Not `build`: `check` is the target a contributor runs, and the distribution is not something
       # a pull request needs built.
       #
       # `viddikVerify` is deliberately **not** here yet. The goldens were recorded on one machine and
       # whether they mean the same thing on another is an open measurement — B-02 — so wiring the
       # comparison in now would either redden every run or, worse, pass for a reason nobody checked.
-      # B-100, TEMPORARY: --no-build-cache, because the failure needs a cold build - every wasm link
-      # executed - and a branch restores main's cache, where the links are already stored.
-      # The cap is the arm: empty - what gradle.properties gives; a size - kotlin.daemon.jvmargs.
-      - run: ./gradlew check --no-daemon --no-build-cache ${B100_KOTLIN_HEAP:+-Pkotlin.daemon.jvmargs=-Xmx$B100_KOTLIN_HEAP}
-        env:
-          B100_KOTLIN_HEAP: ""
-          JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid"
+      - run: ./gradlew check --no-daemon
 
       # **The image is built by CI and by nothing else that can forget.** `check` compiles the server
       # and the bundles; it does not put them in a container, and a Dockerfile that only ever runs on
@@ -136,16 +94,6 @@ jobs:
       # 41 MB is not in git (B-06) — so this builds the context and stops short of the graph, which
       # is the half a runner can check without downloading a city.
       - run: ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
-
-      - name: "B-100: keep the evidence (temporary)"
-        if: always()
-        run: cp /tmp/kotlin-daemon*.log /tmp/b100/ 2>/dev/null || true
-
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: b100-${{ github.event_name }}-${{ github.run_attempt }}
-          path: /tmp/b100
 
   # Separate from the gate, and on a schedule rather than on a pull request, because an anchor rots
   # when somebody refactors a **different** repository. A pull request here is the least likely
