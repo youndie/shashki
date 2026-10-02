@@ -75,11 +75,13 @@ coverage map below, and shashki's own two checks (`scripts/style_contract.py`,
 regenerates the backlog index and appends missing coverage-map lines. On a push to `main` CI also
 runs `make docs-on-main`, which makes a `status: draft` an error there.
 
-The reports do not block. The research also cites files in the stack's own repositories; those are
-written as addresses at the commit that was read — `owner/repo@<commit>!/<path>`, docs-bootstrap's
-SPEC §4.1 — which the anchor report lists without fetching, so it needs nothing checked out beside
-this clone. A new citation of another repository is written the same way: a bare path into it is
-reported missing, because the report looks for a path only in the repository it belongs to.
+BDD coverage does not block; code anchors does (`ANCHORS_ARGS ?= --check` in the Makefile), so a
+path that resolves to nothing fails `make check`. The research also cites files in the stack's own
+repositories; those are written as addresses at the commit that was read —
+`owner/repo@<commit>!/<path>`, docs-bootstrap's SPEC §4.1 — which the anchor report lists without
+fetching, so it needs nothing checked out beside this clone. A new citation of another repository
+is written the same way: a bare path into it is reported missing, and fails the check, because the
+report looks for a path only in the repository it belongs to.
 
 ## Coverage map
 
