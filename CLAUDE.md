@@ -82,9 +82,9 @@ pull request titles and bodies and to branch names.
 ```bash
 pip install pyyaml
 make check     # what CI runs: the gate (index, connectivity, coverage map, the chart and the map
-               # style against the code) and the two non-blocking reports
-make gate      # the blocking half alone
-make report    # non-blocking: BDD coverage, code anchors
+               # style against the code) and the two reports, code anchors blocking
+make gate      # the gate alone
+make report    # BDD coverage (non-blocking), code anchors (blocking: ANCHORS_ARGS)
 make fix       # regenerate the backlog index, append missing coverage-map lines
 ```
 
