@@ -42,10 +42,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
+| [B-100](docs/backlog/B-100-the-kotlin-daemon-runs-out-of-heap-on-the-shared-ui-test-link.md) `[~]` | The Kotlin daemon runs out of heap on the shared-ui test link in a third of cold CI runs | P1 | S | - |
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 | [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[ ]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
