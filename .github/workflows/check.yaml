@@ -80,6 +80,35 @@ jobs:
           eval "$(bash scripts/install-chrome.sh --export)"
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
+      # B-100, TEMPORARY: the memory evidence. A sampler of the runner and of every JVM by role, and
+      # a GC log for each JVM through JAVA_TOOL_OPTIONS, so that the build measured is the build that
+      # fails - no Kotlin property is set to get the log.
+      - name: "B-100: start the memory sampler (temporary)"
+        run: |
+          mkdir -p /tmp/b100/gc /tmp/b100/gc-isolated
+          { echo "nproc=$(nproc)"; free -m; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo; echo "cgroup memory.max: $(cat /sys/fs/cgroup/memory.max 2>/dev/null)"; } > /tmp/b100/host.txt
+          cat /tmp/b100/host.txt
+          cat > /tmp/b100/sample.sh <<'EOF'
+          while :; do
+            line="$(date -u +%H:%M:%S) avail_mb=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)"
+            while read -r pid rss args; do
+              case "$args" in
+                *KotlinCompileDaemon*) role=kotlin ;;
+                *GradleDaemon*) role=gradle ;;
+                *GradleWorkerMain*) role=worker ;;
+                *GradleWrapperMain*) role=client ;;
+                *) role=java ;;
+              esac
+              line="$line $role:$pid=$((rss/1024))"
+              [ -e /tmp/b100/args-$pid.txt ] || echo "$args" > /tmp/b100/args-$pid.txt
+            done < <(ps -eo pid=,rss=,args= | awk '$3 ~ /\/java$/')
+            line="$line chrome=$(ps -eo rss=,comm= | awk '/chrom/{s+=$1} END{print int(s/1024)}') node=$(ps -eo rss=,comm= | awk '$2=="node"{s+=$1} END{print int(s/1024)}')"
+            echo "$line"
+            sleep 2
+          done
+          EOF
+          nohup setsid bash /tmp/b100/sample.sh > /tmp/b100/mem.log 2>&1 &
+
       # Not `build`: `check` is the target a contributor runs, and the distribution is not something
       # a pull request needs built.
       #
@@ -87,6 +116,8 @@ jobs:
       # whether they mean the same thing on another is an open measurement — B-02 — so wiring the
       # comparison in now would either redden every run or, worse, pass for a reason nobody checked.
       - run: ./gradlew check --no-daemon
+        env:
+          JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid"
 
       # **The image is built by CI and by nothing else that can forget.** `check` compiles the server
       # and the bundles; it does not put them in a container, and a Dockerfile that only ever runs on
@@ -94,6 +125,25 @@ jobs:
       # 41 MB is not in git (B-06) — so this builds the context and stops short of the graph, which
       # is the half a runner can check without downloading a city.
       - run: ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+
+      # B-100, TEMPORARY: what the shared-ui test link needs alone - the Kotlin daemon stopped, so
+      # the one task runs in a fresh one, and --rerun so it is not skipped as up to date.
+      - name: "B-100: the shared-ui test link alone (temporary)"
+        if: always()
+        continue-on-error: true
+        env:
+          JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc-isolated/gc-%p.log:time,uptime,pid"
+        run: |
+          pkill -f KotlinCompileDaemon || true
+          sleep 5
+          ./gradlew :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs --rerun --no-daemon
+
+      - name: "B-100: keep the evidence (temporary)"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b100-${{ github.event_name }}-${{ github.run_attempt }}
+          path: /tmp/b100
 
   # Separate from the gate, and on a schedule rather than on a pull request, because an anchor rots
   # when somebody refactors a **different** repository. A pull request here is the least likely
