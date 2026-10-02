@@ -115,7 +115,9 @@ jobs:
       # `viddikVerify` is deliberately **not** here yet. The goldens were recorded on one machine and
       # whether they mean the same thing on another is an open measurement — B-02 — so wiring the
       # comparison in now would either redden every run or, worse, pass for a reason nobody checked.
-      - run: ./gradlew check --no-daemon
+      # B-100, TEMPORARY: --no-build-cache, because the failure needs a cold build - every wasm link
+      # executed - and a branch restores main's cache, where the links are already stored.
+      - run: ./gradlew check --no-daemon --no-build-cache
         env:
           JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid"
 
@@ -138,8 +140,24 @@ jobs:
           sleep 5
           ./gradlew :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs --rerun --no-daemon
 
+      # B-100, TEMPORARY: the positive control. The same link alone, with the daemon capped at 0.8x
+      # the live set the step above measured (1.13-1.16 GB), has to fail the way CI fails.
+      - name: "B-100: the control, the same link under 900 MB (temporary)"
+        if: always()
+        continue-on-error: true
+        env:
+          JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc-control/gc-%p.log:time,uptime,pid"
+        run: |
+          mkdir -p /tmp/b100/gc-control
+          pkill -f KotlinCompileDaemon || true
+          sleep 5
+          ./gradlew :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs --rerun --no-daemon -Pkotlin.daemon.jvmargs=-Xmx900m
+
       - name: "B-100: keep the evidence (temporary)"
         if: always()
+        run: cp /tmp/kotlin-daemon*.log /tmp/b100/ 2>/dev/null || true
+
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: b100-${{ github.event_name }}-${{ github.run_attempt }}
