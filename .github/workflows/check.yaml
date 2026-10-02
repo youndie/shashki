@@ -1,8 +1,7 @@
 # The documentation gate and the code gate. The documentation checks are docs-bootstrap's, at the
 # version the `uses: youndie/docs-bootstrap@...` lines below pin - written here and nowhere else: the
 # Makefile reads the same line and fetches the same version for a local `make check`, and Renovate
-# bumps it. The anchors job at the bottom differs from the template because shashki's anchors point
-# into the stack's other repositories as well as into this one.
+# bumps it.
 
 name: check
 
@@ -33,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: youndie/docs-bootstrap@v0.3.0
+      - uses: youndie/docs-bootstrap@v0.3.6
 
       # **The chart, with the values a real installation sets.** `make check` holds the chart's
       # environment to the server's (`chart_config.py`) and cannot render it: that needs Helm, and a
@@ -105,34 +104,14 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      # **This checkout goes into `repos/`, beside the clones below**, because the anchors point both
-      # ways: into this tree (`server/src/...`, `rider/src/...`) and into the stack's own
-      # repositories. The report resolves them against `REPOS` - `..` by default, the directory this
-      # checkout sits in - so that directory has to hold all of them. With the checkout at the
-      # workspace root and only the clones in `repos/`, every anchor into shashki itself was reported
-      # missing.
       - uses: actions/checkout@v4
-        with:
-          path: repos/shashki
 
-      # Shallow clones: history is not needed, only the file tree.
-      #
-      # A repository that cannot be cloned is a warning and not a failure. Its anchors are then
-      # simply unchecked, which is the truth, and a weekly red build nobody caused is a weekly red
-      # build people learn to skip.
-      #
-      # `smtpkn` is cloned under its own name: the anchors that reach into it are written without a
-      # leading repository segment, because matching is by suffix and the directory a working copy
-      # sits in is not this repository's business.
-      - run: |
-          cd repos
-          for r in kvadrant-ui viddik kompot petich booblik bochka s3kn shildik katcher metrik tracy telek smtpkn; do
-            git clone --depth 1 --filter=blob:none \
-              "https://github.com/${{ github.repository_owner }}/$r.git" \
-              || echo "::warning::$r is unreachable - its anchors were not checked"
-          done
-
-      - uses: youndie/docs-bootstrap@v0.3.0
+      # The code lives in this checkout, so its parent is a directory whose one subdirectory is
+      # this repository - which is exactly what REPOS (`..` by default) expects. The research's
+      # citations of the stack's other repositories are addresses at the commit that was read
+      # (SPEC 4.1), which the report holds to their form without fetching them, so no clones go
+      # beside it: a row about what kvadrant-ui was on 2026-09-01 is about that commit, and
+      # resolving it against kvadrant-ui's main today would vouch for a sentence nobody re-read.
+      - uses: youndie/docs-bootstrap@v0.3.6
         with:
-          working-directory: repos/shashki
           target: report
