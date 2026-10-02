@@ -62,7 +62,8 @@ seven drawn artboards and six open items; six of those items closed the same day
 changed without rewriting the table, because the boundary of v1 is a fact about v1 rather than a
 description of today.
 
-The page is `site/src/jsMain/resources/markdown/shashki.md` in
-[kotlin-website](https://github.com/youndie/kotlin-website), with its `Library` entry beside mani's;
-the site compiles. What is deliberately not here is a hosted instance — that is B-35's image on
-somebody's cluster, and whether it runs publicly is a decision about a cluster.
+The page is [kotlin.website/shashki](https://kotlin.website/shashki), written as
+`site/src/jsMain/resources/markdown/shashki.md` in the site's own repository, which is private, with
+its `Library` entry beside mani's; the site compiles. What is deliberately not here is a hosted
+instance — that is B-35's image on somebody's cluster, and whether it runs publicly is a decision
+about a cluster.
