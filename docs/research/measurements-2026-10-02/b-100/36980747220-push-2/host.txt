@@ -1,0 +1,8 @@
+nproc=4
+               total        used        free      shared  buff/cache   available
+Mem:           15989        1960       10138          46        4283       14029
+Swap:           3071           0        3071
+MemTotal:       16373448 kB
+MemAvailable:   14366132 kB
+SwapTotal:       3145724 kB
+cgroup memory.max: 

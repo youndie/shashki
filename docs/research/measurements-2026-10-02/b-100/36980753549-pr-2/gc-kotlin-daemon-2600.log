@@ -1,0 +1,14 @@
+[2026-10-02T08:05:00.249+0000][0.007s][2600] CardTable entry size: 512
+[2026-10-02T08:05:00.249+0000][0.007s][2600] Using Parallel
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Version: 25.0.4.1+1-LTS (release)
+[2026-10-02T08:05:00.252+0000][0.010s][2600] CPUs: 4 total, 4 available
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Memory: 15989M
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Large Page Support: Disabled
+[2026-10-02T08:05:00.252+0000][0.010s][2600] NUMA Support: Disabled
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Compressed Oops: Enabled (Zero based)
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Alignments: Space 512K, Generation 512K, Heap 2M
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Heap Min Capacity: 8M
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Heap Initial Capacity: 250M
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Heap Max Capacity: 3G
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Pre-touch: Disabled
+[2026-10-02T08:05:00.252+0000][0.010s][2600] Parallel Workers: 4

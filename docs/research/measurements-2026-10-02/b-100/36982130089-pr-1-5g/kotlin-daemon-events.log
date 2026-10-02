@@ -1,0 +1,104 @@
+### kotlin-daemon.2026-10-02.08-06-49-459.00.log
+2026-10-02 08:06:49.595 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx5g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shashki-6569487
+2026-10-02 08:06:49.595 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b88614b2172573/ko
+2026-10-02 08:06:50.114 [compiler] INFO: found daemon on port 17233 (-63 ms old), trying to connect
+2026-10-02 08:06:50.296 [compiler] INFO: Assuming other daemons have lower prio, taking clients from them and schedule them to shutdown: my runfile: kotlin-daemon.2026-10-02T08-06-49.915Z.3f03511f5ea597c2fc170068efe19aa1.17821.run (1790928409947) vs best other runfile: kotlin-daemon.2026-10-02T08-06-49.992Z.3f03511f5ea597c2fc170068efe19aa1.17233.run (1790928410010)
+2026-10-02 08:06:50.623 [compiler] Starting compilation: io.github.youndie:auth-client
+2026-10-02 08:06:50.976 [compiler] Starting compilation: io.github.youndie:auth-client
+2026-10-02 08:06:58.593 [compiler] Starting compilation: io.github.youndie:crash-client
+2026-10-02 08:07:01.779 [compiler] INFO: Done with result 0
+2026-10-02 08:07:02.021 [compiler] Starting compilation: io.github.youndie:auth-client_test
+2026-10-02 08:07:02.192 [compiler] INFO: Done with result 0
+2026-10-02 08:07:02.231 [compiler] INFO: Done with result 0
+2026-10-02 08:07:02.557 [compiler] Starting compilation: io.github.youndie:crash-client_test
+2026-10-02 08:07:02.582 [compiler] Starting compilation: io.github.youndie:auth-client_test
+2026-10-02 08:07:04.262 [compiler] INFO: Done with result 0
+2026-10-02 08:07:04.377 [compiler] Starting compilation: wasm test link auth-client
+2026-10-02 08:07:05.502 [compiler] INFO: Done with result 0
+2026-10-02 08:07:06.929 [compiler] INFO: Done with result 0
+2026-10-02 08:07:09.201 [compiler] Starting compilation: io.github.youndie:crash-client
+2026-10-02 08:07:11.156 [compiler] INFO: Done with result 0
+2026-10-02 08:07:11.345 [compiler] Starting compilation: io.github.youndie:crash-client_test
+2026-10-02 08:07:13.549 [compiler] INFO: Done with result 0
+2026-10-02 08:07:13.675 [compiler] Starting compilation: wasm test link crash-client
+2026-10-02 08:07:20.541 [compiler] Starting compilation: io.github.youndie:protocol
+2026-10-02 08:07:28.441 [compiler] INFO: Done with result 0
+2026-10-02 08:07:28.871 [compiler] Starting compilation: protocol_commonMain
+2026-10-02 08:07:31.174 [compiler] INFO: Done with result 0
+2026-10-02 08:07:36.721 [compiler] Starting compilation: io.github.youndie:shared-ui
+2026-10-02 08:07:43.577 [compiler] INFO: Done with result 0
+2026-10-02 08:07:43.590 [compiler] INFO: Done with result 0
+2026-10-02 08:07:43.861 [compiler] Starting compilation: io.github.youndie:protocol
+2026-10-02 08:07:49.794 [compiler] INFO: Done with result 0
+2026-10-02 08:07:50.041 [compiler] Starting compilation: io.github.youndie:shared-ui
+2026-10-02 08:07:57.567 [compiler] INFO: Done with result 0
+2026-10-02 08:08:00.091 [compiler] Starting compilation: io.github.youndie:driver
+2026-10-02 08:08:01.526 [compiler] INFO: Done with result 0
+2026-10-02 08:08:02.305 [compiler] Starting compilation: io.github.youndie:driver
+2026-10-02 08:08:05.484 [compiler] Starting compilation: io.github.youndie:rider
+2026-10-02 08:08:10.186 [compiler] INFO: Done with result 0
+2026-10-02 08:08:12.635 [compiler] INFO: Done with result 0
+2026-10-02 08:08:16.168 [compiler] Starting compilation: io.github.youndie:driver_test
+2026-10-02 08:08:17.090 [compiler] INFO: Done with result 0
+2026-10-02 08:08:20.145 [compiler] Starting compilation: io.github.youndie:rider_test
+2026-10-02 08:08:23.982 [compiler] INFO: Done with result 0
+2026-10-02 08:08:29.358 [compiler] INFO: Done with result 0
+2026-10-02 08:08:47.122 [compiler] Starting compilation: io.github.youndie:server
+2026-10-02 08:08:50.441 [compiler] Starting compilation: io.github.youndie:shared-ui_test
+2026-10-02 08:08:59.783 [compiler] INFO: Done with result 0
+2026-10-02 08:09:06.589 [compiler] INFO: Done with result 0
+2026-10-02 08:09:07.190 [compiler] Starting compilation: io.github.youndie:server_test
+2026-10-02 08:09:23.830 [compiler] INFO: Done with result 0
+2026-10-02 08:11:27.260 [compiler] INFO: Shutdown started
+2026-10-02 08:11:27.260 [compiler] INFO: Memory stats: total: 1865mb, free: 1817mb, max: 4551mb
+2026-10-02 08:11:27.260 [compiler] INFO: Shutdown complete
+### kotlin-daemon.2026-10-02.08-06-49-733.00.log
+2026-10-02 08:06:49.835 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx5g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -ea -Dkotlin.daemon.custom.run.files.path.for.tests=/home/runner/.kotlin/daemon -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker
+2026-10-02 08:06:49.837 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b88614b2172573/ko
+2026-10-02 08:06:50.146 [compiler] INFO: found daemon on port 17821 (63 ms old), trying to connect
+2026-10-02 08:06:50.289 [compiler] INFO: Assuming other daemons have higher prio, try to handover clients to it and schedule shutdown: my runfile: kotlin-daemon.2026-10-02T08-06-49.992Z.3f03511f5ea597c2fc170068efe19aa1.17233.run (1790928410010) vs best other runfile: kotlin-daemon.2026-10-02T08-06-49.915Z.3f03511f5ea597c2fc170068efe19aa1.17821.run (1790928409947)
+2026-10-02 08:06:51.313 [compiler] INFO: Shutdown started
+2026-10-02 08:06:51.317 [compiler] INFO: Memory stats: total: 240mb, free: 229mb, max: 4551mb
+2026-10-02 08:06:51.318 [compiler] INFO: Shutdown complete
+### kotlin-daemon.2026-10-02.08-08-10-633.00.log
+2026-10-02 08:08:10.734 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx5g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shashki-6569487
+2026-10-02 08:08:10.735 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 08:08:11.240 [compiler] Starting compilation: io.github.youndie:driver_test
+2026-10-02 08:08:11.242 [compiler] Starting compilation: io.github.youndie:rider
+2026-10-02 08:08:31.947 [compiler] INFO: Done with result 0
+2026-10-02 08:08:32.200 [compiler] Starting compilation: wasm test link driver
+2026-10-02 08:08:36.987 [compiler] INFO: Done with result 0
+2026-10-02 08:08:37.228 [compiler] Starting compilation: io.github.youndie:rider_test
+2026-10-02 08:08:43.943 [compiler] INFO: Done with result 0
+2026-10-02 08:08:44.075 [compiler] Starting compilation: wasm test link rider
+2026-10-02 08:09:23.060 [compiler] Starting compilation: io.github.youndie:shared-ui_test
+2026-10-02 08:09:25.437 [compiler] INFO: Done with result 0
+2026-10-02 08:09:26.009 [compiler] Starting compilation: wasm test link shared-ui
+2026-10-02 08:11:18.428 [compiler] INFO: Done with result 0
+2026-10-02 08:11:18.492 [compiler] INFO: Done with result 0
+2026-10-02 08:11:18.546 [compiler] INFO: Done with result 0
+2026-10-02 08:11:27.245 [compiler] INFO: Shutdown started
+2026-10-02 08:11:27.246 [compiler] INFO: Memory stats: total: 3984mb, free: 3947mb, max: 4551mb
+2026-10-02 08:11:27.246 [compiler] INFO: Shutdown complete
+### kotlin-daemon.2026-10-02.08-13-45-108.00.log
+2026-10-02 08:13:45.149 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc-iso-shared-ui/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx3g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-s
+2026-10-02 08:13:45.149 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 08:13:45.385 [compiler] Starting compilation: wasm test link shared-ui
+2026-10-02 08:14:34.068 [compiler] INFO: Done with result 0
+### kotlin-daemon.2026-10-02.08-14-53-762.00.log
+2026-10-02 08:14:53.800 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc-iso-rider/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx3g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shash
+2026-10-02 08:14:53.801 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 08:14:54.053 [compiler] Starting compilation: wasm test link rider
+2026-10-02 08:15:46.748 [compiler] INFO: Done with result 0
+### kotlin-daemon.2026-10-02.08-16-06-923.00.log
+2026-10-02 08:16:06.964 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc-iso-driver/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx3g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shas
+2026-10-02 08:16:06.964 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 08:16:07.212 [compiler] Starting compilation: wasm test link driver
+2026-10-02 08:16:59.961 [compiler] INFO: Done with result 0
+### kotlin-daemon.2026-10-02.08-17-19-904.00.log
+2026-10-02 08:17:19.943 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc-control/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx572m -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shash
+2026-10-02 08:17:19.943 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 08:17:20.186 [compiler] Starting compilation: wasm test link shared-ui
+2026-10-02 08:28:27.371 [stderr] INFO: Exception in thread "Timer-0" java.lang.OutOfMemoryError: Java heap spaceException in thread "RMI TCP Connection(idle)" java.lang.OutOfMemoryError: Java heap space
+2026-10-02 08:28:27.378 [daemon] INFO: Message: exception: java.lang.OutOfMemoryError: Java heap space
+2026-10-02 08:28:27.395 [compiler] INFO: Done with result 137

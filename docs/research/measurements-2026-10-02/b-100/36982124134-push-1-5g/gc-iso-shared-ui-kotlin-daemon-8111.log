@@ -1,0 +1,42 @@
+[2026-10-02T08:11:54.597+0000][0.002s][8111] CardTable entry size: 512
+[2026-10-02T08:11:54.597+0000][0.002s][8111] Using Parallel
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Version: 25.0.4.1+1-LTS (release)
+[2026-10-02T08:11:54.597+0000][0.003s][8111] CPUs: 4 total, 4 available
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Memory: 15989M
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Large Page Support: Disabled
+[2026-10-02T08:11:54.597+0000][0.003s][8111] NUMA Support: Disabled
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Compressed Oops: Enabled (Zero based)
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Alignments: Space 512K, Generation 512K, Heap 2M
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Heap Min Capacity: 8M
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Heap Initial Capacity: 250M
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Heap Max Capacity: 3G
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Pre-touch: Disabled
+[2026-10-02T08:11:54.597+0000][0.003s][8111] Parallel Workers: 4
+[2026-10-02T08:11:55.251+0000][0.657s][8111] GC(0) Pause Young (Allocation Failure) 64M->9M(240M) 3.936ms
+[2026-10-02T08:11:55.531+0000][0.936s][8111] GC(1) Pause Full (Metadata GC Threshold) 64M->20M(240M) 13.127ms
+[2026-10-02T08:11:55.803+0000][1.209s][8111] GC(2) Pause Young (Allocation Failure) 83M->31M(240M) 3.908ms
+[2026-10-02T08:11:55.974+0000][1.379s][8111] GC(3) Pause Young (Allocation Failure) 94M->46M(240M) 7.264ms
+[2026-10-02T08:11:56.054+0000][1.459s][8111] GC(4) Pause Young (Allocation Failure) 108M->63M(303M) 7.872ms
+[2026-10-02T08:11:56.440+0000][1.846s][8111] GC(5) Pause Young (Allocation Failure) 188M->93M(303M) 10.610ms
+[2026-10-02T08:11:56.857+0000][2.262s][8111] GC(6) Pause Young (Allocation Failure) 219M->111M(462M) 16.204ms
+[2026-10-02T08:11:57.245+0000][2.650s][8111] GC(7) Pause Young (Allocation Failure) 363M->147M(463M) 24.396ms
+[2026-10-02T08:11:57.491+0000][2.896s][8111] GC(8) Pause Young (Allocation Failure) 399M->177M(718M) 33.515ms
+[2026-10-02T08:11:58.056+0000][3.461s][8111] GC(9) Pause Young (Allocation Failure) 665M->232M(733M) 78.843ms
+[2026-10-02T08:11:58.242+0000][3.647s][8111] GC(10) Pause Full (Diagnostic Command) 286M->227M(733M) 132.748ms
+[2026-10-02T08:11:58.789+0000][4.194s][8111] GC(11) Pause Young (Allocation Failure) 716M->286M(1047M) 69.428ms
+[2026-10-02T08:11:59.487+0000][4.893s][8111] GC(12) Pause Young (Allocation Failure) 1046M->376M(1137M) 119.616ms
+[2026-10-02T08:12:01.041+0000][6.447s][8111] GC(13) Pause Young (Allocation Failure) 1136M->482M(1244M) 115.855ms
+[2026-10-02T08:12:02.679+0000][8.084s][8111] GC(14) Pause Young (Allocation Failure) 1214M->523M(1359M) 114.950ms
+[2026-10-02T08:12:04.472+0000][9.877s][8111] GC(15) Pause Full (Diagnostic Command) 1061M->496M(1359M) 376.487ms
+[2026-10-02T08:12:08.620+0000][14.025s][8111] GC(16) Pause Young (Allocation Failure) 1212M->597M(1338M) 101.353ms
+[2026-10-02T08:12:10.769+0000][16.175s][8111] GC(17) Pause Full (Diagnostic Command) 730M->595M(1338M) 435.361ms
+[2026-10-02T08:12:16.913+0000][22.319s][8111] GC(18) Pause Full (Diagnostic Command) 1174M->666M(1338M) 497.251ms
+[2026-10-02T08:12:19.774+0000][25.179s][8111] GC(19) Pause Young (Allocation Failure) 1197M->687M(1403M) 132.556ms
+[2026-10-02T08:12:23.184+0000][28.589s][8111] GC(20) Pause Full (Diagnostic Command) 1010M->699M(1403M) 550.779ms
+[2026-10-02T08:12:27.687+0000][33.093s][8111] GC(21) Pause Young (Allocation Failure) 1249M->778M(1308M) 196.371ms
+[2026-10-02T08:12:29.462+0000][34.868s][8111] GC(22) Pause Full (Diagnostic Command) 1154M->914M(1308M) 711.466ms
+[2026-10-02T08:12:30.438+0000][35.844s][8111] GC(23) Pause Young (Allocation Failure) 1153M->1013M(1542M) 264.632ms
+[2026-10-02T08:12:32.541+0000][37.946s][8111] GC(24) Pause Young (Allocation Failure) 1542M->1044M(1616M) 190.104ms
+[2026-10-02T08:12:33.361+0000][38.767s][8111] GC(25) Pause Young (Allocation Failure) 1398M->1122M(1724M) 54.539ms
+[2026-10-02T08:12:33.735+0000][39.140s][8111] GC(26) Pause Young (Allocation Failure) 1476M->1123M(1791M) 46.867ms
+[2026-10-02T08:12:34.825+0000][40.231s][8111] GC(27) Pause Full (Diagnostic Command) 1138M->15M(1791M) 49.818ms

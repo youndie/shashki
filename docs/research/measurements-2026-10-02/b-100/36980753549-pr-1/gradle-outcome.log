@@ -1,0 +1,9 @@
+2026-10-02T07:51:20.1354041Z ##[group]Run ./gradlew check --no-daemon --no-build-cache
+2026-10-02T07:57:39.2139874Z e: java.lang.OutOfMemoryError: GC overhead limit exceeded
+2026-10-02T07:57:39.2149973Z > Task :rider:compileTestDevelopmentExecutableKotlinWasmJs FAILED
+2026-10-02T07:57:45.9131594Z 256 actionable tasks: 256 executed
+2026-10-02T07:57:45.9142722Z BUILD FAILED in 6m 25s
+2026-10-02T07:58:12.8188589Z BUILD SUCCESSFUL in 21s
+2026-10-02T07:58:12.8189491Z 25 actionable tasks: 5 executed, 2 from cache, 18 up-to-date
+2026-10-02T07:58:41.5004596Z BUILD SUCCESSFUL in 23s
+2026-10-02T07:58:41.5005404Z 25 actionable tasks: 5 executed, 20 up-to-date

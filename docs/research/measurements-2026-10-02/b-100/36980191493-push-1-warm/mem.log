@@ -1,0 +1,123 @@
+07:45:24 avail_mb=14073 java:2468=40 chrome=0 node=0
+07:45:26 avail_mb=14126 java:2468=109 chrome=0 node=0
+07:45:28 avail_mb=14143 java:2468=115 gradle:2528=175 chrome=0 node=0
+07:45:30 avail_mb=14203 java:2468=115 gradle:2528=255 chrome=0 node=0
+07:45:32 avail_mb=14252 java:2468=115 gradle:2528=314 chrome=0 node=0
+07:45:34 avail_mb=14190 java:2468=115 gradle:2528=390 chrome=0 node=0
+07:45:36 avail_mb=14212 java:2468=116 gradle:2528=431 chrome=0 node=0
+07:45:38 avail_mb=14278 java:2468=116 gradle:2528=471 java:2655=6 chrome=0 node=0
+07:45:40 avail_mb=14276 java:2468=116 gradle:2528=472 java:2689=8 chrome=0 node=0
+07:45:42 avail_mb=14327 java:2468=116 gradle:2528=472 java:2720=19 chrome=0 node=0
+07:45:44 avail_mb=14305 java:2468=116 gradle:2528=511 chrome=0 node=0
+07:45:47 avail_mb=14204 java:2468=116 gradle:2528=652 chrome=0 node=0
+07:45:49 avail_mb=14192 java:2468=116 gradle:2528=667 chrome=0 node=0
+07:45:51 avail_mb=14156 java:2468=116 gradle:2528=735 chrome=0 node=0
+07:45:53 avail_mb=14150 java:2468=116 gradle:2528=739 chrome=0 node=0
+07:45:55 avail_mb=13864 java:2468=116 gradle:2528=746 worker:2827=109 worker:2855=110 chrome=0 node=0
+07:45:57 avail_mb=13803 java:2468=116 gradle:2528=765 worker:2827=162 worker:2855=161 chrome=0 node=0
+07:45:59 avail_mb=13532 java:2468=116 gradle:2528=766 worker:2827=204 worker:2855=203 worker:2981=105 chrome=0 node=0
+07:46:01 avail_mb=13277 java:2468=116 gradle:2528=767 worker:2827=316 worker:2981=193 chrome=0 node=0
+07:46:03 avail_mb=13494 java:2468=116 gradle:2528=767 worker:2981=387 chrome=0 node=0
+07:46:05 avail_mb=13501 java:2468=116 gradle:2528=767 worker:2981=416 chrome=0 node=0
+07:46:07 avail_mb=13484 java:2468=116 gradle:2528=767 worker:2981=376 chrome=0 node=0
+07:46:10 avail_mb=13764 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:12 avail_mb=13770 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:14 avail_mb=13753 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:16 avail_mb=13774 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:18 avail_mb=13795 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:20 avail_mb=13796 java:2468=116 gradle:2528=768 chrome=0 node=0
+07:46:22 avail_mb=13986 java:2468=116 gradle:2528=782 chrome=0 node=0
+07:46:24 avail_mb=13444 java:2468=116 gradle:2528=782 chrome=0 node=0
+07:46:26 avail_mb=12530 java:2468=116 gradle:2528=782 chrome=3756 node=0
+07:46:28 avail_mb=12161 java:2468=116 gradle:2528=787 chrome=0 node=0
+07:46:30 avail_mb=12696 java:2468=116 gradle:2528=794 chrome=1303 node=0
+07:46:32 avail_mb=13952 java:4130=115 gradle:4167=128 chrome=0 node=0
+07:46:34 avail_mb=13987 java:4130=116 gradle:4167=263 chrome=0 node=0
+07:46:37 avail_mb=14033 java:4130=116 gradle:4167=341 chrome=0 node=0
+07:46:39 avail_mb=14066 java:4130=116 gradle:4167=395 chrome=0 node=0
+07:46:41 avail_mb=14094 java:4130=116 gradle:4167=451 chrome=0 node=0
+07:46:43 avail_mb=14171 java:4130=116 gradle:4167=459 java:4348=26 chrome=0 node=0
+07:46:45 avail_mb=14221 java:4130=116 gradle:4167=475 chrome=0 node=0
+07:46:47 avail_mb=14215 java:4130=117 gradle:4167=554 chrome=0 node=0
+07:46:49 avail_mb=14242 java:4130=117 gradle:4167=588 chrome=0 node=0
+07:46:51 avail_mb=13692 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:46:53 avail_mb=13622 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:46:55 avail_mb=13528 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:46:57 avail_mb=13448 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:46:59 avail_mb=13458 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:01 avail_mb=13488 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:04 avail_mb=13484 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:06 avail_mb=13454 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:08 avail_mb=13453 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:10 avail_mb=13453 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:12 avail_mb=13438 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:14 avail_mb=13407 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:16 avail_mb=13385 java:4130=117 gradle:4167=595 chrome=0 node=0
+07:47:18 avail_mb=13355 java:4130=118 gradle:4167=595 chrome=0 node=0
+07:47:21 avail_mb=13339 java:4130=118 gradle:4167=595 chrome=0 node=0
+07:47:23 avail_mb=13334 java:4130=118 gradle:4167=597 chrome=0 node=0
+07:47:25 avail_mb=13308 java:4130=118 gradle:4167=597 chrome=0 node=0
+07:47:27 avail_mb=13265 java:4130=118 gradle:4167=597 chrome=0 node=0
+07:47:29 avail_mb=13240 java:4130=120 gradle:4167=597 chrome=0 node=0
+07:47:31 avail_mb=13243 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:33 avail_mb=13172 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:35 avail_mb=13097 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:37 avail_mb=13081 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:40 avail_mb=13079 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:42 avail_mb=13078 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:44 avail_mb=13076 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:46 avail_mb=13102 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:48 avail_mb=12955 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:50 avail_mb=12817 java:4130=124 gradle:4167=597 chrome=0 node=0
+07:47:52 avail_mb=12611 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:47:54 avail_mb=12718 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:47:56 avail_mb=12759 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:47:58 avail_mb=12747 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:00 avail_mb=12760 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:03 avail_mb=12775 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:05 avail_mb=12765 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:07 avail_mb=12772 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:09 avail_mb=12758 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:11 avail_mb=12737 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:13 avail_mb=12743 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:15 avail_mb=12719 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:17 avail_mb=12727 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:19 avail_mb=12723 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:21 avail_mb=12743 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:24 avail_mb=12740 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:26 avail_mb=12696 java:4130=126 gradle:4167=597 chrome=0 node=0
+07:48:28 avail_mb=13456 java:4130=126 gradle:4167=601 chrome=0 node=0
+07:48:30 avail_mb=13453 java:4130=126 gradle:4167=601 chrome=0 node=0
+07:48:32 avail_mb=14913 chrome=0 node=0
+07:48:34 avail_mb=14921 chrome=0 node=0
+07:48:36 avail_mb=14919 chrome=0 node=0
+07:48:38 avail_mb=14699 java:5084=119 gradle:5121=177 chrome=0 node=0
+07:48:40 avail_mb=14605 java:5084=119 gradle:5121=271 chrome=0 node=0
+07:48:42 avail_mb=14542 java:5084=119 gradle:5121=336 chrome=0 node=0
+07:48:44 avail_mb=14461 java:5084=119 gradle:5121=413 chrome=0 node=0
+07:48:46 avail_mb=14444 java:5084=119 gradle:5121=441 chrome=0 node=0
+07:48:48 avail_mb=14394 java:5084=119 gradle:5121=500 chrome=0 node=0
+07:48:50 avail_mb=14254 java:5084=119 gradle:5121=511 kotlin:5282=155 chrome=0 node=0
+07:48:52 avail_mb=14034 java:5084=119 gradle:5121=512 kotlin:5282=385 chrome=0 node=0
+07:48:54 avail_mb=13766 java:5084=119 gradle:5121=512 kotlin:5282=662 chrome=0 node=0
+07:48:57 avail_mb=13005 java:5084=119 gradle:5121=512 kotlin:5282=1425 chrome=0 node=0
+07:48:59 avail_mb=12969 java:5084=119 gradle:5121=512 kotlin:5282=1454 chrome=0 node=0
+07:49:01 avail_mb=12869 java:5084=119 gradle:5121=512 kotlin:5282=1563 chrome=0 node=0
+07:49:03 avail_mb=12739 java:5084=119 gradle:5121=512 kotlin:5282=1689 chrome=0 node=0
+07:49:05 avail_mb=12731 java:5084=119 gradle:5121=512 kotlin:5282=1697 chrome=0 node=0
+07:49:07 avail_mb=12725 java:5084=119 gradle:5121=512 kotlin:5282=1703 chrome=0 node=0
+07:49:09 avail_mb=12708 java:5084=119 gradle:5121=512 kotlin:5282=1717 chrome=0 node=0
+07:49:11 avail_mb=12697 java:5084=119 gradle:5121=512 kotlin:5282=1725 chrome=0 node=0
+07:49:13 avail_mb=12696 java:5084=119 gradle:5121=512 kotlin:5282=1729 chrome=0 node=0
+07:49:15 avail_mb=12684 java:5084=119 gradle:5121=512 kotlin:5282=1739 chrome=0 node=0
+07:49:17 avail_mb=12569 java:5084=119 gradle:5121=512 kotlin:5282=1854 chrome=0 node=0
+07:49:19 avail_mb=12564 java:5084=119 gradle:5121=512 kotlin:5282=1857 chrome=0 node=0
+07:49:21 avail_mb=12561 java:5084=119 gradle:5121=512 kotlin:5282=1859 chrome=0 node=0
+07:49:23 avail_mb=12482 java:5084=119 gradle:5121=512 kotlin:5282=1941 chrome=0 node=0
+07:49:25 avail_mb=12479 java:5084=119 gradle:5121=512 kotlin:5282=1942 chrome=0 node=0
+07:49:27 avail_mb=12478 java:5084=119 gradle:5121=512 kotlin:5282=1943 chrome=0 node=0
+07:49:29 avail_mb=12474 java:5084=119 gradle:5121=512 kotlin:5282=1949 chrome=0 node=0
+07:49:32 avail_mb=12403 java:5084=119 gradle:5121=512 kotlin:5282=2014 chrome=0 node=0
+07:49:34 avail_mb=12289 java:5084=119 gradle:5121=512 kotlin:5282=2140 chrome=0 node=0
+07:49:36 avail_mb=12158 java:5084=119 gradle:5121=512 kotlin:5282=2250 chrome=0 node=0
+07:49:38 avail_mb=11970 java:5084=119 gradle:5121=519 kotlin:5282=2407 chrome=0 node=0
