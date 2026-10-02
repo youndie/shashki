@@ -36,6 +36,16 @@ when the plan was checked.
 Versions are the ones in the working copies of the stack repositories on 2026-09-01. Where a
 repository publishes a snapshot, that is said rather than smoothed over — see Risk 3.
 
+**Amended 2026-10-02: every file this document cites in another repository is an address at the
+commit that was read** (`owner/repo@<commit>!/<path>`, docs-bootstrap SPEC §4.1) — the commit that
+repository's default branch was at when the row was written, re-checked to hold the file; the one
+file read out of a jar is addressed by its Maven coordinate instead. Until then they were bare
+paths, which the anchor report resolved against whatever was checked out beside this clone, so a row
+stayed "found" for as long as the file existed, whatever it now said. Several rows here are no
+longer true of `main`, and that is the point of the commit: on the morning of 2026-09-02 katcher's
+`shared` and shildik's `shared-oidc` grew `wasmJs` targets and smtpkn started marking the session
+encrypted after `STARTTLS`, each in answer to a row below. The rows stay as the reading they were.
+
 | Library | Version read | Library | Version read |
 |---|---|---|---|
 | kvadrant-ui | 0.1.0 | kompot | 0.34.1 |
@@ -116,17 +126,17 @@ Verified against the working copy of `youndie/kvadrant-ui` at 0.1.0.
 
 | Fact | Where verified |
 |---|---|
-| The kit's seven dark brushes are the stock dark tokens, hex for hex: foreground `FFFFFF`, background `000000`, subtle `99FFFFFF`, disabled `66FFFFFF`, chrome `1F1F1F`, border `BFFFFFFF`, inactive `33FFFFFF` | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/KvadrantTokens.kt` |
+| The kit's seven dark brushes are the stock dark tokens, hex for hex: foreground `FFFFFF`, background `000000`, subtle `99FFFFFF`, disabled `66FFFFFF`, chrome `1F1F1F`, border `BFFFFFFF`, inactive `33FFFFFF` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/KvadrantTokens.kt` |
 | The token the kit calls "inactive" is `inactive`. `semitransparent` is a different token, `AA000000`, and is not a candidate | same file, `object Dark` |
-| A dark-theme text box is light in both themes: `textBox = BFFFFFFF` with `textBoxForeground = 000000` | `.../theme/KvadrantColors.kt`, `dark()` |
-| `KvadrantTokens` is `internal`. The public surface is `KvadrantColors.dark(accent)`, `KvadrantAccents.*` and `KvadrantTheme.colors` | `.../theme/KvadrantTokens.kt` line 15, `.../theme/KvadrantTheme.kt` |
-| **Amber is stock**, `KvadrantAccents.Amber = #F0A30A`, one of twenty published accents; Cyan is `#1BA1E2` | `.../theme/KvadrantColors.kt` `object KvadrantAccents`, `KvadrantTokens.Accents` |
+| A dark-theme text box is light in both themes: `textBox = BFFFFFFF` with `textBoxForeground = 000000` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantColors.kt`, `dark()` |
+| `KvadrantTokens` is `internal`. The public surface is `KvadrantColors.dark(accent)`, `KvadrantAccents.*` and `KvadrantTheme.colors` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantTokens.kt` line 15, `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantTheme.kt` |
+| **Amber is stock**, `KvadrantAccents.Amber = #F0A30A`, one of twenty published accents; Cyan is `#1BA1E2` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantColors.kt` `object KvadrantAccents`, `KvadrantTokens.Accents` |
 | `Red = #E51400` and `Green = #60A917` are also stock accents — the same two hexes the handoff proposes to hard-code as `ShashkiColors.negative` / `.positive` | `KvadrantTokens.Accents` |
-| Tile grid: `TileSize.Small(1) / Medium(2) / Wide(4)` packed by `KvadrantTileGrid` against `COLUMNS = 4` | `.../components/KvadrantTile.kt` |
-| Press feedback is the theme's: `KvadrantTheme` provides `LocalIndication = TiltIndication(...)` and `LocalOverscrollFactory = KvadrantOverscrollFactory(...)`; `remastered` defaults to `false` | `.../theme/KvadrantTheme.kt` |
+| Tile grid: `TileSize.Small(1) / Medium(2) / Wide(4)` packed by `KvadrantTileGrid` against `COLUMNS = 4` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../components/KvadrantTile.kt` |
+| Press feedback is the theme's: `KvadrantTheme` provides `LocalIndication = TiltIndication(...)` and `LocalOverscrollFactory = KvadrantOverscrollFactory(...)`; `remastered` defaults to `false` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantTheme.kt` |
 | **And a call site can still lose it, silently** (B-82): an indication draws what comes *after* it in the modifier chain, so `.background(colour).clickable { }` leaves the colour outside the tilt and only the label moves. Measured on a class tile: 8 of its 36 corner pixels move that way round, 35 the other | `shared-ui/.../components/Pressable.kt`, `TilePressTest` |
-| The font stack is bundled, not loaded by the consumer: Selawik at W200/300/400/600/700 for Latin, a Source Sans 3 variable for Cyrillic at compensated weights (`CYRILLIC_LIGHT_WEIGHT = 330`, `SEMILIGHT = 370`, `NORMAL = 420`, `SEMIBOLD = 640`, `BOLD = 690`) | `.../foundation/KvadrantFonts.kt`, `.../foundation/KvadrantText.kt`, `kvadrant-core/src/commonMain/composeResources/font/` |
-| `KvadrantIcons` exposes 41 public entries, against the kit's "40 stock icons we do not touch" | `.../icons/KvadrantIcons.kt` |
+| The font stack is bundled, not loaded by the consumer: Selawik at W200/300/400/600/700 for Latin, a Source Sans 3 variable for Cyrillic at compensated weights (`CYRILLIC_LIGHT_WEIGHT = 330`, `SEMILIGHT = 370`, `NORMAL = 420`, `SEMIBOLD = 640`, `BOLD = 690`) | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../foundation/KvadrantFonts.kt`, `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../foundation/KvadrantText.kt`, `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/commonMain/composeResources/font/` |
+| `KvadrantIcons` exposes 41 public entries, against the kit's "40 stock icons we do not touch" | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../icons/KvadrantIcons.kt` |
 
 **Consequence 1.1a — the kit departs from Metro here, deliberately, and the library has no opt-in
 for that departure.** The kit specifies black ink on both accents. `KvadrantColors.onAccent` is
@@ -179,7 +189,7 @@ lives. See [D4](#d4-semantic-colours-are-named-stock-accents-not-literals).
 | body | 15 / W400 | `normal` 15 / W400 | matches |
 | meta | 14 / W400 | `subtle` 14 / W400 | matches |
 
-Verified against `.../theme/KvadrantTypography.kt` (`KvadrantTypography.default`, `KvadrantFontSizes`,
+Verified against `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantTypography.kt` (`KvadrantTypography.default`, `KvadrantFontSizes`,
 `KvadrantWeights`) and `KvadrantTokens.FontSizesSp`. Every *size* the kit asks for is in the stock
 ramp — 14, 15, 17, 19, 24, 32, 54 — and every *weight* exists in `KvadrantWeights` and in the bundled
 Selawik files. What does not exist is four of the seven pairings.
@@ -214,11 +224,11 @@ of usage that stays true across the library's versions.
 
 | Fact | Where verified |
 |---|---|
-| `KvadrantMetrics()` defaults: `margin = 9.dp`, `tileGap = 9.dp`, `tileSmall = 74.25.dp`, `tileMedium = 157.5.dp`, `tileWide = 324.dp` | `.../theme/KvadrantMetrics.kt` |
+| `KvadrantMetrics()` defaults: `margin = 9.dp`, `tileGap = 9.dp`, `tileSmall = 74.25.dp`, `tileMedium = 157.5.dp`, `tileWide = 324.dp` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantMetrics.kt` |
 | The library's own note derives 9 dp from `PhoneMargin` **12 px** × 0.75, not from 16 px | same file, KDoc on `margin` |
 | `scaledToWidth(width) = scaled(width / (margin * 2 + tileWide))`; the divisor is 342 dp, and the KDoc says so and calls the difference from the 360 dp canvas unexplained | same file |
-| `KvadrantTheme` multiplies the type ramp by `metrics.scale`: `typography.scaled(metrics.scale)` | `.../theme/KvadrantTheme.kt` |
-| App bar numbers are private vals in the component, not tokens in `KvadrantMetrics`: `HEIGHT = 54.dp // 72 px`, `BUTTON = 36.dp // 48 px`, `RING = 1.125.dp // 1.5 px`, `KvadrantAppBarGlyphSize = 19.5.dp` | `.../components/KvadrantAppBar.kt` |
+| `KvadrantTheme` multiplies the type ramp by `metrics.scale`: `typography.scaled(metrics.scale)` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../theme/KvadrantTheme.kt` |
+| App bar numbers are private vals in the component, not tokens in `KvadrantMetrics`: `HEIGHT = 54.dp // 72 px`, `BUTTON = 36.dp // 48 px`, `RING = 1.125.dp // 1.5 px`, `KvadrantAppBarGlyphSize = 19.5.dp` | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../components/KvadrantAppBar.kt` |
 
 **Consequence 1.1c — every spacing number in the kit is exactly 4/3 of the library's, and the type
 ramp is not.** Read against `KvadrantMetrics` and `KvadrantAppBar`, the kit's layout numbers line up
@@ -246,7 +256,7 @@ design authority, its artboards are what the goldens are diffed against, and the
 authentically tighter than the drawing is a screen the designer has to accept twice.
 
 **The evidence, kept because the next reader will re-derive it.** kvadrant generates its tokens from
-`reference/metro-compose-brief/references/metro-tokens.json`, and every one of the kit's five numbers
+`youndie/kvadrant-ui@68b6ae9!/reference/metro-compose-brief/references/metro-tokens.json`, and every one of the kit's five numbers
 is the raw pixel value in that file: `pageMarginPx` 12, tile `gapPx` 12, `appBarIconPx` 48,
 `appBarGlyphPx` 26. The fifth, the app bar's ring at 1.5, is 1.5 px in the component's own comment
 and — as kvadrant B-49 established when this was checked — is in no token dump at all; wherever the
@@ -292,8 +302,8 @@ no template to transcribe, and 1.5 px is the library's own number, now marked as
 sharpens §1.1c rather than disturbing it: the kit's ring of 1.5 cannot have come from Microsoft
 either, so it came from the component's `// 1.5 px` comment — the pixel column again.
 
-Verified in `.../theme/KvadrantColors.kt`, `.../theme/KvadrantMetrics.kt` and
-`.../components/KvadrantAppBar.kt`. See [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
+Verified in `youndie/kvadrant-ui@765e37b!/kvadrant-core/.../theme/KvadrantColors.kt`, `youndie/kvadrant-ui@765e37b!/kvadrant-core/.../theme/KvadrantMetrics.kt` and
+`youndie/kvadrant-ui@765e37b!/kvadrant-core/.../components/KvadrantAppBar.kt`. See [D3](#d3-kvadrant-ui-grows-the-two-hooks-the-kit-needs).
 
 **Consequence 1.1d — the app bar does not scale with the theme.** Its height, button and ring are
 constants inside the component, so a scaled theme moves the page around a fixed bar. At the kit's own
@@ -306,17 +316,17 @@ Verified against the working copy of `youndie/viddik` at 0.3.0 and `youndie/kvad
 
 | Fact | Where verified |
 |---|---|
-| The capture engine renders through `ComposeScene` and skiko on a plain JVM. `viddik-testing-core` publishes **JVM variants only** at every published version; `viddik-testing-core-android` is a 404 | `viddik/README.md` ("Compatibility", "Declaring the dependencies by hand"), `kvadrant-ui/gradle/libs.versions.toml` |
-| Therefore neither the Android nor the wasm renderer can have goldens — kvadrant's own build file says so beside its `wasmJs` target | `kvadrant-ui/kvadrant-core/build.gradle.kts` |
-| 0.3.x is bound to Compose Multiplatform 1.12.x / Kotlin 2.4.x, and a mismatch appears at runtime (`NoSuchMethodError` on the first frame), not at compile time | `viddik/README.md`, compatibility table |
-| Reading metadata off `@Preview` needs 0.3.0+, and that `@Preview` is the one CMP 1.12 ships in `commonMain` | `viddik/README.md` |
-| Goldens are cross-OS portable **given** a bundled font run through `normalizeVerticalMetrics()`; glyph rasterisation is neutralised by the capture engine itself | `viddik/README.md`, "Cross-platform goldens" |
-| Bundling the font was **not enough** in practice: kvadrant's first Linux CI run failed on twenty-odd images, all of them text, because the rasteriser differs even when the file does not | `kvadrant-ui/CLAUDE.md`; `kvadrant-ui/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
+| The capture engine renders through `ComposeScene` and skiko on a plain JVM. `viddik-testing-core` publishes **JVM variants only** at every published version; `viddik-testing-core-android` is a 404 | `youndie/viddik@5432efd!/README.md` ("Compatibility", "Declaring the dependencies by hand"), `youndie/kvadrant-ui@68b6ae9!/gradle/libs.versions.toml` |
+| Therefore neither the Android nor the wasm renderer can have goldens — kvadrant's own build file says so beside its `wasmJs` target | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/build.gradle.kts` |
+| 0.3.x is bound to Compose Multiplatform 1.12.x / Kotlin 2.4.x, and a mismatch appears at runtime (`NoSuchMethodError` on the first frame), not at compile time | `youndie/viddik@5432efd!/README.md`, compatibility table |
+| Reading metadata off `@Preview` needs 0.3.0+, and that `@Preview` is the one CMP 1.12 ships in `commonMain` | `youndie/viddik@5432efd!/README.md` |
+| Goldens are cross-OS portable **given** a bundled font run through `normalizeVerticalMetrics()`; glyph rasterisation is neutralised by the capture engine itself | `youndie/viddik@5432efd!/README.md`, "Cross-platform goldens" |
+| Bundling the font was **not enough** in practice: kvadrant's first Linux CI run failed on twenty-odd images, all of them text, because the rasteriser differs even when the file does not | `youndie/kvadrant-ui@68b6ae9!/CLAUDE.md`; `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
 | The fix is `ViddikPlatformTextStyle` — a `PlatformTextStyle` pinning `FontHinting` and `FontSmoothing` — applied to **every** slot of the ramp and to every hand-built `TextStyle` | same file |
 | That helper is `internal` and lives in `desktopTest`. It is not published | same file, `internal fun portableTypography` |
-| kvadrant runs `./gradlew check` on macOS because its **calibration** tests fit the Cyrillic companion's weight by comparing ink coverage, and those numbers came from a mac | `kvadrant-ui/CLAUDE.md` |
-| `ViddikGlyphCoverage.missingGlyphs(text)` reads the bundled font's `cmap` and reports characters that would fall through to a host font | `viddik/README.md` |
-| A match is ≤ 0.05 % of pixels with a ±2 per-channel allowance; for scale, one extra character in a button label moves 1.32 % of the pixels | `viddik/README.md` |
+| kvadrant runs `./gradlew check` on macOS because its **calibration** tests fit the Cyrillic companion's weight by comparing ink coverage, and those numbers came from a mac | `youndie/kvadrant-ui@68b6ae9!/CLAUDE.md` |
+| `ViddikGlyphCoverage.missingGlyphs(text)` reads the bundled font's `cmap` and reports characters that would fall through to a host font | `youndie/viddik@5432efd!/README.md` |
+| A match is ≤ 0.05 % of pixels with a ±2 per-channel allowance; for scale, one extra character in a button label moves 1.32 % of the pixels | `youndie/viddik@5432efd!/README.md` |
 
 **Consequence 1.2a — the handoff's reason for recording on a mac is not the consumer's reason.**
 The handoff says goldens are written on macOS because of "kvadrant's Cyrillic/FreeType limitation".
@@ -410,9 +420,9 @@ web" means. It is what WorldWind does. It is **not** what maplibre-compose does 
 
 | Fact | Where verified |
 |---|---|
-| The browser map draws into an ordinary Compose `Canvas(modifier = modifier.onSizeChanged { … })`, and the GL frame is blitted **into Compose's own canvas** — `drawIntoCanvas { canvas.skiaCanvas.drawImageRect(image = target.image, …) }` | `lib/maplibre-compose/src/jsMain/.../gljs/GlJsMapSurface.kt` |
-| Input arrives through a Compose pointer modifier — `modifier.mapInput(session, options.gestureOptions, …)` — not through DOM listeners | `.../jsMain/.../map/JsMapView.kt` |
-| Their own build file says it in one sentence: "The browser platform **composites MapLibre GL JS into the Compose scene**, so its tests need a real WebGL context" | `lib/maplibre-compose/build.gradle.kts` |
+| The browser map draws into an ordinary Compose `Canvas(modifier = modifier.onSizeChanged { … })`, and the GL frame is blitted **into Compose's own canvas** — `drawIntoCanvas { canvas.skiaCanvas.drawImageRect(image = target.image, …) }` | `maplibre/maplibre-compose@5041343!/lib/maplibre-compose/src/jsMain/.../gljs/GlJsMapSurface.kt` |
+| Input arrives through a Compose pointer modifier — `modifier.mapInput(session, options.gestureOptions, …)` — not through DOM listeners | `maplibre/maplibre-compose@5041343!/lib/maplibre-compose/src/jsMain/.../map/JsMapView.kt` |
+| Their own build file says it in one sentence: "The browser platform **composites MapLibre GL JS into the Compose scene**, so its tests need a real WebGL context" | `maplibre/maplibre-compose@5041343!/lib/maplibre-compose/build.gradle.kts` |
 
 So on `js` the map *is* a sized element and Compose draws over it normally. Route 3's objection is
 therefore not "the map cannot be a sized element" — that is WorldWind's problem specifically — but
@@ -424,9 +434,9 @@ is the one that works on released artefacts today, so what it costs was read the
 
 | Fact | Where verified |
 |---|---|
-| The desktop host reaches Compose's GPU context through Skiko internals: "Compose Desktop exposes **no supported hook** for any of this, so it is read reflectively" | `.../jvmMain/.../desktop/skiko/AwtComposeMapPresentationHost.kt` KDoc |
+| The desktop host reaches Compose's GPU context through Skiko internals: "Compose Desktop exposes **no supported hook** for any of this, so it is read reflectively" | `maplibre/maplibre-compose@5041343!/lib/maplibre-compose/src/jvmMain/.../desktop/skiko/AwtComposeMapPresentationHost.kt` KDoc |
 | The backend is chosen by operating system — `LINUX -> OPENGL`, `MACOS -> METAL`, `WINDOWS -> DIRECT3D12` | same file, `HostOperatingSystem.composeBackend` |
-| "One native runtime is loaded per test process; `maplibre.desktop.backend` selects which, and **a CI matrix adds processes for additional applicable backends**" | `lib/maplibre-compose/build.gradle.kts` |
+| "One native runtime is loaded per test process; `maplibre.desktop.backend` selects which, and **a CI matrix adds processes for additional applicable backends**" | `maplibre/maplibre-compose@5041343!/lib/maplibre-compose/build.gradle.kts` |
 
 The last row is the one that decides something here. A golden in this project is one image compared
 byte-for-byte on the mac, on the Linux box and on CI — that is what B-02 measured and what
@@ -440,8 +450,8 @@ released artefacts there is no way to put this library into a Kotlin/Wasm bundle
 
 **Consequence 1.3b — Kotlin/JS is not the way out.** `kvadrant-core` builds `jvm("desktop")`,
 `wasmJs`, `iosArm64`, `iosSimulatorArm64` and `android`
-(`kvadrant-ui/kvadrant-core/build.gradle.kts`); `kompot-client` builds `jvm("desktop")`, `iosArm64`
-and `wasmJs` (`kompot/kompot-client/build.gradle.kts`). Neither has a `js` target. Retargeting the
+(`youndie/kvadrant-ui@68b6ae9!/kvadrant-core/build.gradle.kts`); `kompot-client` builds `jvm("desktop")`, `iosArm64`
+and `wasmJs` (`youndie/kompot@76ef0a0!/kompot-client/build.gradle.kts`). Neither has a `js` target. Retargeting the
 clients to Kotlin/JS to reach the map means adding a target to two libraries and re-verifying both.
 
 **Consequence 1.3c — the spike changes its question.** The brief made "MapLibre Compose in wasm:
@@ -459,11 +469,11 @@ that does not exist yet and say so in their own metadata: the PBFs must be gener
 
 | Fact | Where verified |
 |---|---|
-| The phases are exactly `ENRICHMENT, VALIDATION, AUTHORIZATION, EXECUTION, POST_PROCESSING` | `petich/petich-core/src/commonMain/kotlin/Petich.kt`, `enum class PetichPhase` |
-| A saga can pause for a human and continue on a later HTTP request, holding neither a thread nor a database connection; a suspended saga nobody returns to is rolled back by a background sweeper | `petich/README.md` |
-| With an outbox-aware repository the intent to emit an event is written in the same transaction as the state change. `PetichEngineConfig(requireOutbox = true)` refuses to build an engine whose repository cannot store events; `PetichEngineMetrics.onDroppedEvents` counts the fallback. Both are off by default | `petich/README.md` |
-| Default per-phase timeouts: ENRICHMENT 1000 ms, VALIDATION 2000 ms, AUTHORIZATION 30000 ms, EXECUTION 10000 ms | `petich/petich-core/src/commonMain/kotlin/Petich.kt`, `PetichPhase.timeoutMs` |
-| `petich-postgres` is the outbox-aware repository, on Exposed | `petich/README.md`, module table |
+| The phases are exactly `ENRICHMENT, VALIDATION, AUTHORIZATION, EXECUTION, POST_PROCESSING` | `youndie/petich@f2991de!/petich-core/src/commonMain/kotlin/Petich.kt`, `enum class PetichPhase` |
+| A saga can pause for a human and continue on a later HTTP request, holding neither a thread nor a database connection; a suspended saga nobody returns to is rolled back by a background sweeper | `youndie/petich@f2991de!/README.md` |
+| With an outbox-aware repository the intent to emit an event is written in the same transaction as the state change. `PetichEngineConfig(requireOutbox = true)` refuses to build an engine whose repository cannot store events; `PetichEngineMetrics.onDroppedEvents` counts the fallback. Both are off by default | `youndie/petich@f2991de!/README.md` |
+| Default per-phase timeouts: ENRICHMENT 1000 ms, VALIDATION 2000 ms, AUTHORIZATION 30000 ms, EXECUTION 10000 ms | `youndie/petich@f2991de!/petich-core/src/commonMain/kotlin/Petich.kt`, `PetichPhase.timeoutMs` |
+| `petich-postgres` is the outbox-aware repository, on Exposed | `youndie/petich@f2991de!/README.md`, module table |
 
 **Consequence 1.4a — the 15-second offer cannot be a blocking step.** EXECUTION's default timeout is
 10 s, and a cascade is several offers deep. Waiting for a driver has to be the engine's suspend/resume
@@ -542,10 +552,10 @@ ENRICHMENT is the first consumer.
 
 | Fact | Where verified |
 |---|---|
-| Version 0.34.1 | `kompot/gradle.properties` |
-| `@KompotComponentMarker` is real and drives a KSP registry; the processor rejects a marked class that implements neither `KompotComponent` nor `KompotComponentRenderer<T>` | `kompot/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
-| `kompot-client` targets `jvm("desktop")`, `iosArm64`, `wasmJs { browser() }` | `kompot/kompot-client/build.gradle.kts` |
-| Live updates are three modules: `kompot-realtime` (the frame contract), `kompot-realtime-server` (delivery to one instance's subscribers plus the bus contract), `kompot-realtime-redis` (the pub/sub bus for more than one instance) | `kompot/README.md`, module table |
+| Version 0.34.1 | `youndie/kompot@76ef0a0!/gradle.properties` |
+| `@KompotComponentMarker` is real and drives a KSP registry; the processor rejects a marked class that implements neither `KompotComponent` nor `KompotComponentRenderer<T>` | `youndie/kompot@76ef0a0!/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
+| `kompot-client` targets `jvm("desktop")`, `iosArm64`, `wasmJs { browser() }` | `youndie/kompot@76ef0a0!/kompot-client/build.gradle.kts` |
+| Live updates are three modules: `kompot-realtime` (the frame contract), `kompot-realtime-server` (delivery to one instance's subscribers plus the bus contract), `kompot-realtime-redis` (the pub/sub bus for more than one instance) | `youndie/kompot@76ef0a0!/README.md`, module table |
 
 **Consequence 1.4g — the geo-index is a grid, and the geohash string is deferred on purpose.**
 Built in B-20. The property research §1.6a asks for is that positions never leave the process and
@@ -578,20 +588,20 @@ The brief assumes several of these run in the wasm clients. Most do not have the
 
 | Library | Targets published | Where verified |
 |---|---|---|
-| `booblik-client` | **JVM only** — the module is `kotlin("jvm")` | `booblik/booblik-client/build.gradle.kts` |
-| katcher client | jvm, linuxX64, linuxArm64, macosX64, macosArm64, iosArm64, iosSimulatorArm64, iosX64, mingwX64 — **no `wasmJs`, no `js`** | `katcher/client/build.gradle.kts` |
-| shildik | jvm, linuxX64, linuxArm64, macosArm64; `ktor-role-based-auth` JVM only; `storage-sqlx4k` and `server-boot` jvm + linuxX64; `distribution` linuxX64 | `shildik/README.md` §Targets, `shildik/oidc-auth-client/build.gradle.kts` |
-| smtpkn | `linuxX64` is "the platform this is built for and the only one it is claimed to work on"; `jvm` shares the code and runs in CI but is "not claimed yet only because nothing has been released". 181 tests on linuxX64, 175 on the JVM | `smtp-client/build.gradle.kts`, `smtp-tls-jvm` |
-| bochka | serves `Range`, conditional reads and writes, SigV4 including `aws-chunked`; `bochka-embedded` starts a server on a random port from a test and stops it after | `bochka/README.md` |
+| `booblik-client` | **JVM only** — the module is `kotlin("jvm")` | `youndie/booblik@e361df7!/booblik-client/build.gradle.kts` |
+| katcher client | jvm, linuxX64, linuxArm64, macosX64, macosArm64, iosArm64, iosSimulatorArm64, iosX64, mingwX64 — **no `wasmJs`, no `js`** | `youndie/katcher@900f54a!/client/build.gradle.kts` |
+| shildik | jvm, linuxX64, linuxArm64, macosArm64; `ktor-role-based-auth` JVM only; `storage-sqlx4k` and `server-boot` jvm + linuxX64; `distribution` linuxX64 | `youndie/shildik@2408e7e!/README.md` §Targets, `youndie/shildik@2408e7e!/oidc-auth-client/build.gradle.kts` |
+| smtpkn | `linuxX64` is "the platform this is built for and the only one it is claimed to work on"; `jvm` shares the code and runs in CI but is "not claimed yet only because nothing has been released". 181 tests on linuxX64, 175 on the JVM | `youndie/smtpkn@252e92c!/README.md` ("Platform support"), `smtp-tls-jvm` |
+| bochka | serves `Range`, conditional reads and writes, SigV4 including `aws-chunked`; `bochka-embedded` starts a server on a random port from a test and stops it after | `youndie/bochka@ed6bc05!/README.md` |
 | GraphHopper | Apache-2.0, "use it as Java library or standalone web server", not archived | `https://api.github.com/repos/graphhopper/graphhopper` |
-| katcher ingest | `POST {serverUrl}/api/reports` | `katcher/README.md` |
-| shildik token endpoint shape | `POST /realms/<realm>/protocol/openid-connect/token`; image `ghcr.io/youndie/shildik` | `shildik/README.md` |
+| katcher ingest | `POST {serverUrl}/api/reports` | `youndie/katcher@900f54a!/README.md` |
+| shildik token endpoint shape | `POST /realms/<realm>/protocol/openid-connect/token`; image `ghcr.io/youndie/shildik` | `youndie/shildik@2408e7e!/README.md` |
 
 **Consequence 1.6e — GraphHopper embedded, measured 2026-09-02 ([B-23](../backlog/B-23-routes-and-eta-on-embedded-graphhopper.md)).**
 
 | Fact | Where verified |
 |---|---|
-| `com.graphhopper:graphhopper-core` 11.0 embeds in the Ktor process; a car profile is `Profile("car").setCustomModel(GHUtility.loadCustomModelFromJar("car.json"))` with `setEncodedValuesString("car_access, car_average_speed, road_access")` — the three names `car.json`'s own header comment lists | the jar's `com/graphhopper/custom_models/car.json` |
+| `com.graphhopper:graphhopper-core` 11.0 embeds in the Ktor process; a car profile is `Profile("car").setCustomModel(GHUtility.loadCustomModelFromJar("car.json"))` with `setEncodedValuesString("car_access, car_average_speed, road_access")` — the three names `car.json`'s own header comment lists | the jar's `com.graphhopper:graphhopper-core:11.0!/com/graphhopper/custom_models/car.json` |
 | On Ljubljana's extract: import **3 168 ms**, opening the prepared graph **22 ms**, a centre-to-airport route **2.57 ms median / 6.6 ms worst of 201**, 22 806 m over 364 points | `CityGraphMeasurement`, on the Linux box |
 | **A point outside the graph's bounding box is refused before any snapping is attempted** — "Point 0 is out of bounds" — while a point *inside* it snaps from as far as 1 500 m off the nearest road | measured against the four-node test fixture |
 
@@ -712,7 +722,7 @@ found by looking at what actually arrived rather than at what was wired.
 
 | Fact | How it presented |
 |---|---|
-| **metrik and tracy each publish `agent-jvm-<version>.jar`**, and they happen to share a version, so two different files want one name in `lib/` | `installDist` refused the build. Every `duplicatesStrategy` "fixes" it by dropping one agent — a service that then reports nothing from half its observability, from inside a running deployment. Both are kept and renamed by group; konekt met this first |
+| **metrik and tracy each publish `agent-jvm-<version>.jar`**, and they happen to share a version, so two different files want one name in the distribution's `lib` directory | `installDist` refused the build. Every `duplicatesStrategy` "fixes" it by dropping one agent — a service that then reports nothing from half its observability, from inside a running deployment. Both are kept and renamed by group; konekt met this first |
 | **tracy's agent keeps 1% of ordinary requests** (tail sampling: everything slow or failed, 1% of the rest) | three requests against the stand produced an empty collector, which reads as broken wiring. `SHASHKI_TRACY_SAMPLE_RATE` exists for that, and the stand sets `1.0` |
 | **A span name is a value and nothing type-checks it** | every saga span arrived named `saga.order.$phase.QuoteStep` — one unexpanded template, invisible to the compiler and to every test, grouping all five phases under one row. Now `spanName` is a property and `OrderSagaTest` asserts it |
 | **metrik answers a window narrower than its aggregation bucket with `0`, not an error**, and a reading taken seconds after traffic has not counted it yet | a delta of 20 for 8 requests, and empty answers for correct-looking windows. The check that holds is: quiet period, reading, N requests, reading |
@@ -808,10 +818,10 @@ ingest endpoint is documented. See [D6](#d6-the-browser-clients-post-to-katchers
 
 | Fact | Where verified |
 |---|---|
-| The ingest is **public by construction**: `route("api") { reportRoute(…) }` sits outside the `authenticate(HEADER_USER_AUTH)` block the pages are inside. An application that has just crashed cannot be asked to sign in, and the `appKey` is what identifies it | `katcher/server/src/commonMain/.../ConfigureRouting.kt` |
-| The ingest answers **202 Accepted**, not 200 — it queues the report. An unknown or revoked key is **401** before anything is queued | `katcher/core/src/commonMain/.../report/ReportRouting.kt`, and measured |
+| The ingest is **public by construction**: `route("api") { reportRoute(…) }` sits outside the `authenticate(HEADER_USER_AUTH)` block the pages are inside. An application that has just crashed cannot be asked to sign in, and the `appKey` is what identifies it | `youndie/katcher@900f54a!/server/src/commonMain/.../ConfigureRouting.kt` |
+| The ingest answers **202 Accepted**, not 200 — it queues the report. An unknown or revoked key is **401** before anything is queued | `youndie/katcher@900f54a!/core/src/commonMain/.../report/ReportRouting.kt`, and measured |
 | End to end against `ghcr.io/youndie/katcher:0.6.2`: a report from shashki's own reporter appears as `IllegalStateException no MapSurface in composition`, tagged `production · 2026.09.02-b10`, with the release in katcher's own release filter | measured against the container |
-| `io.github.youndie.katcher:shared` — the module holding `CreateReportParams` — publishes jvm, four native desktop targets, three iOS ones and mingw. **No `wasmJs`**, so a browser cannot reach the type either | `katcher/shared/build.gradle.kts` |
+| `io.github.youndie.katcher:shared` — the module holding `CreateReportParams` — publishes jvm, four native desktop targets, three iOS ones and mingw. **No `wasmJs`**, so a browser cannot reach the type either | `youndie/katcher@900f54a!/shared/build.gradle.kts` |
 
 The last row is the same shape as §1.6c1's finding about `shared-oidc`, and it has the same answer:
 not a missing *variant* but a missing **target**, on a module that depends on nothing but
@@ -844,10 +854,10 @@ sentence above.**
 
 | Fact | Where verified |
 |---|---|
-| shildik already has PKCE — `Pkce.matches(challenge, verifier)`, `S256` only, constant-time — but only the **verifying** half. There is no generator anywhere in it, published or not | `shildik/crypto/src/commonMain/.../Pkce.kt` |
+| shildik already has PKCE — `Pkce.matches(challenge, verifier)`, `S256` only, constant-time — but only the **verifying** half. There is no generator anywhere in it, published or not | `youndie/shildik@2408e7e!/crypto/src/commonMain/.../Pkce.kt` |
 | It verifies with `dev.whyoleg.cryptography`, which publishes `cryptography-core-wasm-js`, `cryptography-random-wasm-js` and `cryptography-provider-webcrypto-wasm-js` at 0.6.0 | `https://repo1.maven.org/maven2/dev/whyoleg/cryptography/` |
-| shildik's `crypto` and `shared-oidc` modules are `jvm, macosArm64, linuxX64, linuxArm64`. `shared-oidc` — the module holding the `@Resource` endpoint types — depends only on `ktor-resources` and `kotlinx-serialization-json`, both of which publish `wasmJs` | `shildik/crypto/build.gradle.kts`, `shildik/shared-oidc/build.gradle.kts` |
-| shildik's `authorize` serves shildik's **own** sign-in page; the choice between a magic link and Google is made there and returns through `callback/{method}`. The client names no method | `shildik/server/src/commonMain/.../oidc/OidcRoutes.kt`, `startAuthorization` |
+| shildik's `crypto` and `shared-oidc` modules are `jvm, macosArm64, linuxX64, linuxArm64`. `shared-oidc` — the module holding the `@Resource` endpoint types — depends only on `ktor-resources` and `kotlinx-serialization-json`, both of which publish `wasmJs` | `youndie/shildik@2408e7e!/crypto/build.gradle.kts`, `youndie/shildik@2408e7e!/shared-oidc/build.gradle.kts` |
+| shildik's `authorize` serves shildik's **own** sign-in page; the choice between a magic link and Google is made there and returns through `callback/{method}`. The client names no method | `youndie/shildik@2408e7e!/server/src/commonMain/.../oidc/OidcRoutes.kt`, `startAuthorization` |
 
 What this changes. The half that is genuinely ours is smaller than "a browser OIDC client": there is
 no `method` parameter, no branch for Google, and no hand-written WebCrypto — the same library
@@ -911,10 +921,10 @@ code at a CA that signed nothing and it fails. That is Risk 4's question answere
 
 | Fact | Where verified |
 |---|---|
-| `SmtpSession.encrypted` is `private var encrypted = false` and is **assigned nowhere in the module**, so `isEncrypted` is permanently `false` — on every platform, not only the JVM | `smtp-client/src/commonMain/.../SmtpSession.kt:105`, grep over the module |
+| `SmtpSession.encrypted` is `private var encrypted = false` and is **assigned nowhere in the module**, so `isEncrypted` is permanently `false` — on every platform, not only the JVM | `youndie/smtpkn@252e92c!/smtp-client/src/commonMain/.../SmtpSession.kt:105`, grep over the module |
 | `authenticate()` refuses to run when `!isEncrypted`, so **`AUTH` after a successful `STARTTLS` always throws** unless the caller passes `allowOverPlaintext = true` — a flag whose name asserts the opposite of the truth | same file, line 407 |
-| The library's own README shows exactly that sequence — `startTls(...)` then `authenticate(...)` — as its usage example | `kmp-smtp-client/README.md` |
-| Its own tests do not catch it because they pass `allowOverPlaintext = true` throughout, with a comment saying that is better than "pretending the scripted transport" is encrypted | `smtp-client/src/commonTest/.../SmtpAuthTest.kt:332` |
+| The library's own README shows exactly that sequence — `startTls(...)` then `authenticate(...)` — as its usage example | `youndie/smtpkn@252e92c!/README.md` |
+| Its own tests do not catch it because they pass `allowOverPlaintext = true` throughout, with a comment saying that is better than "pretending the scripted transport" is encrypted | `youndie/smtpkn@252e92c!/smtp-client/src/commonTest/.../SmtpAuthTest.kt:332` |
 
 The last row is the mechanism: the flag is only wrong when a *real* provider has upgraded a *real*
 connection, and no test does both. Deciding to be honest about a scripted transport is what hid a
@@ -968,7 +978,7 @@ and proved nothing.
 | Fact | Where verified |
 |---|---|
 | `@Serializable` **without the serialization plugin compiles**. The annotation resolves through a transitive dependency, the class builds, the generated registry builds, and the first decode throws `Serializer for class 'TripRow' is not found` | `:shared-ui` had no `kotlinSerialization` plugin; adding it fixed three failing tests |
-| kompot's `KompotDegradationSink` has three kinds — unknown component, unrenderable component, unknown action — and **none for a property outside its allowed set** | `kompot-client/.../Degradation.kt` |
+| kompot's `KompotDegradationSink` has three kinds — unknown component, unrenderable component, unknown action — and **none for a property outside its allowed set** | `youndie/kompot@76ef0a0!/kompot-client/.../Degradation.kt` |
 | The registry is a KSP side effect: a component that lost its annotation would still compile, still render locally, and be an `UnknownComponent` on the wire | the control test decodes the same payload without the module and gets exactly that |
 
 The first row is the one worth keeping. It is a build-configuration mistake with no compile-time
@@ -1215,9 +1225,9 @@ KDoc states the constraint plainly:
 
 | Target | How the map gets on screen | Where verified |
 |---|---|---|
-| `wasmJs` | its own `<canvas id="worldwind-canvas">`, `position: fixed`, `z-index: 0`, inserted as the **first child of `<body>`** — behind Compose's transparent canvas | `worldwind-compose/src/wasmJsMain/kotlin/earth/worldwind/compose/WorldWindow.wasmJs.kt` |
-| `js` | **Compose HTML** — `org.jetbrains.compose.web.dom.Canvas`, and the overload takes an `AttrsScope` instead of a `Modifier` "because Compose HTML's element-attribute model is incompatible with Compose UI's `Modifier`" | `.../jsMain/.../WorldWindow.js.kt` |
-| `jvm` | a JOGL `GLCanvas` inside a `SwingPanel`, because "Skia and JOGL share no GL context" | `.../jvmMain/.../WorldWindow.jvm.kt` |
+| `wasmJs` | its own `<canvas id="worldwind-canvas">`, `position: fixed`, `z-index: 0`, inserted as the **first child of `<body>`** — behind Compose's transparent canvas | `WorldWindEarth/WorldWindKotlin@f2558f6!/worldwind-compose/src/wasmJsMain/kotlin/earth/worldwind/compose/WorldWindow.wasmJs.kt` |
+| `js` | **Compose HTML** — `org.jetbrains.compose.web.dom.Canvas`, and the overload takes an `AttrsScope` instead of a `Modifier` "because Compose HTML's element-attribute model is incompatible with Compose UI's `Modifier`" | `WorldWindEarth/WorldWindKotlin@f2558f6!/worldwind-compose/src/jsMain/.../WorldWindow.js.kt` |
+| `jvm` | a JOGL `GLCanvas` inside a `SwingPanel`, because "Skia and JOGL share no GL context" | `WorldWindEarth/WorldWindKotlin@f2558f6!/worldwind-compose/src/jvmMain/.../WorldWindow.jvm.kt` |
 
 Three things follow, and each is a fact from the source rather than a worry:
 
@@ -1242,7 +1252,7 @@ unsolvable on wasmJs and ships the workaround. It belongs in D1 as a better-pack
 an escape from the choice.
 
 **Consequence 1.8d — but its MVT package is the size estimate route 4 was missing.**
-`worldwind/src/commonMain/kotlin/earth/worldwind/layer/mvt/` is **30 files**, and the list reads as
+`WorldWindEarth/WorldWindKotlin@f2558f6!/worldwind/src/commonMain/kotlin/earth/worldwind/layer/mvt/` is **30 files**, and the list reads as
 route 4's tiling half itemised: `ProtobufReader`, `MvtDecoder`, `MvtGeometry`, `MvtFilter`,
 `MvtExpression` + `MvtExpressionParser`, `MvtZoomInterp`, `MvtTile` + `MvtTileSource`,
 `MvtBatchedLineTile` + `MvtBatchedPolygonTile`, `MvtLabelCollider`, `MvtLabelGroup`,
@@ -2213,22 +2223,24 @@ it is the sentence for the page (B-51).
 
 There is no shashki source tree yet. *(2026-09-02: there is, and its anchors live in the layer
 documents under `docs/features`, `docs/screens`, `docs/api` and `docs/services` (B-40) rather than
-here. What follows is unchanged: the sibling repositories §1 was verified against.)* What follows is what §1 was verified against; the paths are
-inside the sibling repositories of this stack, and they are what the anchor report (`make report`,
-`REPOS=..`) resolves.
+here. What follows is unchanged: the sibling repositories §1 was verified against.)* What follows is
+what §1 was verified against: addresses into the sibling repositories of this stack, each at the
+commit that was read *(2026-10-02; bare paths before, resolved against whatever was checked out
+beside this clone — see the amendment at the top of §1)*. The anchor report lists them as addresses
+and does not fetch them.
 
 | Subject | Code |
 |---|---|
-| kvadrant-ui foundation | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/` |
-| kvadrant-ui tiles, app bar, text | `kvadrant-ui/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/components/KvadrantTile.kt`, `.../components/KvadrantAppBar.kt`, `.../foundation/KvadrantText.kt` |
-| kvadrant-ui targets and viddik wiring | `kvadrant-ui/kvadrant-core/build.gradle.kts` |
-| the golden pin to re-implement | `kvadrant-ui/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
-| viddik contract | `viddik/README.md`, `viddik/viddik-testing-core` |
-| petich phases and timeouts | `petich/petich-core/src/commonMain/kotlin/Petich.kt` |
-| kompot component registry | `kompot/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
-| kompot client targets | `kompot/kompot-client/build.gradle.kts` |
-| booblik client | `booblik/booblik-client/build.gradle.kts` |
-| katcher client targets and ingest | `katcher/client/build.gradle.kts`, `katcher/README.md` |
-| shildik targets | `shildik/oidc-auth-client/build.gradle.kts`, `shildik/README.md` |
-| smtpkn platform claims | `smtp-client/build.gradle.kts`, `smtp-tls-jvm` |
-| bochka object surface | `bochka/README.md`, `bochka/bochka-embedded` |
+| kvadrant-ui foundation | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/theme/` |
+| kvadrant-ui tiles, app bar, text | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/commonMain/kotlin/io/github/youndie/kvadrant/components/KvadrantTile.kt`, `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../components/KvadrantAppBar.kt`, `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/.../foundation/KvadrantText.kt` |
+| kvadrant-ui targets and viddik wiring | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/build.gradle.kts` |
+| the golden pin to re-implement | `youndie/kvadrant-ui@68b6ae9!/kvadrant-core/src/desktopTest/kotlin/io/github/youndie/kvadrant/type/PortableTypography.kt` |
+| viddik contract | `youndie/viddik@5432efd!/README.md`, `youndie/viddik@5432efd!/viddik-testing-core/` |
+| petich phases and timeouts | `youndie/petich@f2991de!/petich-core/src/commonMain/kotlin/Petich.kt` |
+| kompot component registry | `youndie/kompot@76ef0a0!/kompot-registry-processor/src/main/kotlin/io/github/youndie/kompot/registry/processor/KompotRegistrySymbolProcessor.kt` |
+| kompot client targets | `youndie/kompot@76ef0a0!/kompot-client/build.gradle.kts` |
+| booblik client | `youndie/booblik@e361df7!/booblik-client/build.gradle.kts` |
+| katcher client targets and ingest | `youndie/katcher@900f54a!/client/build.gradle.kts`, `youndie/katcher@900f54a!/README.md` |
+| shildik targets | `youndie/shildik@2408e7e!/oidc-auth-client/build.gradle.kts`, `youndie/shildik@2408e7e!/README.md` |
+| smtpkn platform claims | `youndie/smtpkn@252e92c!/README.md`, `smtp-tls-jvm` |
+| bochka object surface | `youndie/bochka@ed6bc05!/README.md`, `youndie/bochka@ed6bc05!/bochka-embedded/` |
