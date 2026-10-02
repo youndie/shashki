@@ -67,28 +67,25 @@ pip install pyyaml
 make check
 ```
 
-which is what CI runs, and is these five:
+which is what CI runs: the gate — the backlog index, the documents' links and front matter, the
+coverage map below, and shashki's own two checks (`scripts/style_contract.py`,
+`scripts/chart_config.py`) — and then two reports, BDD coverage and code anchors. The checks are
+[docs-bootstrap](https://github.com/youndie/docs-bootstrap)'s, at the version
+`.github/workflows/check.yaml` pins, fetched into `.docs-bootstrap/` by the first run; `make fix`
+regenerates the backlog index and appends missing coverage-map lines. On a push to `main` CI also
+runs `make docs-on-main`, which makes a `status: draft` an error there.
 
-```bash
-python3 scripts/backlog_index.py --check
-python3 scripts/docs_check.py
-python3 scripts/coverage_map.py --check
-python3 scripts/bdd_report.py
-python3 scripts/code_anchors.py --repos ..
-```
-
-The last two are reports rather than gates. `code_anchors.py` is worth reading here in particular:
-while there is no shashki source tree, every anchor in the research points into one of the stack's
-own repositories, and `--repos ..` resolves them only against whatever is checked out beside this
-one. A repository that is not there is reported as missing anchors, which is the truth and not a
-defect in the document — CI clones the whole list explicitly for exactly that reason
-(`.github/workflows/check.yaml`, the `anchors` job).
+The reports do not block. The anchor report is worth reading here in particular: the research's
+anchors point into the stack's own repositories, and `REPOS=..` resolves them only against whatever
+is checked out beside this one. A repository that is not there is reported as missing anchors, which
+is the truth and not a defect in the document — CI clones the whole list next to its own checkout for
+exactly that reason (`.github/workflows/check.yaml`, the `anchors` job).
 
 ## Coverage map
 
 The list below is **checked** against the files on disk: a document missing here, or an entry with no
-file behind it, fails `coverage_map.py`. The grouping and the descriptions are written by a person —
-the machine only guards the membership.
+file behind it, fails the coverage-map check. The grouping and the descriptions are written by a
+person — the machine only guards the membership.
 
 ### Research (1)
 

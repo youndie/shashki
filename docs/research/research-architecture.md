@@ -2214,8 +2214,8 @@ it is the sentence for the page (B-51).
 There is no shashki source tree yet. *(2026-09-02: there is, and its anchors live in the layer
 documents under `docs/features`, `docs/screens`, `docs/api` and `docs/services` (B-40) rather than
 here. What follows is unchanged: the sibling repositories §1 was verified against.)* What follows is what §1 was verified against; the paths are
-inside the sibling repositories of this stack, and they are what `code_anchors.py --repos ..`
-resolves.
+inside the sibling repositories of this stack, and they are what the anchor report (`make report`,
+`REPOS=..`) resolves.
 
 | Subject | Code |
 |---|---|
