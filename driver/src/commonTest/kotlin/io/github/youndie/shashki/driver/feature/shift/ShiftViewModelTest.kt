@@ -384,7 +384,7 @@ class ShiftViewModelTest {
 
     /** The kit's D2 tiles need a clock and a sum (B-81): the meter counts, the read answers once a minute. */
     @Test
-    fun `online, the shift counts its hours and reads today's takings`() =
+    fun `an online shift counts its hours and reads today's takings`() =
         runTest(dispatcher) {
             val model = viewModel(backgroundScope)
             model.onAction(ShiftUiAction.ToggleOnline)

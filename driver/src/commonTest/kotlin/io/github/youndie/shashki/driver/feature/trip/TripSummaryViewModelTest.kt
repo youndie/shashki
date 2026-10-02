@@ -31,7 +31,7 @@ class TripSummaryViewModelTest {
     private val trips = FakeTrips()
 
     @Test
-    fun `a payout that is a moment late is waited for, and formatted once it is in`() =
+    fun `a payout that is a moment late is waited for and formatted once it is in`() =
         runTest(dispatcher) {
             trips.answers = mutableListOf(null, null, SUMMARY)
             val model = TripSummaryViewModel("ride-1", useCase(), backgroundScope, retryAfter = RETRY)

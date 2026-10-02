@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
  */
 class MatchingHeadlineTest {
     @Test
-    fun `while looking, the headline is the search`() {
+    fun `the headline while looking is the search`() {
         assertEquals("looking for a car", state(MatchingStage.LOOKING, reason = null).headline())
     }
 

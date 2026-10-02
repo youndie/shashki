@@ -69,7 +69,7 @@ class FinishedViewModelTest {
         }
 
     @Test
-    fun `done sends the last rating and the chosen tip, once`() =
+    fun `done sends the last rating and the chosen tip exactly once`() =
         runTest(dispatcher) {
             val model = viewModel()
             advanceUntilIdle()
