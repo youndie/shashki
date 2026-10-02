@@ -1,7 +1,7 @@
 ---
 id: B-100
 title: "The Kotlin daemon runs out of heap on the shared-ui test link in a third of cold CI runs"
-status: wip
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -114,3 +114,36 @@ was 4 305 MB — inside the 5 887 MB baseline minimum with more than 2 GB to spa
 
 **Declared before the verification runs:** if any of them shows a live set of 3 413 MB or more (two
 thirds of 5g), the item does not close at 5g; the next step goes to the owner with the numbers.
+
+## The verification — six cold builds at 5g
+
+`kotlin.daemon.jvmargs=-Xmx5g` in `gradle.properties`, the probe otherwise as in the measuring arm
+(cold, forced collections). Two runs, each run three times.
+
+| Run | Result | Links daemon: max heap after a full collection | Lowest `MemAvailable` |
+|---|---|---|---|
+| 36984514289 | passed | not kept: re-running a workflow drops the previous attempt's artifact | — |
+| 36984518756 | passed | 2 795 MB | 4 288 MB |
+| 36984514289 attempt 2 | passed | 2 743 MB | 4 504 MB |
+| 36984518756 attempt 2 | passed | 2 713 MB | 3 709 MB |
+| 36984514289 attempt 3 | passed | 2 706 MB | 3 718 MB |
+| 36984518756 attempt 3 | passed | 2 689 MB | 4 456 MB |
+
+Every kept run is under 3 413 MB, two thirds of the cap, and both daemons carry `-Xmx5g` on their
+command lines. Same runner type, separate runs. The lowest `MemAvailable`, 3.7 GB, came with Chrome
+at 4.1 GB resident during the browser suites — Chrome's figure counts shared pages once per process,
+so it overstates.
+
+**How much six greens prove.** Not much alone. If the probe build still failed at its baseline rate
+(3 of 4), six passes in a row would come up about once in four thousand; at an ordinary pull
+request's rate (4 of 11), about once in fifteen — and both rates rest on few runs. The argument is
+the headroom: the same three links that stalled at 2.75–2.79 GB in a 3 GB heap peaked at 2.69–2.80 GB
+here with 5 GB available, and two thirds of the cap was the line declared before these runs.
+
+**What this leaves.** A warm build — `main`'s cache, every link stored — never links at all, so a
+green `main` after the merge says nothing either way; the next cold build is the next real reading.
+Three things were seen and not changed, because the rule did not ask for them: the plugin starting a
+second daemon with the same arguments (each daemon gets the cap; the second stays under 0.43 GB live
+and 2.0–2.5 GB resident at either cap); the Gradle daemon's 3 GB heap, whose live set never passed
+0.3 GB; and serialising the three links, which would make the overlap impossible instead of
+affordable.

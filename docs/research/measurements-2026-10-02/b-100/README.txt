@@ -8,6 +8,7 @@ of .github/workflows/check.yaml on branch build/b-100-kotlin-daemon-heap.
   (none)  cold build (--no-build-cache), the daemon at today's inherited 3g
   -5g     cold build, -Pkotlin.daemon.jvmargs=-Xmx5g, a forced full collection every 6 s
   -verify cold build, kotlin.daemon.jvmargs=-Xmx5g from gradle.properties, forced collections
+          (36984514289-push-1-verify holds only gradle-outcome.log: the re-run dropped its artifact)
 
 Files:
   host.txt                 nproc, free -m, /proc/meminfo, the cgroup limit (empty: none)
