@@ -127,7 +127,7 @@ jobs:
       # The cap is the arm: empty - what gradle.properties gives; a size - kotlin.daemon.jvmargs.
       - run: ./gradlew check --no-daemon --no-build-cache ${B100_KOTLIN_HEAP:+-Pkotlin.daemon.jvmargs=-Xmx$B100_KOTLIN_HEAP}
         env:
-          B100_KOTLIN_HEAP: 5g
+          B100_KOTLIN_HEAP: ""
           JAVA_TOOL_OPTIONS: "-Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid"
 
       # **The image is built by CI and by nothing else that can forget.** `check` compiles the server
@@ -136,42 +136,6 @@ jobs:
       # 41 MB is not in git (B-06) — so this builds the context and stops short of the graph, which
       # is the half a runner can check without downloading a city.
       - run: ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
-
-      # B-100, TEMPORARY: what each wasm test link needs alone - a fresh daemon at the inherited cap,
-      # its incremental cache removed so the link starts from nothing, --rerun so it is not skipped.
-      - name: "B-100: each wasm test link alone (temporary)"
-        if: always()
-        continue-on-error: true
-        run: |
-          for m in shared-ui rider driver; do
-            pkill -f KotlinCompileDaemon || true
-            sleep 5
-            rm -rf $m/build/klib/cache/wasm-js/testDevelopmentExecutable
-            mkdir -p /tmp/b100/gc-iso-$m
-            JAVA_TOOL_OPTIONS="-Xlog:gc,gc+init:file=/tmp/b100/gc-iso-$m/gc-%p.log:time,uptime,pid" \
-              ./gradlew :$m:compileTestDevelopmentExecutableKotlinWasmJs --rerun --no-daemon || echo "B-100: $m alone FAILED"
-          done
-
-      # B-100, TEMPORARY: the positive control, against the corrected unit. The shared-ui link alone,
-      # capped at 0.8x the live set the step above measured for it, has to fail.
-      - name: "B-100: the control (temporary)"
-        if: always()
-        continue-on-error: true
-        run: |
-          live=$(grep -l "Using Parallel" /tmp/b100/gc-iso-shared-ui/*.log | xargs grep -h "Pause Full" | sed -E 's/.*->([0-9]+)M\(.*/\1/' | sort -n | tail -1)
-          [ -n "$live" ] || { echo "B-100: no live set measured for shared-ui, no control"; exit 0; }
-          cap=$((live * 8 / 10))
-          echo "B-100: shared-ui live set ${live}M, control cap ${cap}M"
-          pkill -f KotlinCompileDaemon || true
-          sleep 5
-          rm -rf shared-ui/build/klib/cache/wasm-js/testDevelopmentExecutable
-          mkdir -p /tmp/b100/gc-control
-          if JAVA_TOOL_OPTIONS="-Xlog:gc,gc+init:file=/tmp/b100/gc-control/gc-%p.log:time,uptime,pid" \
-              ./gradlew :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs --rerun --no-daemon -Pkotlin.daemon.jvmargs=-Xmx${cap}m; then
-            echo "B-100: CONTROL PASSED under ${cap}M - the unit does not measure what the link needs"
-          else
-            echo "B-100: control failed under ${cap}M, as it has to"
-          fi
 
       - name: "B-100: keep the evidence (temporary)"
         if: always()
