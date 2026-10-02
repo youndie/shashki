@@ -77,7 +77,7 @@ class TripViewModelTest {
      * screen that drew a fixture regardless would pass every other assertion here.
      */
     @Test
-    fun `the scene carries the ride's pins, its road and the car`() =
+    fun `the scene carries the ride's pins and its road and the car`() =
         runTest(dispatcher) {
             val model = viewModel(rides)
 
@@ -96,7 +96,7 @@ class TripViewModelTest {
      * tunnel is not a lost car; forty is the kit's R7·a, and the number on it is how long.
      */
     @Test
-    fun `a car quiet for long enough says so, with the seconds`() =
+    fun `a car quiet for long enough says so with the seconds`() =
         runTest(dispatcher) {
             val repository = FakeRideRepository()
             val model = viewModel(repository)
@@ -145,7 +145,7 @@ class TripViewModelTest {
 
     /** The kit's `arriving 20:06`: the leg's seconds from the rider's own clock, as a wall-clock time. */
     @Test
-    fun `the arrival is a clock, from the leg to the drop-off`() =
+    fun `the arrival is a clock from the leg to the drop-off`() =
         runTest(dispatcher) {
             val repository =
                 FakeRideRepository(

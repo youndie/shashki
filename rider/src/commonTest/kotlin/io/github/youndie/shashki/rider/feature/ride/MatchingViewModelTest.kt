@@ -78,7 +78,7 @@ class MatchingViewModelTest {
      * both ends of the deadline, the screen takes their difference once and then ticks.
      */
     @Test
-    fun `the countdown is the server's duration, ticking`() =
+    fun `the countdown ticks down from the server's duration`() =
         runTest(dispatcher) {
             rides.ride =
                 rides.ride.copy(
@@ -155,7 +155,7 @@ class MatchingViewModelTest {
      * the screen must not flip to "no cars nearby" on the way out.
      */
     @Test
-    fun `cancelling asks first, then cancels, and never reads as no cars nearby`() =
+    fun `cancelling asks before it cancels and never reads as no cars nearby`() =
         runTest(dispatcher) {
             val model = viewModel()
             advanceUntilIdle()

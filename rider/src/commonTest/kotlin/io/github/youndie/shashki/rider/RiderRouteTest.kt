@@ -51,14 +51,14 @@ class RiderRouteTest {
     }
 
     @Test
-    fun `an empty path is the start, because that is what a bare origin gives`() {
+    fun `an empty path is the start because that is what a bare origin gives`() {
         assertEquals(RiderRoute.ClassPicker, RiderRoute.ofPath(""))
         assertEquals(RiderRoute.ClassPicker, RiderRoute.ofPath("/"))
     }
 
     /** Not an exception: the application ignores it and stays where it is. */
     @Test
-    fun `an address this application has no screen for is nothing, not a failure`() {
+    fun `an address this application has no screen for is nothing and not a failure`() {
         assertNull(RiderRoute.ofPath("/somebody-elses-page"))
         assertNull(RiderRoute.ofPath("/trip/"), "a trip with no id is not a trip")
         assertNull(RiderRoute.ofPath("/trip"))

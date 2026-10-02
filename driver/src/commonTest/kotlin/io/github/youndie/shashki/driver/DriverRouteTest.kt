@@ -25,13 +25,13 @@ class DriverRouteTest {
     }
 
     @Test
-    fun `an empty path is the shift, because that is what a bare origin gives`() {
+    fun `an empty path is the shift because that is what a bare origin gives`() {
         assertEquals(DriverRoute.Shift, DriverRoute.ofPath(""))
         assertEquals(DriverRoute.Shift, DriverRoute.ofPath("/"))
     }
 
     @Test
-    fun `an address this application has no screen for is nothing, not a failure`() {
+    fun `an address this application has no screen for is nothing and not a failure`() {
         assertNull(DriverRoute.ofPath("/somebody-elses-page"))
         assertNull(DriverRoute.ofPath("/trip/"))
     }
