@@ -49,3 +49,16 @@ not raised until the failure stops.
   That is its own item if the number says the link alone is the problem.
 
 - Anchors: `gradle.properties`, `.github/workflows/check.yaml`
+
+## Amendment 1 — 2026-10-02, after two cold runs at today's setting and before any other arm
+
+- **The control failed to fail, so the unit changes.** Capped at 900 MB, the shared-ui link alone
+  passed, its heap after full collections at most 558 MB. The 1 129–1 156 MB the rule was going to
+  scale came from young collections: the daemon runs the Parallel collector (`-XX:+UseParallelGC` on
+  its command line, put there by the Kotlin Gradle plugin), and a young pause reports the old
+  generation with its dead objects in it. The unit is now **the heap after a full collection**. The
+  measuring arm forces one in each Kotlin daemon every six seconds (`jcmd <pid> GC.run`) so that the
+  peak is sampled rather than waited for; forced collections slow the compilations and lengthen their
+  overlap, so the figure can only err high. The control is run again against the new unit.
+- To find the peak the daemon must survive it: the measuring arm runs the cold build with
+  `-Pkotlin.daemon.jvmargs=-Xmx5g`. The rule, its thresholds and the verification are unchanged.
