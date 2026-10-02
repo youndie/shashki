@@ -81,12 +81,20 @@ pull request titles and bodies and to branch names.
 
 ```bash
 pip install pyyaml
-make check     # the gate: index, connectivity, coverage map
+make check     # what CI runs: the gate (index, connectivity, coverage map, the chart and the map
+               # style against the code) and the two non-blocking reports
+make gate      # the blocking half alone
 make report    # non-blocking: BDD coverage, code anchors
+make fix       # regenerate the backlog index, append missing coverage-map lines
 ```
 
-After editing a backlog item run `python3 scripts/backlog_index.py` and commit both files. The tables
-between the `BEGIN INDEX` / `END INDEX` markers in `backlog.md` are generated; everything else in
-that file is written by hand and is never touched.
+The checks are [docs-bootstrap](https://github.com/youndie/docs-bootstrap)'s, at the version the
+`uses: youndie/docs-bootstrap@…` line in `.github/workflows/check.yaml` pins; the first `make check`
+fetches that version into `.docs-bootstrap/` (it ignores itself). There are no copies of them under
+`scripts/` — what is there is shashki's own, and runs under `gate`.
+
+After editing a backlog item run `make fix` and commit both files. The tables between the
+`BEGIN INDEX` / `END INDEX` markers in `backlog.md` are generated; everything else in that file is
+written by hand and is never touched.
 
 The format itself is [docs/templates/](docs/templates/), copied in so it travels with the repository.
