@@ -1,0 +1,8 @@
+2026-10-02T07:45:24.5004267Z ##[group]Run ./gradlew check --no-daemon
+2026-10-02T07:46:31.3317409Z BUILD SUCCESSFUL in 1m 6s
+2026-10-02T07:46:31.3318538Z 268 actionable tasks: 137 executed, 131 from cache
+2026-10-02T07:46:31.4368657Z ##[group]Run ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+2026-10-02T07:48:31.4082766Z BUILD SUCCESSFUL in 1m 59s
+2026-10-02T07:48:31.4622698Z 94 actionable tasks: 21 executed, 6 from cache, 67 up-to-date
+2026-10-02T07:49:37.9662982Z BUILD SUCCESSFUL in 1m 1s
+2026-10-02T07:49:37.9702739Z 25 actionable tasks: 5 executed, 20 up-to-date

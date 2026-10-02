@@ -1,0 +1,67 @@
+[2026-10-02T09:06:24.891+0000][0.003s][2663] CardTable entry size: 512
+[2026-10-02T09:06:24.891+0000][0.003s][2663] Using Parallel
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Version: 25.0.4.1+1-LTS (release)
+[2026-10-02T09:06:24.908+0000][0.019s][2663] CPUs: 4 total, 4 available
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Memory: 15988M
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Large Page Support: Disabled
+[2026-10-02T09:06:24.908+0000][0.019s][2663] NUMA Support: Disabled
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Compressed Oops: Enabled (Zero based)
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Alignments: Space 512K, Generation 512K, Heap 2M
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Heap Min Capacity: 8M
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Heap Initial Capacity: 250M
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Heap Max Capacity: 5G
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Pre-touch: Disabled
+[2026-10-02T09:06:24.908+0000][0.019s][2663] Parallel Workers: 4
+[2026-10-02T09:06:26.891+0000][2.003s][2663] GC(0) Pause Young (Allocation Failure) 64M->10M(240M) 23.684ms
+[2026-10-02T09:06:27.017+0000][2.129s][2663] GC(1) Pause Full (Diagnostic Command) 15M->10M(240M) 32.812ms
+[2026-10-02T09:06:27.960+0000][3.071s][2663] GC(2) Pause Full (Metadata GC Threshold) 47M->12M(240M) 40.244ms
+[2026-10-02T09:06:29.060+0000][4.172s][2663] GC(3) Pause Young (Allocation Failure) 75M->23M(240M) 15.361ms
+[2026-10-02T09:06:29.559+0000][4.670s][2663] GC(4) Pause Full (Metadata GC Threshold) 51M->24M(240M) 39.502ms
+[2026-10-02T09:06:30.233+0000][5.345s][2663] GC(5) Pause Young (Allocation Failure) 87M->35M(240M) 8.988ms
+[2026-10-02T09:06:30.853+0000][5.964s][2663] GC(6) Pause Young (Allocation Failure) 98M->51M(293M) 53.276ms
+[2026-10-02T09:06:32.922+0000][8.034s][2663] GC(7) Pause Young (Allocation Failure) 168M->75M(293M) 59.066ms
+[2026-10-02T09:06:33.146+0000][8.257s][2663] GC(8) Pause Full (Diagnostic Command) 78M->75M(293M) 198.148ms
+[2026-10-02T09:06:34.161+0000][9.273s][2663] GC(9) Pause Young (Allocation Failure) 191M->101M(434M) 21.108ms
+[2026-10-02T09:06:36.447+0000][11.559s][2663] GC(10) Pause Young (Allocation Failure) 332M->95M(436M) 20.486ms
+[2026-10-02T09:06:37.474+0000][12.586s][2663] GC(11) Pause Young (Allocation Failure) 326M->158M(639M) 60.738ms
+[2026-10-02T09:06:39.231+0000][14.342s][2663] GC(12) Pause Full (Diagnostic Command) 468M->85M(639M) 160.089ms
+[2026-10-02T09:06:41.914+0000][17.026s][2663] GC(13) Pause Young (Allocation Failure) 521M->138M(665M) 68.907ms
+[2026-10-02T09:06:43.614+0000][18.726s][2663] GC(14) Pause Young (Allocation Failure) 574M->202M(905M) 176.648ms
+[2026-10-02T09:06:46.006+0000][21.118s][2663] GC(15) Pause Full (Diagnostic Command) 504M->185M(905M) 457.050ms
+[2026-10-02T09:06:47.842+0000][22.954s][2663] GC(16) Pause Young (Allocation Failure) 855M->260M(934M) 136.182ms
+[2026-10-02T09:06:49.565+0000][24.676s][2663] GC(17) Pause Young (Allocation Failure) 929M->349M(1428M) 134.419ms
+[2026-10-02T09:06:52.368+0000][27.480s][2663] GC(18) Pause Full (Diagnostic Command) 919M->320M(1428M) 609.636ms
+[2026-10-02T09:06:57.708+0000][32.820s][2663] GC(19) Pause Young (Allocation Failure) 1380M->431M(1492M) 182.936ms
+[2026-10-02T09:06:58.460+0000][33.572s][2663] GC(20) Pause Full (Diagnostic Command) 470M->430M(1492M) 493.725ms
+[2026-10-02T09:07:05.543+0000][40.654s][2663] GC(21) Pause Full (Diagnostic Command) 1216M->444M(1492M) 1133.363ms
+[2026-10-02T09:07:09.951+0000][45.063s][2663] GC(22) Pause Young (Allocation Failure) 1369M->634M(1844M) 400.764ms
+[2026-10-02T09:07:10.930+0000][46.042s][2663] GC(23) Pause Full (Diagnostic Command) 844M->95M(1844M) 249.620ms
+[2026-10-02T09:07:17.945+0000][53.056s][2663] GC(24) Pause Full (Diagnostic Command) 547M->105M(1844M) 663.170ms
+[2026-10-02T09:07:24.599+0000][59.711s][2663] GC(25) Pause Full (Diagnostic Command) 550M->127M(1844M) 707.754ms
+[2026-10-02T09:07:30.671+0000][65.783s][2663] GC(26) Pause Full (Diagnostic Command) 712M->143M(1844M) 570.440ms
+[2026-10-02T09:07:37.124+0000][72.236s][2663] GC(27) Pause Full (Diagnostic Command) 827M->260M(1844M) 769.226ms
+[2026-10-02T09:07:43.560+0000][78.671s][2663] GC(28) Pause Full (Diagnostic Command) 1042M->129M(1844M) 700.594ms
+[2026-10-02T09:07:49.915+0000][85.026s][2663] GC(29) Pause Full (Diagnostic Command) 1273M->230M(1844M) 710.679ms
+[2026-10-02T09:07:56.378+0000][91.490s][2663] GC(30) Pause Full (Diagnostic Command) 635M->42M(1844M) 556.939ms
+[2026-10-02T09:08:02.410+0000][97.521s][2663] GC(31) Pause Full (Diagnostic Command) 57M->42M(1844M) 400.694ms
+[2026-10-02T09:08:09.241+0000][104.352s][2663] GC(32) Pause Full (Diagnostic Command) 521M->127M(1844M) 593.477ms
+[2026-10-02T09:08:15.558+0000][110.670s][2663] GC(33) Pause Full (Diagnostic Command) 825M->212M(1844M) 671.048ms
+[2026-10-02T09:08:22.183+0000][117.294s][2663] GC(34) Pause Full (Diagnostic Command) 1095M->49M(1844M) 763.405ms
+[2026-10-02T09:08:28.120+0000][123.231s][2663] GC(35) Pause Full (Diagnostic Command) 54M->48M(1844M) 389.843ms
+[2026-10-02T09:08:34.888+0000][129.999s][2663] GC(36) Pause Full (Diagnostic Command) 68M->48M(1844M) 609.428ms
+[2026-10-02T09:08:40.861+0000][135.972s][2663] GC(37) Pause Full (Diagnostic Command) 51M->48M(1844M) 383.499ms
+[2026-10-02T09:08:47.094+0000][142.206s][2663] GC(38) Pause Full (Diagnostic Command) 59M->48M(1844M) 264.118ms
+[2026-10-02T09:08:53.404+0000][148.516s][2663] GC(39) Pause Full (Diagnostic Command) 48M->48M(1844M) 317.395ms
+[2026-10-02T09:08:59.954+0000][155.066s][2663] GC(40) Pause Full (Diagnostic Command) 52M->48M(1844M) 351.445ms
+[2026-10-02T09:09:06.119+0000][161.230s][2663] GC(41) Pause Full (Diagnostic Command) 55M->48M(1844M) 410.815ms
+[2026-10-02T09:09:12.373+0000][167.485s][2663] GC(42) Pause Full (Diagnostic Command) 48M->48M(1844M) 355.627ms
+[2026-10-02T09:09:18.501+0000][173.612s][2663] GC(43) Pause Full (Diagnostic Command) 55M->48M(1844M) 303.116ms
+[2026-10-02T09:09:24.706+0000][179.818s][2663] GC(44) Pause Full (Diagnostic Command) 48M->48M(1844M) 243.169ms
+[2026-10-02T09:09:31.032+0000][186.144s][2663] GC(45) Pause Full (Diagnostic Command) 55M->47M(1844M) 229.027ms
+[2026-10-02T09:09:37.199+0000][192.311s][2663] GC(46) Pause Full (Diagnostic Command) 58M->46M(1844M) 251.580ms
+[2026-10-02T09:09:43.401+0000][198.513s][2663] GC(47) Pause Full (Diagnostic Command) 47M->46M(1844M) 193.411ms
+[2026-10-02T09:09:49.666+0000][204.778s][2663] GC(48) Pause Full (Diagnostic Command) 46M->46M(1844M) 194.875ms
+[2026-10-02T09:09:55.969+0000][211.081s][2663] GC(49) Pause Full (Diagnostic Command) 46M->46M(1844M) 197.142ms
+[2026-10-02T09:10:02.323+0000][217.434s][2663] GC(50) Pause Full (Diagnostic Command) 46M->46M(1844M) 227.191ms
+[2026-10-02T09:10:08.409+0000][223.520s][2663] GC(51) Pause Full (Diagnostic Command) 46M->46M(1844M) 183.666ms
+[2026-10-02T09:10:14.704+0000][229.816s][2663] GC(52) Pause Full (Diagnostic Command) 46M->46M(1844M) 186.790ms

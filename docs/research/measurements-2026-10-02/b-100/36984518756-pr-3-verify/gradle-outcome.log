@@ -1,0 +1,6 @@
+2026-10-02T09:20:31.3277360Z ##[group]Run ./gradlew check --no-daemon --no-build-cache ${B100_KOTLIN_HEAP:+-Pkotlin.daemon.jvmargs=-Xmx$B100_KOTLIN_HEAP}
+2026-10-02T09:25:47.1144720Z BUILD SUCCESSFUL in 5m 15s
+2026-10-02T09:25:47.1162599Z 268 actionable tasks: 268 executed
+2026-10-02T09:25:47.4291525Z ##[group]Run ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+2026-10-02T09:27:53.1121998Z BUILD SUCCESSFUL in 2m 5s
+2026-10-02T09:27:53.1122919Z 94 actionable tasks: 21 executed, 6 from cache, 67 up-to-date

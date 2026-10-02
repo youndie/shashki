@@ -1,0 +1,18 @@
+2026-10-02T08:06:19.0948828Z ##[group]Run ./gradlew check --no-daemon --no-build-cache ${B100_KOTLIN_HEAP:+-Pkotlin.daemon.jvmargs=-Xmx$B100_KOTLIN_HEAP}
+2026-10-02T08:10:01.6290040Z BUILD SUCCESSFUL in 3m 42s
+2026-10-02T08:10:01.6290568Z 268 actionable tasks: 268 executed
+2026-10-02T08:10:01.9723626Z ##[group]Run ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+2026-10-02T08:11:39.3465476Z BUILD SUCCESSFUL in 1m 37s
+2026-10-02T08:11:39.3466119Z 94 actionable tasks: 21 executed, 6 from cache, 67 up-to-date
+2026-10-02T08:12:34.5422917Z BUILD SUCCESSFUL in 49s
+2026-10-02T08:12:34.5479319Z 25 actionable tasks: 5 executed, 20 up-to-date
+2026-10-02T08:13:33.2142996Z BUILD SUCCESSFUL in 52s
+2026-10-02T08:13:33.2156142Z 36 actionable tasks: 9 executed, 27 up-to-date
+2026-10-02T08:14:32.1594449Z BUILD SUCCESSFUL in 52s
+2026-10-02T08:14:32.1594934Z 36 actionable tasks: 9 executed, 27 up-to-date
+2026-10-02T08:14:32.4900899Z B-100: shared-ui live set 914M, control cap 731M
+2026-10-02T08:16:23.1236550Z e: java.lang.OutOfMemoryError: GC overhead limit exceeded
+2026-10-02T08:16:23.1273320Z BUILD FAILED in 1m 44s
+2026-10-02T08:16:23.1273789Z > Task :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs FAILED
+2026-10-02T08:16:23.1275285Z 25 actionable tasks: 5 executed, 20 up-to-date
+2026-10-02T08:16:23.5205882Z B-100: control failed under 731M, as it has to

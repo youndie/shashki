@@ -1,0 +1,11 @@
+2026-10-02T08:04:27.5541813Z ##[group]Run ./gradlew check --no-daemon --no-build-cache
+2026-10-02T08:11:30.5701885Z e: java.lang.OutOfMemoryError: Java heap space
+2026-10-02T08:11:30.5733164Z > Task :rider:compileTestDevelopmentExecutableKotlinWasmJs FAILED
+2026-10-02T08:11:30.5771356Z > Task :driver:compileTestDevelopmentExecutableKotlinWasmJs FAILED
+2026-10-02T08:11:30.6087053Z e: java.lang.OutOfMemoryError: Java heap space
+2026-10-02T08:11:35.9724688Z BUILD FAILED in 7m 8s
+2026-10-02T08:11:35.9724959Z 256 actionable tasks: 256 executed
+2026-10-02T08:12:02.8480765Z BUILD SUCCESSFUL in 21s
+2026-10-02T08:12:02.8481765Z 25 actionable tasks: 5 executed, 2 from cache, 18 up-to-date
+2026-10-02T08:12:32.3813510Z BUILD SUCCESSFUL in 24s
+2026-10-02T08:12:32.3814118Z 25 actionable tasks: 5 executed, 20 up-to-date

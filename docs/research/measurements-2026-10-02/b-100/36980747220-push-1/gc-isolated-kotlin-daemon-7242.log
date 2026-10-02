@@ -1,0 +1,35 @@
+[2026-10-02T07:59:13.603+0000][0.003s][7242] CardTable entry size: 512
+[2026-10-02T07:59:13.603+0000][0.003s][7242] Using Parallel
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Version: 25.0.4.1+1-LTS (release)
+[2026-10-02T07:59:13.604+0000][0.004s][7242] CPUs: 4 total, 4 available
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Memory: 15989M
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Large Page Support: Disabled
+[2026-10-02T07:59:13.604+0000][0.004s][7242] NUMA Support: Disabled
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Compressed Oops: Enabled (Zero based)
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Alignments: Space 512K, Generation 512K, Heap 2M
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Heap Min Capacity: 8M
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Heap Initial Capacity: 250M
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Heap Max Capacity: 3G
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Pre-touch: Disabled
+[2026-10-02T07:59:13.604+0000][0.004s][7242] Parallel Workers: 4
+[2026-10-02T07:59:14.535+0000][0.935s][7242] GC(0) Pause Young (Allocation Failure) 64M->9M(240M) 5.163ms
+[2026-10-02T07:59:14.919+0000][1.319s][7242] GC(1) Pause Full (Metadata GC Threshold) 49M->16M(240M) 16.984ms
+[2026-10-02T07:59:15.218+0000][1.618s][7242] GC(2) Pause Young (Allocation Failure) 79M->29M(240M) 4.446ms
+[2026-10-02T07:59:15.565+0000][1.965s][7242] GC(3) Pause Young (Allocation Failure) 92M->43M(240M) 8.295ms
+[2026-10-02T07:59:15.695+0000][2.095s][7242] GC(4) Pause Young (Allocation Failure) 106M->61M(303M) 9.196ms
+[2026-10-02T07:59:16.253+0000][2.653s][7242] GC(5) Pause Young (Allocation Failure) 187M->90M(303M) 15.119ms
+[2026-10-02T07:59:16.865+0000][3.265s][7242] GC(6) Pause Young (Allocation Failure) 216M->108M(463M) 16.938ms
+[2026-10-02T07:59:17.429+0000][3.828s][7242] GC(7) Pause Young (Allocation Failure) 360M->145M(463M) 30.028ms
+[2026-10-02T07:59:17.827+0000][4.227s][7242] GC(8) Pause Young (Allocation Failure) 397M->176M(717M) 55.118ms
+[2026-10-02T07:59:18.799+0000][5.199s][7242] GC(9) Pause Young (Allocation Failure) 664M->235M(733M) 97.364ms
+[2026-10-02T07:59:19.439+0000][5.839s][7242] GC(10) Pause Young (Allocation Failure) 723M->296M(1068M) 93.095ms
+[2026-10-02T07:59:20.251+0000][6.651s][7242] GC(11) Pause Young (Allocation Failure) 1061M->393M(1185M) 131.088ms
+[2026-10-02T07:59:23.496+0000][9.896s][7242] GC(12) Pause Young (Allocation Failure) 1158M->488M(1269M) 136.028ms
+[2026-10-02T07:59:25.486+0000][11.886s][7242] GC(13) Pause Young (Allocation Failure) 1230M->534M(1371M) 123.576ms
+[2026-10-02T07:59:26.698+0000][13.098s][7242] GC(14) Pause Full (Metadata GC Threshold) 920M->495M(1371M) 409.811ms
+[2026-10-02T07:59:33.497+0000][19.897s][7242] GC(15) Pause Young (Allocation Failure) 1229M->599M(1353M) 148.835ms
+[2026-10-02T07:59:42.095+0000][28.495s][7242] GC(16) Pause Young (Allocation Failure) 1329M->677M(1475M) 150.444ms
+[2026-10-02T07:59:47.378+0000][33.778s][7242] GC(17) Pause Young (Allocation Failure) 1407M->725M(1540M) 129.352ms
+[2026-10-02T07:59:55.185+0000][41.585s][7242] GC(18) Pause Young (Allocation Failure) 1457M->859M(1592M) 169.496ms
+[2026-10-02T07:59:58.546+0000][44.946s][7242] GC(19) Pause Young (Allocation Failure) 1591M->1068M(1587M) 251.789ms
+[2026-10-02T08:00:00.749+0000][47.149s][7242] GC(20) Pause Young (Allocation Failure) 1579M->1156M(1840M) 153.984ms

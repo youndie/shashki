@@ -1,0 +1,71 @@
+### kotlin-daemon.2026-10-02.09-20-56-955.00.log
+2026-10-02 09:20:57.070 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx5g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shashki-7388642
+2026-10-02 09:20:57.074 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b88614b2172573/ko
+2026-10-02 09:20:58.007 [compiler] Starting compilation: io.github.youndie:auth-client
+2026-10-02 09:20:58.156 [compiler] Starting compilation: io.github.youndie:auth-client
+2026-10-02 09:21:05.471 [compiler] Starting compilation: io.github.youndie:crash-client
+2026-10-02 09:21:09.470 [compiler] INFO: Done with result 0
+2026-10-02 09:21:09.620 [compiler] Starting compilation: io.github.youndie:auth-client_test
+2026-10-02 09:21:09.653 [compiler] INFO: Done with result 0
+2026-10-02 09:21:09.726 [compiler] INFO: Done with result 0
+2026-10-02 09:21:09.994 [compiler] Starting compilation: io.github.youndie:auth-client_test
+2026-10-02 09:21:10.016 [compiler] Starting compilation: io.github.youndie:crash-client_test
+2026-10-02 09:21:11.610 [compiler] INFO: Done with result 0
+2026-10-02 09:21:11.772 [compiler] Starting compilation: wasm test link auth-client
+2026-10-02 09:21:12.799 [compiler] INFO: Done with result 0
+2026-10-02 09:21:14.736 [compiler] INFO: Done with result 0
+2026-10-02 09:21:16.271 [compiler] Starting compilation: io.github.youndie:crash-client
+2026-10-02 09:21:17.377 [compiler] INFO: Done with result 0
+2026-10-02 09:21:17.557 [compiler] Starting compilation: io.github.youndie:crash-client_test
+2026-10-02 09:21:20.525 [compiler] INFO: Done with result 0
+2026-10-02 09:21:20.748 [compiler] Starting compilation: wasm test link crash-client
+2026-10-02 09:21:28.380 [compiler] Starting compilation: io.github.youndie:protocol
+2026-10-02 09:21:36.755 [compiler] INFO: Done with result 0
+2026-10-02 09:21:37.220 [compiler] Starting compilation: protocol_commonMain
+2026-10-02 09:21:39.814 [compiler] INFO: Done with result 0
+2026-10-02 09:21:45.852 [compiler] Starting compilation: io.github.youndie:shared-ui
+2026-10-02 09:21:50.884 [compiler] INFO: Done with result 0
+2026-10-02 09:21:50.895 [compiler] INFO: Done with result 0
+2026-10-02 09:21:51.640 [compiler] Starting compilation: io.github.youndie:protocol
+2026-10-02 09:21:57.263 [compiler] INFO: Done with result 0
+2026-10-02 09:21:57.585 [compiler] Starting compilation: io.github.youndie:shared-ui
+2026-10-02 09:22:12.296 [compiler] INFO: Done with result 0
+2026-10-02 09:22:13.254 [compiler] Starting compilation: io.github.youndie:driver
+2026-10-02 09:22:13.994 [compiler] INFO: Done with result 0
+2026-10-02 09:22:14.189 [compiler] Starting compilation: io.github.youndie:rider
+2026-10-02 09:22:26.640 [compiler] INFO: Done with result 0
+2026-10-02 09:22:29.392 [compiler] INFO: Done with result 0
+2026-10-02 09:22:31.445 [compiler] Starting compilation: io.github.youndie:driver_test
+2026-10-02 09:22:32.222 [compiler] Starting compilation: io.github.youndie:rider_test
+2026-10-02 09:22:39.424 [compiler] INFO: Done with result 0
+2026-10-02 09:22:41.080 [compiler] INFO: Done with result 0
+2026-10-02 09:22:53.167 [compiler] Starting compilation: io.github.youndie:server
+2026-10-02 09:23:05.249 [compiler] Starting compilation: io.github.youndie:shared-ui_test
+2026-10-02 09:23:13.970 [compiler] INFO: Done with result 0
+2026-10-02 09:23:18.320 [compiler] INFO: Done with result 0
+2026-10-02 09:23:19.034 [compiler] Starting compilation: io.github.youndie:server_test
+2026-10-02 09:23:35.829 [compiler] INFO: Done with result 0
+2026-10-02 09:25:48.735 [compiler] INFO: Shutdown started
+2026-10-02 09:25:48.735 [compiler] INFO: Memory stats: total: 1983mb, free: 1936mb, max: 4551mb
+2026-10-02 09:25:48.735 [compiler] INFO: Shutdown complete
+### kotlin-daemon.2026-10-02.09-22-15-088.00.log
+2026-10-02 09:22:15.282 [daemon] INFO: daemon JVM args: -Xlog:gc,gc+init:file=/tmp/b100/gc/gc-%p.log:time,uptime,pid -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx5g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=/tmp/kotlin-compiler-in-shashki-7388642
+2026-10-02 09:22:15.283 [daemon] INFO: daemon args: --daemon-logsPath /tmp --daemon-logsFileSizeLimit=1048576 --daemon-logsFileCountLimit=3 --daemon-runFilesPath /home/runner/.local/share/kotlin/daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath /home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.4.20/d49fbc8ac11501c5a281c0b463b8861
+2026-10-02 09:22:16.195 [compiler] Starting compilation: io.github.youndie:driver
+2026-10-02 09:22:18.085 [compiler] Starting compilation: io.github.youndie:rider
+2026-10-02 09:22:45.833 [compiler] INFO: Done with result 0
+2026-10-02 09:22:45.833 [compiler] INFO: Done with result 0
+2026-10-02 09:22:46.159 [compiler] Starting compilation: io.github.youndie:driver_test
+2026-10-02 09:22:46.162 [compiler] Starting compilation: io.github.youndie:rider_test
+2026-10-02 09:22:51.892 [compiler] INFO: Done with result 0
+2026-10-02 09:22:51.987 [compiler] INFO: Done with result 0
+2026-10-02 09:22:52.098 [compiler] Starting compilation: wasm test link rider
+2026-10-02 09:22:52.116 [compiler] Starting compilation: wasm test link driver
+2026-10-02 09:23:36.374 [compiler] Starting compilation: io.github.youndie:shared-ui_test
+2026-10-02 09:23:38.673 [compiler] INFO: Done with result 0
+2026-10-02 09:23:38.999 [compiler] Starting compilation: wasm test link shared-ui
+2026-10-02 09:25:39.218 [compiler] INFO: Done with result 0
+2026-10-02 09:25:39.435 [compiler] INFO: Done with result 0
+2026-10-02 09:25:41.486 [compiler] INFO: Done with result 0
+2026-10-02 09:25:48.433 [compiler] INFO: Shutdown started
+2026-10-02 09:25:48.433 [compiler] INFO: Memory stats: total: 3965mb, free: 3918mb, max: 4551mb

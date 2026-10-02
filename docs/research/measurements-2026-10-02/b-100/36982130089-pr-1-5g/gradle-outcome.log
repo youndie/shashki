@@ -1,0 +1,18 @@
+2026-10-02T08:06:27.4468038Z ##[group]Run ./gradlew check --no-daemon --no-build-cache ${B100_KOTLIN_HEAP:+-Pkotlin.daemon.jvmargs=-Xmx$B100_KOTLIN_HEAP}
+2026-10-02T08:11:25.1677521Z BUILD SUCCESSFUL in 4m 57s
+2026-10-02T08:11:25.1678003Z 268 actionable tasks: 268 executed
+2026-10-02T08:11:25.5213383Z ##[group]Run ./gradlew :server:installDist :rider:wasmJsBrowserDistribution :driver:wasmJsBrowserDistribution --no-daemon
+2026-10-02T08:13:26.6865037Z BUILD SUCCESSFUL in 2m 1s
+2026-10-02T08:13:26.6866049Z 94 actionable tasks: 21 executed, 6 from cache, 67 up-to-date
+2026-10-02T08:14:34.9879249Z BUILD SUCCESSFUL in 1m 2s
+2026-10-02T08:14:34.9879844Z 25 actionable tasks: 5 executed, 20 up-to-date
+2026-10-02T08:15:47.7516884Z BUILD SUCCESSFUL in 1m 6s
+2026-10-02T08:15:47.7519563Z 36 actionable tasks: 9 executed, 27 up-to-date
+2026-10-02T08:17:00.9770553Z BUILD SUCCESSFUL in 1m 7s
+2026-10-02T08:17:00.9771174Z 36 actionable tasks: 9 executed, 27 up-to-date
+2026-10-02T08:17:01.3141259Z B-100: shared-ui live set 716M, control cap 572M
+2026-10-02T08:28:27.4360700Z e: java.lang.OutOfMemoryError: Java heap space
+2026-10-02T08:28:27.5382770Z > Task :shared-ui:compileTestDevelopmentExecutableKotlinWasmJs FAILED
+2026-10-02T08:28:27.6370301Z 25 actionable tasks: 5 executed, 20 up-to-date
+2026-10-02T08:28:27.6377792Z BUILD FAILED in 11m 20s
+2026-10-02T08:28:28.0503273Z B-100: control failed under 572M, as it has to
