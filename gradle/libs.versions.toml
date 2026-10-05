@@ -93,12 +93,12 @@ booblik = "0.3.4"
 metrik = "0.2.18"
 tracy = "0.2.15"
 katcher = "0.7.44"
-# Server-driven UI. A CI-numbered publish from the Reposilite, not a `-SNAPSHOT` (#43): 0.39.0 is not
-# on Central yet — Central has 0.38.0 — and moves there when kompot cuts it. Since 0.38 the group is
+# Server-driven UI, the 0.39.0 release from Central (#43; it was the Reposilite's 0.39.0.201 until
+# kompot cut it — the same tree, so nothing else moves with it). Since 0.38 the group is
 # `io.github.youndie.kompot`; the settings plugin's filter is a regex over `io.github.youndie` and its
 # subgroups, so the new group resolves without a line changing there. kompot 0.38+ is built on
 # Compose 1.12.1, the line `wip` already holds, so nothing in the Compose half moves with it.
-kompot = "0.39.0.201"
+kompot = "0.39.0"
 kvadrant = "0.2.0"
 viddik = "0.4.0"
 
