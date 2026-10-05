@@ -49,7 +49,7 @@ re-prioritising one must never move its file.
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 | [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[ ]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
-## Closed (99)
+## Closed (100)
 
 **Remove the unknowns**
 
@@ -89,6 +89,7 @@ re-prioritising one must never move its file.
 
 - [B-10](docs/backlog/B-10-crash-reports-from-the-browser.md) `[x]` - Crash reports from the browser go over katcher's ingest endpoint
 - [B-101](docs/backlog/B-101-kompot-0-39.md) `[x]` - kompot 0.39: the new group, the degradation outcome and the 0.38 vocabulary
+- [B-102](docs/backlog/B-102-kompot-0-40-snapshot.md) `[x]` - kompot 0.40 stabilization line: the snapshot, and the two workarounds it retires
 - [B-13](docs/backlog/B-13-pin-every-dependency.md) `[x]` - Every dependency is a release or a pinned snapshot before the demo is published
 - [B-14](docs/backlog/B-14-receipt-over-smtpkn-jvm.md) `[x]` - The e-mail receipt runs on smtpkn's JVM target, gated by a test against Mailpit
 - [B-17](docs/backlog/B-17-kompot-renderer-invariants.md) `[x]` - The kit's composition rules live in the kompot renderer, not in the protocol

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.youndie.kompot.KompotSurfaceRoles
 import io.github.youndie.kompot.TypographyToken
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.kvadrant.theme.KvadrantTheme
@@ -71,17 +72,7 @@ class DesignSystemInkTest {
                 Themed(dark = true) {
                     val palette =
                         with(KvadrantTheme.colors) {
-                            // The hairline is the one brush the kit derives rather than names: the
-                            // ink at 12 %, as every native rule draws it (#43).
-                            setOf(
-                                background,
-                                foreground,
-                                subtle,
-                                accent,
-                                onAccent,
-                                chrome,
-                                foreground.copy(alpha = 0.12f),
-                            )
+                            setOf(background, foreground, subtle, accent, onAccent, chrome)
                         }
                     for (token in ShashkiTokens.COLORS) {
                         val colour =
@@ -97,12 +88,36 @@ class DesignSystemInkTest {
         }
 
         assertEquals(ShashkiTokens.COLORS.size, resolved.size, "the vocabulary is empty; this would pass over nothing")
-        // **Seven names and six colours, and that is the kit rather than a bug.** `foreground` and
+        // **Six names and five colours, and that is the kit rather than a bug.** `foreground` and
         // `on_accent` are both white on the dark theme — the ink on cyan is white here, which
         // `SkeletonFixtures` records as Metro reproduced faithfully at 2.90:1. An assertion that the
         // names were distinct was written first and was wrong about the design: what matters is that
         // each name lands *in* the palette, which is what the check above holds.
-        assertEquals(6, resolved.values.toSet().size, "the palette this vocabulary covers")
+        assertEquals(5, resolved.values.toSet().size, "the palette this vocabulary covers")
+    }
+
+    /**
+     * **The rule nobody coloured is the kit's hairline**, not Material's `outlineVariant`: the ink at
+     * 12 %, as every native rule draws it (#43). A kompot `divider` without a colour and a `table`'s
+     * rules both ask the design system's `divider` role (kompot 0.40, youndie/kompot#204) — before
+     * it the server named a `hairline` token on every divider to get the same line.
+     */
+    @Test
+    fun `the divider role is the kit's hairline in both themes`() {
+        for (dark in listOf(true, false)) {
+            var outline = Color.Unspecified
+            var foreground = Color.Unspecified
+            runComposeUiTest {
+                setContent {
+                    Themed(dark) {
+                        foreground = KvadrantTheme.colors.foreground
+                        outline = ShashkiDesignSystem.resolveSurface(KompotSurfaceRoles.Divider).outline
+                    }
+                }
+            }
+            assertTrue(foreground.isSpecified, "the theme was never composed (dark = $dark)")
+            assertEquals(foreground.copy(alpha = 0.12f), outline, "the divider role (dark = $dark)")
+        }
     }
 
     @Composable

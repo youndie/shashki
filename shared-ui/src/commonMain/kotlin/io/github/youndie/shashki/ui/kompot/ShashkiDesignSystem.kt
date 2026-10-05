@@ -8,6 +8,7 @@ import androidx.compose.ui.text.TextStyle
 import io.github.youndie.kompot.ColorToken
 import io.github.youndie.kompot.KompotDesignSystem
 import io.github.youndie.kompot.KompotSurface
+import io.github.youndie.kompot.KompotSurfaceRoles
 import io.github.youndie.kompot.SurfaceRole
 import io.github.youndie.kompot.TypographyToken
 import io.github.youndie.kvadrant.theme.KvadrantTheme
@@ -33,21 +34,11 @@ public object ShashkiDesignSystem : KompotDesignSystem {
         val colors = KvadrantTheme.colors
         return when (token.key) {
             ShashkiTokens.COLOR_BACKGROUND -> colors.background
-
             ShashkiTokens.COLOR_FOREGROUND -> colors.foreground
-
             ShashkiTokens.COLOR_SUBTLE -> colors.subtle
-
             ShashkiTokens.COLOR_ACCENT -> colors.accent
-
             ShashkiTokens.COLOR_ON_ACCENT -> colors.onAccent
-
             ShashkiTokens.COLOR_CHROME -> colors.chrome
-
-            // The same rule the native screens draw by hand above a driver or a payment row, so a
-            // kompot `divider` and a native hairline are one line (#43).
-            ShashkiTokens.COLOR_HAIRLINE -> colors.foreground.copy(alpha = HAIRLINE_ALPHA)
-
             else -> colors.foreground
         }
     }
@@ -105,6 +96,20 @@ public object ShashkiDesignSystem : KompotDesignSystem {
                 KompotSurface(shape = RectangleShape, container = colors.chrome)
             }
 
+            // **The line nobody named**: a kompot `divider` without a colour, and a `table`'s rules —
+            // the ink at 12 %, the rule the native screens draw by hand above a driver or a payment
+            // row, so a kompot `divider` and a native hairline are one line (#43). A role since kompot
+            // 0.40 (youndie/kompot#204); before it the toolkit's default was Material's
+            // `outlineVariant` and the server had to name a `hairline` token on every divider.
+            role == KompotSurfaceRoles.Divider -> {
+                KompotSurface(shape = RectangleShape, outline = colors.foreground.copy(alpha = HAIRLINE_ALPHA))
+            }
+
+            // **A catch-all that answers the corner and nothing else.** Every colour stays unspecified,
+            // which kompot reads as "not answered", so a role named nowhere above — `table_header`
+            // today, whatever kompot adds next — keeps the toolkit's own colours rather than being
+            // painted over by this branch. A colour here would answer roles that do not exist yet:
+            // that is how 0.40 erased another consumer's divider and table rules (youndie/kompot#217).
             else -> {
                 KompotSurface(shape = RectangleShape)
             }

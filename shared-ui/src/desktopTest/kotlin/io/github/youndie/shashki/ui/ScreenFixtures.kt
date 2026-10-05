@@ -436,11 +436,9 @@ private fun RiderReceipt(dark: Boolean) {
                                         FareLine("paid with", "card-4417"),
                                     ),
                             ),
-                            // The hairline above who drove, in kompot's own word (#43).
-                            DividerComponent(
-                                id = "receipt-rule",
-                                color = ColorToken(ShashkiTokens.COLOR_HAIRLINE),
-                            ),
+                            // The hairline above who drove, in kompot's own word (#43), with no
+                            // colour on it — the kit's `divider` role draws it, as the server sends it.
+                            DividerComponent(id = "receipt-rule"),
                             TextComponent(
                                 id = "receipt-driver",
                                 text = "Ivan Sokolov · Skoda Octavia · white · A 123 BC",

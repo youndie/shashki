@@ -43,8 +43,10 @@ a client can be wrong about is a name.
 configured for this product's own DTOs, and one of the two would have had to lose.
 
 The tree uses the 0.38 vocabulary where it has a use: the headline is `heading: true`, the one place
-a screen reader can move to (SPEC.md §4.11). It is built through `TextComponent` rather than the DSL's
-`text(…)`, which cannot set the field yet — youndie/kompot#205.
+a screen reader can move to (SPEC.md §4.11). It is set through the DSL's `text(…, heading = true)`,
+which has taken the field since kompot 0.40 — until then the node was built as a `TextComponent` by
+hand ([youndie/kompot#205](https://github.com/youndie/kompot/issues/205),
+[B-102](../backlog/B-102-kompot-0-40-snapshot.md)).
 
 ## What a client could not draw
 

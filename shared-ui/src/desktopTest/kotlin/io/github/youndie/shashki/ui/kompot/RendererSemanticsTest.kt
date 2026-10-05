@@ -5,7 +5,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.v2.runComposeUiTest
-import io.github.youndie.kompot.ColorToken
 import io.github.youndie.kompot.TypographyToken
 import io.github.youndie.kompot.standard.ColumnComponent
 import io.github.youndie.kompot.standard.DividerComponent
@@ -89,7 +88,7 @@ class RendererSemanticsTest {
                             primary = true,
                             lines = listOf(FareLine("fare", "$ 28.96"), FareLine("tip", "$ 3")),
                         ),
-                        DividerComponent(id = "rule", color = ColorToken(ShashkiTokens.COLOR_HAIRLINE)),
+                        DividerComponent(id = "rule"),
                         TripRow(
                             id = "row",
                             title = "a ride",

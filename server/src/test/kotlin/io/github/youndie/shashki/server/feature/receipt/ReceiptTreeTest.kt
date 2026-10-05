@@ -89,11 +89,12 @@ class ReceiptTreeTest {
 
     /**
      * **The title is a heading and nothing else is** (#43, SPEC.md §4.11): a screen reader moves by
-     * headings, and a receipt has one place to move to. The rule above the driver names this kit's
-     * hairline — the toolkit's default would be Material's (youndie/kompot#204).
+     * headings, and a receipt has one place to move to. The rule above the driver names **no** colour:
+     * since kompot 0.40 the line is the design system's `divider` role, which the client answers with
+     * this kit's hairline (youndie/kompot#204). A colour named here would override the role.
      */
     @Test
-    fun `the title is the one heading and the rule is the kit's hairline`() {
+    fun `the title is the one heading and the rule leaves its colour to the design system`() {
         val tree = assertIs<JsonObject>(Json.parseToJsonElement(encodedReceipt(receiptTree(COMPLETED))))
         val nodes = assertIs<JsonArray>(tree["children"]).map { assertIs<JsonObject>(it) }
 
@@ -101,7 +102,7 @@ class ReceiptTreeTest {
         assertEquals(listOf("receipt"), headings.map { it.string("text") })
 
         val rule = nodes.single { it.string("type") == "divider" }
-        assertEquals(ShashkiTokens.COLOR_HAIRLINE, rule.string("color"))
+        assertEquals(null, rule["color"], "a colour on the rule overrides the kit's divider role")
         assertEquals(
             "shashki.fare_breakdown",
             nodes[nodes.indexOf(rule) - 1].string("type"),
