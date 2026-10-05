@@ -93,7 +93,12 @@ booblik = "0.3.4"
 metrik = "0.2.18"
 tracy = "0.2.15"
 katcher = "0.7.44"
-kompot = "0.36.2.116"
+# Server-driven UI. A CI-numbered publish from the Reposilite, not a `-SNAPSHOT` (#43): 0.39.0 is not
+# on Central yet — Central has 0.38.0 — and moves there when kompot cuts it. Since 0.38 the group is
+# `io.github.youndie.kompot`; the settings plugin's filter is a regex over `io.github.youndie` and its
+# subgroups, so the new group resolves without a line changing there. kompot 0.38+ is built on
+# Compose 1.12.1, the line `wip` already holds, so nothing in the Compose half moves with it.
+kompot = "0.39.0.201"
 kvadrant = "0.2.0"
 viddik = "0.4.0"
 
@@ -167,12 +172,12 @@ shildik-oidcAuthCore = { module = "io.github.youndie.shildik:oidc-auth-core", ve
 
 shildik-sharedOidc = { module = "io.github.youndie.shildik:shared-oidc", version.ref = "shildik" }
 
-kompot-standard = { module = "io.github.youndie:kompot-standard", version.ref = "kompot" }
+kompot-standard = { module = "io.github.youndie.kompot:kompot-standard", version.ref = "kompot" }
 
-kompot-client = { module = "io.github.youndie:kompot-client", version.ref = "kompot" }
-kompot-core = { module = "io.github.youndie:kompot-core", version.ref = "kompot" }
-kompot-registryAnnotations = { module = "io.github.youndie:kompot-registry-annotations", version.ref = "kompot" }
-kompot-registryProcessor = { module = "io.github.youndie:kompot-registry-processor", version.ref = "kompot" }
+kompot-client = { module = "io.github.youndie.kompot:kompot-client", version.ref = "kompot" }
+kompot-core = { module = "io.github.youndie.kompot:kompot-core", version.ref = "kompot" }
+kompot-registryAnnotations = { module = "io.github.youndie.kompot:kompot-registry-annotations", version.ref = "kompot" }
+kompot-registryProcessor = { module = "io.github.youndie.kompot:kompot-registry-processor", version.ref = "kompot" }
 
 smtpkn-client = { module = "io.github.youndie:smtp-client", version.ref = "smtpkn" }
 smtpkn-transportKtor = { module = "io.github.youndie:smtp-transport-ktor", version.ref = "smtpknTransport" }

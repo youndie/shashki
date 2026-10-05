@@ -27,13 +27,25 @@ import java.util.concurrent.atomic.AtomicLong
 public class DegradationCounter {
     private val byKind = ConcurrentHashMap<String, AtomicLong>()
 
+    /**
+     * The same reports, split by what the client drew instead (#43). A second map rather than a
+     * longer key, so [count] by kind and type stays the total it always was and the split is a
+     * question asked separately — "how many saw a hole" and "how many saw what the server chose" are
+     * the numbers a staged rollout is decided on, and kompot 0.38 is what made them different numbers.
+     */
+    private val byOutcome = ConcurrentHashMap<String, AtomicLong>()
+
     public fun record(report: DegradationReport) {
         byKind.computeIfAbsent("${report.kind}:${report.componentType}") { AtomicLong() }.incrementAndGet()
+        byOutcome
+            .computeIfAbsent("${report.kind}:${report.componentType}:${report.outcome}") { AtomicLong() }
+            .incrementAndGet()
         LOG.warn(
-            "a client could not render {} on {} ({})",
+            "a client could not render {} on {} ({}, drew {})",
             report.componentType,
             report.screen,
             report.kind,
+            report.outcome,
         )
     }
 
@@ -41,6 +53,13 @@ public class DegradationCounter {
         kind: String,
         componentType: String,
     ): Long = byKind["$kind:$componentType"]?.get() ?: 0
+
+    /** How many of [count] drew [outcome] — one of kompot's three names, or `UNREPORTED`. */
+    public fun count(
+        kind: String,
+        componentType: String,
+        outcome: String,
+    ): Long = byOutcome["$kind:$componentType:$outcome"]?.get() ?: 0
 
     public fun total(): Long = byKind.values.sumOf { it.get() }
 

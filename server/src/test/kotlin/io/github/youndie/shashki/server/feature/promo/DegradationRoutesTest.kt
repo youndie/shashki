@@ -10,6 +10,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.routing.routing
@@ -35,7 +36,9 @@ class DegradationRoutesTest {
             val response: HttpResponse =
                 client.post(Degradations()) {
                     contentType(ContentType.Application.Json)
-                    setBody(DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "promo", drawnAsFallback = true))
+                    setBody(
+                        DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "promo", outcome = "SERVER_FALLBACK"),
+                    )
                 }
 
             // 202: the client has said its piece and nothing it draws depends on the answer.
@@ -45,7 +48,7 @@ class DegradationRoutesTest {
 
             client.post(Degradations()) {
                 contentType(ContentType.Application.Json)
-                setBody(DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "trip", drawnAsFallback = false))
+                setBody(DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "trip", outcome = "NOTHING"))
             }
 
             assertEquals(2, counter.count("UNKNOWN_COMPONENT", "earningsTile"), "the second client was not counted")
@@ -61,11 +64,56 @@ class DegradationRoutesTest {
         withCounter { client ->
             client.post(Degradations()) {
                 contentType(ContentType.Application.Json)
-                setBody(DegradationReport("UNKNOWN_ACTION", "openWallet", "promo", drawnAsFallback = false))
+                setBody(DegradationReport("UNKNOWN_ACTION", "openWallet", "promo", outcome = "NOTHING"))
             }
 
             assertEquals(0, counter.count("UNKNOWN_COMPONENT", "earningsTile"))
             assertEquals(1, counter.count("UNKNOWN_ACTION", "openWallet"))
+        }
+
+    /**
+     * **The outcome survives the trip, server side included** (#43). The two reports above are one
+     * component and two outcomes: the total by kind and type is two, and the split says which client
+     * saw the server's equivalent and which saw a hole — the distinction kompot 0.38 introduced.
+     */
+    @Test
+    fun `what the client drew instead is counted apart`() =
+        withCounter { client ->
+            for (outcome in listOf("SERVER_FALLBACK", "NOTHING", "NOTHING")) {
+                client.post(Degradations()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(DegradationReport("UNKNOWN_COMPONENT", "box", "promo", outcome = outcome))
+                }
+            }
+
+            assertEquals(3, counter.count("UNKNOWN_COMPONENT", "box"))
+            assertEquals(1, counter.count("UNKNOWN_COMPONENT", "box", "SERVER_FALLBACK"))
+            assertEquals(2, counter.count("UNKNOWN_COMPONENT", "box", "NOTHING"))
+            assertEquals(0, counter.count("UNKNOWN_COMPONENT", "box", "PLACEHOLDER"))
+        }
+
+    /**
+     * **A bundle built before #43 is still heard.** It sends `drawnAsFallback` and no outcome; the
+     * server decodes strictly, so without the field kept on the DTO this answer would be a 400 and
+     * the report — the one thing the sink must never lose — would be dropped by the server instead.
+     * Written as raw JSON, because that is what the older bundle's bytes are.
+     */
+    @Test
+    fun `a report from a bundle older than the outcome is counted as unreported`() =
+        withCounter { client ->
+            val response =
+                client.post(Degradations()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        TextContent(
+                            """{"kind":"UNKNOWN_COMPONENT","componentType":"box","screen":"promo","drawnAsFallback":true}""",
+                            ContentType.Application.Json,
+                        ),
+                    )
+                }
+
+            assertEquals(HttpStatusCode.Accepted, response.status)
+            assertEquals(1, counter.count("UNKNOWN_COMPONENT", "box", DegradationReport.OUTCOME_UNREPORTED))
         }
 
     private fun withCounter(block: suspend (io.ktor.client.HttpClient) -> Unit) =

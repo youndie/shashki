@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.rider.feature.promo.data
 
 import io.github.youndie.kompot.KompotDegradationKind
+import io.github.youndie.kompot.KompotDegradationOutcome
 import io.github.youndie.kompot.KompotDegradationSink
 import io.github.youndie.shashki.protocol.DegradationReport
 import io.github.youndie.shashki.protocol.Degradations
@@ -38,13 +39,14 @@ public class ReportingDegradationSink(
         kind: KompotDegradationKind,
         originalType: String,
         /**
-         * Whether the client drew *something* in its place.
+         * What was drawn in its place: nothing, kompot's placeholder, or the server's equivalent.
          *
-         * Reported as it comes rather than filtered here: "drawn as a fallback" and "nothing at all"
-         * are two different holes and the second is worse, so the decision about which matters
-         * belongs to whoever reads the counter.
+         * Reported as it comes rather than filtered here: the three are different holes, and which of
+         * them matters belongs to whoever reads the counter — the server's fallback is the one a
+         * staged rollout is decided on, and it is the one the boolean this replaced could not tell
+         * apart (#43).
          */
-        drawnAsFallback: Boolean,
+        outcome: KompotDegradationOutcome,
     ) {
         scope.launch {
             // `try` and not `runCatching`: this class exists so that a degradation is never invisible,
@@ -57,7 +59,7 @@ public class ReportingDegradationSink(
                     // `runCatching` below swallows it. A report nobody can see failing is the one
                     // thing this class must not be.
                     contentType(ContentType.Application.Json)
-                    setBody(DegradationReport(kind.name, originalType, screen, drawnAsFallback))
+                    setBody(DegradationReport(kind.name, originalType, screen, outcome.name))
                 }
             } catch (e: CancellationException) {
                 throw e
