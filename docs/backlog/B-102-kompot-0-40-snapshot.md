@@ -57,9 +57,19 @@ the rule through kompot's `ruleColor()` → `resolveSurface(Divider).outline` in
 value reaches the same `HorizontalDivider`. `DesignSystemInkTest` holds the role itself (the ink at
 12 % in both themes), since a golden that does not move cannot say which path drew it.
 
+**And the golden can see the line go.** A golden that stays green says nothing unless it would have
+gone red, so the role was set to `Color.Transparent` for one run: `viddikVerify` failed on both
+receipt goldens at 366 of 329 160 pixels (0.11 % against the 0.05 % tolerance) — the rule's whole
+width — and passed again with the hairline back. That is the failure
+[youndie/kompot#217](https://github.com/youndie/kompot/issues/217) describes from another consumer:
+0.40 asks `resolveSurface` two new roles, and a catch-all branch that answers with a colour erases
+dividers and table rules while every golden without one stays green. Here the catch-all answers only
+the shape and leaves every colour unspecified, so `table_header` (no table is drawn in this product)
+keeps kompot's default; the branch now says why it must stay that way.
+
 **The colour vocabulary is six names and five colours now.** Dropping `hairline` from
 `ShashkiTokens.COLORS` takes the one derived brush out of the palette check; `ReceiptTreeTest` asserts
 the rule carries no `color` at all, because a token on it would override the role.
 
-**Nothing to report to kompot.** Both fixes do what #204 and #205 asked, on this repository's own
-trees, with no source change beyond the two call sites.
+**Nothing new to report to kompot.** Both fixes do what #204 and #205 asked, on this repository's own
+trees, with no source change beyond the two call sites; the one hazard found is #217, already filed.

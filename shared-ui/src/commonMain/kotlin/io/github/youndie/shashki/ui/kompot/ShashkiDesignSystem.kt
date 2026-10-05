@@ -105,6 +105,11 @@ public object ShashkiDesignSystem : KompotDesignSystem {
                 KompotSurface(shape = RectangleShape, outline = colors.foreground.copy(alpha = HAIRLINE_ALPHA))
             }
 
+            // **A catch-all that answers the corner and nothing else.** Every colour stays unspecified,
+            // which kompot reads as "not answered", so a role named nowhere above — `table_header`
+            // today, whatever kompot adds next — keeps the toolkit's own colours rather than being
+            // painted over by this branch. A colour here would answer roles that do not exist yet:
+            // that is how 0.40 erased another consumer's divider and table rules (youndie/kompot#217).
             else -> {
                 KompotSurface(shape = RectangleShape)
             }
