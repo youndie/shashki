@@ -54,17 +54,6 @@ public object ShashkiTokens {
     public const val COLOR_CHROME: String = "chrome"
 
     /**
-     * The kit's hairline: the 1 dp rule above a row that starts a new block, the ink at 12 %. The
-     * colour a kompot `divider` is given (#43).
-     *
-     * **Named on every divider rather than left to the default**, because kompot's default for a
-     * divider with no colour is Material's `outlineVariant` and its design system has no hook to say
-     * otherwise — youndie/kompot#204. Without the name this kit's rule would be drawn in a palette
-     * this kit does not have.
-     */
-    public const val COLOR_HAIRLINE: String = "hairline"
-
-    /**
      * Every typography name, for whoever has to check that all of them behave.
      *
      * **A list here rather than in a test**, because a guard that enumerates a vocabulary by hand
@@ -83,7 +72,6 @@ public object ShashkiTokens {
             COLOR_ACCENT,
             COLOR_ON_ACCENT,
             COLOR_CHROME,
-            COLOR_HAIRLINE,
         )
 }
 

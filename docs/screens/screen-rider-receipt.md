@@ -92,10 +92,12 @@ had nothing else to hand, and an id is for a log.
 
 **The hairline above who drove** is kompot's `divider`, a word the toolkit has had since 0.38: the
 same rule the trip screen hand-draws over the same driver (`DriverRow`, 1 dp at the ink's 12 %). It
-is there only when there is a driver block to separate. The tree names its colour, `hairline`, rather
-than leaving it to kompot's default — that default is Material's `outlineVariant` and the design
-system cannot change it ([youndie/kompot#204](https://github.com/youndie/kompot/issues/204)). A client
-older than `divider` draws nothing in its place, which loses a line and none of the receipt.
+is there only when there is a driver block to separate. **The tree names no colour for it**: the line
+is the design system's `divider` role, which `ShashkiDesignSystem` answers with the same hairline
+(kompot 0.40; [youndie/kompot#204](https://github.com/youndie/kompot/issues/204)). Until then the
+toolkit's default was Material's `outlineVariant` and the server named a `hairline` token on the
+divider instead ([B-102](../backlog/B-102-kompot-0-40-snapshot.md)). A client older than `divider`
+draws nothing in its place, which loses a line and none of the receipt.
 
 **`receipt` is a heading** for a screen reader, the one place on the page to move to; and each line
 of the card is read as one — `tip, $ 3` — because `FareBreakdownRenderer` merges a line's label and

@@ -3,7 +3,6 @@ package io.github.youndie.shashki.server.feature.receipt.domain
 import io.github.youndie.kompot.ColorToken
 import io.github.youndie.kompot.KompotComponent
 import io.github.youndie.kompot.TypographyToken
-import io.github.youndie.kompot.standard.TextComponent
 import io.github.youndie.kompot.standard.divider
 import io.github.youndie.kompot.standard.kompotScreen
 import io.github.youndie.kompot.standard.text
@@ -54,16 +53,13 @@ public class NoReceiptException(
 internal fun receiptTree(ride: SettledRide): KompotComponent =
     kompotScreen {
         spacing(SPACING_DP)
-        // **A heading, for a screen reader to move to** (kompot 0.38, SPEC.md §4.11). Built as the
-        // constructor rather than through `text(…)`: the DSL has no way to set `heading` yet —
-        // youndie/kompot#205. Back to `text(…, heading = true)` when it does.
-        addComponent(
-            TextComponent(
-                id = "receipt-title",
-                text = "receipt",
-                style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
-                heading = true,
-            ),
+        // **A heading, for a screen reader to move to** (kompot 0.38, SPEC.md §4.11). Through the DSL
+        // since kompot 0.40 (youndie/kompot#205); the id stays the one every other line here names.
+        text(
+            "receipt",
+            style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
+            id = "receipt-title",
+            heading = true,
         )
         // **The journey, not the identifier** (B-79). The second line used to be the ride's UUID —
         // the tree needed a line and the server had nothing else to hand. A rider reads where they
@@ -80,13 +76,13 @@ internal fun receiptTree(ride: SettledRide): KompotComponent =
         // (`DriverRow`, a 1 dp box at the ink's 12 %), said here in kompot's own word since 0.38
         // (#43). Before it the tree had no way to say "a rule" short of an empty column with a size
         // and a background, which is the shape SPEC.md §4.10 retired. Only when there is a driver
-        // block to separate. The colour is named rather than left to kompot's default, which is
-        // Material's and not this kit's — youndie/kompot#204.
+        // block to separate. **No colour on it**: the line is the design system's `divider` role,
+        // which this kit answers with the same hairline (kompot 0.40, youndie/kompot#204).
         //
         // An older client does not know `divider` and draws nothing in its place, which §4.10 calls
         // the right answer for a rule: the receipt loses a line and none of its meaning.
         if (ride.driver != null || ride.stars != null) {
-            divider(color = ColorToken(ShashkiTokens.COLOR_HAIRLINE), id = "receipt-rule")
+            divider(id = "receipt-rule")
         }
         // Who drove, and what this rider thought of it — the kit's last two lines. "rated 5 of 5"
         // rather than a star: the bundled face has no ★ and the glyph guard would say so.
