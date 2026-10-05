@@ -54,6 +54,17 @@ public object ShashkiTokens {
     public const val COLOR_CHROME: String = "chrome"
 
     /**
+     * The kit's hairline: the 1 dp rule above a row that starts a new block, the ink at 12 %. The
+     * colour a kompot `divider` is given (#43).
+     *
+     * **Named on every divider rather than left to the default**, because kompot's default for a
+     * divider with no colour is Material's `outlineVariant` and its design system has no hook to say
+     * otherwise — youndie/kompot#204. Without the name this kit's rule would be drawn in a palette
+     * this kit does not have.
+     */
+    public const val COLOR_HAIRLINE: String = "hairline"
+
+    /**
      * Every typography name, for whoever has to check that all of them behave.
      *
      * **A list here rather than in a test**, because a guard that enumerates a vocabulary by hand
@@ -65,7 +76,15 @@ public object ShashkiTokens {
 
     /** Every colour name, for the same reason. */
     public val COLORS: List<String> =
-        listOf(COLOR_BACKGROUND, COLOR_FOREGROUND, COLOR_SUBTLE, COLOR_ACCENT, COLOR_ON_ACCENT, COLOR_CHROME)
+        listOf(
+            COLOR_BACKGROUND,
+            COLOR_FOREGROUND,
+            COLOR_SUBTLE,
+            COLOR_ACCENT,
+            COLOR_ON_ACCENT,
+            COLOR_CHROME,
+            COLOR_HAIRLINE,
+        )
 }
 
 /**
@@ -98,9 +117,35 @@ public data class DegradationReport(
     val componentType: String,
     /** Which screen it happened on, so a count can be read as "this screen is broken for somebody". */
     val screen: String,
-    /** Whether anything was drawn in its place. A hole and a placeholder are different holes. */
-    val drawnAsFallback: Boolean = false,
-)
+    /**
+     * What the person in front of the screen saw instead: kompot's `KompotDegradationOutcome` by
+     * name — `NOTHING`, `PLACEHOLDER` or `SERVER_FALLBACK` (#43).
+     *
+     * **Three answers where there used to be a boolean**, because kompot 0.38 split it and the split
+     * is the point: a hole, the toolkit's placeholder for a renderer this build lacks, and the
+     * equivalent the server chose are three different events to whoever reads the count, and only
+     * the last is somebody's decision. A string like [kind], for the same reason — the enum lives in
+     * `kompot-client`, which carries Compose and has no place in this module — and an open one, so a
+     * fourth outcome upstream is a new value in a log rather than a report the server refuses.
+     *
+     * Defaulted to [OUTCOME_UNREPORTED] for a bundle built before the field existed.
+     */
+    val outcome: String = OUTCOME_UNREPORTED,
+    /**
+     * **Read, never written:** what a bundle built against kompot before 0.38 sends instead of
+     * [outcome]. The server decodes strictly, so a field it no longer declared would turn every
+     * report from such a bundle into a 400 — and a report that fails is the one thing the sink must
+     * not do. Its `true` cannot be split into the three outcomes after the fact (it was `true` for a
+     * placeholder and for the server's fallback alike), so it is kept as it came and the outcome of
+     * such a report stays [OUTCOME_UNREPORTED]. Goes when no bundle older than #43 is served.
+     */
+    val drawnAsFallback: Boolean? = null,
+) {
+    public companion object {
+        /** No outcome on the wire: a bundle older than the field. Not one of kompot's three. */
+        public const val OUTCOME_UNREPORTED: String = "UNREPORTED"
+    }
+}
 
 /** `POST /api/screens/degradations` — what a client could not draw. */
 

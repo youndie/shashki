@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import io.github.youndie.kompot.ColorToken
 import io.github.youndie.kompot.TypographyToken
 import io.github.youndie.kompot.standard.ColumnComponent
+import io.github.youndie.kompot.standard.DividerComponent
 import io.github.youndie.kompot.standard.TextComponent
 import io.github.youndie.kvadrant.foundation.kvadrantLatin
 import io.github.youndie.shashki.protocol.EarningsTile
@@ -408,6 +409,7 @@ private fun RiderReceipt(dark: Boolean) {
                                 id = "receipt-title",
                                 text = "receipt",
                                 style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
+                                heading = true,
                             ),
                             // The journey, not the identifier (B-79): both ends as the settlement
                             // recorded them, then the card, then who drove and how it was rated.
@@ -433,6 +435,11 @@ private fun RiderReceipt(dark: Boolean) {
                                         FareLine("tip", "$ 3"),
                                         FareLine("paid with", "card-4417"),
                                     ),
+                            ),
+                            // The hairline above who drove, in kompot's own word (#43).
+                            DividerComponent(
+                                id = "receipt-rule",
+                                color = ColorToken(ShashkiTokens.COLOR_HAIRLINE),
                             ),
                             TextComponent(
                                 id = "receipt-driver",

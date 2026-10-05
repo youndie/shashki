@@ -1,6 +1,7 @@
 package io.github.youndie.shashki.rider.feature.promo
 
 import io.github.youndie.kompot.KompotDegradationKind
+import io.github.youndie.kompot.KompotDegradationOutcome
 import io.github.youndie.shashki.protocol.DegradationReport
 import io.github.youndie.shashki.rider.feature.promo.data.ReportingDegradationSink
 import io.ktor.client.HttpClient
@@ -49,15 +50,46 @@ class ReportingDegradationSinkTest {
                 )
 
             ReportingDegradationSink(client, realWork, screen = "promo")
-                .onUnknown(KompotDegradationKind.UNKNOWN_COMPONENT, "earningsTile", drawnAsFallback = true)
+                .onUnknown(
+                    KompotDegradationKind.UNKNOWN_COMPONENT,
+                    "earningsTile",
+                    KompotDegradationOutcome.SERVER_FALLBACK,
+                )
 
             val request = sent.await()
             assertEquals("/api/screens/degradations", request.url.encodedPath, "the report went somewhere else")
             assertEquals(
-                DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "promo", drawnAsFallback = true),
+                DegradationReport("UNKNOWN_COMPONENT", "earningsTile", "promo", outcome = "SERVER_FALLBACK"),
                 Json.decodeFromString(DegradationReport.serializer(), (request.body as TextContent).text),
                 "the server would decode something other than what was sent",
             )
+        }
+
+    /**
+     * **Each of kompot's outcomes leaves under its own name** (#43). The boolean this replaced folded
+     * a placeholder and the server's fallback into one `true`; a sink that collapsed the three again
+     * — or sent one of them for all — would pass the test above for the one outcome it names.
+     */
+    @Test
+    fun `every outcome reaches the wire as itself`() =
+        runTest {
+            for (outcome in KompotDegradationOutcome.entries) {
+                val sent = CompletableDeferred<HttpRequestData>()
+                val client =
+                    client(
+                        MockEngine { request ->
+                            sent.complete(request)
+                            respond("", HttpStatusCode.Accepted)
+                        },
+                    )
+
+                ReportingDegradationSink(client, realWork, screen = "receipt")
+                    .onUnknown(KompotDegradationKind.UNRENDERABLE_COMPONENT, "shashki.fare_breakdown", outcome)
+
+                val report =
+                    Json.decodeFromString(DegradationReport.serializer(), (sent.await().body as TextContent).text)
+                assertEquals(outcome.name, report.outcome, "$outcome left as something else")
+            }
         }
 
     /**
@@ -79,7 +111,7 @@ class ReportingDegradationSinkTest {
                 )
 
             ReportingDegradationSink(client, realWork, screen = "promo")
-                .onUnknown(KompotDegradationKind.UNKNOWN_COMPONENT, "earningsTile", drawnAsFallback = false)
+                .onUnknown(KompotDegradationKind.UNKNOWN_COMPONENT, "earningsTile", KompotDegradationOutcome.NOTHING)
 
             reached.await()
         }

@@ -582,6 +582,18 @@ move. Writing the first found that the sink relied on the application client's `
 its content type and silently failed for any other client — a report that cannot be seen failing is
 the one thing this class must not be.
 
+**Consequence 1.5c — the report says what was drawn instead, and the boolean it carried was wrong
+about it (2026-10-05, [B-101](../backlog/B-101-kompot-0-39.md), #43).** `DegradationReport` used to
+carry `drawnAsFallback: Boolean`, copied from the sink's own parameter. kompot 0.38 replaced that
+parameter with `KompotDegradationOutcome` — `NOTHING`, `PLACEHOLDER`, `SERVER_FALLBACK` — because the
+boolean was `true` for a missing renderer as well as for the server's named equivalent, and only the
+second is somebody's decision (`youndie/kompot@545de37!/UPGRADING.md`, the 0.38.0 entry). So this
+counter had been unable to answer the one question a staged rollout asks. The report now carries the
+outcome by name, the counter keys on it, and a report from a bundle built before the field is still
+accepted — the server decodes strictly, so dropping the old field from the DTO would have turned
+every such report into a 400 — and counted as `UNREPORTED`, because its `true` cannot be split after
+the fact.
+
 ### 1.6 Which of the remaining libraries can reach a browser, and which cannot
 
 The brief assumes several of these run in the wasm clients. Most do not have the target.

@@ -144,7 +144,7 @@ Read where it is used, not from a central file: `DatabaseFactory.kt`, `AuthConfi
 |---|---|---|
 | metrik | is it up, how slow, how many errors | `install(Metrik)` in `baseModule`, UDP |
 | tracy | where a request's time went, and what the saga did | `install(Tracy)`, plus named spans in `QuoteRouting` and one per saga step |
-| kompot's degradation sink | which server-driven component a client could not draw | the client posts `/api/screens/degradations`; `DegradationCounter` counts it |
+| kompot's degradation sink | which server-driven component a client could not draw, and what it drew instead | the client posts `/api/screens/degradations` with kompot's outcome; `DegradationCounter` counts it by kind, type and outcome |
 
 **The spans are named, and the names are asserted.** A trace whose only span is `POST /api/quotes`
 is the library installed rather than used, so `QuoteRouting` opens `route.estimate`,
