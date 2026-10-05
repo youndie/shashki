@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -62,6 +63,11 @@ public class TripRowRenderer : KompotComponentRenderer<TripRow> {
         Row(
             Modifier
                 .fillMaxWidth()
+                // **One stop for a screen reader, not five** (#43). kompot 0.38 gave its own
+                // containers roles and labels (SPEC.md §4.11); a product component is this
+                // renderer's to make readable. A row is one ride — both ends, the meta, the amount —
+                // and read as separate texts it is a list of fragments nobody can tell apart.
+                .semantics(mergeDescendants = true) {}
                 .background(surface)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -146,12 +152,17 @@ public class FareBreakdownRenderer : KompotComponentRenderer<FareBreakdown> {
                 component.amount,
                 style = if (component.primary) type.pageTitle else type.figure,
             )
+            // Each line is read as one — "tip, $ 3" — rather than a column of labels followed by a
+            // column of values, which is what two texts a row apart become to a screen reader (#43).
             KvadrantText(component.caption, style = type.body.cappedForCard().copy(color = colors.subtle))
             for (line in component.lines) {
                 // The server may name a step of the ramp; the cap is what the rule adds to it. A
                 // line asking for `figure` gets 19, not 32 — the card already has its one figure.
                 val asked = line.emphasis.toStyle(type) ?: type.meta
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
                     KvadrantText(line.label, style = type.meta.cappedForCard().copy(color = colors.subtle))
                     KvadrantText(line.value, style = asked.cappedForCard())
                 }
@@ -190,6 +201,8 @@ public class EarningsTileRenderer : KompotComponentRenderer<EarningsTile> {
         Column(
             Modifier
                 .width(width)
+                // The figure and what it counts are one fact; read apart, "12" and "trips" are two (#43).
+                .semantics(mergeDescendants = true) {}
                 .background(surface)
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),

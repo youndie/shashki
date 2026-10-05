@@ -76,12 +76,37 @@ class ReceiptTreeTest {
         assertTrue(texts.none { it == COMPLETED.rideId }, "an identifier is for a log, not a rider: $texts")
     }
 
-    /** The three types on this wire, and every one of them is registered on the other side. */
+    /**
+     * The four types on this wire, and every one of them is registered on the other side — `divider`
+     * by kompot's standard renderers since 0.38 (#43).
+     */
     @Test
     fun `every node on the wire is a type the client registers`() {
         val types = Json.parseToJsonElement(encodedReceipt(receiptTree(COMPLETED))).collect("type")
 
-        assertEquals(setOf("column", "text", "shashki.fare_breakdown"), types)
+        assertEquals(setOf("column", "text", "divider", "shashki.fare_breakdown"), types)
+    }
+
+    /**
+     * **The title is a heading and nothing else is** (#43, SPEC.md §4.11): a screen reader moves by
+     * headings, and a receipt has one place to move to. The rule above the driver names this kit's
+     * hairline — the toolkit's default would be Material's (youndie/kompot#204).
+     */
+    @Test
+    fun `the title is the one heading and the rule is the kit's hairline`() {
+        val tree = assertIs<JsonObject>(Json.parseToJsonElement(encodedReceipt(receiptTree(COMPLETED))))
+        val nodes = assertIs<JsonArray>(tree["children"]).map { assertIs<JsonObject>(it) }
+
+        val headings = nodes.filter { it["heading"]?.let { h -> assertIs<JsonPrimitive>(h).content } == "true" }
+        assertEquals(listOf("receipt"), headings.map { it.string("text") })
+
+        val rule = nodes.single { it.string("type") == "divider" }
+        assertEquals(ShashkiTokens.COLOR_HAIRLINE, rule.string("color"))
+        assertEquals(
+            "shashki.fare_breakdown",
+            nodes[nodes.indexOf(rule) - 1].string("type"),
+            "the rule separates the card from who drove",
+        )
     }
 
     @Test
@@ -170,24 +195,10 @@ class ReceiptTreeTest {
 
         val CANCELLED = COMPLETED.copy(chargedCents = 728, cancelled = true, tipCents = 0)
 
-        val TYPOGRAPHY =
-            setOf(
-                ShashkiTokens.TYPE_PAGE_TITLE,
-                ShashkiTokens.TYPE_FIGURE,
-                ShashkiTokens.TYPE_STATE_HEADLINE,
-                ShashkiTokens.TYPE_TILE_LABEL,
-                ShashkiTokens.TYPE_BODY,
-                ShashkiTokens.TYPE_META,
-            )
+        // `ShashkiTokens`' own lists rather than a copy of them here: a copy is a list that stops
+        // covering the vocabulary the day a word is added — as the hairline was (#43).
+        val TYPOGRAPHY = ShashkiTokens.TYPOGRAPHY.toSet()
 
-        val COLOURS =
-            setOf(
-                ShashkiTokens.COLOR_BACKGROUND,
-                ShashkiTokens.COLOR_FOREGROUND,
-                ShashkiTokens.COLOR_SUBTLE,
-                ShashkiTokens.COLOR_ACCENT,
-                ShashkiTokens.COLOR_ON_ACCENT,
-                ShashkiTokens.COLOR_CHROME,
-            )
+        val COLOURS = ShashkiTokens.COLORS.toSet()
     }
 }

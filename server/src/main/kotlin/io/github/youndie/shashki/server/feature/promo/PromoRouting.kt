@@ -7,6 +7,7 @@ import io.github.youndie.kompot.encodeKompotComponent
 import io.github.youndie.kompot.generated.generatedStandardSerializersModule
 import io.github.youndie.kompot.kompotCoreSerializersModule
 import io.github.youndie.kompot.standard.NavigateAction
+import io.github.youndie.kompot.standard.TextComponent
 import io.github.youndie.kompot.standard.button
 import io.github.youndie.kompot.standard.kompotScreen
 import io.github.youndie.kompot.standard.kompotStandardSerializersModule
@@ -70,7 +71,16 @@ internal fun promoTree(): KompotComponent =
     kompotScreen {
         spacing(SPACING_DP)
 
-        text("first ride on us", style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE), id = "promo-headline")
+        // A heading for a screen reader (kompot 0.38, SPEC.md §4.11), through the constructor because
+        // the DSL cannot set `heading` yet — youndie/kompot#205.
+        addComponent(
+            TextComponent(
+                id = "promo-headline",
+                text = "first ride on us",
+                style = TypographyToken(ShashkiTokens.TYPE_PAGE_TITLE),
+                heading = true,
+            ),
+        )
         text(
             "half of every fare, for a week",
             style = TypographyToken(ShashkiTokens.TYPE_FIGURE),

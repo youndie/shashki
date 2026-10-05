@@ -71,7 +71,17 @@ class DesignSystemInkTest {
                 Themed(dark = true) {
                     val palette =
                         with(KvadrantTheme.colors) {
-                            setOf(background, foreground, subtle, accent, onAccent, chrome)
+                            // The hairline is the one brush the kit derives rather than names: the
+                            // ink at 12 %, as every native rule draws it (#43).
+                            setOf(
+                                background,
+                                foreground,
+                                subtle,
+                                accent,
+                                onAccent,
+                                chrome,
+                                foreground.copy(alpha = 0.12f),
+                            )
                         }
                     for (token in ShashkiTokens.COLORS) {
                         val colour =
@@ -87,12 +97,12 @@ class DesignSystemInkTest {
         }
 
         assertEquals(ShashkiTokens.COLORS.size, resolved.size, "the vocabulary is empty; this would pass over nothing")
-        // **Six names and five colours, and that is the kit rather than a bug.** `foreground` and
+        // **Seven names and six colours, and that is the kit rather than a bug.** `foreground` and
         // `on_accent` are both white on the dark theme — the ink on cyan is white here, which
         // `SkeletonFixtures` records as Metro reproduced faithfully at 2.90:1. An assertion that the
-        // six were distinct was written first and was wrong about the design: what matters is that
+        // names were distinct was written first and was wrong about the design: what matters is that
         // each name lands *in* the palette, which is what the check above holds.
-        assertEquals(5, resolved.values.toSet().size, "the palette this vocabulary covers")
+        assertEquals(6, resolved.values.toSet().size, "the palette this vocabulary covers")
     }
 
     @Composable

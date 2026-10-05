@@ -39,8 +39,8 @@ this product's own components rather than kompot's stock vocabulary.
 
 - **Loading:** one ellipsis in the subtle brush. Nothing else: a skeleton of a card whose shape the
   server has not sent yet would be this client guessing the layout.
-- **Content:** whatever tree came back, drawn by `ServerScreen` — in practice a title, the ride's id
-  and one `FareBreakdown`.
+- **Content:** whatever tree came back, drawn by `ServerScreen` — in practice a title, both ends of
+  the journey, one `FareBreakdown`, a rule, and who drove.
 - **Empty and error are the same state, deliberately:** "no receipt for this ride yet". A ride that
   has not settled answers 404 and means it; a network failure answers nothing. A screen that claimed
   to tell them apart would be inventing the difference.
@@ -87,6 +87,19 @@ BC`, then `rated 4 of 5` when this rider rated the ride — all of them the serv
 settlement's own record of the journey, the driver record and the rating. **The ride's identifier
 is no longer on the screen**: it had been the second line because the tree needed one and the server
 had nothing else to hand, and an id is for a log.
+
+### 4.1b. The rule and the heading (#43)
+
+**The hairline above who drove** is kompot's `divider`, a word the toolkit has had since 0.38: the
+same rule the trip screen hand-draws over the same driver (`DriverRow`, 1 dp at the ink's 12 %). It
+is there only when there is a driver block to separate. The tree names its colour, `hairline`, rather
+than leaving it to kompot's default — that default is Material's `outlineVariant` and the design
+system cannot change it ([youndie/kompot#204](https://github.com/youndie/kompot/issues/204)). A client
+older than `divider` draws nothing in its place, which loses a line and none of the receipt.
+
+**`receipt` is a heading** for a screen reader, the one place on the page to move to; and each line
+of the card is read as one — `tip, $ 3` — because `FareBreakdownRenderer` merges a line's label and
+value (`RendererSemanticsTest`).
 
 ### 4.2. A cancelled ride
 

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -63,6 +64,17 @@ class PromoTreeTest {
         assertTrue(deeplinks.none { it.startsWith("http") })
     }
 
+    /** The headline is the screen's one heading for a screen reader (#43, SPEC.md §4.11). */
+    @Test
+    fun `the headline is the one heading`() {
+        val headings =
+            assertIs<JsonArray>(assertIs<JsonObject>(tree)["children"])
+                .map { assertIs<JsonObject>(it) }
+                .filter { (it["heading"] as? JsonPrimitive)?.content == "true" }
+
+        assertEquals(listOf("promo-headline"), headings.map { (it["id"] as JsonPrimitive).content })
+    }
+
     /** Every string value under [key], anywhere in the document. */
     private fun JsonElement.collect(key: String): Set<String> =
         when (this) {
@@ -90,24 +102,10 @@ class PromoTreeTest {
         }
 
     private companion object {
-        val TYPOGRAPHY =
-            setOf(
-                ShashkiTokens.TYPE_PAGE_TITLE,
-                ShashkiTokens.TYPE_FIGURE,
-                ShashkiTokens.TYPE_STATE_HEADLINE,
-                ShashkiTokens.TYPE_TILE_LABEL,
-                ShashkiTokens.TYPE_BODY,
-                ShashkiTokens.TYPE_META,
-            )
+        // `ShashkiTokens`' own lists rather than a copy of them here: a copy is a list that stops
+        // covering the vocabulary the day a word is added — as the hairline was (#43).
+        val TYPOGRAPHY = ShashkiTokens.TYPOGRAPHY.toSet()
 
-        val COLOURS =
-            setOf(
-                ShashkiTokens.COLOR_BACKGROUND,
-                ShashkiTokens.COLOR_FOREGROUND,
-                ShashkiTokens.COLOR_SUBTLE,
-                ShashkiTokens.COLOR_ACCENT,
-                ShashkiTokens.COLOR_ON_ACCENT,
-                ShashkiTokens.COLOR_CHROME,
-            )
+        val COLOURS = ShashkiTokens.COLORS.toSet()
     }
 }

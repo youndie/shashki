@@ -33,11 +33,21 @@ public object ShashkiDesignSystem : KompotDesignSystem {
         val colors = KvadrantTheme.colors
         return when (token.key) {
             ShashkiTokens.COLOR_BACKGROUND -> colors.background
+
             ShashkiTokens.COLOR_FOREGROUND -> colors.foreground
+
             ShashkiTokens.COLOR_SUBTLE -> colors.subtle
+
             ShashkiTokens.COLOR_ACCENT -> colors.accent
+
             ShashkiTokens.COLOR_ON_ACCENT -> colors.onAccent
+
             ShashkiTokens.COLOR_CHROME -> colors.chrome
+
+            // The same rule the native screens draw by hand above a driver or a payment row, so a
+            // kompot `divider` and a native hairline are one line (#43).
+            ShashkiTokens.COLOR_HAIRLINE -> colors.foreground.copy(alpha = HAIRLINE_ALPHA)
+
             else -> colors.foreground
         }
     }
@@ -101,3 +111,5 @@ public object ShashkiDesignSystem : KompotDesignSystem {
         }
     }
 }
+
+private const val HAIRLINE_ALPHA = 0.12f
