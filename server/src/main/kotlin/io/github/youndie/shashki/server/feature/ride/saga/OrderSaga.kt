@@ -114,20 +114,38 @@ public fun sagaEngine(
         // snapshot after the version this server was pinned to.
         config = PetichEngineConfig(requireOutbox = true, requireAnnouncementFailureHandler = true),
         clock = clock,
-        metrics = RefusingMetrics,
+        metrics = SagaMetrics,
         definitions = definitions,
         announcementFailureHandler = AnnouncementFailures(sagaJson()),
         tracer = tracer,
     )
 
-private object RefusingMetrics : PetichEngineMetrics {
+// What the engine counts, said where somebody will read it. `internal` so that a test can hand it to
+// an engine and make each method fire (B-99).
+internal object SagaMetrics : PetichEngineMetrics {
+    /**
+     * **Logged at ERROR, because a throw here reaches nobody (B-99).**
+     *
+     * This used to `error(...)`, on the reasoning that a dropped event means something changed under
+     * `requireOutbox` and a counter nobody reads is not the place to find out. The reasoning stands; the
+     * mechanism stopped working with petich B-52, which wraps an engine's metrics in `GuardedMetrics`
+     * and catches everything but cancellation from every counter, reporting it nowhere. The throw was
+     * swallowed and the saga completed as if nothing had happened — the one outcome the throw existed
+     * to prevent. An ERROR line is what is left that petich cannot catch: it leaves the process in the
+     * log and in tracy. The saga still completes, which is petich's choice and the right one — the
+     * work is done, only the event is lost.
+     */
     override fun onDroppedEvents(
         type: String,
         count: Int,
-    ): Unit =
-        error(
-            "$count outbox event(s) of saga type '$type' were dropped — requireOutbox is meant to make this impossible",
+    ) {
+        LOG.error(
+            "{} outbox event(s) of saga type '{}' were dropped — requireOutbox is meant to make this impossible, " +
+                "so the repository under this engine changed since it was built",
+            count,
+            type,
         )
+    }
 
     /**
      * **Counted, not thrown, and the asymmetry with the method above is the whole of it** (B-97).
