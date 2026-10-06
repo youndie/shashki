@@ -89,7 +89,7 @@ navigation3 = "1.2.0-alpha02"
 # The wasmJs target arrived with youndie/shildik#20.
 shildik = "0.3.0.16"
 # katcher's own wire types. The browser target arrived with youndie/katcher#32.
-booblik = "0.3.4"
+booblik = "0.3.5"
 metrik = "0.2.18"
 tracy = "0.2.15"
 katcher = "0.7.44"
