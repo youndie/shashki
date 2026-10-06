@@ -42,10 +42,11 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (3)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
+| [B-103](docs/backlog/B-103-ride-history-survives-a-broker-restart.md) `[~]` | The ride history stops for good when the broker restarts, and the subscription it reads can drop batches | P1 | S | - |
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 | [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[ ]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
