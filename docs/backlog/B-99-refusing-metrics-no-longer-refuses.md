@@ -1,7 +1,7 @@
 ---
 id: B-99
 title: "RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52"
-status: open
+status: wip
 priority: P3
 size: XS
 stage: stage-6-what-running-it-said

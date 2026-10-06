@@ -47,7 +47,7 @@ re-prioritising one must never move its file.
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
-| [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[ ]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
+| [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[~]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
 ## Closed (101)
 
