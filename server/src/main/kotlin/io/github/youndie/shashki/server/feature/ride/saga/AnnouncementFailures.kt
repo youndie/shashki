@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
  * Not late. Never.
  *
  * This server had already refused exactly this shape once, for the outbox: `requireOutbox = true`
- * and a `RefusingMetrics` that turns a dropped event into an error. The announcement path was the
+ * and a `SagaMetrics` that logs a dropped event at ERROR (B-99). The announcement path was the
  * same drop with no switch on it, and that was not a decision — `AnnouncementFailureHandler` arrived
  * one petich snapshot after the one this build was pinned to (B-96).
  */

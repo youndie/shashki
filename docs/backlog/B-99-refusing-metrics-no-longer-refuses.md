@@ -1,7 +1,7 @@
 ---
 id: B-99
 title: "RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52"
-status: open
+status: done
 priority: P3
 size: XS
 stage: stage-6-what-running-it-said
@@ -31,3 +31,15 @@ no longer has. Found while wiring B-98; read in petich's `Guarded.kt`, not yet r
   test makes it fire through the engine and asserts that.
 
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/ride/saga/OrderSaga.kt`
+
+## Findings — 2026-10-06
+
+- **Done, the loud path made real.** `RefusingMetrics` is `SagaMetrics` now: `onDroppedEvents` logs
+  at ERROR on `shashki.saga` instead of throwing, and its KDoc says what happens and why — the saga
+  completes, the event is lost, the line is what leaves the process. Counting it through metrik was
+  the other half of the option; not done, because the ERROR line already reaches tracy and a counter
+  of an event `requireOutbox` makes impossible would read zero for ever.
+- **The swallow is measured now, not only read.** `SagaMetricsTest` runs a real engine over a
+  repository with no outbox: the saga completes and exactly one ERROR line names the type and count.
+  With the old `error(...)` restored, the saga still completes and the log is empty — petich's
+  `GuardedMetrics` caught the throw, as the item said from reading `Guarded.kt`.
