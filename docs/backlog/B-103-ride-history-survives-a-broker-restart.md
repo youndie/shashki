@@ -1,7 +1,7 @@
 ---
 id: B-103
 title: "The ride history stops for good when the broker restarts, and the subscription it reads can drop batches"
-status: wip
+status: done
 priority: P1
 size: S
 stage: stage-6-what-running-it-said
@@ -35,3 +35,18 @@ is exactly when a reader outruns its collector.
 - AC: shashki builds against booblik 0.3.5.
 - Anchors: `server/src/main/kotlin/io/github/youndie/shashki/server/feature/events/data/BooblikRideHistory.kt`,
   `gradle/libs.versions.toml`.
+
+## Findings — 2026-10-06
+
+- **Done.** booblik 0.3.5 (reposilite, published for this item from booblik's `main` with M-170 and the
+  consumer-position recipe). `BooblikRideHistory` asks the broker for the partitions until it answers,
+  then runs one reader per partition that follows from its next offset after any failure.
+- **AC, walked:** `RideHistoryAcrossABrokerRestartTest` — a real booblik (the stand's image, on a fixed
+  host port), an event read, the container restarted, an event published after it: it reaches the
+  history with nobody restarting anything. **Control:** a reader that returns instead of following again
+  → red, "an event published after the broker restarted never reached the history".
+- The restarted broker's port answers before booblik does — docker's proxy accepts and closes — so the
+  test retries its own publish; that wait is the test's, not the reader's.
+- Not reproduced here: M-170's batch loss itself in shashki. The projection's collector is in-memory
+  and fast, so it falls 64 batches behind only on a long replay; the fix is the client's and is tested
+  there (booblik `SubscriptionTest`, `a slow collector loses nothing`).

@@ -42,15 +42,14 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (3)
+## Open (2)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
-| [B-103](docs/backlog/B-103-ride-history-survives-a-broker-restart.md) `[~]` | The ride history stops for good when the broker restarts, and the subscription it reads can drop batches | P1 | S | - |
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
 | [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[ ]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
-## Closed (100)
+## Closed (101)
 
 **Remove the unknowns**
 
@@ -127,6 +126,7 @@ re-prioritising one must never move its file.
 **What running it said**
 
 - [B-100](docs/backlog/B-100-the-kotlin-daemon-runs-out-of-heap-on-the-shared-ui-test-link.md) `[x]` - The Kotlin daemon runs out of heap on the shared-ui test link in a third of cold CI runs
+- [B-103](docs/backlog/B-103-ride-history-survives-a-broker-restart.md) `[x]` - The ride history stops for good when the broker restarts, and the subscription it reads can drop batches
 - [B-53](docs/backlog/B-53-the-driver-bundle-cannot-go-online.md) `[x]` - The driver bundle sends an id the token contradicts, so every position frame is dropped
 - [B-54](docs/backlog/B-54-the-shift-counter-counts-frames-nobody-took.md) `[x]` - The shift's count rises for frames the server threw away
 - [B-55](docs/backlog/B-55-browser-sign-in-needs-an-unreleased-shildik.md) `[x]` - Browser sign-in cannot finish: the provider's CORS headers are unreleased

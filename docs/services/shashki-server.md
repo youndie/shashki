@@ -181,3 +181,9 @@ repository deliberately does not carry alert rules: they describe an installatio
   traffic has not counted it yet.
 * **The ride history is a projection with no store**, rebuilt from the broker on start — so what
   retention has dropped is not in it, and no database would bring it back either.
+* **The ride history survives a broker restart** ([B-103](../backlog/B-103-ride-history-survives-a-broker-restart.md)).
+  booblik's subscription has no retry of its own, and the reader used to collect it once — so the first
+  broker restart stopped the history until the server restarted, with nothing in any log. Each partition
+  now has a reader that follows again from its next offset after a second; a reader that retention passed
+  carries on from the start of the live log and says so. `RideHistoryAcrossABrokerRestartTest` restarts
+  a real broker under it.
