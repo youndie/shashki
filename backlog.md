@@ -42,14 +42,13 @@ re-prioritising one must never move its file.
 
 <!-- BEGIN INDEX -->
 
-## Open (2)
+## Open (1)
 
 | Task | | Priority | Size | Blocked by |
 |---|---|---|---|---|
 | [B-94](docs/backlog/B-94-a-tap-on-the-map-cannot-become-a-place.md) `[?]` | A tap on the map cannot become a place, though the projection has always known how | P2 | M | - |
-| [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[~]` | RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52 | P3 | XS | - |
 
-## Closed (101)
+## Closed (102)
 
 **Remove the unknowns**
 
@@ -172,6 +171,7 @@ re-prioritising one must never move its file.
 - [B-96](docs/backlog/B-96-petich-is-nine-commits-behind.md) `[x]` - petich is pinned one commit before the handler B-97 needs, and nine behind
 - [B-97](docs/backlog/B-97-announcement-failures-go-nowhere.md) `[x]` - A ride can be assigned and settled without anyone downstream being told
 - [B-98](docs/backlog/B-98-a-saga-is-traced-nowhere.md) `[x]` - What one saga did is written nowhere this server can read it
+- [B-99](docs/backlog/B-99-refusing-metrics-no-longer-refuses.md) `[x]` - RefusingMetrics throws from onDroppedEvents, and petich has swallowed that throw since B-52
 
 <!-- END INDEX -->
 
