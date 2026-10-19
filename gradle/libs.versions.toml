@@ -84,7 +84,7 @@ cryptography = "0.6.0"
 # Navigation 3 for Compose Multiplatform. **An alpha, and the only line published for `wasmJs`** —
 # pinned like everything else, but pre-release quality, and the runtime half comes from Google's
 # repository rather than Maven Central.
-navigation3 = "1.2.0-alpha02"
+navigation3 = "1.2.0-rc01"
 # The OIDC surface as `@Resource` classes, so a browser client does not build the path from strings.
 # The wasmJs target arrived with youndie/shildik#20.
 shildik = "0.3.0.16"
@@ -149,7 +149,7 @@ navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui",
 # screen of one type shares one view model across rides, and the second ride is shown the first one's
 # state. 2.11.0-beta01 is the lifecycle this navigation3 already resolves to — pinned to the same line
 # rather than to the newest, so the bump is one artefact and not the whole lifecycle graph.
-lifecycle-viewmodelNavigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.11.0-beta01" }
+lifecycle-viewmodelNavigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.11.0" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-composeViewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-composeNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
