@@ -89,7 +89,7 @@ services:
   # application can arrange for itself. Three partitions because the key is the ride's id: everything
   # that happens to one ride lands on one partition, in order.
   booblik:
-    image: ghcr.io/youndie/booblik:0.3.1
+    image: ghcr.io/youndie/booblik:0.3.4
     environment:
       BOOBLIK_TOPICS: ride-events:3
     ports:
