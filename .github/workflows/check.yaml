@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: youndie/docs-bootstrap@v0.3.8
+      - uses: youndie/docs-bootstrap@v0.3.11
 
       # **The chart, with the values a real installation sets.** `make check` holds the chart's
       # environment to the server's (`chart_config.py`) and cannot render it: that needs Helm, and a
@@ -113,6 +113,6 @@ jobs:
       # (SPEC 4.1), which the report holds to their form without fetching them, so no clones go
       # beside it: a row about what kvadrant-ui was on 2026-09-01 is about that commit, and
       # resolving it against kvadrant-ui's main today would vouch for a sentence nobody re-read.
-      - uses: youndie/docs-bootstrap@v0.3.8
+      - uses: youndie/docs-bootstrap@v0.3.11
         with:
           target: report
