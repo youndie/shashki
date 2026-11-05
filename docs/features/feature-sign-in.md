@@ -126,9 +126,10 @@ accept a token no client of ours can produce.
 
 ## 7. Quirks
 
-* **There is no sign-in screen.** `RiderRoute.SignIn` exists and renders the class picker: the flow is
-  a redirect out of the application and back, so what would be on that screen is a button nobody has
-  needed yet.
+* **There is no sign-in screen.** `RiderRoute` has no route for one: the application opens on
+  `RiderRoute.ClassPicker`, a refused token starts the flow (`Session.renew`), and the flow is a
+  redirect out of the application and back to `RiderRoute.Callback`, which draws nothing. What would
+  be on that screen is a button nobody has needed yet.
 * **The rider's email is on the order saga's payload**, taken from the token when there is one. It is
   what the receipt is sent to, and `null` is why a stand with no provider sends none.
 * **The provider must have one address, and a container network makes that awkward.** The validator

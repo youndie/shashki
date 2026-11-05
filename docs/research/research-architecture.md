@@ -866,7 +866,7 @@ sentence above.**
 
 | Fact | Where verified |
 |---|---|
-| shildik already has PKCE — `Pkce.matches(challenge, verifier)`, `S256` only, constant-time — but only the **verifying** half. There is no generator anywhere in it, published or not | `youndie/shildik@2408e7e!/crypto/src/commonMain/.../Pkce.kt` |
+| shildik already has PKCE — `io.github.youndie.shildik.crypto.Pkce.matches(challenge, verifier)`, `S256` only, constant-time — but only the **verifying** half. There is no generator anywhere in it, published or not | `youndie/shildik@2408e7e!/crypto/src/commonMain/.../Pkce.kt` |
 | It verifies with `dev.whyoleg.cryptography`, which publishes `cryptography-core-wasm-js`, `cryptography-random-wasm-js` and `cryptography-provider-webcrypto-wasm-js` at 0.6.0 | `https://repo1.maven.org/maven2/dev/whyoleg/cryptography/` |
 | shildik's `crypto` and `shared-oidc` modules are `jvm, macosArm64, linuxX64, linuxArm64`. `shared-oidc` — the module holding the `@Resource` endpoint types — depends only on `ktor-resources` and `kotlinx-serialization-json`, both of which publish `wasmJs` | `youndie/shildik@2408e7e!/crypto/build.gradle.kts`, `youndie/shildik@2408e7e!/shared-oidc/build.gradle.kts` |
 | shildik's `authorize` serves shildik's **own** sign-in page; the choice between a magic link and Google is made there and returns through `callback/{method}`. The client names no method | `youndie/shildik@2408e7e!/server/src/commonMain/.../oidc/OidcRoutes.kt`, `startAuthorization` |
