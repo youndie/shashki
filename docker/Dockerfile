@@ -39,7 +39,7 @@ RUN MODULES=$(jdeps --print-module-deps --ignore-missing-deps --multi-release 25
         --strip-debug --no-header-files --no-man-pages --compress=zip-6 \
         --output /javaruntime
 
-FROM alpine:3.21
+FROM alpine:3.24
 COPY --from=runtime /javaruntime /opt/java
 ENV JAVA_HOME=/opt/java
 ENV PATH=$JAVA_HOME/bin:$PATH
