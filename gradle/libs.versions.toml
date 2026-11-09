@@ -101,7 +101,7 @@ katcher = "0.7.44"
 # without a line changing there. kompot is built on Compose 1.12.1, the line `wip` already holds.
 kompot = "0.40.0.210"
 kvadrant = "0.2.0"
-viddik = "0.4.0"
+viddik = "0.7.1.59"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
