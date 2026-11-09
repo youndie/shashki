@@ -41,7 +41,7 @@ services:
     # cross-origin in every configuration this stand supports, and the image published before
     # 2026-09-02 answered it with no `Access-Control-Allow-Origin` — the page went blank and sign-in
     # looked like a client bug. youndie/shildik#22 is the whole story.
-    image: ghcr.io/youndie/shildik:0.2.0.13
+    image: ghcr.io/youndie/shildik:0.4.0.19
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
   #
   # `docker/upload-tiles.sh` sets both, and it has to be run: an empty store is not a broken one.
   bochka:
-    image: ghcr.io/youndie/bochka:v0.5.0
+    image: ghcr.io/youndie/bochka:v0.7.0
     environment:
       # The key `map/tile_serving.py` signs with. In a deployment these go in a file behind
       # `BOCHKA_CONFIG` — passed here they are readable by anyone who can run `docker inspect`,

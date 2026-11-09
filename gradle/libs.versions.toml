@@ -51,7 +51,7 @@ petich = "0.4.0.112"
 s3kn = "0.1.0-20260817.123924-1"
 exposed = "1.4.0"
 hikari = "7.1.0"
-postgresql = "42.7.13"
+postgresql = "42.7.14"
 flyway = "13.3.0"
 testcontainers = "1.21.4"
 # The PKCE hash and the verifier's randomness. Chosen because shildik verifies with this same
@@ -101,7 +101,7 @@ katcher = "0.7.44"
 # without a line changing there. kompot is built on Compose 1.12.1, the line `wip` already holds.
 kompot = "0.40.0.210"
 kvadrant = "0.2.0"
-viddik = "0.4.0"
+viddik = "0.7.1.59"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
