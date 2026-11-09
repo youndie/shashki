@@ -74,7 +74,7 @@ services:
   #
   # `docker/upload-tiles.sh` sets both, and it has to be run: an empty store is not a broken one.
   bochka:
-    image: ghcr.io/youndie/bochka:v0.5.0
+    image: ghcr.io/youndie/bochka:v0.7.0
     environment:
       # The key `map/tile_serving.py` signs with. In a deployment these go in a file behind
       # `BOCHKA_CONFIG` — passed here they are readable by anyone who can run `docker inspect`,
