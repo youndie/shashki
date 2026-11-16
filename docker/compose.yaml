@@ -115,7 +115,7 @@ services:
   # the same reason the databases have none — this is a stand, and a trace older than the demo is
   # not interesting.
   tracy:
-    image: ghcr.io/youndie/tracy:0.2.2
+    image: ghcr.io/youndie/tracy:0.3.9
     environment:
       TRACY_INGEST_KEY: shashki-ingest
       # The **file**, not the directory it lives in: tracy opens exactly this path, and a directory
