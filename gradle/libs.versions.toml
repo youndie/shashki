@@ -13,7 +13,7 @@ sborka = "0.5.0.135"
 
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
-logback = "1.5.20"
+logback = "1.6.8"
 # **The Main dispatcher for the desktop windows, and the one coroutines artefact pinned here.**
 # `wip` carries `kotlinx-coroutines-core` and not `-swing`; the two have to be the same version,
 # so this number is not free — it is whatever `wip.kotlinx.coroutines.core` resolves to (1.11.0
