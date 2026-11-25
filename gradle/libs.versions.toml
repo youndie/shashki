@@ -9,11 +9,11 @@
 # The convention plugins. The settings plugin is versioned in `settings.gradle.kts`; these are the
 # project half, and they need a version here because the root build has to put them on the plugin
 # classpath — see the note there.
-sborka = "0.5.0.135"
+sborka = "0.5.0.136"
 
 # Ktor's own version is `wip.versions.ktor`; these are the artefacts, which the shared catalog does
 # not carry because which of them a service needs is the service's business.
-logback = "1.5.20"
+logback = "1.6.8"
 # **The Main dispatcher for the desktop windows, and the one coroutines artefact pinned here.**
 # `wip` carries `kotlinx-coroutines-core` and not `-swing`; the two have to be the same version,
 # so this number is not free — it is whatever `wip.kotlinx.coroutines.core` resolves to (1.11.0
@@ -101,7 +101,7 @@ katcher = "0.7.44"
 # without a line changing there. kompot is built on Compose 1.12.1, the line `wip` already holds.
 kompot = "0.40.0.210"
 kvadrant = "0.2.0"
-viddik = "0.7.1.59"
+viddik = "0.8.1.75"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
